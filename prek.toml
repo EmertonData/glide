@@ -1,0 +1,10 @@
+[[repos]]
+repo = "https://github.com/astral-sh/ruff-pre-commit"
+rev = "v0.15.4"
+hooks = [{ id = "ruff" }]
+
+[[repos]]
+repo = "local"
+hooks = [
+  { id = "ty", name = "ty", entry = "uv run ty check", language = "system", types = ["python"], pass_filenames = false },
+]

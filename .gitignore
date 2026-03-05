@@ -1,0 +1,25 @@
+# Mac
+.DS_Store
+
+# Python-generated files
+__pycache__/
+*.py[oc]
+build/
+dist/
+wheels/
+*.egg-info
+
+# Virtual environments
+.venv
+
+# Credentials
+.env
+
+# Cache files
+.ruff_cache
+.mypy_cache
+.pytest_cache
+
+# Coverage
+.coverage
+htmlcov
