@@ -4,7 +4,9 @@ version = "0.1.0"
 description = "Reference template for Open-Source Python projects"
 readme = "README.md"
 requires-python = ">=3.12"
-dependencies = []
+dependencies = [
+    "numpy>=2.4.2",
+]
 
 [build-system]
 requires = ["hatchling"]
