@@ -38,3 +38,6 @@ respect-type-ignore-comments = true
 
 [tool.pytest.ini_options]
 addopts = "--import-mode=importlib"
+
+[tool.coverage.run]
+omit = ["glide/estimators/estimator_protocol.py"]
