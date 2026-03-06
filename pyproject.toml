@@ -1,5 +1,5 @@
 [project]
-name = "starter-kit-python-open-source"
+name = "glide"
 version = "0.1.0"
 description = "Reference template for Open-Source Python projects"
 readme = "README.md"
@@ -11,7 +11,7 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/starter_kit"]
+packages = ["glide"]
 
 [dependency-groups]
 dev = [
