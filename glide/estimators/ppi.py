@@ -6,6 +6,36 @@ from glide.core.inference_result import InferenceResult
 
 
 class PPIMeanEstimator:
+    """Estimator for population mean using Prediction-Powered Inference (PPI).
+
+    This class implements the PPI method which combines a small set of labeled samples
+    with a large set of unlabeled samples whose labels are approximated by a proxy model.
+    The method provides consistent estimates even when the proxy is imperfect.
+
+    References
+    ----------
+    Angelopoulos, Anastasios N., Stephen Bates, Clara Fannjiang, Michael I. Jordan,
+    and Tijana Zrnic. "Prediction-powered inference." Science 382, no. 6671 (2023):
+    669-674.
+
+    Examples
+    --------
+    >>> from glide.core.dataset import Dataset
+    >>> from glide.estimators.ppi import PPIMeanEstimator
+    >>> labeled = [{"y_true": 5.0, "y_proxy": 4.9}, {"y_true": 6.0, "y_proxy": 6.1}]
+    >>> unlabeled = [{"y_proxy": 5.2}, {"y_proxy": 6.1}]
+    >>> dataset = Dataset(labeled + unlabeled)
+    >>> estimator = PPIMeanEstimator()
+    >>> result = estimator.estimate(dataset, y_true_field="y_true", y_proxy_field="y_proxy")
+    >>> print(result)
+    Metric: Metric
+    Point Estimate: 5.650
+    Confidence Interval (95%): [4.75, 6.55]
+    Estimator : PPIMeanEstimator
+    n_true: 2
+    n_proxy: 4
+    """
+
     def _preprocess(self, dataset: Dataset, y_true_field: str, y_proxy_field: str) -> tuple:
         data = dataset.to_numpy(fields=[y_true_field, y_proxy_field])
         y_true_all = data[:, 0]
