@@ -1,7 +1,8 @@
 .PHONY: venv pre-commit lint type-check tests coverage clean
 
 venv:
-	uv sync
+	uv sync  # installs dev group only (default)
+	# To also install doc dependencies: uv sync --group doc
 
 pre-commit:
 	uv run prek run --all-files

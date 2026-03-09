@@ -213,38 +213,38 @@ name = "glide"
 version = "0.1.0"
 source = { editable = "." }
 dependencies = [
-    { name = "numpy" },
     { name = "scipy" },
 ]
 
 [package.dev-dependencies]
 dev = [
-    { name = "mkdocs" },
-    { name = "mkdocs-material" },
-    { name = "mkdocstrings", extra = ["python"] },
     { name = "prek" },
     { name = "pytest" },
     { name = "pytest-coverage" },
     { name = "ruff" },
     { name = "ty" },
 ]
+doc = [
+    { name = "mkdocs" },
+    { name = "mkdocs-material" },
+    { name = "mkdocstrings", extra = ["python"] },
+]
 
 [package.metadata]
-requires-dist = [
-    { name = "numpy", specifier = ">=2.4.2" },
-    { name = "scipy", specifier = ">=1.17.1" },
-]
+requires-dist = [{ name = "scipy", specifier = ">=1.17.1" }]
 
 [package.metadata.requires-dev]
 dev = [
-    { name = "mkdocs", specifier = ">=1.6.1" },
-    { name = "mkdocs-material", specifier = ">=9.7.4" },
-    { name = "mkdocstrings", extras = ["python"], specifier = ">=1.0.3" },
     { name = "prek", specifier = ">=0.3.4" },
     { name = "pytest", specifier = ">=9.0.2" },
     { name = "pytest-coverage", specifier = ">=0.0" },
     { name = "ruff", specifier = ">=0.15.4" },
     { name = "ty", specifier = ">=0.0.20" },
+]
+doc = [
+    { name = "mkdocs", specifier = ">=1.6.1" },
+    { name = "mkdocs-material", specifier = ">=9.7.4" },
+    { name = "mkdocstrings", extras = ["python"], specifier = ">=1.0.3" },
 ]
 
 [[package]]

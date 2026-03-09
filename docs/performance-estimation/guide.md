@@ -10,7 +10,7 @@ The challenge is that computing the **true** metric $\theta^*$ requires reliable
 
 A natural shortcut is to use an **LLM-as-Judge** to label all $N$ items cheaply. The problem: LLM judges are **biased** — their labels $\tilde{Y}$ satisfy $E[\tilde{Y}] \neq \theta^*$. Naively averaging them gives a systematically wrong estimate of $\theta^*$.
 
-GLIDE solves this using **Prediction Powered Inference (PPI)**.
+GLIDE addresses this using estimators that combine cheap LLM labels with a small set of human labels to produce unbiased, reliable estimates of $\theta^*$.
 
 ---
 
@@ -43,9 +43,9 @@ The key insight: even though human labels are scarce, they can be used to **corr
 
 ---
 
-## The PPI estimator
+## The Prediction-Powered Inference (PPI) estimator
 
-PPI combines both sources of data into a single estimate:
+PPI ([Angelopoulos et al., *Science* 2023](https://www.science.org/doi/10.1126/science.adi6000)) combines both sources of data into a single estimate:
 
 $$\hat{\theta} = \underbrace{\frac{1}{N} \sum_{i=1}^{N} \tilde{Y}_i}_{\text{Biased estimate}} + \underbrace{\frac{1}{n} \sum_{j=1}^{n} \left(Y_j - \tilde{Y}_j\right)}_{\text{Bias rectifier}}$$
 
@@ -62,8 +62,8 @@ For large enough sample sizes (typically $n \geq 100$), the **Central Limit Theo
 
 $$\sigma^2_{\hat{\theta}} = \underbrace{\frac{\sigma^2_{\tilde{Y}}}{N}}_{\text{LLM-as-Judge variance}} + \underbrace{\frac{\sigma^2_{Y - \tilde{Y}}}{n}}_{\text{Residual variance}}$$
 
-- The first term shrinks as $N$ grows — more LLM labels reduce the variance of the biased estimate.
-- The second term shrinks as $n$ grows — more human labels reduce the residual uncertainty after bias correction.
+- The first term shrinks as $N$ grows — but since $N$ is typically large, this term is usually negligible in practice.
+- The second term dominates and shrinks both as $n$ grows and as the LLM judge becomes more aligned with human annotations (smaller numerator $\sigma^2_{Y - \tilde{Y}}$).
 
 This gives a confidence interval at level $1 - \alpha$:
 
@@ -75,4 +75,10 @@ where $z_{1-\alpha/2}$ is the standard normal quantile (e.g. $z_{0.975} = 1.96$ 
 
 ## Why it matters
 
-By combining a large pool of cheap LLM labels with a small set of human labels, PPI can achieve the same statistical precision as a purely human-labeled approach — **at roughly half the cost**. This makes rigorous performance evaluation tractable even for large-scale AI systems.
+By combining a large pool of cheap LLM labels with a small set of human labels, PPI can achieve the same statistical precision as a purely human-labeled approach — at a fraction of the annotation cost. Actual savings depend on the annotation effort required and how well the LLM judge aligns with human judgement, but the potential gains can be substantial. This makes rigorous performance evaluation tractable even for large-scale AI systems.
+
+---
+
+## References
+
+Angelopoulos, Anastasios N., Stephen Bates, Clara Fannjiang, Michael I. Jordan, and Tijana Zrnic. "Prediction-powered inference." *Science* 382, no. 6671 (2023): 669–674.
