@@ -3,6 +3,7 @@ name = "glide"
 version = "0.1.0"
 description = "Rigorous GenAI evaluation with humans in the loop"
 readme = "README.md"
+license = { text = "Apache-2.0" }
 requires-python = ">=3.12"
 dependencies = [
     "numpy>=2.4.2",
