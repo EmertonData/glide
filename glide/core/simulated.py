@@ -65,8 +65,8 @@ def generate_dataset_binary(
 
     records = []
     for y_true, y_proxy in zip(true_vals, proxy_labeled):
-        records.append({"true": int(y_true), "proxy": int(y_proxy)})
+        records.append({"y_true": int(y_true), "y_proxy": int(y_proxy)})
     for y_proxy in proxy_unlabeled:
-        records.append({"proxy": int(y_proxy)})
+        records.append({"y_proxy": int(y_proxy)})
 
     return Dataset(records)
