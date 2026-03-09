@@ -19,7 +19,7 @@
 
 ## 🧭 What is GLIDE?
 
-GLIDE is a Python library for **rigorous evaluation of GenAI systems** using hybrid human/proxy annotations, powered by [Prediction-Powered Inference (PPI)](https://arxiv.org/abs/2301.09633).
+GLIDE is a Python library for **rigorous evaluation of GenAI systems** using hybrid human/proxy annotations.
 
 ## 🤔 Why GLIDE?
 
@@ -65,3 +65,5 @@ If you use Glide in your research, please cite:
 ## 🏛️ Affiliation
 
 Developed at [Emerton Data](https://www.emerton-data.com/).
+
+<img src="assets/logo-ed.jpg" alt="Emerton Data" height="48">
