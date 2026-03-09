@@ -33,7 +33,11 @@ class PPIMeanEstimator:
     >>> result = estimator.estimate(dataset, y_true_field="y_true", y_proxy_field="y_proxy")
     >>> print(result)
     Metric: Metric
-    ...
+    Point Estimate: 5.650
+    Confidence Interval (95%): [4.75, 6.55]
+    Estimator : PPIMeanEstimator
+    n_true: 2
+    n_proxy: 4
     """
 
     def _preprocess(self, dataset: Dataset, y_true_field: str, y_proxy_field: str) -> tuple:
