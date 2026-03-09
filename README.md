@@ -1,39 +1,67 @@
-# start-kit-python-repo
+<!-- Logo placeholder -->
 
-A reference template for Python projects, with code quality standards enforced through linting, type checking, and CI/CD.
+<p align="center">
+  <a href="https://github.com/EmertonData/glide/actions/workflows/ci.yml">
+    <img src="https://github.com/EmertonData/glide/actions/workflows/ci.yml/badge.svg" alt="CI">
+  </a>
+  <a href="https://codecov.io/gh/EmertonData/glide">
+    <img src="https://codecov.io/gh/EmertonData/glide/branch/main/graph/badge.svg" alt="Coverage">
+  </a>
+  <img src="https://img.shields.io/badge/python-3.12+-blue" alt="Python 3.12+">
+  <a href="https://scientific-python.org/specs/spec-0000/">
+    <img src="https://img.shields.io/badge/SPEC-0-green?labelColor=grey" alt="SPEC 0">
+  </a>
+  <img src="https://img.shields.io/badge/docs-passing-brightgreen" alt="Docs">
+</p>
 
-## Requirements
+# GLIDE [logo]
+### Generative Label Inference & Debiasing Engine
 
-- [uv](https://docs.astral.sh/uv/) — fast Python package manager
+## 🧭 What is GLIDE?
 
-## Setup
+GLIDE is a Python library for **rigorous evaluation of GenAI systems** using hybrid human/proxy annotations, powered by [Prediction-Powered Inference (PPI)](https://arxiv.org/abs/2301.09633).
 
-```bash
-make venv
+## 🤔 Why GLIDE?
+
+- 🤖 **GenAI applications are everywhere — and imperfect.** Deployed systems make mistakes, and measuring how often matters.
+- ⚖️ **LLM-as-judge is biased.** Proxy evaluators (models, heuristics) are cheap but systematically over- or under-estimate true performance.
+- 🧑 **Rigorous evaluation requires a human in the loop.** Ground-truth labels from humans are expensive, so only a small subset is feasible.
+- 📐 **GLIDE bridges the gap.** It combines a small set of human annotations with a large set of proxy predictions to produce statistically valid metrics — correcting proxy bias without requiring full human labeling.
+
+## ⚡ Quick Start
+
+> 🚧 Coming soon — see the [documentation](#-documentation).
+
+## 📚 Documentation
+
+> 🚧 Documentation link coming soon.
+
+## 🤝 Contributing
+
+Contributions are welcome! Feel free to open an [issue](https://github.com/EmertonData/glide/issues) to report a bug or suggest a feature, or submit a [pull request](https://github.com/EmertonData/glide/pulls) with your changes.
+
+## 🔢 Versioning
+
+This project follows [Semantic Versioning (SemVer)](https://semver.org/): `MAJOR.MINOR.PATCH`.
+
+## 📦 Dependency Support
+
+This project follows [SPEC 0](https://scientific-python.org/specs/spec-0000/) for dependency support windows.
+
+## 📄 License & Citation
+
+> 🚧 License details coming soon.
+
+If you use Glide in your research, please cite:
+
+```bibtex
+@software{glide,
+  title  = {GLIDE: Generative Label Inference \& Debiasing Engine},
+  year   = {2026},
+  url    = {https://github.com/EmertonData/glide},
+}
 ```
 
-## Development
+## 🏛️ Affiliation
 
-```bash
-make lint        # ruff linting
-make type-check  # ty type checking
-make tests       # pytest
-make coverage    # pytest with coverage report
-make pre-commit  # run all hooks on all files
-make clean       # remove caches and build artifacts
-```
-
-## Code Quality
-
-This project uses:
-- **[ruff](https://docs.astral.sh/ruff/)** — linting and formatting
-- **[ty](https://github.com/astral-sh/ty)** — type checking
-- **[prek](https://github.com/j178/prek)** — pre-commit hooks
-
-### Recommended VSCode Extensions
-
-Install the following extensions for inline feedback while coding:
-
-- [Ruff](https://marketplace.visualstudio.com/items?itemName=charliermarsh.ruff) (`charliermarsh.ruff`) — linting and formatting on save
-- [ty](https://marketplace.visualstudio.com/items?itemName=astral-sh.ty) (`astral-sh.ty`) — type checking
-- [Even better TOML](https://marketplace.visualstudio.com/items?itemName=tamasfe.even-better-toml) (`tamasfe.even-better-toml`) - TOML color syntaxing
+Developed at [Emerton Data](https://www.emerton-data.com/).

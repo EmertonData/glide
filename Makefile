@@ -21,6 +21,7 @@ coverage:
 		--cov=. \
 		--cov-report term-missing \
 		--cov-report html \
+		--cov-report xml \
 		.
 
 clean:
