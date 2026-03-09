@@ -1,0 +1,25 @@
+site_name: Glide
+theme:
+  name: material
+
+plugins:
+  - search
+  - mkdocstrings
+
+markdown_extensions:
+  - pymdownx.snippets
+  - pymdownx.arithmatex:
+      generic: true
+
+extra_javascript:
+  - https://unpkg.com/mathjax@3/es5/tex-mml-chtml.js
+
+nav:
+  - Home: index.md
+  - Getting Started: getting-started.md
+  - Performance Estimation:
+    - Guide: performance-estimation/guide.md
+    - Examples:
+      - Quickstart: performance-estimation/examples/quickstart.md
+      - Example 2: performance-estimation/examples/example2.md
+  - API Reference: api/index.md

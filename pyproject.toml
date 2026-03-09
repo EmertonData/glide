@@ -19,6 +19,9 @@ packages = ["glide"]
 
 [dependency-groups]
 dev = [
+    "mkdocs>=1.6.1",
+    "mkdocs-material>=9.7.4",
+    "mkdocstrings[python]>=1.0.3",
     "prek>=0.3.4",
     "pytest>=9.0.2",
     "pytest-coverage>=0.0",
