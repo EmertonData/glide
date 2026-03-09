@@ -22,13 +22,9 @@ class PPIMeanEstimator:
     --------
     >>> from glide.core.dataset import Dataset
     >>> from glide.estimators.ppi import PPIMeanEstimator
-    >>>
-    >>> # Create dataset with labeled and unlabeled samples
     >>> labeled = [{"y_true": 5.0, "y_proxy": 4.9}, {"y_true": 6.0, "y_proxy": 6.1}]
     >>> unlabeled = [{"y_proxy": 5.2}, {"y_proxy": 6.1}]
     >>> dataset = Dataset(labeled + unlabeled)
-    >>>
-    >>> # Estimate population mean
     >>> estimator = PPIMeanEstimator()
     >>> result = estimator.estimate(dataset, y_true_field="y_true", y_proxy_field="y_proxy")
     >>> print(result)
