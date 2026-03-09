@@ -12,6 +12,9 @@
     <img src="https://img.shields.io/badge/SPEC-0-green?labelColor=grey" alt="SPEC 0">
   </a>
   <img src="https://img.shields.io/badge/docs-passing-brightgreen" alt="Docs">
+  <a href="LICENSE">
+    <img src="https://img.shields.io/badge/license-Apache%202.0-blue" alt="License">
+  </a>
 </p>
 
 # GLIDE [logo]
@@ -50,7 +53,7 @@ This project follows [SPEC 0](https://scientific-python.org/specs/spec-0000/) fo
 
 ## 📄 License & Citation
 
-> 🚧 License details coming soon.
+This project is licensed under the [Apache 2.0 License](LICENSE).
 
 If you use Glide in your research, please cite:
 
