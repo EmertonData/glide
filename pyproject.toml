@@ -37,7 +37,7 @@ lint.extend-select = ["E", "I"]
 respect-type-ignore-comments = true
 
 [tool.pytest.ini_options]
-addopts = "--import-mode=importlib"
+addopts = "--import-mode=importlib --doctest-modules"
 
 [tool.coverage.run]
 omit = ["glide/estimators/estimator_protocol.py"]
