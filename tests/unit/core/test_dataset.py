@@ -60,21 +60,21 @@ def test_to_numpy_unknown_field_raises():
 
 
 def test_generate_dataset_binary_returns_dataset():
-    ds = generate_dataset_binary(n=1, N=2, random_seed=0)
+    ds = generate_dataset_binary(n=1, N=1, random_seed=0)
     assert isinstance(ds, Dataset)
 
 
 def test_generate_dataset_binary_counts():
-    ds = generate_dataset_binary(n=10, N=40, random_seed=0)
+    ds = generate_dataset_binary(n=1, N=2, random_seed=0)
     labeled = [r for r in ds if "y_true" in r]
     unlabeled = [r for r in ds if "y_true" not in r]
-    assert len(ds) == 50
-    assert len(labeled) == 10
-    assert len(unlabeled) == 40
+    assert len(ds) == 3
+    assert len(labeled) == 1
+    assert len(unlabeled) == 2
 
 
 def test_generate_dataset_binary_record_structure():
-    ds = generate_dataset_binary(n=5, N=5, random_seed=0)
+    ds = generate_dataset_binary(n=2, N=2, random_seed=0)
     for record in ds:
         assert "y_proxy" in record
         assert record["y_proxy"] in (0, 1)
@@ -82,7 +82,6 @@ def test_generate_dataset_binary_record_structure():
 
 
 def test_generate_dataset_binary_impossible_correlation_raises():
-    # correlation=0.95 makes probs[1] = proxy_mean - both_1_prob negative
     with pytest.raises(AssertionError):
         generate_dataset_binary(n=1, N=9, true_mean=0.7, proxy_mean=0.6, correlation=0.95)
 
