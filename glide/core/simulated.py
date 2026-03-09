@@ -35,6 +35,11 @@ def generate_dataset_binary(
     Dataset
         A Dataset of n + N records. Each record contains ``"proxy"`` (always present)
         and ``"true"`` (only for the first ``n`` records).
+
+    References
+    ----------
+    .. [SO] `Correlation between Bernoulli Variables <https://math.stackexchange.com/questions/610443/finding-a-correlation-between-bernoulli-variables>`_
+
     """
     assert 0 < true_mean < 1, "true_mean must be in (0, 1)"
     assert 0 < proxy_mean < 1, "proxy_mean must be in (0, 1)"
@@ -54,19 +59,19 @@ def generate_dataset_binary(
     assert min(probs) > 0, "Impossible combination of true_mean, bias, and correlation"
 
     # generate the outcome pairs as integers between 0 and 3 inclusive
-    labeled = rng.choice(4, p=probs, size=n)
+    samples = rng.choice(4, p=probs, size=n)
     # extract the true and proxy values via integer division and modulo 2
     # we have 0 = (0, 0), 1 = (0, 1), 2 = (1, 0), 3 = (1, 1)
-    true_vals = labeled // 2
-    proxy_labeled = labeled % 2
+    y_true = samples // 2
+    y_proxy_labeled = samples % 2
 
     # generate proxy values for un labeled samples
-    proxy_unlabeled = rng.choice(2, p=[1 - p_mean, p_mean], size=N)
+    y_proxy_unlabeled = rng.choice(2, p=[1 - p_mean, p_mean], size=N)
 
     records = []
-    for y_true, y_proxy in zip(true_vals, proxy_labeled):
-        records.append({"y_true": int(y_true), "y_proxy": int(y_proxy)})
-    for y_proxy in proxy_unlabeled:
-        records.append({"y_proxy": int(y_proxy)})
+    for y_true_, y_proxy_ in zip(y_true, y_proxy_labeled):
+        records.append({"y_true": int(y_true_), "y_proxy": int(y_proxy_)})
+    for y_proxy_ in y_proxy_unlabeled:
+        records.append({"y_proxy": int(y_proxy_)})
 
     return Dataset(records)
