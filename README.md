@@ -69,4 +69,4 @@ If you use Glide in your research, please cite:
 
 Developed at [Emerton Data](https://www.emerton-data.com/).
 
-<img src="assets/logo-ed.jpg" alt="Emerton Data" height="48">
+<img src="assets/logo-ed.jpg" alt="Emerton Data" height="30">

@@ -20,13 +20,13 @@ class PPIMeanEstimator:
 
     Examples
     --------
-    >>> from glide.core.dataset import Dataset
-    >>> from glide.estimators.ppi import PPIMeanEstimator
-    >>> labeled = [{"y_true": 5.0, "y_proxy": 4.9}, {"y_true": 6.0, "y_proxy": 6.1}]
-    >>> unlabeled = [{"y_proxy": 5.2}, {"y_proxy": 6.1}]
-    >>> dataset = Dataset(labeled + unlabeled)
-    >>> estimator = PPIMeanEstimator()
-    >>> result = estimator.estimate(dataset, y_true_field="y_true", y_proxy_field="y_proxy")
+    >>> from glide.core.dataset import Dataset \n
+    >>> from glide.estimators.ppi import PPIMeanEstimator \n
+    >>> labeled = [{"y_true": 5.0, "y_proxy": 4.9}, {"y_true": 6.0, "y_proxy": 6.1}] \n
+    >>> unlabeled = [{"y_proxy": 5.2}, {"y_proxy": 6.1}] \n
+    >>> dataset = Dataset(labeled + unlabeled) \n
+    >>> estimator = PPIMeanEstimator() \n
+    >>> result = estimator.estimate(dataset, y_true_field="y_true", y_proxy_field="y_proxy") \n
     >>> print(result)
     Metric: Metric
     Point Estimate: 5.650
