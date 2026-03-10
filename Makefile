@@ -1,4 +1,4 @@
-.PHONY: venv pre-commit lint type-check tests coverage clean
+.PHONY: venv pre-commit lint type-check tests coverage clean doc doc-serve
 
 venv:
 	uv sync  # installs dev group only (default)
@@ -24,6 +24,14 @@ coverage:
 		--cov-report html \
 		--cov-report xml \
 		.
+
+doc:
+	uv sync --group doc
+	uv run mkdocs build
+
+doc-serve:
+	uv sync --group doc
+	uv run mkdocs serve
 
 clean:
 	rm -rf .ruff_cache

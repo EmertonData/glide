@@ -5,9 +5,8 @@ build:
   tools:
     python: "3.12"
   commands:
-    - pip install uv
-    - uv sync --group doc
-    - uv run mkdocs build --config-file mkdocs.yml
+    - curl -LsSf https://astral.sh/uv/install.sh | sh
+    - make doc
 
 mkdocs:
   configuration: mkdocs.yml
