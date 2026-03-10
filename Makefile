@@ -28,6 +28,7 @@ coverage:
 doc:
 	uv sync --group doc
 	uv run mkdocs build
+	@if [ -n "$$READTHEDOCS_OUTPUT" ]; then mkdir -p "$$READTHEDOCS_OUTPUT/html" && cp -r site/* "$$READTHEDOCS_OUTPUT/html/"; fi
 
 doc-serve:
 	uv sync --group doc
