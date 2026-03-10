@@ -207,6 +207,10 @@ for m in METHODS:
     w = results[m]["CI"][1] - results[m]["CI"][0]
     print(f"  {m:<25}: {w:.4f}")
 ```
+<figure>
+  <img src="errorbars.svg" />
+  <figcaption>Single run confidence intervals with each method for correlation level ρ = 0.8.</figcaption>
+</figure>
 
 ## 3. Coverage Validity {#3-coverage-validity}
 
@@ -237,6 +241,12 @@ def simulate_coverages(correlation, n_seeds=N_SEEDS, alpha=ALPHA):
             hits[m] += int(lo <= TRUE_MEAN <= hi)
     return {m: hits[m] / n_seeds for m in METHODS}
 ```
+
+<figure>
+  <img src="empirical_vs_target_coverage_ppi.svg" alt="Coverage vs target confidence level" />
+  <figcaption>Empirical coverage vs target confidence level across correlation levels.</figcaption>
+</figure>
+  
 
 ### Coverage vs confidence level --- for three correlation levels {#coverage-vs-confidence-level--for-three-correlation-levels}
 
@@ -316,6 +326,11 @@ ax.legend()
 plt.tight_layout()
 plt.show()
 ```
+<figure>
+  <img src="coverage_varying_correlation.svg"/>
+  <figcaption>Coverage vs correlation for fixed significance level 0.1.</figcaption>
+</figure>
+
 
 Note that **Surrogate only** and **Labelled + Surrogate** under-cover
 because the proxy is biased (proxy mean ≠ true mean). Only **PPI** and
@@ -378,6 +393,10 @@ ax.legend()
 plt.tight_layout()
 plt.show()
 ```
+<figure>
+  <img src="ci_width_vs_correlation.svg"/>
+  <figcaption>Confidence interval width vs correlation for fixed significance level 0.1.</figcaption>
+</figure>
 
 As expected, PPI\'s interval width decreases with increasing correlation
 --- leveraging the unlabeled proxy data is only beneficial when the
@@ -424,10 +443,14 @@ print("ESS summary:")
 for rho, ess in zip(correlations_sweep, ess_values):
     print(f"  ρ = {rho:.1f}  →  ESS = {ess:.0f}  (×{ess/N_LABELED:.2f} labeled)")
 ```
+<figure>
+  <img src="ess_vs_correlation.svg"/>
+  <figcaption>PPI effective sample size vs proxy correlation.</figcaption>
+</figure>
 
 ## Summary
 
-This notebook has empirically validated that GLIDE\'s PPI implementation
+This notebook has empirically validated that GLIDE's PPI implementation
 satisfies two key statistical properties:
 
   -----------------------------------------------------------------------
@@ -453,4 +476,6 @@ The ESS analysis shows that with a proxy correlation of $\rho = 0.8$,
 PPI is equivalent to having roughly **twice more labeled data** --- a
 significant practical gain in scenarios where human annotation is
 expensive.
+
+Access the code here : [Downloadable notebook](../../notebooks/PPI_demo_synthdata_binary.ipynb)
 

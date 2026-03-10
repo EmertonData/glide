@@ -12,6 +12,10 @@ wheels/
 # Virtual environments
 .venv
 
+# Docs
+site/
+
+
 # Credentials
 .env
 
