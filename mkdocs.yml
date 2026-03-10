@@ -1,4 +1,5 @@
 site_name: Glide
+site_dir: !ENV [READTHEDOCS_OUTPUT, 'site']/html
 theme:
   name: material
 
