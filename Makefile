@@ -1,4 +1,4 @@
-.PHONY: venv pre-commit lint type-check tests coverage clean doc doc-serve
+.PHONY: tests
 
 venv:
 	uv sync  # installs dev group only (default)
