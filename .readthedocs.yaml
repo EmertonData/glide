@@ -5,7 +5,7 @@ build:
   tools:
     python: "3.12"
   commands:
-    - curl -LsSf https://astral.sh/uv/install.sh | sh
+    - pip install uv
     - make doc
 
 mkdocs:
