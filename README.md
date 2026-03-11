@@ -18,7 +18,7 @@
 </p>
 
 <p align="center">
-  <img src="https://github.com/EmertonData/glide/blob/feat/image_readme/assets/logo-glide.png" alt="GLIDE Logo" width="80%">
+  <img src="https://github.com/EmertonData/glide/blob/main/assets/logo-glide.png" alt="GLIDE Logo" width="80%">
 </p>
 
 # GLIDE 
