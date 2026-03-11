@@ -72,7 +72,7 @@ def test_ess_manual(estimator):
     y_true = np.array([5.0, 6.0, 7.0])
     y_proxy_labeled = np.array([4.5, 5.5, 6.5])
     y_proxy_unlabeled = np.array([4.0, 5.0, 6.0, 7.0])
-    std = estimator._ppi_std(y_true, y_proxy_labeled, y_proxy_unlabeled)
+    std = estimator._ppi_std((y_true, y_proxy_labeled, y_proxy_unlabeled))
     n = len(y_true)
     var_y_true = np.var(y_true, ddof=1)
     std_labeled = np.sqrt(var_y_true / n)
