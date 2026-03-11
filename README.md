@@ -1,4 +1,4 @@
-<!-- Logo placeholder -->
+
 
 <p align="center">
   <a href="https://github.com/EmertonData/glide/actions/workflows/ci.yml">
@@ -17,7 +17,11 @@
   </a>
 </p>
 
-# GLIDE [logo]
+<p align="center">
+  <img src="https://github.com/EmertonData/glide/blob/main/assets/logo-glide.png" alt="GLIDE Logo" width="80%">
+</p>
+
+# GLIDE 
 ### Generative Label Inference & Debiasing Engine
 
 ## 🧭 What is GLIDE?
