@@ -1,4 +1,6 @@
-<!-- Logo placeholder -->
+<p align="center">
+  <img src="https://github.com/EmertonData/glide/blob/feat/image_readme/assets/logo-glide.png" alt="GLIDE Logo" width="120">
+</p>
 
 <p align="center">
   <a href="https://github.com/EmertonData/glide/actions/workflows/ci.yml">
