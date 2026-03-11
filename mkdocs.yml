@@ -5,6 +5,9 @@ theme:
 plugins:
   - search
   - mkdocstrings
+  - mkdocs-jupyter:
+      execute: false
+      include_source: true
 
 markdown_extensions:
   - pymdownx.snippets
@@ -20,6 +23,6 @@ nav:
   - Performance Estimation:
     - Guide: performance-estimation/guide.md
     - Examples:
-      - Quickstart: performance-estimation/examples/quickstart.md
+      - Quickstart: performance-estimation/examples/quickstart.ipynb
       - Example 2: performance-estimation/examples/example2.md
   - API Reference: api/index.md

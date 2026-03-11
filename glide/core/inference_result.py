@@ -26,5 +26,9 @@ class InferenceResult:
             ]
         )
 
+    def summary(self) -> str:
+        """Return a formatted summary of the inference result."""
+        return self.__str__()
+
     def __repr__(self) -> str:
         return self.__str__()
