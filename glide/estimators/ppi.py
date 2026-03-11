@@ -6,6 +6,7 @@ from numpy.typing import NDArray
 from glide.core.clt_confidence_interval import CLTConfidenceInterval
 from glide.core.dataset import Dataset
 from glide.core.inference_result import InferenceResult
+from glide.core.utils import compute_effective_sample_size
 
 
 class PPIMeanEstimator:
@@ -37,7 +38,7 @@ class PPIMeanEstimator:
     Estimator : PPIMeanEstimator
     n_true: 2
     n_proxy: 4
-    ESS: 2.4
+    Effective Sample Size: 2.4
     """
 
     def _preprocess(self, dataset: Dataset, y_true_field: str, y_proxy_field: str) -> Tuple[NDArray, NDArray, NDArray]:
@@ -107,10 +108,7 @@ class PPIMeanEstimator:
         y_true, y_proxy_labeled, y_proxy_unlabeled = self._preprocess(dataset, y_true_field, y_proxy_field)
         mean = self._ppi_mean((y_true, y_proxy_labeled, y_proxy_unlabeled))
         std = self._ppi_std((y_true, y_proxy_labeled, y_proxy_unlabeled))
-        n = len(y_true)
-        var_y_true = np.var(y_true, ddof=1)
-        std_labeled = np.sqrt(var_y_true / n)
-        ess = float(n * (std_labeled / std) ** 2) if std > 0 else None
+        effective_sample_size = compute_effective_sample_size(y_true, std)
         ci = CLTConfidenceInterval(
             mean=float(mean),
             std=float(std),
@@ -120,8 +118,8 @@ class PPIMeanEstimator:
             result=ci,
             metric_name=metric_name,
             estimator_name=self.__class__.__name__,
-            n_true=n,
+            n_true=len(y_true),
             n_proxy=len(y_proxy_unlabeled) + len(y_proxy_labeled),
-            ess=ess,
+            effective_sample_size=effective_sample_size,
         )
         return result

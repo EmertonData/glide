@@ -10,7 +10,7 @@ class InferenceResult:
     estimator_name: str
     n_true: int
     n_proxy: int
-    ess: float | None = None
+    effective_sample_size: float
 
     def __str__(self) -> str:
         lower_bound = self.result.lower_bound
@@ -23,9 +23,8 @@ class InferenceResult:
             f"Estimator : {self.estimator_name}",
             f"n_true: {self.n_true}",
             f"n_proxy: {self.n_proxy}",
+            f"Effective Sample Size: {self.effective_sample_size:.1f}",
         ]
-        if self.ess is not None:
-            lines.append(f"ESS: {self.ess:.1f}")
         return "\n".join(lines)
 
     def __repr__(self) -> str:
