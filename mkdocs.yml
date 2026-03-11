@@ -23,6 +23,6 @@ nav:
   - Performance Estimation:
     - Guide: performance-estimation/guide.md
     - Examples:
-      - Quickstart: performance-estimation/examples/quickstart.ipynb
+      - Quickstart: performance-estimation/examples/soft_quickstart.ipynb
       - Example 2: performance-estimation/examples/example2.md
   - API Reference: api/index.md

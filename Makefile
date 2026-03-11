@@ -43,4 +43,5 @@ clean:
 	rm -rf .pytest_cache
 	rm -f .coverage
 	rm -rf htmlcov
+	rm -rf site
 	find . -type d -name "__pycache__" -exec rm -rf {} +
