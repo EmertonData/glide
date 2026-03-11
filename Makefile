@@ -1,8 +1,10 @@
-.PHONY: venv pre-commit lint type-check tests coverage clean
+.PHONY: tests
 
 venv:
-	uv sync  # installs dev group only (default)
-	# To also install doc dependencies: uv sync --group doc
+	uv sync --all-groups
+
+venv-doc:
+	uv sync --group doc
 
 pre-commit:
 	uv run prek run --all-files
@@ -24,6 +26,17 @@ coverage:
 		--cov-report html \
 		--cov-report xml \
 		.
+
+_sync-doc:
+	uv sync --group doc
+
+doc: _sync-doc
+	if [ -n "$$READTHEDOCS_OUTPUT" ]; then \
+		uv run mkdocs build --site-dir "$$READTHEDOCS_OUTPUT/html"; \
+	else \
+		uv run mkdocs build; \
+		uv run mkdocs serve; \
+	fi
 
 clean:
 	rm -rf .ruff_cache
