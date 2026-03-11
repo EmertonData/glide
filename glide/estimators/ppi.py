@@ -37,6 +37,7 @@ class PPIMeanEstimator:
     Estimator : PPIMeanEstimator
     n_true: 2
     n_proxy: 4
+    ESS: 2.4
     """
     
     def _preprocess(self, dataset: Dataset, y_true_field: str, y_proxy_field: str) -> Tuple[NDArray, NDArray, NDArray]:
