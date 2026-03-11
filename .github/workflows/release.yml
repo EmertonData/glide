@@ -37,7 +37,7 @@ jobs:
     # NOTE: create a GitHub Environment named `pypi` in your repo settings and require manual approval
     environment:
       name: pypi
-      url: https://pypi.org/project/glade-genai/
+      url: https://pypi.org/project/glide-py/
     permissions:
       id-token: write  # mandatory for Trusted Publishing
 
@@ -57,7 +57,7 @@ jobs:
     runs-on: ubuntu-latest
     environment:
       name: testpypi
-      url: https://test.pypi.org/project/glide-genai/
+      url: https://test.pypi.org/project/glide-py/
     permissions:
       id-token: write
 
