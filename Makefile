@@ -30,15 +30,13 @@ coverage:
 _sync-doc:
 	uv sync --group doc
 
-doc: _sync-doc
+doc-serve: _sync-doc
 	if [ -n "$$READTHEDOCS_OUTPUT" ]; then \
 		uv run mkdocs build --site-dir "$$READTHEDOCS_OUTPUT/html"; \
 	else \
 		uv run mkdocs build; \
+		uv run mkdocs serve; \
 	fi
-
-doc-serve: _sync-doc
-	uv run mkdocs serve
 
 clean:
 	rm -rf .ruff_cache
