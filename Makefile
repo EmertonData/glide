@@ -31,7 +31,11 @@ _sync-doc:
 	uv sync --group doc
 
 doc: _sync-doc
-	uv run mkdocs build
+	if [ -n "$$READTHEDOCS_OUTPUT" ]; then \
+		uv run mkdocs build --site-dir "$$READTHEDOCS_OUTPUT/html"; \
+	else \
+		uv run mkdocs build; \
+	fi
 
 doc-serve: _sync-doc
 	uv run mkdocs serve
