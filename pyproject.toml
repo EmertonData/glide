@@ -1,13 +1,26 @@
 [project]
-name = "glide"
+name = "glide-genai"
 version = "0.1.0"
+authors = [
+  {email = "gregoire.martinon@emerton-data.com"},
+  {name = "Grégoire Martinon"}
+]
 description = "Helping humans ride the GenAI evaluation wave"
 readme = "README.md"
-license = { text = "Apache-2.0" }
+license = "Apache-2.0"
+license-files = ["LICENSE"]
 requires-python = ">=3.12"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Operating System :: OS Independent",
+]
 dependencies = [
     "scipy>=1.17.1",
 ]
+
+[project.urls]
+Homepage = "https://github.com/EmertonData/glide"
+Issues = "https://github.com/EmertonData/glide/issues"
 
 [build-system]
 requires = ["hatchling"]
@@ -17,6 +30,7 @@ build-backend = "hatchling.build"
 packages = ["glide"]
 
 [dependency-groups]
+
 dev = [
     "prek>=0.3.4",
     "pytest>=9.0.2",
