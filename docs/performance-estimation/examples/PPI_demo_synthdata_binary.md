@@ -57,8 +57,8 @@ consistent setup.
   Parameter       Value   Description
   --------------- ------- -------------------------------------------------
   `ALPHA`         0.1     Significance level → 90% confidence intervals
-  `N_LABELED`     500     Number of human-labeled samples
-  `N_UNLABELED`   5000    Number of proxy-only samples
+  `N_TRUE`     500     Number of human-labeled samples
+  `N_PROXY`   5000    Number of proxy-only samples
   `TRUE_MEAN`     0.7     Ground-truth population mean
   `PROXY_MEAN`    0.6     Mean of the proxy labels (biased)
   `N_SEEDS`       500     Number of Monte Carlo repetitions per condition
@@ -69,20 +69,20 @@ consistent setup.
 
 ``` python
 ALPHA = 0.1          # fixed throughout — 90% CI
-N_LABELED = 500
-N_UNLABELED = 5000
+N_TRUE = 500
+N_PROXY = 5000
 TRUE_MEAN = 0.55
 PROXY_MEAN = 0.5
 N_SEEDS = 500
 
-METHODS = ['Labelled only', 'Labelled + Surrogate', 'Surrogate only', 'PPI']
+METHODS = ['Labelled only', 'Labelled + Proxy', 'Proxy only', 'PPI']
 ```
 
 ## 1. Data Generation {#1-data-generation}
 
 We use `generate_dataset_binary` to simulate a realistic evaluation
 scenario. It generates correlated binary labels `(y_true, y_proxy)` for
-`N_LABELED` items, plus `N_UNLABELED` items with only `y_proxy`
+`N_TRUE` items, plus `N_PROXY` items with only `y_proxy`
 available.
 
 The `correlation` parameter controls the Pearson correlation between
@@ -91,8 +91,8 @@ human and LLM-as-judge labels on the labeled subset.
 ``` python
 # Single example dataset for illustration
 example_dataset = generate_dataset_binary(
-    n=N_LABELED,
-    N=N_UNLABELED,
+    n=N_TRUE,
+    N=N_PROXY,
     true_mean=TRUE_MEAN,
     proxy_mean=PROXY_MEAN,
     correlation=0.8,
@@ -123,9 +123,9 @@ We compare four estimators:
                                                        validity
 
   **Labelled +          `y_true` + `y_proxy` pooled    Ignores the bias of
-  Surrogate**                                          the proxy
+  Proxy**                                          the proxy
 
-  **Surrogate only**    `y_proxy` (N=5000)             Biased --- cheap
+  **Proxy only**    `y_proxy` (N=5000)             Biased --- cheap
                                                        but wrong
 
   **PPI**               `y_true` + `y_proxy`           Our method ---
@@ -173,8 +173,8 @@ def generate_estimates(dataset, alpha=ALPHA):
 
     return {
         'Labelled only':         {"mean": lo_mean, "CI": lo_ci},
-        'Labelled + Surrogate':  {"mean": ls_mean, "CI": ls_ci},
-        'Surrogate only':        {"mean": so_mean, "CI": so_ci},
+        'Labelled + Proxy':  {"mean": ls_mean, "CI": ls_ci},
+        'Proxy only':        {"mean": so_mean, "CI": so_ci},
         'PPI':                   {"mean": ppi_mean, "CI": ppi_ci},
     }
 ```
@@ -231,7 +231,7 @@ def simulate_coverages(correlation, n_seeds=N_SEEDS, alpha=ALPHA):
     hits = {m: 0 for m in METHODS}
     for seed in range(n_seeds):
         ds = generate_dataset_binary(
-            n=N_LABELED, N=N_UNLABELED,
+            n=N_TRUE, N=N_PROXY,
             true_mean=TRUE_MEAN, proxy_mean=PROXY_MEAN,
             correlation=correlation, random_seed=seed,
         )
@@ -332,7 +332,7 @@ plt.show()
 </figure>
 
 
-Note that **Surrogate only** and **Labelled + Surrogate** under-cover
+Note that **Proxy only** and **Labelled + Proxy** under-cover
 because the proxy is biased (proxy mean ≠ true mean). Only **PPI** and
 **Labelled only** remain valid across all correlation levels.
 
@@ -354,7 +354,7 @@ def simulate_ci_widths(correlation, n_seeds=N_SEEDS, alpha=ALPHA):
     widths = {m: [] for m in METHODS}
     for seed in range(n_seeds):
         ds = generate_dataset_binary(
-            n=N_LABELED, N=N_UNLABELED,
+            n=N_TRUE, N=N_PROXY,
             true_mean=TRUE_MEAN, proxy_mean=PROXY_MEAN,
             correlation=correlation, random_seed=seed,
         )
@@ -424,13 +424,13 @@ ess_values = []
 for rho in correlations_sweep:
     mean_w_labeled = np.mean(width_by_corr[rho]['Labelled only'])
     mean_w_ppi = np.mean(width_by_corr[rho]['PPI'])
-    ess = N_LABELED * (mean_w_labeled / mean_w_ppi) ** 2
+    ess = N_TRUE * (mean_w_labeled / mean_w_ppi) ** 2
     ess_values.append(ess)
 
 fig, ax = plt.subplots(figsize=(8, 5))
 ax.plot(correlations_sweep, ess_values, marker='o', color='darkorange', label='PPI ESS')
-ax.axhline(y=N_LABELED, color='steelblue', linestyle='--', lw=2,
-           label=f'Baseline (Labelled only, n={N_LABELED})')
+ax.axhline(y=N_TRUE, color='steelblue', linestyle='--', lw=2,
+           label=f'Baseline (Labelled only, n={N_TRUE})')
 ax.set_xlabel('Proxy–human correlation $\\rho$')
 ax.set_ylabel('Effective sample size')
 ax.set_title('PPI effective sample size vs proxy correlation')
@@ -441,7 +441,7 @@ plt.show()
 
 print("ESS summary:")
 for rho, ess in zip(correlations_sweep, ess_values):
-    print(f"  ρ = {rho:.1f}  →  ESS = {ess:.0f}  (×{ess/N_LABELED:.2f} labeled)")
+    print(f"  ρ = {rho:.1f}  →  ESS = {ess:.0f}  (×{ess/N_TRUE:.2f} labeled)")
 ```
 <figure>
   <img src="ess_vs_correlation.svg"/>
@@ -467,8 +467,8 @@ satisfies two key statistical properties:
                                           growing with correlation
   -----------------------------------------------------------------------
 
-Crucially, the biased baselines (**Surrogate only**, **Labelled +
-Surrogate**) fail the coverage test --- they appear precise but are
+Crucially, the biased baselines (**Proxy only**, **Labelled +
+Proxy**) fail the coverage test --- they appear precise but are
 systematically wrong. PPI avoids this by correcting for proxy bias using
 the labeled subset.
 

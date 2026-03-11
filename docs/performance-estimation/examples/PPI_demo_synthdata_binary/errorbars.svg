@@ -261,7 +261,7 @@ z
       </g>
      </g>
      <g id="text_2">
-      <!-- Labelled + Surrogate -->
+      <!-- Labelled + Proxy -->
       <g transform="translate(175.13357 271.596563) scale(0.1 -0.1)">
        <defs>
         <path id="DejaVuSans-2b" d="M 2944 4013 
@@ -435,7 +435,7 @@ z
       </g>
      </g>
      <g id="text_3">
-      <!-- Surrogate only -->
+      <!-- Proxy only -->
       <g transform="translate(346.314086 271.596563) scale(0.1 -0.1)">
        <use xlink:href="#DejaVuSans-53"/>
        <use xlink:href="#DejaVuSans-75" x="63.476562"/>
