@@ -65,6 +65,27 @@ def test_ppi_std_matches_manual(estimator):
     assert result == pytest.approx(expected_std)
 
 
+# --- ess ---
+
+
+def test_ess_manual(estimator):
+    y_true = np.array([5.0, 6.0, 7.0])
+    y_proxy_labeled = np.array([4.5, 5.5, 6.5])
+    y_proxy_unlabeled = np.array([4.0, 5.0, 6.0, 7.0])
+    std = estimator._ppi_std(y_true, y_proxy_labeled, y_proxy_unlabeled)
+    n = len(y_true)
+    var_y_true = np.var(y_true, ddof=1)
+    std_labeled = np.sqrt(var_y_true / n)
+    ess = n * (std_labeled / std) ** 2
+    assert ess == pytest.approx(2.4)
+
+
+def test_ess_in_estimate_result(estimator, dataset):
+    result = estimator.estimate(dataset, y_true_field="y_true", y_proxy_field="y_proxy")
+    assert result.ess is not None
+    assert result.ess > 0
+
+
 # --- estimate ---
 
 
@@ -100,6 +121,7 @@ def test_str_format(estimator, dataset):
     assert f"Estimator : {estimator.__class__.__name__}" in output
     assert "n_true: 25" in output
     assert "n_proxy: 100" in output
+    assert "ESS:" in output
 
 
 def test_repr_equals_str(estimator, dataset):

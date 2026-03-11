@@ -524,6 +524,7 @@ dev = [
 ]
 doc = [
     { name = "mkdocs" },
+    { name = "mkdocs-jupyter" },
     { name = "mkdocs-material" },
     { name = "mkdocstrings", extra = ["python"] },
 ]
@@ -545,6 +546,7 @@ dev = [
 ]
 doc = [
     { name = "mkdocs", specifier = ">=1.6.1" },
+    { name = "mkdocs-jupyter", specifier = ">=0.25.1" },
     { name = "mkdocs-material", specifier = ">=9.7.4" },
     { name = "mkdocstrings", extras = ["python"], specifier = ">=1.0.3" },
 ]

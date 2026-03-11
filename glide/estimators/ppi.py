@@ -101,6 +101,10 @@ class PPIMeanEstimator:
         y_true, y_proxy_labeled, y_proxy_unlabeled = self._preprocess(dataset, y_true_field, y_proxy_field)
         mean = self._ppi_mean(y_true, y_proxy_labeled, y_proxy_unlabeled)
         std = self._ppi_std(y_true, y_proxy_labeled, y_proxy_unlabeled)
+        n = len(y_true)
+        var_y_true = np.var(y_true, ddof=1)
+        std_labeled = np.sqrt(var_y_true / n)
+        ess = float(n * (std_labeled / std) ** 2) if std > 0 else None
         ci = CLTConfidenceInterval(
             mean=float(mean),
             std=float(std),
@@ -110,7 +114,8 @@ class PPIMeanEstimator:
             result=ci,
             metric_name=metric_name,
             estimator_name=self.__class__.__name__,
-            n_true=len(y_true),
+            n_true=n,
             n_proxy=len(y_proxy_unlabeled) + len(y_proxy_labeled),
+            ess=ess,
         )
         return result
