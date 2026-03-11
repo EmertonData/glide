@@ -30,7 +30,7 @@ coverage:
 _sync-doc:
 	uv sync --group doc
 
-doc-serve: _sync-doc
+doc: _sync-doc
 	if [ -n "$$READTHEDOCS_OUTPUT" ]; then \
 		uv run mkdocs build --site-dir "$$READTHEDOCS_OUTPUT/html"; \
 	else \
