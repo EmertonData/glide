@@ -1,8 +1,10 @@
 .PHONY: tests
 
 venv:
-	uv sync  # installs dev group only (default)
-	# To also install doc dependencies: uv sync --group doc
+	uv sync --group dev --group doc
+
+venv-doc:
+	uv sync --group doc
 
 pre-commit:
 	uv run prek run --all-files
@@ -25,13 +27,13 @@ coverage:
 		--cov-report xml \
 		.
 
-doc:
+_sync-doc:
 	uv sync --group doc
-	uv run mkdocs build
-	@if [ -n "$$READTHEDOCS_OUTPUT" ]; then mkdir -p "$$READTHEDOCS_OUTPUT/html" && cp -r site/* "$$READTHEDOCS_OUTPUT/html/"; fi
 
-doc-serve:
-	uv sync --group doc
+doc: _sync-doc
+	uv run mkdocs build
+
+doc-serve: _sync-doc
 	uv run mkdocs serve
 
 clean:
