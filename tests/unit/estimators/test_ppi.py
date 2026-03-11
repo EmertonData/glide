@@ -30,15 +30,15 @@ def estimator() -> PPIMeanEstimator:
 
 
 def test_preprocess_counts(estimator, dataset):
-    y_data = estimator._preprocess(dataset, "y_true", "y_proxy")
-    assert len(y_data["y_true"]) == 25
-    assert len(y_data["y_proxy_labeled"]) == 25
-    assert len(y_data["y_proxy_unlabeled"]) == 75
+    y_true, y_proxy_labeled, y_proxy_unlabeled = estimator._preprocess(dataset, "y_true", "y_proxy")
+    assert len(y_true) == 25
+    assert len(y_proxy_labeled) == 25
+    assert len(y_proxy_unlabeled) == 75
 
 
 def test_preprocess_no_nans_in_y_true(estimator, dataset):
-    y_data = estimator._preprocess(dataset, "y_true", "y_proxy")
-    assert not np.any(np.isnan(y_data["y_true"]))
+    y_true, _, _ = estimator._preprocess(dataset, "y_true", "y_proxy")
+    assert not np.any(np.isnan(y_true))
 
 
 # --- ppi_mean ---
@@ -48,9 +48,8 @@ def test_ppi_mean_matches_manual(estimator):
     y_true = np.array([5.0, 6.0, 7.0])
     y_proxy_labeled = np.array([4.5, 5.5, 6.5])
     y_proxy = np.array([4.0, 5.0, 6.0, 7.0])
-    y_data = {"y_true": y_true, "y_proxy_labeled": y_proxy_labeled, "y_proxy_unlabeled": y_proxy}
     expected = 6.0
-    result = estimator._ppi_mean(y_data)
+    result = estimator._ppi_mean((y_true, y_proxy_labeled, y_proxy))
     assert result == pytest.approx(expected)
 
 
@@ -62,8 +61,7 @@ def test_ppi_std_matches_manual(estimator):
     y_proxy_labeled = np.array([4.5, 5.5, 6.5])
     y_proxy = np.array([4.0, 5.0, 6.0, 7.0])
     expected_std = 0.645497224
-    y_data = {"y_true": y_true, "y_proxy_labeled": y_proxy_labeled, "y_proxy_unlabeled": y_proxy}
-    result = estimator._ppi_std(y_data)
+    result = estimator._ppi_std((y_true, y_proxy_labeled, y_proxy))
     assert result == pytest.approx(expected_std)
 
 
