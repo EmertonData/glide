@@ -1,7 +1,7 @@
 .PHONY: tests
 
 venv:
-	uv sync --group dev --group doc
+	uv sync --all-groups
 
 venv-doc:
 	uv sync --group doc
