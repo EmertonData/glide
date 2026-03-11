@@ -1,4 +1,7 @@
+from typing import Tuple
+
 import numpy as np
+from numpy.typing import NDArray
 
 from glide.core.clt_confidence_interval import CLTConfidenceInterval
 from glide.core.dataset import Dataset
@@ -35,8 +38,8 @@ class PPIMeanEstimator:
     n_true: 2
     n_proxy: 4
     """
-
-    def _preprocess(self, dataset: Dataset, y_true_field: str, y_proxy_field: str) -> tuple:
+    
+    def _preprocess(self, dataset: Dataset, y_true_field: str, y_proxy_field: str) -> Tuple[NDArray, NDArray, NDArray]:
         data = dataset.to_numpy(fields=[y_true_field, y_proxy_field])
         y_true_all = data[:, 0]
         y_proxy_all = data[:, 1]
@@ -46,13 +49,15 @@ class PPIMeanEstimator:
         y_proxy_unlabeled = y_proxy_all[~labeled_mask]
         return y_true, y_proxy_labeled, y_proxy_unlabeled
 
-    def _ppi_mean(self, y_true: np.ndarray, y_proxy_labeled: np.ndarray, y_proxy_unlabeled: np.ndarray) -> float:
+    def _ppi_mean(self, y_data: Tuple[NDArray, NDArray, NDArray]) -> float:
+        y_true, y_proxy_labeled, y_proxy_unlabeled = y_data
         rectifier = np.mean(y_true) - np.mean(y_proxy_labeled)
         proxy_mean = np.mean(y_proxy_unlabeled)
         ppi_mean = proxy_mean + rectifier
         return ppi_mean
 
-    def _ppi_std(self, y_true: np.ndarray, y_proxy_labeled: np.ndarray, y_proxy_unlabeled: np.ndarray) -> float:
+    def _ppi_std(self, y_data: Tuple[NDArray, NDArray, NDArray]) -> float:
+        y_true, y_proxy_labeled, y_proxy_unlabeled = y_data
         n = len(y_true)
         N = len(y_proxy_unlabeled)
         var = np.var(y_true - y_proxy_labeled, ddof=1) / n + np.var(y_proxy_unlabeled, ddof=1) / N
@@ -99,8 +104,8 @@ class PPIMeanEstimator:
             prediction).
         """
         y_true, y_proxy_labeled, y_proxy_unlabeled = self._preprocess(dataset, y_true_field, y_proxy_field)
-        mean = self._ppi_mean(y_true, y_proxy_labeled, y_proxy_unlabeled)
-        std = self._ppi_std(y_true, y_proxy_labeled, y_proxy_unlabeled)
+        mean = self._ppi_mean((y_true, y_proxy_labeled, y_proxy_unlabeled))
+        std = self._ppi_std((y_true, y_proxy_labeled, y_proxy_unlabeled))
         ci = CLTConfidenceInterval(
             mean=float(mean),
             std=float(std),
