@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="https://github.com/EmertonData/glide/blob/feat/image_readme/assets/logo-glide.png" alt="GLIDE Logo" width="120">
+  <img src="https://github.com/EmertonData/glide/blob/feat/image_readme/assets/logo-glide.png" alt="GLIDE Logo" width="80%">
 </p>
 
 <p align="center">
