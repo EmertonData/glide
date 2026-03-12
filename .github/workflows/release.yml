@@ -71,10 +71,9 @@ jobs:
         uses: pypa/gh-action-pypi-publish@v1.13.0
         with:
           repository-url: https://test.pypi.org/legacy/
+          verbose: true
 
 # Notes:
 # - Make sure to update the pypi and testpypi Trusted Publishers in the settings of your PyPI and TestPyPI accounts.
 # - Configure GitHub Environments named `pypi` and `testpypi` in your repository settings.
 # - For `pypi` the environment should require manual approval (recommended by PyPI Trusted Publishing).
-# - After switching to Trusted Publishing you should remove any long-lived PYPI API token secrets from the repo and
-#   revoke them on PyPI/TestPyPI as described in the PyPI guide.
