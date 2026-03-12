@@ -39,7 +39,7 @@ $$\Pr(\theta^* \in C_\alpha) \geq 1 - \alpha$$
 
 The key insight: even though human labels are scarce, they can be used to **correct** the bias in the cheap LLM labels.
 
-<img src="../../assets/schema-PPI.png" alt="PPI data schema" width="400">
+<img src="https://github.com/EmertonData/glide/tree/main/docs/assets/schema-PPI.png" alt="PPI data schema" width="400">
 
 ---
 
