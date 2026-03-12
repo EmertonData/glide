@@ -1,24 +1,16 @@
 
 
 <p align="center">
-  <a href="https://github.com/EmertonData/glide/actions/workflows/ci.yml">
-    <img src="https://github.com/EmertonData/glide/actions/workflows/ci.yml/badge.svg" alt="CI">
-  </a>
-  <a href="https://codecov.io/gh/EmertonData/glide">
-    <img src="https://codecov.io/gh/EmertonData/glide/branch/main/graph/badge.svg" alt="Coverage">
-  </a>
+  <a href="https://github.com/EmertonData/glide/actions/workflows/ci.yml"><img src="https://github.com/EmertonData/glide/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
+  <a href="https://codecov.io/gh/EmertonData/glide"><img src="https://codecov.io/gh/EmertonData/glide/branch/main/graph/badge.svg" alt="Coverage"></a>
   <img src="https://img.shields.io/badge/python-3.12+-blue" alt="Python 3.12+">
-  <a href="https://scientific-python.org/specs/spec-0000/">
-    <img src="https://img.shields.io/badge/SPEC-0-green?labelColor=grey" alt="SPEC 0">
-  </a>
+  <a href="https://scientific-python.org/specs/spec-0000/"><img src="https://img.shields.io/badge/SPEC-0-green?labelColor=grey" alt="SPEC 0"></a>
   <img src="https://img.shields.io/badge/docs-passing-brightgreen" alt="Docs">
-  <a href="LICENSE">
-    <img src="https://img.shields.io/badge/license-Apache%202.0-blue" alt="License">
-  </a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-Apache%202.0-blue" alt="License"></a>
 </p>
 
 <p align="center">
-  <img src="https://github.com/EmertonData/glide/blob/main/assets/logo-glide.png" alt="GLIDE Logo" width="80%">
+  <img src="https://raw.githubusercontent.com/EmertonData/glide/refs/heads/main/assets/logo-glide.png" alt="GLIDE Logo" width="80%">
 </p>
 
 # GLIDE 
@@ -73,4 +65,4 @@ If you use Glide in your research, please cite:
 
 Developed at [Emerton Data](https://www.emerton-data.com/).
 
-<img src="assets/logo-ed.jpg" alt="Emerton Data" height="30">
+<img src="https://raw.githubusercontent.com/EmertonData/glide/refs/heads/main/assets/logo-ed.jpg" alt="Emerton Data" height="30">
