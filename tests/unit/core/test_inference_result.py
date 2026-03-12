@@ -12,3 +12,4 @@ def test_inference_result():
     assert RESULT.n_proxy == 90
     assert RESULT.result.mean == 0.7
     assert repr(RESULT) == str(RESULT)
+    assert repr(RESULT) == RESULT.summary()
