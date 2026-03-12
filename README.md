@@ -3,9 +3,12 @@
 <p align="center">
   <a href="https://github.com/EmertonData/glide/actions/workflows/ci.yml"><img src="https://github.com/EmertonData/glide/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
   <a href="https://codecov.io/gh/EmertonData/glide"><img src="https://codecov.io/gh/EmertonData/glide/branch/main/graph/badge.svg" alt="Coverage"></a>
-  <img src="https://img.shields.io/badge/python-3.12+-blue" alt="Python 3.12+">
   <a href="https://scientific-python.org/specs/spec-0000/"><img src="https://img.shields.io/badge/SPEC-0-green?labelColor=grey" alt="SPEC 0"></a>
   <img src="https://img.shields.io/badge/docs-passing-brightgreen" alt="Docs">
+  <img src="https://img.shields.io/badge/python-3.12+-blue" alt="Python 3.12+">
+  <a href="https://pypi.org/project/glide-py/"><img src="https://img.shields.io/pypi/v/glide-py"></a>
+  <a href="https://github.com/EmertonData/glide/releases"><img src="https://img.shields.io/github/v/release/EmertonData/glide"></a>
+  <a href="https://github.com/EmertonData/glide/commits/master"><img src="https://img.shields.io/github/commits-since/EmertonData/glide/latest"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-Apache%202.0-blue" alt="License"></a>
 </p>
 
@@ -29,11 +32,13 @@ GLIDE is a Python library for **rigorous evaluation of GenAI systems** using hyb
 
 ## ⚡ Quick Start
 
-> 🚧 Coming soon — see the [documentation](#-documentation).
+```bash
+pip install glide-py
+```
 
 ## 📚 Documentation
 
-> 🚧 Documentation link coming soon.
+[Documentation](https://glide-py.readthedocs.io/en/latest/)
 
 ## 🤝 Contributing
 

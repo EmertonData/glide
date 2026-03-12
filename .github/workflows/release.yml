@@ -22,7 +22,7 @@ jobs:
 #        run: make venv
 
       - name: Build a binary wheel and a source tarball
-        run: uv build
+        run: make build
       - name: Store the distribution packages
         uses: actions/upload-artifact@v7.0.0
         with:
