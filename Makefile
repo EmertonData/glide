@@ -45,3 +45,16 @@ clean:
 	rm -rf htmlcov
 	rm -rf site
 	find . -type d -name "__pycache__" -exec rm -rf {} +
+
+build:
+	rm -rf dist
+	uv build
+
+bump-major:
+	uv version --bump major
+
+bump-minor:
+	uv version --bump minor
+
+bump-patch:
+	uv version --bump patch
