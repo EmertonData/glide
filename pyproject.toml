@@ -1,9 +1,16 @@
 [project]
 name = "glide-py"
-version = "0.1.0"
+version = "0.0.0"
 authors = [
-  {email = "gregoire.martinon@emerton-data.com"},
-  {name = "Grégoire Martinon"}
+  {name = "Grégoire Martinon", email = "gregoire.martinon@emerton-data.com"},
+  {name = "Ibrahim Merad", email = "ibrahim.merad@kaukana-ventures.com"},
+  {name = "Mohammed Raki", email = "mohammed.raki@emerton-data.com"},
+  {name = "Guillaume D'Hérouville", email = "guillaume.dherouville@emerton-data.com"},
+  {name = "Victor Woelffel", email = "victor.woelffel@emerton-data.com"},
+]
+maintainers = [
+  {name = "Grégoire Martinon", email = "gregoire.martinon@emerton-data.com"},
+  {name = "Ibrahim Merad", email = "ibrahim.merad@kaukana-ventures.com"},
 ]
 description = "Helping humans ride the GenAI evaluation wave"
 readme = "README.md"
@@ -11,8 +18,18 @@ license = "Apache-2.0"
 license-files = ["LICENSE"]
 requires-python = ">=3.12"
 classifiers = [
-    "Programming Language :: Python :: 3",
-    "Operating System :: OS Independent",
+    "Intended Audience :: Science/Research",
+    "Intended Audience :: Developers",
+    "Topic :: Software Development",
+    "Topic :: Scientific/Engineering",
+    "Operating System :: Microsoft :: Windows",
+    "Operating System :: POSIX",
+    "Operating System :: Unix",
+    "Operating System :: MacOS",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+    "Programming Language :: Python :: 3.15",
 ]
 dependencies = [
     "scipy>=1.17.1",
@@ -21,6 +38,8 @@ dependencies = [
 [project.urls]
 Homepage = "https://github.com/EmertonData/glide"
 Issues = "https://github.com/EmertonData/glide/issues"
+Repository = "https://github.com/EmertonData/glide"
+Documentation = "https://glide-py.readthedocs.io/en/latest/"
 
 [build-system]
 requires = ["hatchling"]
@@ -30,7 +49,6 @@ build-backend = "hatchling.build"
 packages = ["glide"]
 
 [dependency-groups]
-
 dev = [
     "prek>=0.3.4",
     "pytest>=9.0.2",

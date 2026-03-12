@@ -4,7 +4,7 @@
 - [ ] Check that `main` contains all intended changes for the release.
 - [ ] Make sure CI tests pass on GitHub Actions for the latest commit on main. Otherwise fix issues in a Pull Request and merge it.
 - [ ] Checkout `main` and pull latest changes: `git checkout main && git pull origin main`.
-- [ ] Use `uv bump` to update the version number in the pyproject.toml (see [here](https://docs.astral.sh/uv/guides/package/#updating-your-version) for details, version must change or release will fail).
+- [ ] Use one of `make bump-major` or `make bump-minor` or `make bump-patch` to update the version number in the pyproject.toml (see [here](https://docs.astral.sh/uv/guides/package/#updating-your-version) for details. Version must change or release will fail).
 - [ ] Publish to TestPyPI to verify the build:
     * Manually trigger the TestPyPI publish job on GitHub Actions
     * Verify that the build and TestPyPI publish succeeded (https://test.pypi.org/project/glide-py/)
