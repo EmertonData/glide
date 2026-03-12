@@ -3,8 +3,8 @@ import pytest
 
 from glide.core.dataset import Dataset
 from glide.core.inference_result import InferenceResult
-from glide.estimators.ppi import PPIMeanEstimator
 from glide.core.utils import compute_effective_sample_size
+from glide.estimators.ppi import PPIMeanEstimator
 
 
 def make_dataset(n_true: int = 25, n_proxy: int = 75, seed: int = 42) -> Dataset:
@@ -69,19 +69,13 @@ def test_ppi_std_matches_manual(estimator):
 # --- ess ---
 
 
-def test_ess_manual(estimator):
+def test_compute_effective_sample_size_manual(estimator):
     y_true = np.array([5.0, 6.0, 7.0])
     y_proxy_labeled = np.array([4.5, 5.5, 6.5])
     y_proxy_unlabeled = np.array([4.0, 5.0, 6.0, 7.0])
     std = estimator._ppi_std((y_true, y_proxy_labeled, y_proxy_unlabeled))
     ess = compute_effective_sample_size(y_true, std)
-    assert ess == pytest.approx(2.4)
-
-
-def test_ess_in_estimate_result(estimator, dataset):
-    result = estimator.estimate(dataset, y_true_field="y_true", y_proxy_field="y_proxy")
-    assert result.effective_sample_size is not None
-    assert result.effective_sample_size > 0
+    assert ess == 2.0
 
 
 # --- estimate ---

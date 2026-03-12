@@ -23,5 +23,5 @@ nav:
     - Examples:
       - Quickstart: performance-estimation/examples/quickstart.md
       - Example 2: performance-estimation/examples/example2.md
-      - Scientific validation: notebooks/PPI_demo_synthdata_binary.ipynb
+      - Scientific validation: examples/PPI_demo_synthdata_binary.ipynb
   - API Reference: api/index.md

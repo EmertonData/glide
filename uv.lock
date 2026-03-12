@@ -510,7 +510,6 @@ version = "0.1.0"
 source = { editable = "." }
 dependencies = [
     { name = "matplotlib" },
-    { name = "mkdocs-jupyter" },
     { name = "scipy" },
 ]
 
@@ -532,7 +531,6 @@ doc = [
 [package.metadata]
 requires-dist = [
     { name = "matplotlib", specifier = ">=3.10.8" },
-    { name = "mkdocs-jupyter", specifier = ">=0.25.1" },
     { name = "scipy", specifier = ">=1.17.1" },
 ]
 
