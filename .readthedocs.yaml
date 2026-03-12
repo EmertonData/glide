@@ -6,7 +6,7 @@ build:
     python: "3.12"
   commands:
     - curl -LsSf https://astral.sh/uv/install.sh | sh
-    - make doc
+    - PATH=$HOME/.local/bin:$PATH make doc
 
 mkdocs:
   configuration: mkdocs.yml
