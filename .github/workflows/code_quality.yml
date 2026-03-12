@@ -1,4 +1,4 @@
-name: CI
+name: Code quality
 
 on:
   push:
@@ -11,6 +11,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6.0.2
+        with:
+          persist-credentials: false
 
       - name: Install uv
         uses: astral-sh/setup-uv@v7.4.0
@@ -23,9 +25,6 @@ jobs:
 
       - name: Type check
         run: make type-check
-
-      - name: Tests
-        run: make tests
 
       - name: Coverage
         run: make coverage
