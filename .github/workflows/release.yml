@@ -74,6 +74,6 @@ jobs:
           verbose: true
 
 # Notes:
-# - Make sure to update the pypi and testpypi Trusted Publishers in the settings of your PyPI and TestPyPI accounts.
 # - Configure GitHub Environments named `pypi` and `testpypi` in your repository settings.
+# - Make sure to update the pypi and testpypi Trusted Publishers in the settings of your PyPI and TestPyPI accounts.
 # - For `pypi` the environment should require manual approval (recommended by PyPI Trusted Publishing).
