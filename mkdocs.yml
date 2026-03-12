@@ -5,6 +5,7 @@ theme:
 plugins:
   - search
   - mkdocstrings
+  - mkdocs-jupyter
 
 markdown_extensions:
   - pymdownx.snippets
@@ -22,4 +23,5 @@ nav:
     - Examples:
       - Quickstart: performance-estimation/examples/quickstart.md
       - Example 2: performance-estimation/examples/example2.md
+      - Scientific validation: examples/PPI_demo_synthdata_binary.ipynb
   - API Reference: api/index.md
