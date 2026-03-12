@@ -41,10 +41,10 @@ clean:
 	find . -type d -name "__pycache__" -exec rm -rf {} +
 
 bump-major:
-uv version --bump major
+	uv version --bump major
 
 bump-minor:
-uv version --bump minor
+	uv version --bump minor
 
 bump-patch:
-uv version --bump patch
+	uv version --bump patch
