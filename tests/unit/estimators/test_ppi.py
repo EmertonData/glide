@@ -100,6 +100,7 @@ def test_str_format(estimator, dataset):
     assert f"Estimator : {estimator.__class__.__name__}" in output
     assert "n_true: 25" in output
     assert "n_proxy: 100" in output
+    assert "Effective Sample Size:" in output
 
 
 def test_repr_equals_str(estimator, dataset):
