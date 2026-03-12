@@ -1,14 +1,46 @@
 [project]
-name = "glide"
-version = "0.1.0"
+name = "glide-py"
+version = "0.0.0"
+authors = [
+  {name = "Grégoire Martinon", email = "gregoire.martinon@emerton-data.com"},
+  {name = "Ibrahim Merad", email = "ibrahim.merad@kaukana-ventures.com"},
+  {name = "Mohammed Raki", email = "mohammed.raki@emerton-data.com"},
+  {name = "Guillaume D'Hérouville", email = "guillaume.dherouville@emerton-data.com"},
+  {name = "Victor Woelffel", email = "victor.woelffel@emerton-data.com"},
+]
+maintainers = [
+  {name = "Grégoire Martinon", email = "gregoire.martinon@emerton-data.com"},
+  {name = "Ibrahim Merad", email = "ibrahim.merad@kaukana-ventures.com"},
+]
 description = "Helping humans ride the GenAI evaluation wave"
 readme = "README.md"
-license = { text = "Apache-2.0" }
+license = "Apache-2.0"
+license-files = ["LICENSE"]
 requires-python = ">=3.12"
+classifiers = [
+    "Intended Audience :: Science/Research",
+    "Intended Audience :: Developers",
+    "Topic :: Software Development",
+    "Topic :: Scientific/Engineering",
+    "Operating System :: Microsoft :: Windows",
+    "Operating System :: POSIX",
+    "Operating System :: Unix",
+    "Operating System :: MacOS",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+    "Programming Language :: Python :: 3.15",
+]
 dependencies = [
     "matplotlib>=3.10.8",
     "scipy>=1.17.1",
 ]
+
+[project.urls]
+Homepage = "https://github.com/EmertonData/glide"
+Issues = "https://github.com/EmertonData/glide/issues"
+Repository = "https://github.com/EmertonData/glide"
+Documentation = "https://glide-py.readthedocs.io/en/latest/"
 
 [build-system]
 requires = ["hatchling"]
@@ -48,3 +80,9 @@ addopts = "--import-mode=importlib --doctest-modules"
 
 [tool.coverage.run]
 omit = ["glide/estimators/estimator_protocol.py"]
+
+[[tool.uv.index]]
+name = "testpypi"
+url = "https://test.pypi.org/simple/"
+publish-url = "https://test.pypi.org/legacy/"
+explicit = true
