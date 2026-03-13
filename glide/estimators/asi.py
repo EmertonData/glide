@@ -1,0 +1,156 @@
+from typing import Tuple
+
+import numpy as np
+from numpy.typing import NDArray
+
+from glide.core.clt_confidence_interval import CLTConfidenceInterval
+from glide.core.dataset import Dataset
+from glide.core.inference_result import InferenceResult
+from glide.core.utils import compute_effective_sample_size
+
+
+class ASIMeanEstimator:
+    """Estimator for population mean using Active Statistical Inference (ASI).
+
+    This class implements the ASI method which extends PPI++ to non-uniform sampling.
+    Each labeled sample has a known, pre-determined sampling probability π_i. Inverse
+    probability weighting (IPW) corrects for this non-uniform selection, yielding valid
+    confidence intervals under any sampling rule.
+
+    The special case where all π_i are equal to n_labeled / n recovers PPI++ at λ = 1.
+
+    References
+    ----------
+    Zrnic, Tijana, and Emmanuel Candès. "Active statistical inference."
+    arXiv:2403.03208 (2024). https://arxiv.org/abs/2403.03208
+
+    Gligoric, Kristina, et al. "Confidence-driven inference."
+    arXiv:2408.15204 (2024). https://arxiv.org/abs/2408.15204
+
+    Examples
+    --------
+    >>> from glide.core.dataset import Dataset \n
+    >>> from glide.estimators.asi import ASIMeanEstimator \n
+    >>> pi = 2 / 4  # n_labeled / n \n
+    >>> labeled = [{"y_true": 5.0, "y_proxy": 4.9, "pi": pi}, {"y_true": 6.0, "y_proxy": 6.1, "pi": pi}] \n
+    >>> unlabeled = [{"y_proxy": 5.2, "pi": pi}, {"y_proxy": 6.1, "pi": pi}] \n
+    >>> dataset = Dataset(labeled + unlabeled) \n
+    >>> estimator = ASIMeanEstimator() \n
+    >>> result = estimator.estimate(dataset, y_true_field="y_true", y_proxy_field="y_proxy", sampling_probability_field="pi", power_tuning=False) \n
+    >>> print(result.n_true, result.n_proxy)
+    2 4
+    """
+
+    def _preprocess(
+        self,
+        dataset: Dataset,
+        y_true_field: str,
+        y_proxy_field: str,
+        sampling_probability_field: str,
+    ) -> Tuple[NDArray, NDArray, NDArray, NDArray]:
+        data = dataset.to_numpy(fields=[y_true_field, y_proxy_field, sampling_probability_field])
+        y_true_all = data[:, 0]  # NaN for unlabeled
+        y_proxy = data[:, 1]  # always present
+        pi = data[:, 2]  # always present
+        xi = (~np.isnan(y_true_all)).astype(float)  # 1.0 if labeled, 0.0 otherwise
+        # replace NaN values in y_true_all by zero
+        y_true = np.where(np.isnan(y_true_all), 0.0, y_true_all)
+        return y_true, y_proxy, xi, pi
+
+    def _compute_lambda(
+        self,
+        y_data: Tuple[NDArray, NDArray, NDArray, NDArray],
+        power_tuning: bool,
+    ) -> float:
+        if not power_tuning:
+            return 1.0
+        y_true, y_proxy, xi, pi = y_data
+        a = y_proxy * (xi / pi - 1)
+        b = y_true * xi / pi
+        cov = np.cov(b, a, ddof=1)[0, 1]
+        var = np.var(a, ddof=1)
+        return float(cov / var)
+
+    def _asi_mean(
+        self,
+        y_data: Tuple[NDArray, NDArray, NDArray, NDArray],
+        _lambda: float,
+    ) -> float:
+        y_true, y_proxy, xi, pi = y_data
+        z = _lambda * y_proxy + xi * (y_true - _lambda * y_proxy) / pi
+        return float(np.mean(z))
+
+    def _asi_std(
+        self,
+        y_data: Tuple[NDArray, NDArray, NDArray, NDArray],
+        _lambda: float,
+    ) -> float:
+        y_true, y_proxy, xi, pi = y_data
+        z = _lambda * y_proxy + xi * (y_true - _lambda * y_proxy) / pi
+        n = len(z)
+        return float(np.std(z, ddof=1) / np.sqrt(n))
+
+    def estimate(
+        self,
+        dataset: Dataset,
+        y_true_field: str,
+        y_proxy_field: str,
+        sampling_probability_field: str,
+        metric_name: str = "Metric",
+        confidence_level: float = 0.95,
+        power_tuning: bool = True,
+    ) -> InferenceResult:
+        """Estimate the population mean using Active Statistical Inference (ASI).
+
+        Uses inverse-probability weighting (IPW) to correct for non-uniform sampling,
+        combining labeled and unlabeled samples into a single IPW-corrected estimator.
+        An optional power-tuning step finds the λ that minimises asymptotic variance.
+
+        Parameters
+        ----------
+        dataset : Dataset
+            Dataset where every record carries a proxy prediction and a sampling
+            probability. Records that also have ``y_true_field`` are treated as
+            labeled (ξ_i = 1); all others are unlabeled (ξ_i = 0).
+        y_true_field : str
+            Name of the column holding ground-truth labels (present only for labeled rows).
+        y_proxy_field : str
+            Name of the column holding proxy predictions (required for every row).
+        sampling_probability_field : str
+            Name of the column holding the pre-determined sampling probability π_i ∈ (0, 1]
+            for each record. Mandatory — every record must carry this field.
+        metric_name : str, optional
+            Human-readable label for the metric. Defaults to ``"Metric"``.
+        confidence_level : float, optional
+            Target coverage for the confidence interval. Defaults to ``0.95``.
+        power_tuning : bool, optional
+            If ``True`` (default), selects λ analytically to minimise asymptotic variance.
+            If ``False``, uses λ = 1 (plain IPW estimator).
+
+        Returns
+        -------
+        InferenceResult
+            Contains the CLT-based confidence interval, the metric name, the estimator
+            name (``"ASIMeanEstimator"``), and the counts ``n_true`` (labeled rows) and
+            ``n_proxy`` (total rows).
+        """
+        y_data = self._preprocess(dataset, y_true_field, y_proxy_field, sampling_probability_field)
+        _lambda = self._compute_lambda(y_data, power_tuning)
+        mean = self._asi_mean(y_data, _lambda)
+        std = self._asi_std(y_data, _lambda)
+
+        y_true, y_proxy, xi, pi = y_data
+        n_true = int(xi.sum())
+        n_proxy = len(y_proxy)
+
+        ci = CLTConfidenceInterval(mean=mean, std=std, confidence_level=confidence_level)
+        effective_sample_size = compute_effective_sample_size(y_true[xi == 1], std)
+
+        return InferenceResult(
+            result=ci,
+            metric_name=metric_name,
+            estimator_name=self.__class__.__name__,
+            n_true=n_true,
+            n_proxy=n_proxy,
+            effective_sample_size=effective_sample_size,
+        )
