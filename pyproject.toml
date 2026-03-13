@@ -62,7 +62,6 @@ doc = [
     "mkdocs-jupyter>=0.25.1",
     "mkdocs-material>=9.7.4",
     "mkdocstrings[python]>=1.0.3",
-    "mkdocs-jupyter>=0.25.0",
 ]
 
 [tool.uv]

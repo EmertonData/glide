@@ -7,7 +7,7 @@ plugins:
   - mkdocstrings
   - mkdocs-jupyter:
       execute: false
-      include_source: true
+      include_source: false
 
 markdown_extensions:
   - pymdownx.snippets
@@ -20,7 +20,7 @@ extra_javascript:
 nav:
   - Home: index.md
   - Getting Started: getting-started.md
-  - Quickstart: notebooks/quickstart.ipynb
-  - Why use Glide ?: notebooks/why_use_glide.ipynb
+  - Quickstart: examples/quickstart.ipynb
+  - Why use Glide ?: examples/why_use_glide.ipynb
   - Performance estimation: performance-estimation/guide.md
   - API Reference: api/index.md
