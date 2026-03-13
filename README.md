@@ -70,4 +70,4 @@ If you use Glide in your research, please cite:
 
 Developed at [Emerton Data](https://www.emerton-data.com/).
 
-<img src="https://raw.githubusercontent.com/EmertonData/glide/refs/heads/main/assets/logo-ed.jpg" alt="Emerton Data" height="30">
+<img src="https://raw.githubusercontent.com/EmertonData/glide/refs/heads/main/assets/logo-ed.jpg" alt="Emerton Data" width="250">
