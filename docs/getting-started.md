@@ -3,7 +3,7 @@
 ## Installation
 
 ```bash
-pip install glide
+pip install glide-py
 ```
 
 ## Requirements

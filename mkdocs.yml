@@ -1,13 +1,15 @@
 site_name: Glide
 theme:
   name: material
+  custom_dir: docs/overrides
 
 plugins:
   - search
   - mkdocstrings
   - mkdocs-jupyter:
+      include_source: true
       execute: false
-      include_source: false
+#      execute: true
 
 markdown_extensions:
   - pymdownx.snippets
@@ -22,5 +24,5 @@ nav:
   - Getting Started: getting-started.md
   - Quickstart: examples/quickstart.ipynb
   - Why use Glide ?: examples/why_use_glide.ipynb
-  - Performance estimation: performance-estimation/guide.md
+  - User guide: user_guide/guide.md
   - API Reference: api/index.md

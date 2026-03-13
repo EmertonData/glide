@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+
+{% block content %}
+{{ super() }}
+
+{% if page.nb_url %}
+    <div style="margin-top: 1rem;">
+        <a href="{{ page.nb_url }}" style="display: inline-block; padding: 0.35rem 0.75rem; font-size: 0.8rem; font-weight: 500; color: #fff; background: linear-gradient(135deg, #6366f1, #06b6d4); border-radius: 4px; text-decoration: none;">
+            Click here to download this notebook
+        </a>
+    </div>
+{% endif %}
+{% endblock content %}
