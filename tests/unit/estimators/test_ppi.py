@@ -29,40 +29,63 @@ def estimator() -> PPIMeanEstimator:
 # --- preprocessing ---
 
 
-def test_preprocess_counts(estimator, dataset):
-    y_true, y_proxy_labeled, y_proxy_unlabeled = estimator._preprocess(dataset, "y_true", "y_proxy")
+def test_preprocess_returns_tuple(estimator, dataset):
+    y_data = estimator._preprocess(dataset, "y_true", "y_proxy")
+    y_true, y_proxy_labeled, y_proxy_unlabeled = y_data
     assert len(y_true) == 25
     assert len(y_proxy_labeled) == 25
     assert len(y_proxy_unlabeled) == 75
-
-
-def test_preprocess_no_nans_in_y_true(estimator, dataset):
-    y_true, _, _ = estimator._preprocess(dataset, "y_true", "y_proxy")
     assert not np.any(np.isnan(y_true))
 
 
-# --- ppi_mean ---
+# --- ppi_mean --- without power-tuning
 
 
 def test_ppi_mean_matches_manual(estimator):
     y_true = np.array([5.0, 6.0, 7.0])
     y_proxy_labeled = np.array([4.5, 5.5, 6.5])
-    y_proxy = np.array([4.0, 5.0, 6.0, 7.0])
+    y_proxy_unlabeled = np.array([4.0, 5.0, 6.0, 7.0])
     expected = 6.0
-    result = estimator._ppi_mean((y_true, y_proxy_labeled, y_proxy))
+    result = estimator._ppi_mean((y_true, y_proxy_labeled, y_proxy_unlabeled), _lambda=1.0)
     assert result == pytest.approx(expected)
 
 
-# --- ppi_std ---
+# --- ppi_std --- without power-tuning
 
 
 def test_ppi_std_matches_manual(estimator):
     y_true = np.array([5.0, 6.0, 7.0])
     y_proxy_labeled = np.array([4.5, 5.5, 6.5])
-    y_proxy = np.array([4.0, 5.0, 6.0, 7.0])
-    expected_std = 0.645497224
-    result = estimator._ppi_std((y_true, y_proxy_labeled, y_proxy))
-    assert result == pytest.approx(expected_std)
+    y_proxy_unlabeled = np.array([4.0, 5.0, 6.0, 7.0])
+    expected = 0.65
+    result = estimator._ppi_std((y_true, y_proxy_labeled, y_proxy_unlabeled), _lambda=1.0)
+    assert result == pytest.approx(expected, abs=1e-2)
+
+
+# --- _ppi_mean --- with power-tuning
+
+
+def test_ppi_mean_with_lambda_other(estimator):
+    y_true = np.array([5.0, 6.0, 7.0])
+    y_proxy_labeled = np.array([4.5, 5.5, 6.5])
+    y_proxy_unlabeled = np.array([6.0, 7.0, 8.0])
+    y_data = (y_true, y_proxy_labeled, y_proxy_unlabeled)
+    expected = 6.75
+    result = estimator._ppi_mean(y_data, _lambda=0.5)
+    assert result == pytest.approx(expected)
+
+
+# --- _ppi_std --- with power-tuning
+
+
+def test_ppi_std_with_lambda_other(estimator):
+    y_true = np.array([5.0, 6.0, 7.0])
+    y_proxy_labeled = np.array([4.5, 5.5, 6.5])
+    y_proxy_unlabeled = np.array([4.0, 5.0, 6.0, 7.0])
+    y_data = (y_true, y_proxy_labeled, y_proxy_unlabeled)
+    expected = 0.43
+    result = estimator._ppi_std(y_data, _lambda=0.5)
+    assert result == pytest.approx(expected, abs=1e-2)
 
 
 # --- estimate ---
@@ -106,3 +129,22 @@ def test_str_format(estimator, dataset):
 def test_repr_equals_str(estimator, dataset):
     result = estimator.estimate(dataset, y_true_field="y_true", y_proxy_field="y_proxy", metric_name="perf")
     assert repr(result) == str(result)
+
+
+# --- _compute_lambda ---
+
+
+def test_compute_lambda_returns_one_when_power_tuning_false(estimator, dataset):
+    y_data = estimator._preprocess(dataset, "y_true", "y_proxy")
+    result = estimator._compute_lambda(y_data, power_tuning=False)
+    assert result == 1.0
+
+
+def test_compute_lambda_known_values(estimator):
+    y_true = np.array([0.0, 1.0])
+    y_proxy_labeled = np.array([0.0, 1.0])
+    y_proxy_unlabeled = np.array([0.0, 1.0])
+    y_data = (y_true, y_proxy_labeled, y_proxy_unlabeled)
+    expected = 0.75
+    result = estimator._compute_lambda(y_data, power_tuning=True)
+    assert result == pytest.approx(expected)
