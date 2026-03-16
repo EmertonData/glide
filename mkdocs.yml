@@ -2,6 +2,9 @@ site_name: Glide
 theme:
   name: material
 
+extra_css:
+  - stylesheets/extra.css
+
 plugins:
   - search
   - mkdocstrings
