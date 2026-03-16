@@ -81,7 +81,7 @@ class PPIMeanEstimator:
         N = len(y_proxy_unlabeled)
         rectifier_var = np.var(y_true - _lambda * y_proxy_labeled, ddof=1) / n
         proxy_var = _lambda**2 * np.var(y_proxy_unlabeled, ddof=1) / N
-        ppi_var = rectifier_var + proxy_var
+        ppi_var = proxy_var + rectifier_var
         ppi_std = np.sqrt(ppi_var)
         return ppi_std
 
@@ -102,8 +102,8 @@ class PPIMeanEstimator:
         a consistent estimate even when the proxy is imperfect.
 
         The weight λ interpolates between relying only on ``y_true`` (λ = 0) and the
-        full PPI estimate that also leverages ``y_proxy`` (λ = 1). When
-        ``power_tuning=True`` (default), the optimal λ is computed via the PPI++
+        standard PPI estimate that leverages both ``y_true`` ``y_proxy`` with equal weights (λ = 1).
+        When ``power_tuning=True`` (default), the optimal λ is computed via the PPI++
         closed-form formula to minimise the confidence interval width. When
         ``power_tuning=False``, λ = 1 and the estimator reduces to the classic PPI estimator.
 
