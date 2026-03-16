@@ -36,7 +36,8 @@ class ASIMeanEstimator:
     >>> unlabeled = [{"y_proxy": 5.2, "pi": pi}, {"y_proxy": 6.1, "pi": pi}] \n
     >>> dataset = Dataset(labeled + unlabeled) \n
     >>> estimator = ASIMeanEstimator() \n
-    >>> result = estimator.estimate(dataset, y_true_field="y_true", y_proxy_field="y_proxy", sampling_probability_field="pi", power_tuning=False) \n
+    >>> result = estimator.estimate(dataset, y_true_field="y_true", y_proxy_field="y_proxy", \
+    sampling_probability_field="pi", power_tuning=False) \n
     >>> print(result.n_true, result.n_proxy)
     2 4
     """
@@ -71,16 +72,17 @@ class ASIMeanEstimator:
         var = np.var(a, ddof=1)
         return float(cov / var)
 
-    def _asi_mean(
+    def compute_mean_estimate(
         self,
         y_data: Tuple[NDArray, NDArray, NDArray, NDArray],
         _lambda: float,
     ) -> float:
         y_true, y_proxy, xi, pi = y_data
         z = _lambda * y_proxy + xi * (y_true - _lambda * y_proxy) / pi
-        return float(np.mean(z))
+        mean_estimate = float(np.mean(z))
+        return mean_estimate
 
-    def _asi_std(
+    def compute_std_estimate(
         self,
         y_data: Tuple[NDArray, NDArray, NDArray, NDArray],
         _lambda: float,
@@ -88,7 +90,8 @@ class ASIMeanEstimator:
         y_true, y_proxy, xi, pi = y_data
         z = _lambda * y_proxy + xi * (y_true - _lambda * y_proxy) / pi
         n = len(z)
-        return float(np.std(z, ddof=1) / np.sqrt(n))
+        std_estimate = float(np.std(z, ddof=1) / np.sqrt(n))
+        return std_estimate
 
     def estimate(
         self,
@@ -104,7 +107,8 @@ class ASIMeanEstimator:
 
         Uses inverse-probability weighting (IPW) to correct for non-uniform sampling,
         combining labeled and unlabeled samples into a single IPW-corrected estimator.
-        An optional power-tuning step finds the λ that minimises asymptotic variance.
+        A power-tuning step (enabled by default) finds the λ that minimises asymptotic
+        variance.
 
         Parameters
         ----------
@@ -136,15 +140,15 @@ class ASIMeanEstimator:
         """
         y_data = self._preprocess(dataset, y_true_field, y_proxy_field, sampling_probability_field)
         _lambda = self._compute_lambda(y_data, power_tuning)
-        mean = self._asi_mean(y_data, _lambda)
-        std = self._asi_std(y_data, _lambda)
+        mean_estimate = self.compute_mean_estimate(y_data, _lambda)
+        std_estimate = self.compute_std_estimate(y_data, _lambda)
 
         y_true, y_proxy, xi, pi = y_data
         n_true = int(xi.sum())
         n_proxy = len(y_proxy)
 
-        ci = CLTConfidenceInterval(mean=mean, std=std, confidence_level=confidence_level)
-        effective_sample_size = compute_effective_sample_size(y_true[xi == 1], std)
+        ci = CLTConfidenceInterval(mean=mean_estimate, std=std_estimate, confidence_level=confidence_level)
+        effective_sample_size = compute_effective_sample_size(y_true[xi == 1], std_estimate)
 
         return InferenceResult(
             result=ci,
