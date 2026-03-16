@@ -1,4 +1,9 @@
 [[repos]]
+repo = "https://github.com/kynan/nbstripout"
+rev = "0.9.1"
+hooks = [{ id = "nbstripout" }]
+
+[[repos]]
 repo = "https://github.com/astral-sh/ruff-pre-commit"
 rev = "v0.15.4"
 hooks = [{ id = "ruff" }]
