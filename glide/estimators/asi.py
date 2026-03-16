@@ -31,19 +31,24 @@ class ASIMeanEstimator:
     --------
     >>> from glide.core.dataset import Dataset \n
     >>> from glide.estimators.asi import ASIMeanEstimator \n
-    >>> pi = 2 / 4  # n_labeled / n \n
-    >>> labeled = [{"y_true": 5.0, "y_proxy": 4.9, "pi": pi}, {"y_true": 6.0, "y_proxy": 6.1, "pi": pi}] \n
-    >>> unlabeled = [{"y_proxy": 5.2, "pi": pi}, {"y_proxy": 6.1, "pi": pi}] \n
+    >>> labeled = [{"y_true": 5.0, "y_proxy": 4.9, "pi": 0.5}, {"y_true": 6.0, "y_proxy": 6.1, "pi": 0.7}] \n
+    >>> unlabeled = [{"y_proxy": 5.2, "pi": 0.6}, {"y_proxy": 6.1, "pi": 0.2}] \n
     >>> dataset = Dataset(labeled + unlabeled) \n
     >>> estimator = ASIMeanEstimator() \n
     >>> result = estimator.estimate(
     ...      dataset,
     ...      y_true_field="y_true",
-    ...      y_proxy_field="y_proxy", 
+    ...      y_proxy_field="y_proxy",
     ...      sampling_probability_field="pi"
     ... ) \n
-    >>> print(result.n_true, result.n_proxy)
-    2 4
+    >>> print(result)
+    Metric: Metric
+    Point Estimate: 5.563
+    Confidence Interval (95%): [5.08, 6.04]
+    Estimator : ASIMeanEstimator
+    n_true: 2
+    n_proxy: 4
+    Effective Sample Size: 8.0
     """
 
     def _preprocess(
@@ -54,12 +59,13 @@ class ASIMeanEstimator:
         sampling_probability_field: str,
     ) -> Tuple[NDArray, NDArray, NDArray, NDArray]:
         data = dataset.to_numpy(fields=[y_true_field, y_proxy_field, sampling_probability_field])
-        y_true_all = data[:, 0]  # NaN for unlabeled
-        y_proxy = data[:, 1]  # always present
-        pi = data[:, 2]  # always present
-        xi = (~np.isnan(y_true_all)).astype(float)  # 1.0 if labeled, 0.0 otherwise
+        y_true_all = data[:, 0]
+        y_proxy = data[:, 1]
+        pi = data[:, 2]
+        assert np.min(pi) > 0, "Minimum annotation probability is <= 0 !"
+        xi = (~np.isnan(y_true_all)).astype(float)
         # replace NaN values in y_true_all by zero
-        y_true = np.where(np.isnan(y_true_all), 0.0, y_true_all)
+        y_true = np.nan_to_num(y_true_all, nan=-1.0)
         return y_true, y_proxy, xi, pi
 
     def _compute_lambda(
@@ -72,17 +78,26 @@ class ASIMeanEstimator:
         y_true, y_proxy, xi, pi = y_data
         a = y_proxy * (xi / pi - 1)
         b = y_true * xi / pi
-        cov = np.cov(b, a, ddof=1)[0, 1]
-        var = np.var(a, ddof=1)
-        return float(cov / var)
+        cov_matrix = np.cov(a, b, ddof=1)
+        var, cov = cov_matrix[0]
+        _lambda = float(cov / var)
+        return _lambda
+
+    def _compute_rectified_labels(
+        self,
+        y_data: Tuple[NDArray, NDArray, NDArray, NDArray],
+        _lambda: float,
+    ) -> NDArray:
+        y_true, y_proxy, xi, pi = y_data
+        rectified_labels = _lambda * y_proxy + xi * (y_true - _lambda * y_proxy) / pi
+        return rectified_labels
 
     def compute_mean_estimate(
         self,
         y_data: Tuple[NDArray, NDArray, NDArray, NDArray],
         _lambda: float,
     ) -> float:
-        y_true, y_proxy, xi, pi = y_data
-        z = _lambda * y_proxy + xi * (y_true - _lambda * y_proxy) / pi
+        z = self._compute_rectified_labels(y_data, _lambda)
         mean_estimate = float(np.mean(z))
         return mean_estimate
 
@@ -91,8 +106,7 @@ class ASIMeanEstimator:
         y_data: Tuple[NDArray, NDArray, NDArray, NDArray],
         _lambda: float,
     ) -> float:
-        y_true, y_proxy, xi, pi = y_data
-        z = _lambda * y_proxy + xi * (y_true - _lambda * y_proxy) / pi
+        z = self._compute_rectified_labels(y_data, _lambda)
         n = len(z)
         std_estimate = float(np.std(z, ddof=1) / np.sqrt(n))
         return std_estimate

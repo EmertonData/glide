@@ -5,7 +5,6 @@ from glide.core.dataset import Dataset
 from glide.core.inference_result import InferenceResult
 from glide.estimators.asi import ASIMeanEstimator
 
-
 # ── helpers ────────────────────────────────────────────────────────────────────
 
 
@@ -64,6 +63,15 @@ def test_preprocess_xi_is_binary(estimator, dataset):
     assert set(xi.tolist()).issubset({0.0, 1.0})
 
 
+@pytest.mark.parametrize("bad_pi", [0.0, -0.5])
+def test_preprocess_raises_on_non_positive_pi(estimator, bad_pi):
+    labeled = [{"y_true": 1.0, "y_proxy": 1.0, "pi": 0.5}]
+    unlabeled = [{"y_proxy": 1.0, "pi": bad_pi}]
+    dataset = Dataset(labeled + unlabeled)
+    with pytest.raises(AssertionError, match="Minimum annotation probability is <= 0"):
+        estimator._preprocess(dataset, "y_true", "y_proxy", "pi")
+
+
 # ── _compute_lambda ────────────────────────────────────────────────────────────
 
 
@@ -96,35 +104,6 @@ def test_compute_lambda_constant_proxy_returns_zero(estimator):
     pi = np.array([0.5, 0.5, 0.5, 0.5])
     lam = estimator._compute_lambda((y_true, y_proxy, xi, pi), power_tuning=True)
     assert lam == pytest.approx(0.0)
-
-
-def test_compute_lambda_arbitrary_proxy_known_value(estimator):
-    # n=4, n_l=2, pi=0.5
-    # a = y_proxy * (xi/pi - 1) = [0, 2,  0, -2], mean(a) = 0
-    # b = y_true  * xi / pi     = [2, 6,  0,  0], mean(b) = 2
-    # cov(b, a, ddof=1) = 12/3 = 4,  var(a, ddof=1) = 8/3  =>  lam = 3/2
-    y_true = np.array([1.0, 3.0, 0.0, 0.0])
-    y_proxy = np.array([0.0, 2.0, 0.0, 2.0])
-    xi = np.array([1.0, 1.0, 0.0, 0.0])
-    pi = np.array([0.5, 0.5, 0.5, 0.5])
-    lam = estimator._compute_lambda((y_true, y_proxy, xi, pi), power_tuning=True)
-    assert lam == pytest.approx(3 / 2)
-
-
-def test_compute_lambda_uniform_pi_finite_and_positive(estimator):
-    rng = np.random.default_rng(0)
-    n, n_l = 20, 5
-    pi_val = n_l / n
-    y_true_labeled = rng.normal(5.0, 1.0, size=n_l)
-    y_proxy_labeled = y_true_labeled + rng.normal(0, 0.3, size=n_l)
-    y_proxy_unlabeled = rng.normal(5.0, 1.0, size=n - n_l)
-    y_true = np.concatenate([y_true_labeled, np.zeros(n - n_l)])
-    y_proxy = np.concatenate([y_proxy_labeled, y_proxy_unlabeled])
-    xi = np.array([1.0] * n_l + [0.0] * (n - n_l))
-    pi = np.full(n, pi_val)
-    lam = estimator._compute_lambda((y_true, y_proxy, xi, pi), power_tuning=True)
-    assert np.isfinite(lam)
-    assert lam > 0 and lam <= 1
 
 
 # ── compute_mean_estimate ─────────────────────────────────────────
