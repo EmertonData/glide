@@ -1,3 +1,4 @@
+from glide.estimators.classical import ClassicalMeanEstimator
 from glide.estimators.ppi import PPIMeanEstimator
 
-__all__ = ["PPIMeanEstimator"]
+__all__ = ["ClassicalMeanEstimator", "PPIMeanEstimator"]
