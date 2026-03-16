@@ -36,8 +36,12 @@ class ASIMeanEstimator:
     >>> unlabeled = [{"y_proxy": 5.2, "pi": pi}, {"y_proxy": 6.1, "pi": pi}] \n
     >>> dataset = Dataset(labeled + unlabeled) \n
     >>> estimator = ASIMeanEstimator() \n
-    >>> result = estimator.estimate(dataset, y_true_field="y_true", y_proxy_field="y_proxy", \
-    sampling_probability_field="pi", power_tuning=False) \n
+    >>> result = estimator.estimate(
+    ...      dataset,
+    ...      y_true_field="y_true",
+    ...      y_proxy_field="y_proxy", 
+    ...      sampling_probability_field="pi"
+    ... ) \n
     >>> print(result.n_true, result.n_proxy)
     2 4
     """
