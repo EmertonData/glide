@@ -1,9 +1,9 @@
 import numpy as np
+from numpy.typing import NDArray
 
 from glide.core.clt_confidence_interval import CLTConfidenceInterval
 from glide.core.dataset import Dataset
-from glide.core.inference_result import InferenceResult
-from glide.core.utils import compute_effective_sample_size
+from glide.core.inference_result import ClassicalMeanInferenceResult
 
 
 class ClassicalMeanEstimator:
@@ -25,10 +25,18 @@ class ClassicalMeanEstimator:
     Point Estimate: 5.500
     Confidence Interval (95%): [4.23, 6.77]
     Estimator : ClassicalMeanEstimator
-    n_true: 4
-    n_proxy: 0
-    Effective Sample Size: 4.0
+    n: 4
     """
+
+    def _preprocess(self, dataset: Dataset, y_field: str) -> NDArray:
+        return dataset.to_numpy(fields=[y_field])[:, 0]
+
+    def _classical_mean(self, y: NDArray) -> float:
+        return float(np.nanmean(y))
+
+    def _classical_std(self, y: NDArray) -> float:
+        n_not_nan = np.sum(~np.isnan(y))
+        return float(np.nanstd(y, ddof=1) / np.sqrt(n_not_nan))
 
     def estimate(
         self,
@@ -36,7 +44,7 @@ class ClassicalMeanEstimator:
         y_field: str,
         metric_name: str = "Metric",
         confidence_level: float = 0.95,
-    ) -> InferenceResult:
+    ) -> ClassicalMeanInferenceResult:
         """Estimate the population mean using the classical sample mean.
 
         Parameters
@@ -44,7 +52,8 @@ class ClassicalMeanEstimator:
         dataset : Dataset
             Dataset containing records with a ``y_field`` column.
         y_field : str
-            Name of the column holding the observations.
+            Name of the column holding the observations. Pass ``"y_true"`` for
+            the true-labels baseline, ``"y_proxy"`` for the proxy-only baseline.
         metric_name : str, optional
             Human-readable label for the metric. Defaults to ``"Metric"``.
         confidence_level : float, optional
@@ -53,27 +62,22 @@ class ClassicalMeanEstimator:
 
         Returns
         -------
-        InferenceResult
+        ClassicalMeanInferenceResult
             Contains the CLT-based confidence interval, the metric name,
-            the estimator name (``"ClassicalMeanEstimator"``), ``n_true``
-            (number of observations), and ``n_proxy=0``.
+            the estimator name (``"ClassicalMeanEstimator"``), and ``n``
+            (number of observations).
         """
-        y = dataset.to_numpy(fields=[y_field])[:, 0]
-        n = np.sum(~np.isnan(y))
-        mean = np.nanmean(y)
-        std = np.nanstd(y, ddof=1) / np.sqrt(n)
-        effective_sample_size = compute_effective_sample_size(y, std)
+        y = self._preprocess(dataset, y_field)
+        mean = self._classical_mean(y)
+        std = self._classical_std(y)
         ci = CLTConfidenceInterval(
-            mean=float(mean),
-            std=float(std),
+            mean=mean,
+            std=std,
             confidence_level=confidence_level,
         )
-        result = InferenceResult(
-            result=ci,
+        return ClassicalMeanInferenceResult(
+            confidence_interval=ci,
             metric_name=metric_name,
             estimator_name=self.__class__.__name__,
-            n_true=len(y),
-            n_proxy=0,
-            effective_sample_size=effective_sample_size,
+            n=len(y),
         )
-        return result

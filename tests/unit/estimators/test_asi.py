@@ -181,9 +181,9 @@ def test_power_tuning_false_is_valid_inference_result(estimator, dataset):
         power_tuning=False,
     )
     assert isinstance(result, InferenceResult)
-    assert np.isfinite(result.result.lower_bound)
-    assert np.isfinite(result.result.upper_bound)
-    assert result.result.lower_bound < result.result.upper_bound
+    assert np.isfinite(result.confidence_interval.lower_bound)
+    assert np.isfinite(result.confidence_interval.upper_bound)
+    assert result.confidence_interval.lower_bound < result.confidence_interval.upper_bound
     assert result.estimator_name == "ASIMeanEstimator"
 
 
@@ -231,8 +231,8 @@ def test_estimate_full_output(estimator):
     assert result.n_true == 2
     assert result.n_proxy == 4
     assert result.effective_sample_size == expected_ess
-    assert result.result.confidence_level == 0.95
-    assert result.result.mean == pytest.approx(expected_mean)
-    assert result.result.std == pytest.approx(expected_std)
-    assert result.result.lower_bound == pytest.approx(expected_lower)
-    assert result.result.upper_bound == pytest.approx(expected_upper)
+    assert result.confidence_interval.confidence_level == 0.95
+    assert result.confidence_interval.mean == pytest.approx(expected_mean)
+    assert result.std == pytest.approx(expected_std)
+    assert result.confidence_interval.lower_bound == pytest.approx(expected_lower)
+    assert result.confidence_interval.upper_bound == pytest.approx(expected_upper)

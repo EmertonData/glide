@@ -5,7 +5,7 @@ from numpy.typing import NDArray
 
 from glide.core.clt_confidence_interval import CLTConfidenceInterval
 from glide.core.dataset import Dataset
-from glide.core.inference_result import InferenceResult
+from glide.core.inference_result import SemiSupervisedMeanInferenceResult
 from glide.core.utils import compute_effective_sample_size
 
 
@@ -93,7 +93,7 @@ class PPIMeanEstimator:
         metric_name: str = "Metric",
         confidence_level: float = 0.95,
         power_tuning: bool = True,
-    ) -> InferenceResult:
+    ) -> SemiSupervisedMeanInferenceResult:
         """Estimate the population mean using Prediction-Powered Inference (PPI).
 
         Combines a small set of labeled samples with a large set of unlabeled samples whose
@@ -145,8 +145,8 @@ class PPIMeanEstimator:
             std=float(std),
             confidence_level=confidence_level,
         )
-        result = InferenceResult(
-            result=ci,
+        result = SemiSupervisedMeanInferenceResult(
+            confidence_interval=ci,
             metric_name=metric_name,
             estimator_name=self.__class__.__name__,
             n_true=len(y_true),

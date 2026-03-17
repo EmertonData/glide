@@ -108,7 +108,7 @@ def test_estimate_custom_confidence_level(estimator, dataset):
     result = estimator.estimate(
         dataset, y_true_field="y_true", y_proxy_field="y_proxy", metric_name="perf", confidence_level=0.90
     )
-    assert result.result.confidence_level == 0.90
+    assert result.confidence_interval.confidence_level == 0.90
 
 
 # --- __str__ / __repr__ ---
