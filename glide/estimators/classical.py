@@ -29,14 +29,17 @@ class ClassicalMeanEstimator:
     """
 
     def _preprocess(self, dataset: Dataset, y_field: str) -> NDArray:
-        return dataset.to_numpy(fields=[y_field])[:, 0]
+        y = dataset.to_numpy(fields=[y_field])[:, 0]
+        return y
 
     def _classical_mean(self, y: NDArray) -> float:
-        return float(np.nanmean(y))
+        mean = float(np.nanmean(y))
+        return mean
 
     def _classical_std(self, y: NDArray) -> float:
         n_not_nan = np.sum(~np.isnan(y))
-        return float(np.nanstd(y, ddof=1) / np.sqrt(n_not_nan))
+        std = float(np.nanstd(y, ddof=1) / np.sqrt(n_not_nan))
+        return std
 
     def estimate(
         self,
@@ -75,9 +78,10 @@ class ClassicalMeanEstimator:
             std=std,
             confidence_level=confidence_level,
         )
-        return ClassicalMeanInferenceResult(
+        result = ClassicalMeanInferenceResult(
             confidence_interval=ci,
             metric_name=metric_name,
             estimator_name=self.__class__.__name__,
             n=len(y),
         )
+        return result
