@@ -37,7 +37,8 @@ def test_preprocess_returns_all_records(estimator, dataset):
 
 def test_classical_mean_known_values(estimator):
     y = np.array([2.0, 4.0, 6.0, 8.0])
-    assert estimator._classical_mean(y) == pytest.approx(np.mean(y))
+    expected = 5.0
+    assert estimator._classical_mean(y) == pytest.approx(expected)
 
 
 # --- _classical_std ---
@@ -45,7 +46,7 @@ def test_classical_mean_known_values(estimator):
 
 def test_classical_std_known_values(estimator):
     y = np.array([2.0, 4.0, 6.0, 8.0])
-    expected = np.std(y, ddof=1) / np.sqrt(len(y))
+    expected = 1.2909944487358056
     assert estimator._classical_std(y) == pytest.approx(expected)
 
 
@@ -68,6 +69,7 @@ def test_estimate_metadata(estimator, dataset):
     result = estimator.estimate(dataset, y_field="y", metric_name="performance")
     assert result.metric_name == "performance"
     assert result.estimator_name == "ClassicalMeanEstimator"
+    assert result.n == 50
 
 
 def test_estimate_custom_confidence_level(estimator, dataset):
