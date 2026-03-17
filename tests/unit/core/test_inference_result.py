@@ -16,3 +16,4 @@ def test_inference_result():
     assert RESULT.result.std == 0.05
     assert RESULT.effective_sample_size == 200
     assert repr(RESULT) == str(RESULT)
+    assert repr(RESULT) == RESULT.summary()

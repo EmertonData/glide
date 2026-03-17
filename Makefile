@@ -34,7 +34,6 @@ doc: _sync-doc
 	if [ -n "$$READTHEDOCS_OUTPUT" ]; then \
 		uv run mkdocs build --site-dir "$$READTHEDOCS_OUTPUT/html"; \
 	else \
-		uv run mkdocs build; \
 		uv run mkdocs serve; \
 	fi
 
@@ -43,6 +42,7 @@ clean:
 	rm -rf .pytest_cache
 	rm -f .coverage
 	rm -rf htmlcov
+	rm -rf site
 	find . -type d -name "__pycache__" -exec rm -rf {} +
 
 build:

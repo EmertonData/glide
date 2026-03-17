@@ -3,7 +3,7 @@
 ## Installation
 
 ```bash
-pip install glide
+pip install glide-py
 ```
 
 ## Requirements
@@ -13,4 +13,4 @@ pip install glide
 
 ## Quickstart
 
-See the [Quickstart example](performance-estimation/examples/quickstart.md) for a full walkthrough.
+See the [Quickstart example](examples/quickstart.ipynb) for a full walkthrough.
