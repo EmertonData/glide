@@ -58,10 +58,10 @@ class ClassicalMeanEstimator:
             the estimator name (``"ClassicalMeanEstimator"``), ``n_true``
             (number of observations), and ``n_proxy=0``.
         """
-        data = dataset.to_numpy(fields=[y_field])[:, 0]
-        y = data[~np.isnan(data)]
-        mean = np.mean(y)
-        std = np.std(y, ddof=1) / np.sqrt(len(y))
+        y = dataset.to_numpy(fields=[y_field])[:, 0]
+        n = np.sum(~np.isnan(y))
+        mean = np.nanmean(y)
+        std = np.nanstd(y, ddof=1) / np.sqrt(n)
         effective_sample_size = compute_effective_sample_size(y, std)
         ci = CLTConfidenceInterval(
             mean=float(mean),
