@@ -14,13 +14,18 @@ RESULT = InferenceResult(
 
 def test_to_json():
     parsed = json.loads(to_json(RESULT))
-    assert parsed["metric_name"] == "accuracy"
-    assert parsed["estimator_name"] == "Test"
-    assert parsed["n_true"] == 10
-    assert parsed["n_proxy"] == 90
-    assert parsed["effective_sample_size"] == 200
-    assert parsed["result"]["mean"] == pytest.approx(0.70, abs=1e-2)
-    assert parsed["result"]["std"] == pytest.approx(0.05, abs=1e-2)
-    assert parsed["result"]["confidence_level"] == pytest.approx(0.95, abs=1e-2)
-    assert parsed["result"]["lower_bound"] == pytest.approx(0.60, abs=1e-2)
-    assert parsed["result"]["upper_bound"] == pytest.approx(0.80, abs=1e-2)
+    expected = {
+        "metric_name": "accuracy",
+        "estimator_name": "Test",
+        "n_true": 10,
+        "n_proxy": 90,
+        "effective_sample_size": 200,
+        "result": {
+            "mean": pytest.approx(0.70, abs=1e-2),
+            "std": pytest.approx(0.05, abs=1e-2),
+            "confidence_level": pytest.approx(0.95, abs=1e-2),
+            "lower_bound": pytest.approx(0.60, abs=1e-2),
+            "upper_bound": pytest.approx(0.80, abs=1e-2),
+        },
+    }
+    assert parsed == expected
