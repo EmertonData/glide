@@ -1,11 +1,17 @@
 site_name: Glide
 theme:
   name: material
+  custom_dir: docs/overrides
+
+extra_css:
+  - stylesheets/extra.css
 
 plugins:
   - search
   - mkdocstrings
-  - mkdocs-jupyter
+  - mkdocs-jupyter:
+      include_source: true
+      execute: true
 
 markdown_extensions:
   - pymdownx.snippets
@@ -13,15 +19,15 @@ markdown_extensions:
       generic: true
 
 extra_javascript:
+  - javascripts/mathjax.js
   - https://unpkg.com/mathjax@3/es5/tex-mml-chtml.js
 
 nav:
   - Home: index.md
   - Getting Started: getting-started.md
-  - Performance Estimation:
-    - Guide: performance-estimation/guide.md
-    - Examples:
-      - Quickstart: performance-estimation/examples/quickstart.md
-      - Example 2: performance-estimation/examples/example2.md
-      - Scientific validation: examples/PPI_demo_synthdata_binary.ipynb
+  - Quickstart: examples/quickstart.ipynb
+  - Why use Glide ?: examples/why_use_glide.ipynb
+  - User guide: user_guide/guide.md
+  - Examples: 
+    - examples/scientific_validation_PPI.ipynb
   - API Reference: api/index.md
