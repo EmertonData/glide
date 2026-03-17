@@ -1,5 +1,3 @@
-import math
-
 import numpy as np
 import pytest
 
@@ -24,7 +22,7 @@ def estimator() -> ClassicalMeanEstimator:
     return ClassicalMeanEstimator()
 
 
-# --- _preprocess ---
+# --- preprocessing ---
 
 
 def test_preprocess_returns_all_records(estimator, dataset):
@@ -32,22 +30,22 @@ def test_preprocess_returns_all_records(estimator, dataset):
     assert len(y) == 50
 
 
-# --- _classical_mean ---
+# --- _compute_mean_estimate ---
 
 
 def test_classical_mean_known_values(estimator):
     y = np.array([2.0, 4.0, 6.0, 8.0])
     expected = 5.0
-    assert estimator._classical_mean(y) == pytest.approx(expected)
+    assert estimator._compute_mean_estimate(y) == pytest.approx(expected)
 
 
-# --- _classical_std ---
+# --- _compute_std_estimate ---
 
 
 def test_classical_std_known_values(estimator):
     y = np.array([2.0, 4.0, 6.0, 8.0])
     expected = 1.2909944487358056
-    assert estimator._classical_std(y) == pytest.approx(expected)
+    assert estimator._compute_std_estimate(y) == pytest.approx(expected)
 
 
 # --- estimate ---
@@ -56,19 +54,12 @@ def test_classical_std_known_values(estimator):
 def test_estimate_returns_classical_inference_result(estimator, dataset):
     result = estimator.estimate(dataset, y_field="y")
     assert isinstance(result, ClassicalMeanInferenceResult)
-    assert math.isfinite(result.confidence_interval.lower_bound)
-    assert math.isfinite(result.confidence_interval.upper_bound)
-
-
-def test_estimate_n_equals_record_count(estimator, dataset):
-    result = estimator.estimate(dataset, y_field="y")
-    assert result.n == len(dataset)
 
 
 def test_estimate_metadata(estimator, dataset):
     result = estimator.estimate(dataset, y_field="y", metric_name="performance")
     assert result.metric_name == "performance"
-    assert result.estimator_name == "ClassicalMeanEstimator"
+    assert result.estimator_name == estimator.__class__.__name__
     assert result.n == 50
 
 
@@ -77,11 +68,22 @@ def test_estimate_custom_confidence_level(estimator, dataset):
     assert result.confidence_interval.confidence_level == 0.90
 
 
+# --- __str__ / __repr__ ---
+
+
 def test_str_format(estimator, dataset):
     result = estimator.estimate(dataset, y_field="y", metric_name="performance")
     output = str(result)
-    assert "Metric: performance" in output
-    assert "Point Estimate:" in output
-    assert "Confidence Interval (95%):" in output
-    assert "Estimator : ClassicalMeanEstimator" in output
-    assert "n: 50" in output
+    expected = (
+        "Metric: performance\n"
+        "Point Estimate: 5.091\n"
+        "Confidence Interval (95%): [4.88, 5.30]\n"
+        "Estimator : ClassicalMeanEstimator\n"
+        "n: 50"
+    )
+    assert output == expected
+
+
+def test_repr_equals_str(estimator, dataset):
+    result = estimator.estimate(dataset, y_field="y", metric_name="perf")
+    assert repr(result) == str(result)

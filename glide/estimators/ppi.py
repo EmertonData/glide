@@ -68,14 +68,14 @@ class PPIMeanEstimator:
         _lambda = cov / ((1 + n / N) * var)
         return _lambda
 
-    def _ppi_mean(self, y_data: Tuple[NDArray, NDArray, NDArray], _lambda: float) -> float:
+    def _compute_mean_estimate(self, y_data: Tuple[NDArray, NDArray, NDArray], _lambda: float) -> float:
         y_true, y_proxy_labeled, y_proxy_unlabeled = y_data
         rectifier = np.mean(y_true) - _lambda * np.mean(y_proxy_labeled)
         proxy_mean = _lambda * np.mean(y_proxy_unlabeled)
         ppi_mean = proxy_mean + rectifier
         return ppi_mean
 
-    def _ppi_std(self, y_data: Tuple[NDArray, NDArray, NDArray], _lambda: float) -> float:
+    def _compute_std_estimate(self, y_data: Tuple[NDArray, NDArray, NDArray], _lambda: float) -> float:
         y_true, y_proxy_labeled, y_proxy_unlabeled = y_data
         n = len(y_true)
         N = len(y_proxy_unlabeled)
@@ -137,8 +137,8 @@ class PPIMeanEstimator:
         y_data = self._preprocess(dataset, y_true_field, y_proxy_field)
         y_true, y_proxy_labeled, y_proxy_unlabeled = y_data
         _lambda = self._compute_lambda(y_data, power_tuning)
-        mean = self._ppi_mean(y_data, _lambda)
-        std = self._ppi_std(y_data, _lambda)
+        mean = self._compute_mean_estimate(y_data, _lambda)
+        std = self._compute_std_estimate(y_data, _lambda)
         effective_sample_size = compute_effective_sample_size(y_true, std)
         ci = CLTConfidenceInterval(
             mean=float(mean),

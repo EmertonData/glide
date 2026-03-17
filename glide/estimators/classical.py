@@ -32,11 +32,11 @@ class ClassicalMeanEstimator:
         y = dataset.to_numpy(fields=[y_field])[:, 0]
         return y
 
-    def _classical_mean(self, y: NDArray) -> float:
+    def _compute_mean_estimate(self, y: NDArray) -> float:
         mean = float(np.nanmean(y))
         return mean
 
-    def _classical_std(self, y: NDArray) -> float:
+    def _compute_std_estimate(self, y: NDArray) -> float:
         n_not_nan = np.sum(~np.isnan(y))
         std = float(np.nanstd(y, ddof=1) / np.sqrt(n_not_nan))
         return std
@@ -71,8 +71,8 @@ class ClassicalMeanEstimator:
             (number of observations).
         """
         y = self._preprocess(dataset, y_field)
-        mean = self._classical_mean(y)
-        std = self._classical_std(y)
+        mean = self._compute_mean_estimate(y)
+        std = self._compute_std_estimate(y)
         ci = CLTConfidenceInterval(
             mean=mean,
             std=std,

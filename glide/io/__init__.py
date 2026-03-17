@@ -1,10 +1,10 @@
 import json
 from dataclasses import asdict
 
-from glide.core.inference_result import SemiSupervisedMeanInferenceResult
+from glide.core.inference_result import MeanInferenceResultBase
 
 
-def to_json(result: SemiSupervisedMeanInferenceResult) -> str:
+def to_json(result: MeanInferenceResultBase) -> str:
     data = asdict(result)
     data["mean"] = result.mean
     data["std"] = result.std

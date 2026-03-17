@@ -2,7 +2,7 @@ import numpy as np
 import pytest
 
 from glide.core.dataset import Dataset
-from glide.core.inference_result import InferenceResult
+from glide.core.inference_result import SemiSupervisedMeanInferenceResult
 from glide.estimators.asi import ASIMeanEstimator
 
 # ── helpers ────────────────────────────────────────────────────────────────────
@@ -180,7 +180,7 @@ def test_power_tuning_false_is_valid_inference_result(estimator, dataset):
         sampling_probability_field="pi",
         power_tuning=False,
     )
-    assert isinstance(result, InferenceResult)
+    assert isinstance(result, SemiSupervisedMeanInferenceResult)
     assert np.isfinite(result.confidence_interval.lower_bound)
     assert np.isfinite(result.confidence_interval.upper_bound)
     assert result.confidence_interval.lower_bound < result.confidence_interval.upper_bound
