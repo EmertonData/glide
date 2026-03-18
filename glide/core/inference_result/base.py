@@ -4,7 +4,7 @@ from glide.core.clt_confidence_interval import CLTConfidenceInterval
 
 
 @dataclass(repr=False)
-class MeanInferenceResultBase:
+class MeanInferenceResult:
     confidence_interval: CLTConfidenceInterval
     metric_name: str
     estimator_name: str
