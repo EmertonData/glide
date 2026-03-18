@@ -70,9 +70,13 @@ If you use Glide in your research, please cite:
 
 ## 📰 Implemented Papers <a name="implemented-papers"></a>
 
-| Year | Title | Venue | Code | Implementation |
+| Year | Title | Venue | Code Link | Implementation |
 |------|-------|-------|------|----------------|
-|      |       |       |      |                |
+| 2023 | Prediction-powered inference |Science|[Link](https://github.com/aangelopoulos/ppi_py/)| estimators.PPIMeanEstimator.estimate(power_tuning=False) |
+| 2023 | PPI++: Efficient Prediction-Powered Inference |Preprint|[Link](https://github.com/aangelopoulos/ppi_py/tree/ppi++)| estimators.PPIMeanEstimator |
+| 2024 | Active Statistical Inference |ICML'24|[Link](https://github.com/tijana-zrnic/active-inference)| estimators.ASIMeanEstimator |
+
+
 
 ## 🏛️ Affiliation
 
