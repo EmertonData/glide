@@ -1,7 +1,10 @@
 import pytest
 
 from glide.core.clt_confidence_interval import CLTConfidenceInterval
-from glide.core.inference_result import ClassicalMeanInferenceResult
+from glide.core.inference_result import (
+    ClassicalMeanInferenceResult,
+    MeanInferenceResult,
+)
 
 # --- MeanInferenceResult (common attributes and properties) ---
 
@@ -29,3 +32,18 @@ def test_base_width():
 def test_base_repr_equals_str_equals_summary():
     assert repr(_CLASSICAL) == str(_CLASSICAL)
     assert str(_CLASSICAL) == _CLASSICAL.summary()
+
+
+# --- MeanInferenceResult.__str__ ---
+
+_CLASSICAL_1 = ClassicalMeanInferenceResult(
+    confidence_interval=CLTConfidenceInterval(mean=0.6, std=0.1, confidence_level=0.9),
+    metric_name="metric1",
+    estimator_name="Classical",
+    n=500,
+)
+
+
+def test_base_classical_1():
+    expected = "Metric: metric1\nPoint Estimate: 0.600\nConfidence Interval (90%): [0.44, 0.76]\nEstimator : Classical"
+    assert MeanInferenceResult.__str__(_CLASSICAL_1) == expected
