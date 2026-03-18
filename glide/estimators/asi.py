@@ -5,7 +5,7 @@ from numpy.typing import NDArray
 
 from glide.core.clt_confidence_interval import CLTConfidenceInterval
 from glide.core.dataset import Dataset
-from glide.core.inference_result import InferenceResult
+from glide.core.mean_inference_result import SemiSupervisedMeanInferenceResult
 from glide.core.utils import compute_effective_sample_size
 
 
@@ -116,7 +116,7 @@ class ASIMeanEstimator:
         metric_name: str = "Metric",
         confidence_level: float = 0.95,
         power_tuning: bool = True,
-    ) -> InferenceResult:
+    ) -> SemiSupervisedMeanInferenceResult:
         """Estimate the population mean using Active Statistical Inference (ASI).
 
         Uses inverse-probability weighting (IPW) to correct for non-uniform sampling,
@@ -165,8 +165,8 @@ class ASIMeanEstimator:
         ci = CLTConfidenceInterval(mean=mean_estimate, std=std_estimate, confidence_level=confidence_level)
         effective_sample_size = compute_effective_sample_size(y_true[xi == 1], std_estimate)
 
-        return InferenceResult(
-            result=ci,
+        return SemiSupervisedMeanInferenceResult(
+            confidence_interval=ci,
             metric_name=metric_name,
             estimator_name=self.__class__.__name__,
             n_true=n_true,
