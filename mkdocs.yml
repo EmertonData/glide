@@ -11,7 +11,7 @@ plugins:
   - mkdocstrings
   - mkdocs-jupyter:
       include_source: true
-      execute: true
+      execute: false
 
 markdown_extensions:
   - pymdownx.snippets

@@ -23,6 +23,8 @@
 
 GLIDE is a Python library for **rigorous evaluation of GenAI systems** using hybrid human/proxy annotations.
 
+GLIDE implements methods from the field of **Semi-supervised Inference** — a family of statistical techniques that combine a small labeled dataset with a large unlabeled (or proxy-labeled) dataset to produce valid, debiased estimates. See the [implemented papers](#-implemented-papers) below.
+
 ## 🤔 Why GLIDE?
 
 - 🤖 **GenAI applications are everywhere — and imperfect.** Deployed systems make mistakes, and measuring how often matters.
@@ -65,6 +67,12 @@ If you use Glide in your research, please cite:
   url    = {https://github.com/EmertonData/glide},
 }
 ```
+
+## 📰 Implemented Papers
+
+| Year | Title | Venue | Code | Implementation |
+|------|-------|-------|------|----------------|
+|      |       |       |      |                |
 
 ## 🏛️ Affiliation
 
