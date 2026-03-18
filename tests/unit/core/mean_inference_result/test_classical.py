@@ -1,5 +1,5 @@
 from glide.core.clt_confidence_interval import CLTConfidenceInterval
-from glide.core.inference_result import ClassicalMeanInferenceResult
+from glide.core.mean_inference_result import ClassicalMeanInferenceResult
 
 # --- ClassicalMeanInferenceResult ---
 

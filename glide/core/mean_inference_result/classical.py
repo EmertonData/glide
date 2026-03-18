@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 
 from glide.core.clt_confidence_interval import CLTConfidenceInterval
-from glide.core.inference_result.base import MeanInferenceResult
+from glide.core.mean_inference_result.base import MeanInferenceResult
 
 
 @dataclass(repr=False)

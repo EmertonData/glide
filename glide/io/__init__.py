@@ -1,7 +1,7 @@
 import json
 from dataclasses import asdict
 
-from glide.core.inference_result import MeanInferenceResult
+from glide.core.mean_inference_result import MeanInferenceResult
 
 
 def to_json(result: MeanInferenceResult) -> str:

@@ -2,7 +2,7 @@ import numpy as np
 import pytest
 
 from glide.core.dataset import Dataset
-from glide.core.inference_result import SemiSupervisedMeanInferenceResult
+from glide.core.mean_inference_result import SemiSupervisedMeanInferenceResult
 from glide.estimators.asi import ASIMeanEstimator
 
 # ── helpers ────────────────────────────────────────────────────────────────────

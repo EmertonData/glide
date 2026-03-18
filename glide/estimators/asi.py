@@ -5,7 +5,7 @@ from numpy.typing import NDArray
 
 from glide.core.clt_confidence_interval import CLTConfidenceInterval
 from glide.core.dataset import Dataset
-from glide.core.inference_result import SemiSupervisedMeanInferenceResult
+from glide.core.mean_inference_result import SemiSupervisedMeanInferenceResult
 from glide.core.utils import compute_effective_sample_size
 
 

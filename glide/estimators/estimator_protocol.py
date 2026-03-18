@@ -1,7 +1,7 @@
 from typing import Protocol
 
 from glide.core.dataset import Dataset
-from glide.core.inference_result import MeanInferenceResult
+from glide.core.mean_inference_result import MeanInferenceResult
 
 
 class MeanEstimator(Protocol):
