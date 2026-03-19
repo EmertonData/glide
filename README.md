@@ -17,7 +17,7 @@
 </p>
 
 # GLIDE 
-### generated Label Inference & Debiasing Engine
+### Generated Label Inference & Debiasing Engine
 
 ## 🧭 What is GLIDE?
 
@@ -60,7 +60,7 @@ If you use Glide in your research, please cite:
 
 ```bibtex
 @software{glide,
-  title  = {GLIDE: generated Label Inference \& Debiasing Engine},
+  title  = {GLIDE: Generated Label Inference \& Debiasing Engine},
   year   = {2026},
   url    = {https://github.com/EmertonData/glide},
 }
