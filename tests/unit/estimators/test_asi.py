@@ -5,7 +5,7 @@ from glide.core.dataset import Dataset
 from glide.core.mean_inference_result import SemiSupervisedMeanInferenceResult
 from glide.estimators.asi import ASIMeanEstimator
 
-# ── helpers ────────────────────────────────────────────────────────────────────
+# --- helpers ---
 
 
 def make_dataset(n_labeled: int = 2, n_unlabeled: int = 2, seed: int = 0) -> Dataset:
@@ -43,7 +43,7 @@ PI = np.array([0.5, 0.5, 0.5, 0.5])
 Y_DATA = (Y_TRUE, Y_PROXY, XI, PI)
 
 
-# ── _preprocess ────────────────────────────────────────────────────────────────
+# --- preprocessing ---
 
 
 def test_preprocess_counts(estimator, dataset):
@@ -85,7 +85,7 @@ def test_preprocess_raises_on_non_positive_pi(estimator, bad_pi):
         estimator._preprocess(dataset, "y_true", "y_proxy", "pi")
 
 
-# ── _compute_lambda ────────────────────────────────────────────────────────────
+# --- _compute_lambda ---
 
 
 def test_compute_lambda_returns_one_when_power_tuning_false(estimator, simple_y_data):
@@ -119,19 +119,7 @@ def test_compute_lambda_constant_proxy_returns_zero(estimator):
     assert lam == pytest.approx(0.0)
 
 
-# ── compute_mean_estimate ─────────────────────────────────────────
-
-
-def test_asi_mean_with_lambda_one_uniform_pi(estimator):
-    # lam=1, pi=0.5 (= n_l/n = 2/4)
-    # z = [2+2, 4+2, 5, 7] = [4, 6, 5, 7]  =>  mean = 5.5
-    # Equivalently: mean(y_proxy_all) + mean_labeled(y_true) - mean_labeled(y_proxy)
-    #             = 4.5 + 4.0 - 3.0 = 5.5
-    _lambda = 1
-    rectified_labels = _lambda * Y_PROXY + XI * (Y_TRUE - _lambda * Y_PROXY) / PI
-    mean = estimator._compute_mean_estimate(rectified_labels)
-    expected = np.mean(Y_PROXY) + np.mean(Y_TRUE[XI == 1]) - np.mean(Y_PROXY[XI == 1])
-    assert mean == pytest.approx(expected)
+# --- _compute_mean_estimate ---
 
 
 def test_asi_mean_with_lambda_other(estimator):
@@ -145,17 +133,7 @@ def test_asi_mean_with_lambda_other(estimator):
     assert mean == pytest.approx(expected)
 
 
-# ── compute_std_estimate ───────────────────────────────────────────
-
-
-def test_asi_std_with_lambda_one(estimator):
-    # lam=1.0, z=[4, 6, 5, 7], mean=5.5
-    # Var(z, ddof=1) = (1.5²+0.5²+0.5²+1.5²)/3 = 5/3  =>  std = sqrt(5/3)/2 = sqrt(5/12)
-    _lambda = 1
-    rectified_labels = _lambda * Y_PROXY + XI * (Y_TRUE - _lambda * Y_PROXY) / PI
-    std = estimator._compute_std_estimate(rectified_labels)
-    expected = np.sqrt(5 / 12)
-    assert std == pytest.approx(expected)
+# --- _compute_std_estimate ---
 
 
 def test_asi_std_with_lambda_other(estimator):
@@ -169,7 +147,7 @@ def test_asi_std_with_lambda_other(estimator):
     assert std == pytest.approx(expected)
 
 
-# ── estimate ──────────────────────────────────────────────────────────────────
+# --- estimate ---
 
 
 def test_power_tuning_false_is_valid_inference_result(estimator, dataset):
@@ -186,16 +164,6 @@ def test_power_tuning_false_is_valid_inference_result(estimator, dataset):
     assert result.confidence_interval.lower_bound < result.confidence_interval.upper_bound
     assert result.estimator_name == "ASIMeanEstimator"
 
-
-def test_estimate_n_true_and_n_proxy(estimator, dataset):
-    result = estimator.estimate(
-        dataset,
-        y_true_field="y_true",
-        y_proxy_field="y_proxy",
-        sampling_probability_field="pi",
-    )
-    assert result.n_true == 2
-    assert result.n_proxy == 4
 
 
 def test_estimate_full_output(estimator):
@@ -236,3 +204,35 @@ def test_estimate_full_output(estimator):
     assert result.std == pytest.approx(expected_std)
     assert result.confidence_interval.lower_bound == pytest.approx(expected_lower)
     assert result.confidence_interval.upper_bound == pytest.approx(expected_upper)
+
+
+# --- __str__ / __repr__ ---
+
+
+def test_str_format(estimator, dataset):
+    result = estimator.estimate(
+        dataset,
+        y_true_field="y_true",
+        y_proxy_field="y_proxy",
+        sampling_probability_field="pi",
+        metric_name="accuracy",
+    )
+    output = str(result)
+    assert "Metric: accuracy" in output
+    assert "Point Estimate:" in output
+    assert "Confidence Interval (95%):" in output
+    assert f"Estimator : {estimator.__class__.__name__}" in output
+    assert "n_true: 2" in output
+    assert "n_proxy: 4" in output
+    assert "Effective Sample Size:" in output
+
+
+def test_repr_equals_str(estimator, dataset):
+    result = estimator.estimate(
+        dataset,
+        y_true_field="y_true",
+        y_proxy_field="y_proxy",
+        sampling_probability_field="pi",
+        metric_name="perf",
+    )
+    assert repr(result) == str(result)

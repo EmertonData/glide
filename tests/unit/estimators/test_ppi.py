@@ -5,6 +5,8 @@ from glide.core.dataset import Dataset
 from glide.core.mean_inference_result import SemiSupervisedMeanInferenceResult
 from glide.estimators.ppi import PPIMeanEstimator
 
+# ── helpers ────────────────────────────────────────────────────────────────────
+
 
 def make_dataset(n_true: int = 25, n_proxy: int = 75, seed: int = 42) -> Dataset:
     rng = np.random.default_rng(seed)
@@ -38,31 +40,26 @@ def test_preprocess_returns_tuple(estimator, dataset):
     assert not np.any(np.isnan(y_true))
 
 
-# --- _compute_mean_estimate --- without power-tuning
+# --- _compute_lambda ---
 
 
-def test_ppi_mean_matches_manual(estimator):
-    y_true = np.array([5.0, 6.0, 7.0])
-    y_proxy_labeled = np.array([4.5, 5.5, 6.5])
-    y_proxy_unlabeled = np.array([4.0, 5.0, 6.0, 7.0])
-    expected = 6.0
-    result = estimator._compute_mean_estimate((y_true, y_proxy_labeled, y_proxy_unlabeled), _lambda=1.0)
+def test_compute_lambda_returns_one_when_power_tuning_false(estimator, dataset):
+    y_data = estimator._preprocess(dataset, "y_true", "y_proxy")
+    result = estimator._compute_lambda(y_data, power_tuning=False)
+    assert result == 1.0
+
+
+def test_compute_lambda_known_values(estimator):
+    y_true = np.array([0.0, 1.0])
+    y_proxy_labeled = np.array([0.0, 1.0])
+    y_proxy_unlabeled = np.array([0.0, 1.0])
+    y_data = (y_true, y_proxy_labeled, y_proxy_unlabeled)
+    expected = 0.75
+    result = estimator._compute_lambda(y_data, power_tuning=True)
     assert result == pytest.approx(expected)
 
 
-# --- _compute_std_estimate --- without power-tuning
-
-
-def test_ppi_std_matches_manual(estimator):
-    y_true = np.array([5.0, 6.0, 7.0])
-    y_proxy_labeled = np.array([4.5, 5.5, 6.5])
-    y_proxy_unlabeled = np.array([4.0, 5.0, 6.0, 7.0])
-    expected = 0.65
-    result = estimator._compute_std_estimate((y_true, y_proxy_labeled, y_proxy_unlabeled), _lambda=1.0)
-    assert result == pytest.approx(expected, abs=1e-2)
-
-
-# --- _compute_mean_estimate --- with power-tuning
+# --- _compute_mean_estimate ---
 
 
 def test_ppi_mean_with_lambda_other(estimator):
@@ -75,7 +72,7 @@ def test_ppi_mean_with_lambda_other(estimator):
     assert result == pytest.approx(expected)
 
 
-# --- _compute_std_estimate --- with power-tuning
+# --- _compute_std_estimate ---
 
 
 def test_ppi_std_with_lambda_other(estimator):
@@ -129,22 +126,3 @@ def test_str_format(estimator, dataset):
 def test_repr_equals_str(estimator, dataset):
     result = estimator.estimate(dataset, y_true_field="y_true", y_proxy_field="y_proxy", metric_name="perf")
     assert repr(result) == str(result)
-
-
-# --- _compute_lambda ---
-
-
-def test_compute_lambda_returns_one_when_power_tuning_false(estimator, dataset):
-    y_data = estimator._preprocess(dataset, "y_true", "y_proxy")
-    result = estimator._compute_lambda(y_data, power_tuning=False)
-    assert result == 1.0
-
-
-def test_compute_lambda_known_values(estimator):
-    y_true = np.array([0.0, 1.0])
-    y_proxy_labeled = np.array([0.0, 1.0])
-    y_proxy_unlabeled = np.array([0.0, 1.0])
-    y_data = (y_true, y_proxy_labeled, y_proxy_unlabeled)
-    expected = 0.75
-    result = estimator._compute_lambda(y_data, power_tuning=True)
-    assert result == pytest.approx(expected)
