@@ -17,7 +17,7 @@ plugins:
             docstring_style: numpy
   - mkdocs-jupyter:
       include_source: true
-      execute: false
+      execute: true
 
 markdown_extensions:
   - pymdownx.snippets
