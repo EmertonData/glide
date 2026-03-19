@@ -19,7 +19,7 @@ Depending on what you want to do, jump to the relevant section:
 - **Improving CI, tooling, or the Makefile?** → [Repository hygiene](#4-repository-hygiene)
 - **Restructuring code without changing behaviour?** → [Refactoring](#5-refactoring)
 
-Before writing any code, please [open an issue](https://github.com/EmertonData/glide/issues) to discuss the scope of your change. When you are ready to submit, fork the repository, create a branch off `main`, and open a pull request against `main`. Make sure you follow the PR template available [here](https://github.com/EmertonData/glide/blob/main/.github/PULL_REQUEST_TEMPLATE.md)
+Before writing any code, please [open an issue](https://github.com/EmertonData/glide/issues) to discuss the scope of your change. When you are ready to submit, fork the repository, create a branch off `main`, and open a pull request against `main`.
 
 ---
 
@@ -37,7 +37,6 @@ curl -LsSf https://astral.sh/uv/install.sh | sh
 
 ```bash
 make venv
-# equivalent to: uv sync --all-groups
 ```
 
 This installs the main package, test dependencies, and documentation dependencies in one step.
