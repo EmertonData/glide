@@ -13,4 +13,4 @@ pip install glide-py
 
 ## Quickstart
 
-See the [Quickstart example](examples/quickstart.ipynb) for a full walkthrough.
+See the [Quickstart example](quickstart.ipynb) for a full walkthrough.
