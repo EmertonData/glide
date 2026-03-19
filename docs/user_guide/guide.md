@@ -39,7 +39,13 @@ $$\Pr(\theta^* \in C_\alpha) \geq 1 - \alpha$$
 
 The key insight: even though human labels are scarce, they can be used to **correct** the bias in the cheap LLM labels.
 
-<img src="../../assets/schema-PPI.png" alt="PPI data schema" width="400">
+<p align="center">
+  <img src="../../assets/schema-PPI.png" alt="PPI data schema" width="400">
+</p>
+
+<p align="center">
+  <em>All $N$ items are evaluated by the LLM judge. A smaller subset of $n$ items receives human annotations as well, enabling bias measurement and correction.</em>
+</p>
 
 ---
 
