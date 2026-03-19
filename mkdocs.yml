@@ -2,6 +2,8 @@ site_name: Glide
 theme:
   name: material
   custom_dir: docs/overrides
+  features:
+    - content.code.copy
 
 extra_css:
   - stylesheets/extra.css
@@ -15,7 +17,7 @@ plugins:
             docstring_style: numpy
   - mkdocs-jupyter:
       include_source: true
-      execute: true
+      execute: false
 
 markdown_extensions:
   - pymdownx.snippets
