@@ -34,7 +34,7 @@ $$E[\hat{\theta}] = \theta^*$$
 
 $$\Pr(\theta^* \in C_\alpha) \geq 1 - \alpha$$
 
-Moreover $C_\alpha$ should be as small as possible
+Moreover, $C_\alpha$ should be as small as possible
 
 ---
 
@@ -61,31 +61,51 @@ The key insight: even though human labels are scarce, they can be used to **corr
 
 ## The Prediction-Powered Inference (PPI++) estimator
 
-PPI ([Angelopoulos et al., *Science* 2023](https://www.science.org/doi/10.1126/science.adi6000)) combines both sources of data into a single estimate:
+PPI ([Angelopoulos et al., *Science* 2023](https://www.science.org/doi/10.1126/science.adi6000)) combines both sources of data into a single unbiased estimate:
 
 $$\hat{\theta} = \underbrace{\frac{1}{N} \sum_{i=1}^{N} \tilde{Y}_i}_{\text{Biased estimate}} + \underbrace{\frac{1}{n} \sum_{j=1}^{n} \left(Y_j - \tilde{Y}_j\right)}_{\text{Bias rectifier}}$$
 
 - The **biased estimate** uses all $N$ LLM labels to get a low-variance but biased estimate.
 - The **bias rectifier** uses the $n$ paired samples (items that have both a human label and an LLM label) to measure and subtract the average bias.
 
-The result is an estimator that is **unbiased** ($E[\hat{\theta}] = \theta^*$) and leverages the full dataset for precision.
+This method was subsequently extended to **PPI++** ([Angelopoulos et al., 2023](https://arxiv.org/abs/2311.01453)), which introduces power tuning through a weight $\lambda \in [0, 1]$ on the proxy labels:
+
+$$\hat{\theta}_{\lambda} = \frac{1}{n} \sum_{j=1}^{n} Y_j + \lambda \left[\frac{1}{N} \sum_{i=1}^{N} \tilde{Y}_i - \frac{1}{n} \sum_{j=1}^{n} \tilde{Y}_j\right]$$
+
+At $\lambda = 1$ this reduces exactly to the original PPI estimator.
 
 ---
 
 ## Variance and confidence intervals
 
-For large enough sample sizes (typically $n \geq 100$), the **Central Limit Theorem** applies and the variance of the PPI estimator decomposes cleanly:
+For large enough sample sizes (typically $n \geq 100$), the **Central Limit Theorem** applies and the variance of the PPI++ estimator decomposes as:
 
-$$\sigma^2_{\hat{\theta}} = \underbrace{\frac{\sigma^2_{\tilde{Y}}}{N}}_{\text{LLM-as-Judge variance}} + \underbrace{\frac{\sigma^2_{Y - \tilde{Y}}}{n}}_{\text{Residual variance}}$$
+$$\sigma^2_{\hat{\theta}}(\lambda) = \underbrace{\frac{\sigma^2_{Y - \lambda\tilde{Y}}}{n}}_{\text{Labeled residual variance}} + \underbrace{\frac{\lambda^2\,\sigma^2_{\tilde{Y}}}{N}}_{\text{Unlabeled proxy variance}}$$
 
-- The first term shrinks as $N$ grows — but since $N$ is typically large, this term is usually negligible in practice.
-- The second term dominates and shrinks both as $n$ grows and as the LLM judge becomes more aligned with human annotations (smaller numerator $\sigma^2_{Y - \tilde{Y}}$).
+- The first term shrinks both as $n$ grows and as the LLM judge aligns better with human annotations.
+- The second term shrinks as $N$ grows and is usually negligible in practice since $N \gg n$.
 
 This gives a confidence interval at level $1 - \alpha$:
 
-$$\Pr\!\left(\theta^* \in \left[\hat{\theta} - z_{1-\alpha/2}\, \sigma_{\hat{\theta}},\; \hat{\theta} + z_{1-\alpha/2}\, \sigma_{\hat{\theta}}\right]\right) \geq 1 - \alpha$$
+$$\Pr\!\left(\theta^* \in \left[\hat{\theta}_{\lambda} - z_{1-\alpha/2}\, \sigma_{\hat{\theta}}(\lambda),\; \hat{\theta}_{\lambda} + z_{1-\alpha/2}\, \sigma_{\hat{\theta}}(\lambda)\right]\right) \geq 1 - \alpha$$
 
 where $z_{1-\alpha/2}$ is the standard normal quantile (e.g. $z_{0.975} = 1.96$ for a 95% confidence interval).
+
+### Optimal $\lambda$
+
+PPI++ derives a closed-form plug-in estimator for the $\lambda$ that minimises the CI width:
+
+$$\hat{\lambda} = \frac{\widehat{\text{Cov}}_n(Y,\, \tilde{Y})}{\left(1 + \tfrac{n}{N}\right)\widehat{\text{Var}}_{n+N}(\tilde{Y})}$$
+
+where:
+
+- $\widehat{\text{Cov}}_n$ is the sample covariance computed on the **$n$ labeled samples only**,
+
+- $\widehat{\text{Var}}_{n+N}$ is the sample variance computed on **all $n + N$ proxy values pooled**,
+
+- $n$ and $N$ are the numbers of labeled and unlabeled items respectively.
+
+When the proxy is informative (high covariance with human labels), $\hat{\lambda}$ is close to 1 and the CI is narrower than standard PPI; when the proxy is uninformative, $\hat{\lambda}$ shrinks toward 0, down-weighting it and falling back to the classical human-only mean estimate. PPI++ uses optimal $\hat{\lambda}$ in GLIDE by default. This ensures the resulting estimate always has smaller variance than the classical estimate.
 
 
 # Active Statistical Inference (ASI)
@@ -98,3 +118,5 @@ where $z_{1-\alpha/2}$ is the standard normal quantile (e.g. $z_{0.975} = 1.96$ 
 ## References
 
 Angelopoulos, Anastasios N., Stephen Bates, Clara Fannjiang, Michael I. Jordan, and Tijana Zrnic. "Prediction-powered inference." *Science* 382, no. 6671 (2023): 669–674.
+
+Angelopoulos, Anastasios N., John C. Duchi, and Tijana Zrnic. "PPI++: Efficient prediction-powered inference." *arXiv preprint arXiv:2311.01453* (2023).
