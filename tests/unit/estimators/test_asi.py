@@ -63,10 +63,13 @@ def test_preprocess_no_nans_in_y_true(estimator, dataset):
 def test_preprocess_returns_four_arrays(estimator, dataset):
     result = estimator._preprocess(dataset, "y_true", "y_proxy", "pi")
     n = len(dataset)
+    assert len(result) == 4
     for arr in result:
         assert arr.shape == (n,)
-    y_true, _, _, pi = result
-    assert not np.any(np.isnan(y_true))
+
+
+def test_preprocess_pi_values_in_valid_range(estimator, dataset):
+    _, _, _, pi = estimator._preprocess(dataset, "y_true", "y_proxy", "pi")
     assert np.all((pi > 0)) and np.all((pi <= 1))
 
 
