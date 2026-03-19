@@ -13,9 +13,9 @@
         - `uv pip install --index-url https://test.pypi.org/simple/ --no-deps glide-py`
         - import glide and verify version: `python -c "import glide; print(glide.__version__)"`
 - [ ] Update `CHANGELOG.md`:
-    * Move all entries from `[Unreleased]` into a new version section `[X.Y.Z] – YYYY-MM-DD`
+    * Move all entries from `[Next release]` into a new version section `[X.Y.Z] – YYYY-MM-DD`
     * Add a `💛 Contributors` line thanking everyone who contributed
-    * Leave an empty `[Unreleased]` section at the top
+    * Leave an empty `[Next release]` section at the top
 - [ ] Tag manually the last commit with a tag of the form "vX.Y.Z"
 - [ ] Monitor the PyPI publish job on GitHub Actions:
     * The workflow automatically triggers on tag pushes
