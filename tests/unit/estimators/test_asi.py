@@ -50,6 +50,7 @@ def test_preprocess_counts(estimator, dataset):
     y_true, y_proxy, xi, pi = estimator._preprocess(dataset, "y_true", "y_proxy", "pi")
     assert len(y_true) == 4
     assert len(y_proxy) == 4
+    assert len(xi) == 4
     assert int(xi.sum()) == 2
     assert len(pi) == 4
 
@@ -61,12 +62,10 @@ def test_preprocess_no_nans_in_y_true(estimator, dataset):
 
 def test_preprocess_returns_four_arrays(estimator, dataset):
     result = estimator._preprocess(dataset, "y_true", "y_proxy", "pi")
-    y_true, _, xi, pi = result
     n = len(dataset)
-    assert len(result) == 4
     for arr in result:
         assert arr.shape == (n,)
-    assert int(xi.sum()) == 2  # n_labeled
+    y_true, _, _, pi = result
     assert not np.any(np.isnan(y_true))
     assert np.all((pi > 0)) and np.all((pi <= 1))
 

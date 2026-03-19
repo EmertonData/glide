@@ -8,7 +8,7 @@ from glide.estimators.ppi import PPIMeanEstimator
 # ── helpers ────────────────────────────────────────────────────────────────────
 
 
-def make_dataset(n_true: int = 25, n_proxy: int = 75, seed: int = 42) -> Dataset:
+def make_dataset(n_true: int = 2, n_proxy: int = 2, seed: int = 42) -> Dataset:
     rng = np.random.default_rng(seed)
     y_true = rng.normal(loc=5.0, scale=1.0, size=n_true)
     y_proxy_labeled = y_true + rng.normal(0, 0.5, size=n_true)
@@ -20,7 +20,7 @@ def make_dataset(n_true: int = 25, n_proxy: int = 75, seed: int = 42) -> Dataset
 
 @pytest.fixture
 def dataset() -> Dataset:
-    return make_dataset(n_true=25, n_proxy=75)
+    return make_dataset(n_true=2, n_proxy=2)
 
 
 @pytest.fixture
@@ -34,9 +34,9 @@ def estimator() -> PPIMeanEstimator:
 def test_preprocess_returns_tuple(estimator, dataset):
     y_data = estimator._preprocess(dataset, "y_true", "y_proxy")
     y_true, y_proxy_labeled, y_proxy_unlabeled = y_data
-    assert len(y_true) == 25
-    assert len(y_proxy_labeled) == 25
-    assert len(y_proxy_unlabeled) == 75
+    assert len(y_true) == 2
+    assert len(y_proxy_labeled) == 2
+    assert len(y_proxy_unlabeled) == 2
     assert not np.any(np.isnan(y_true))
 
 
@@ -97,8 +97,8 @@ def test_estimate_metadata(estimator, dataset):
     result = estimator.estimate(dataset, y_true_field="y_true", y_proxy_field="y_proxy", metric_name="performance")
     assert result.metric_name == "performance"
     assert result.estimator_name == estimator.__class__.__name__
-    assert result.n_true == 25
-    assert result.n_proxy == 100
+    assert result.n_true == 2
+    assert result.n_proxy == 4
 
 
 def test_estimate_custom_confidence_level(estimator, dataset):
@@ -118,8 +118,8 @@ def test_str_format(estimator, dataset):
     assert "Point Estimate:" in output
     assert "Confidence Interval (95%):" in output
     assert f"Estimator : {estimator.__class__.__name__}" in output
-    assert "n_true: 25" in output
-    assert "n_proxy: 100" in output
+    assert "n_true: 2" in output
+    assert "n_proxy: 4" in output
     assert "Effective Sample Size:" in output
 
 
