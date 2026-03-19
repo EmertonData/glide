@@ -17,11 +17,13 @@
 </p>
 
 # GLIDE 
-### Generative Label Inference & Debiasing Engine
+### Generated Label Inference & Debiasing Engine
 
 ## 🧭 What is GLIDE?
 
 GLIDE is a Python library for **rigorous evaluation of GenAI systems** using hybrid human/proxy annotations.
+
+GLIDE implements methods from the field of **Semi-supervised Inference** — the science of system evaluation that combines a small labeled dataset with a large unlabeled (or proxy-labeled) dataset to produce valid, debiased estimates. See the [implemented papers](#implemented-papers) below.
 
 ## 🤔 Why GLIDE?
 
@@ -60,11 +62,24 @@ If you use Glide in your research, please cite:
 
 ```bibtex
 @software{glide,
-  title  = {GLIDE: Generative Label Inference \& Debiasing Engine},
+  title  = {GLIDE: Generated Label Inference \& Debiasing Engine},
   year   = {2026},
   url    = {https://github.com/EmertonData/glide},
 }
 ```
+
+## 📰 Implemented Papers <a name="implemented-papers"></a>
+
+| Year | Title | Venue | Original Implementation | GLIDE class |
+|------|-------|-------|------|----------------|
+| 2023 | [Prediction-powered inference](https://www.science.org/doi/10.1126/science.adi6000) |Science|[Link](https://github.com/aangelopoulos/ppi_py/)| estimators.PPIMeanEstimator (with `power_tuning=False`) |
+| 2023 | [PPI++: Efficient Prediction-Powered Inference](https://arxiv.org/abs/2311.01453) |Preprint|[Link](https://github.com/aangelopoulos/ppi_py/tree/ppi++)| estimators.PPIMeanEstimator |
+| 2024 | [Active Statistical Inference](https://dl.acm.org/doi/10.5555/3692070.3694680) |ICML'24|[Link](https://github.com/tijana-zrnic/active-inference)| estimators.ASIMeanEstimator |
+| 2025 | [Can Unconfident LLM Annotations Be Used for Confident Conclusions?](https://aclanthology.org/2025.naacl-long.179/) |NAACL'25|[Link](https://github.com/kristinagligoric/confidence-driven-inference)| estimators.ASIMeanEstimator |
+
+
+
+
 
 ## 🏛️ Affiliation
 
