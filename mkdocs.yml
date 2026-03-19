@@ -17,7 +17,7 @@ plugins:
             docstring_style: numpy
   - mkdocs-jupyter:
       include_source: true
-      execute: true
+      execute: false #true
 
 markdown_extensions:
   - pymdownx.snippets
@@ -36,9 +36,7 @@ nav:
   - Tutorials:
     - Estimate your AI system's hallucination rate at low cost using PPI: tutorials/ppi.ipynb
     - ASI Tutorial: tutorials/asi.ipynb
-  - User Guide:
-    - PPI: user_guide/ppi.md
-    - ASI: user_guide/asi.md
+  - User Guide: user_guide.md
   - Deep Dive:
     - Scientific Validation of PPI: science/ppi_validation.ipynb
     - Scientific Validation of ASI: science/asi_validation.ipynb
