@@ -44,7 +44,7 @@ pip install glide-py
 
 ## 🤝 Contributing
 
-Contributions are welcome! Feel free to open an [issue](https://github.com/EmertonData/glide/issues) to report a bug or suggest a feature, or submit a [pull request](https://github.com/EmertonData/glide/pulls) with your changes.
+Contributions are welcome! Please read the [contributing guide](https://github.com/EmertonData/glide/blob/main/CONTRIBUTING.md) for setup instructions, an architectural overview, and the checklist to follow before opening a pull request. Feel free to open an [issue](https://github.com/EmertonData/glide/issues) to report a bug or suggest a feature.
 
 ## 🔢 Versioning
 
