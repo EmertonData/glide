@@ -29,18 +29,18 @@ class ASIMeanEstimator:
 
     Examples
     --------
-    >>> from glide.core.dataset import Dataset \n
-    >>> from glide.estimators.asi import ASIMeanEstimator \n
-    >>> labeled = [{"y_true": 5.0, "y_proxy": 4.9, "pi": 0.5}, {"y_true": 6.0, "y_proxy": 6.1, "pi": 0.7}] \n
-    >>> unlabeled = [{"y_proxy": 5.2, "pi": 0.6}, {"y_proxy": 6.1, "pi": 0.2}] \n
-    >>> dataset = Dataset(labeled + unlabeled) \n
-    >>> estimator = ASIMeanEstimator() \n
+    >>> from glide.core.dataset import Dataset
+    >>> from glide.estimators.asi import ASIMeanEstimator
+    >>> labeled = [{"y_true": 5.0, "y_proxy": 4.9, "pi": 0.5}, {"y_true": 6.0, "y_proxy": 6.1, "pi": 0.7}]
+    >>> unlabeled = [{"y_proxy": 5.2, "pi": 0.6}, {"y_proxy": 6.1, "pi": 0.2}]
+    >>> dataset = Dataset(labeled + unlabeled)
+    >>> estimator = ASIMeanEstimator()
     >>> result = estimator.estimate(
     ...      dataset,
     ...      y_true_field="y_true",
     ...      y_proxy_field="y_proxy",
     ...      sampling_probability_field="pi"
-    ... ) \n
+    ... )
     >>> print(result)
     Metric: Metric
     Point Estimate: 5.563

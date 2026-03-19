@@ -15,11 +15,11 @@ class ClassicalMeanEstimator:
 
     Examples
     --------
-    >>> from glide.core.dataset import Dataset \n
-    >>> from glide.estimators.classical import ClassicalMeanEstimator \n
-    >>> dataset = Dataset([{"y": 5.0}, {"y": 6.0}, {"y": 4.0}, {"y": 7.0}]) \n
-    >>> estimator = ClassicalMeanEstimator() \n
-    >>> result = estimator.estimate(dataset, y_field="y") \n
+    >>> from glide.core.dataset import Dataset
+    >>> from glide.estimators.classical import ClassicalMeanEstimator
+    >>> dataset = Dataset([{"y": 5.0}, {"y": 6.0}, {"y": 4.0}, {"y": 7.0}])
+    >>> estimator = ClassicalMeanEstimator()
+    >>> result = estimator.estimate(dataset, y_field="y")
     >>> print(result)
     Metric: Metric
     Point Estimate: 5.500
