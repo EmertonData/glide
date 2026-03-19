@@ -20,13 +20,13 @@ def make_dataset(n_labeled: int = 2, n_unlabeled: int = 2, seed: int = 0) -> Dat
 
 
 @pytest.fixture
-def estimator() -> ASIMeanEstimator:
-    return ASIMeanEstimator()
+def dataset() -> Dataset:
+    return make_dataset(n_labeled=2, n_unlabeled=2)
 
 
 @pytest.fixture
-def dataset() -> Dataset:
-    return make_dataset(n_labeled=2, n_unlabeled=2)
+def estimator() -> ASIMeanEstimator:
+    return ASIMeanEstimator()
 
 
 @pytest.fixture
@@ -35,7 +35,6 @@ def simple_y_data(estimator, dataset):
 
 
 # Hand-crafted arrays for deterministic unit tests.
-# n=4, n_l=2, pi=0.5 throughout, xi=[1,1,0,0]
 Y_TRUE = np.array([3.0, 5.0, 0.0, 0.0])
 Y_PROXY = np.array([2.0, 4.0, 5.0, 7.0])
 XI = np.array([1.0, 1.0, 0.0, 0.0])
@@ -96,10 +95,6 @@ def test_compute_lambda_returns_one_when_power_tuning_false(estimator, simple_y_
 
 
 def test_compute_lambda_known_values(estimator):
-    # n=4, n_l=2, pi=0.5
-    # a = y_proxy * (xi/pi - 1) = [2.0, 4.0, -3.0, -5.0]
-    # b = y_true * xi / pi     = [4.0, 8.0,  0.0,  0.0]
-    # cov(b, a, ddof=1) = 46/3,  var(a, ddof=1) = 53/3  =>  lam = 46/53
     y_true = np.array([2.0, 4.0, 0.0, 0.0])
     y_proxy = np.array([2.0, 4.0, 3.0, 5.0])
     xi = np.array([1.0, 1.0, 0.0, 0.0])
@@ -109,10 +104,6 @@ def test_compute_lambda_known_values(estimator):
 
 
 def test_compute_lambda_constant_proxy_returns_zero(estimator):
-    # With constant y_proxy = c, a = c*(xi/pi - 1) and
-    # cov(b, a) = (c * n_u/n_l) / (n-1) * sum_labeled(y_true).
-    # => lambda = 0 exactly when mean_labeled(y_true) = 0.
-    # Here y_true_labeled = [-1, 1] has mean 0, so lambda = 0.
     y_true = np.array([-1.0, 1.0, 0.0, 0.0])
     y_proxy = np.array([3.0, 3.0, 3.0, 3.0])
     xi = np.array([1.0, 1.0, 0.0, 0.0])
@@ -125,9 +116,6 @@ def test_compute_lambda_constant_proxy_returns_zero(estimator):
 
 
 def test_asi_mean_with_lambda_other(estimator):
-    # lam=0.5, pi=0.5
-    # z = [0.5*2 + (3-1)/0.5, 0.5*4 + (5-2)/0.5, 0.5*5, 0.5*7]
-    #   = [1+4, 2+6, 2.5, 3.5] = [5, 8, 2.5, 3.5]  =>  mean = 19/4 = 4.75
     _lambda = 0.5
     rectified_labels = _lambda * Y_PROXY + XI * (Y_TRUE - _lambda * Y_PROXY) / PI
     mean = estimator._compute_mean_estimate(rectified_labels)

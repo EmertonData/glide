@@ -31,7 +31,7 @@ def estimator() -> PPIMeanEstimator:
 # --- preprocessing ---
 
 
-def test_preprocess_returns_tuple(estimator, dataset):
+def test_preprocess_counts(estimator, dataset):
     y_data = estimator._preprocess(dataset, "y_true", "y_proxy")
     y_true, y_proxy_labeled, y_proxy_unlabeled = y_data
     assert len(y_true) == 2
@@ -57,6 +57,15 @@ def test_compute_lambda_known_values(estimator):
     expected = 0.75
     result = estimator._compute_lambda(y_data, power_tuning=True)
     assert result == pytest.approx(expected)
+
+
+def test_compute_lambda_constant_proxy_returns_zero(estimator):
+    y_true = np.array([-1.0, 1.0, 0.0, 0.0])
+    y_proxy_labeled = np.array([3.0, 3.0, 3.0, 3.0])
+    y_proxy_unlabeled = np.array([3.0, 3.0])
+    y_data = (y_true, y_proxy_labeled, y_proxy_unlabeled)
+    lam = estimator._compute_lambda(y_data, power_tuning=True)
+    assert lam == pytest.approx(0.0)
 
 
 # --- _compute_mean_estimate ---

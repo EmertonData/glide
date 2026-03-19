@@ -6,7 +6,7 @@ from glide.core.mean_inference_result import ClassicalMeanInferenceResult
 from glide.estimators.classical import ClassicalMeanEstimator
 
 
-def make_dataset(n: int = 50, seed: int = 42) -> Dataset:
+def make_dataset(n: int = 4, seed: int = 42) -> Dataset:
     rng = np.random.default_rng(seed)
     y = rng.normal(loc=5.0, scale=1.0, size=n)
     return Dataset([{"y": float(v)} for v in y])
@@ -14,7 +14,7 @@ def make_dataset(n: int = 50, seed: int = 42) -> Dataset:
 
 @pytest.fixture
 def dataset() -> Dataset:
-    return make_dataset(n=50)
+    return make_dataset(n=4)
 
 
 @pytest.fixture
@@ -25,15 +25,15 @@ def estimator() -> ClassicalMeanEstimator:
 # --- preprocessing ---
 
 
-def test_preprocess_returns_all_records(estimator, dataset):
+def test_preprocess_counts(estimator, dataset):
     y = estimator._preprocess(dataset, "y")
-    assert len(y) == 50
+    assert len(y) == 4
 
 
 # --- _compute_mean_estimate ---
 
 
-def test_classical_mean_known_values(estimator):
+def test_classical_mean(estimator):
     y = np.array([2.0, 4.0, 6.0, 8.0])
     expected = 5.0
     assert estimator._compute_mean_estimate(y) == pytest.approx(expected)
@@ -60,7 +60,7 @@ def test_estimate_metadata(estimator, dataset):
     result = estimator.estimate(dataset, y_field="y", metric_name="performance")
     assert result.metric_name == "performance"
     assert result.estimator_name == estimator.__class__.__name__
-    assert result.n == 50
+    assert result.n == 4
 
 
 def test_estimate_custom_confidence_level(estimator, dataset):
@@ -76,10 +76,10 @@ def test_str_format(estimator, dataset):
     output = str(result)
     expected = (
         "Metric: performance\n"
-        "Point Estimate: 5.091\n"
-        "Confidence Interval (95%): [4.88, 5.30]\n"
+        "Point Estimate: 5.239\n"
+        "Confidence Interval (95%): [4.36, 6.11]\n"
         "Estimator : ClassicalMeanEstimator\n"
-        "n: 50"
+        "n: 4"
     )
     assert output == expected
 
