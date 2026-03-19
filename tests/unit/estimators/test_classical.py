@@ -42,7 +42,7 @@ def test_classical_mean(estimator):
 # --- _compute_std_estimate ---
 
 
-def test_classical_std_known_values(estimator):
+def test_classical_std(estimator):
     y = np.array([2.0, 4.0, 6.0, 8.0])
     expected = 1.2909944487358056
     assert estimator._compute_std_estimate(y) == pytest.approx(expected)

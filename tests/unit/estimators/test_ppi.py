@@ -84,7 +84,7 @@ def test_ppi_mean_with_lambda_other(estimator):
 # --- _compute_std_estimate ---
 
 
-def test_ppi_std_with_lambda_other(estimator):
+def test_ppi_std_with_lambda_not_one(estimator):
     y_true = np.array([5.0, 6.0, 7.0])
     y_proxy_labeled = np.array([4.5, 5.5, 6.5])
     y_proxy_unlabeled = np.array([4.0, 5.0, 6.0, 7.0])
@@ -98,8 +98,17 @@ def test_ppi_std_with_lambda_other(estimator):
 
 
 def test_estimate_returns_semisupervised_mean_inference_result(estimator, dataset):
-    result = estimator.estimate(dataset, y_true_field="y_true", y_proxy_field="y_proxy", metric_name="perf")
+    result = estimator.estimate(dataset, y_true_field="y_true", y_proxy_field="y_proxy")
     assert isinstance(result, SemiSupervisedMeanInferenceResult)
+
+
+def test_power_tuning_false_is_valid_inference_result(estimator, dataset):
+    result = estimator.estimate(dataset, y_true_field="y_true", y_proxy_field="y_proxy", power_tuning=False)
+    assert isinstance(result, SemiSupervisedMeanInferenceResult)
+    assert np.isfinite(result.confidence_interval.lower_bound)
+    assert np.isfinite(result.confidence_interval.upper_bound)
+    assert result.confidence_interval.lower_bound < result.confidence_interval.upper_bound
+    assert result.estimator_name == "PPIMeanEstimator"
 
 
 def test_estimate_metadata(estimator, dataset):
@@ -108,6 +117,7 @@ def test_estimate_metadata(estimator, dataset):
     assert result.estimator_name == estimator.__class__.__name__
     assert result.n_true == 2
     assert result.n_proxy == 4
+    assert result.effective_sample_size == 4
 
 
 def test_estimate_custom_confidence_level(estimator, dataset):
@@ -123,13 +133,16 @@ def test_estimate_custom_confidence_level(estimator, dataset):
 def test_str_format(estimator, dataset):
     result = estimator.estimate(dataset, y_true_field="y_true", y_proxy_field="y_proxy", metric_name="performance")
     output = str(result)
-    assert "Metric: performance" in output
-    assert "Point Estimate:" in output
-    assert "Confidence Interval (95%):" in output
-    assert f"Estimator : {estimator.__class__.__name__}" in output
-    assert "n_true: 2" in output
-    assert "n_proxy: 4" in output
-    assert "Effective Sample Size:" in output
+    expected = (
+        "Metric: performance\n"
+        "Point Estimate: 4.068\n"
+        "Confidence Interval (95%): [3.14, 5.00]\n"
+        "Estimator : PPIMeanEstimator\n"
+        "n_true: 2\n"
+        "n_proxy: 4\n"
+        "Effective Sample Size: 4.0"
+    )
+    assert output == expected
 
 
 def test_repr_equals_str(estimator, dataset):

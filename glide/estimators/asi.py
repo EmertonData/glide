@@ -80,7 +80,10 @@ class ASIMeanEstimator:
         b = y_true * xi / pi
         cov_matrix = np.cov(a, b, ddof=1)
         var, cov = cov_matrix[0]
-        _lambda = float(cov / var)
+        if var == 0:
+            _lambda = 0
+        else:
+            _lambda = float(cov / var)
         return _lambda
 
     def _compute_rectified_labels(
