@@ -1,4 +1,5 @@
 import pytest
+
 from glide.core.dataset import Dataset
 from glide.core.simulated_datasets import generate_binary_dataset
 
