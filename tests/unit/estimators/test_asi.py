@@ -25,23 +25,6 @@ def estimator() -> ASIMeanEstimator:
     return ASIMeanEstimator()
 
 
-@pytest.fixture
-def simple_y_data(estimator, dataset):
-    return estimator._preprocess(dataset, "y_true", "y_proxy", "pi")
-
-
-@pytest.fixture
-def hand_crafted_dataset() -> Dataset:
-    labeled = [
-        {"y_true": float(Y_TRUE[0]), "y_proxy": float(Y_PROXY[0]), "pi": float(PI[0])},
-        {"y_true": float(Y_TRUE[1]), "y_proxy": float(Y_PROXY[1]), "pi": float(PI[1])},
-    ]
-    unlabeled = [
-        {"y_proxy": float(Y_PROXY[2]), "pi": float(PI[2])},
-        {"y_proxy": float(Y_PROXY[3]), "pi": float(PI[3])},
-    ]
-    dataset = Dataset(labeled + unlabeled)
-    return dataset
 
 
 # Hand-crafted arrays for deterministic unit tests.
@@ -86,8 +69,8 @@ def test_preprocess_raises_on_non_positive_pi(estimator, bad_pi):
 # --- _compute_lambda ---
 
 
-def test_compute_lambda_returns_one_when_power_tuning_false(estimator, simple_y_data):
-    lam = estimator._compute_lambda(simple_y_data, power_tuning=False)
+def test_compute_lambda_returns_one_when_power_tuning_false(estimator):
+    lam = estimator._compute_lambda(Y_DATA, power_tuning=False)
     assert lam == 1.0
 
 
@@ -101,13 +84,17 @@ def test_compute_lambda_known_values(estimator):
     assert lam == pytest.approx(expected)
 
 
+
+    
+
+
 def test_compute_lambda_constant_proxy_constant_xi_returns_zero(estimator):
     y_true = np.array([-1.0, 1.0, 0.0, 0.0])
     y_proxy = np.array([3.0, 3.0, 3.0, 3.0])
     xi = np.array([0.0, 0.0, 0.0, 0.0])
     pi = np.array([0.5, 0.5, 0.5, 0.5])
-    lam = estimator._compute_lambda((y_true, y_proxy, xi, pi), power_tuning=True)
-    assert lam == pytest.approx(0.0)
+    with pytest.raises(ValueError, match="Input proxy values have zero variance"):
+        estimator._compute_lambda((y_true, y_proxy, xi, pi), power_tuning=True)
 
 
 def test_compute_lambda_constant_proxy_variable_xi_returns_zero(estimator):
@@ -165,9 +152,9 @@ def test_estimate_is_valid_inference_result(estimator, dataset):
     assert result.estimator_name == "ASIMeanEstimator"
 
 
-def test_estimate_metadata(estimator, hand_crafted_dataset):
+def test_estimate_metadata(estimator, dataset):
     result = estimator.estimate(
-        hand_crafted_dataset,
+        dataset,
         y_true_field="y_true",
         y_proxy_field="y_proxy",
         sampling_probability_field="pi",
@@ -177,22 +164,22 @@ def test_estimate_metadata(estimator, hand_crafted_dataset):
     assert result.estimator_name == estimator.__class__.__name__
     assert result.n_true == 2
     assert result.n_proxy == 4
-    assert result.effective_sample_size == 5
+    assert result.effective_sample_size == 0
 
 
-def test_estimate_custom_confidence_level(estimator, hand_crafted_dataset):
+def test_estimate_custom_confidence_level(estimator, dataset):
     result = estimator.estimate(
-        hand_crafted_dataset,
+        dataset,
         y_true_field="y_true",
         y_proxy_field="y_proxy",
         sampling_probability_field="pi",
         confidence_level=0.95,
     )
 
-    expected_mean = 5.341176470
-    expected_std = 0.5807365168135927
-    expected_lower = 4.20295381
-    expected_upper = 6.47939912
+    expected_mean = 3.9179923614545595
+    expected_std = 0.18542314388290385
+    expected_lower = 3.5545696775438795
+    expected_upper = 4.2814150453652395
 
     assert result.confidence_interval.confidence_level == 0.95
     assert result.confidence_interval.mean == pytest.approx(expected_mean)

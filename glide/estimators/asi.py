@@ -81,7 +81,7 @@ class ASIMeanEstimator:
         cov_matrix = np.cov(a, b, ddof=1)
         var, cov = cov_matrix[0]
         if var == 0:
-            _lambda = 0
+            raise ValueError("Input proxy values have zero variance")
         else:
             _lambda = float(cov / var)
         return _lambda
