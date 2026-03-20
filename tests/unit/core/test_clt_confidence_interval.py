@@ -69,5 +69,5 @@ def test_null_hypothesis_smaller_positive_z():
 
 def test_null_hypothesis_invalid_alternative():
     ci = CLTConfidenceInterval(mean=0.0, std=1.0)
-    with pytest.raises(ValueError, match="alternative must be"):
+    with pytest.raises(ValueError, match="alternative must be 'two-sided', 'larger', or 'smaller'"):
         ci.test_null_hypothesis(h0_value=0.0, alternative="invalid")

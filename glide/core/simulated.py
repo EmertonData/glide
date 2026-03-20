@@ -36,13 +36,25 @@ def generate_dataset_binary(
         A Dataset of n + N records. Each record contains ``"proxy"`` (always present)
         and ``"true"`` (only for the first ``n`` records).
 
+    Raises
+    ------
+    ValueError
+        If ``true_mean`` is not in (0, 1).
+    ValueError
+        If ``proxy_mean`` is not in (0, 1).
+    ValueError
+        If the combination of ``true_mean``, ``proxy_mean``, and ``correlation`` is
+        impossible (leads to negative joint probabilities).
+
     References
     ----------
     .. [SO] `Correlation between Bernoulli Variables <https://math.stackexchange.com/questions/610443/finding-a-correlation-between-bernoulli-variables>`_
 
     """
-    assert 0 < true_mean < 1, "true_mean must be in (0, 1)"
-    assert 0 < proxy_mean < 1, "proxy_mean must be in (0, 1)"
+    if not (0 < true_mean < 1):
+        raise ValueError(f"true_mean must be in (0, 1), got {true_mean}")
+    if not (0 < proxy_mean < 1):
+        raise ValueError(f"proxy_mean must be in (0, 1), got {proxy_mean}")
 
     rng = np.random.default_rng(seed=random_seed)
 
@@ -56,7 +68,11 @@ def generate_dataset_binary(
     probs = [1 - t_mean - p_mean + both_1_prob, p_mean - both_1_prob, t_mean - both_1_prob, both_1_prob]
     # some combinations of true_mean, proxy_mean and correlation are impossible
     # and lead to negative probabilities
-    assert min(probs) > 0, "Impossible combination of true_mean, bias, and correlation"
+    if min(probs) <= 0:
+        raise ValueError(
+            f"Impossible combination of true_mean={true_mean}, proxy_mean={proxy_mean}, "
+            f"and correlation={correlation}: leads to negative joint probabilities"
+        )
 
     # generate the outcome pairs as integers between 0 and 3 inclusive
     samples = rng.choice(4, p=probs, size=n)
