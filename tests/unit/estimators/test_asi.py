@@ -7,6 +7,7 @@ from glide.estimators.asi import ASIMeanEstimator
 
 # --- helpers ---
 
+
 @pytest.fixture
 def dataset(n_labeled: int = 2, n_unlabeled: int = 2, seed: int = 0) -> Dataset:
     rng = np.random.default_rng(seed)
@@ -19,20 +20,9 @@ def dataset(n_labeled: int = 2, n_unlabeled: int = 2, seed: int = 0) -> Dataset:
     return Dataset(labeled + unlabeled)
 
 
-
 @pytest.fixture
 def estimator() -> ASIMeanEstimator:
     return ASIMeanEstimator()
-
-
-
-
-# Hand-crafted arrays for deterministic unit tests.
-Y_TRUE = np.array([3.0, 5.0, 0.0, 0.0])
-Y_PROXY = np.array([2.0, 4.0, 5.0, 7.0])
-XI = np.array([1.0, 1.0, 0.0, 0.0])
-PI = np.array([0.5, 0.5, 0.5, 0.5])
-Y_DATA = (Y_TRUE, Y_PROXY, XI, PI)
 
 
 # --- preprocessing ---
@@ -48,13 +38,10 @@ def test_preprocess(estimator, dataset):
     assert np.all((pi > 0)) and np.all((pi <= 1))
     assert set(xi.tolist()).issubset({0.0, 1.0})
 
+
 def test_preprocess_no_nans_in_y_true(estimator, dataset):
     y_true, _, _, _ = estimator._preprocess(dataset, "y_true", "y_proxy", "pi")
     assert not np.any(np.isnan(y_true))
-
-
-
-    
 
 
 @pytest.mark.parametrize("bad_pi", [0.0, -0.5])
@@ -70,7 +57,13 @@ def test_preprocess_raises_on_non_positive_pi(estimator, bad_pi):
 
 
 def test_compute_lambda_returns_one_when_power_tuning_false(estimator):
-    lam = estimator._compute_lambda(Y_DATA, power_tuning=False)
+    # Hand-crafted arrays for deterministic unit tests.
+    y_true = np.array([3.0, 5.0, 0.0, 0.0])
+    y_proxy = np.array([2.0, 4.0, 5.0, 7.0])
+    xi = np.array([1.0, 1.0, 0.0, 0.0])
+    pi = np.array([0.5, 0.5, 0.5, 0.5])
+    y_data = (y_true, y_proxy, xi, pi)
+    lam = estimator._compute_lambda(y_data, power_tuning=False)
     assert lam == 1.0
 
 
@@ -82,10 +75,6 @@ def test_compute_lambda_known_values(estimator):
     lam = estimator._compute_lambda((y_true, y_proxy, xi, pi), power_tuning=True)
     expected = 46 / 53
     assert lam == pytest.approx(expected)
-
-
-
-    
 
 
 def test_compute_lambda_constant_proxy_constant_xi_returns_zero(estimator):
@@ -110,10 +99,9 @@ def test_compute_lambda_constant_proxy_variable_xi_returns_zero(estimator):
 
 
 def test_compute_mean_estimate_known_values(estimator):
-    _lambda = 0.5
-    rectified_labels = _lambda * Y_PROXY + XI * (Y_TRUE - _lambda * Y_PROXY) / PI
+    rectified_labels = np.array([2.0, 4.0, 3.0, 5.0])
     mean = estimator._compute_mean_estimate(rectified_labels)
-    expected = 4.75
+    expected = 3.5
     assert mean == pytest.approx(expected)
 
 
@@ -121,10 +109,9 @@ def test_compute_mean_estimate_known_values(estimator):
 
 
 def test_compute_std_estimate_known_values(estimator):
-    _lambda = 0.5
-    rectified_labels = _lambda * Y_PROXY + XI * (Y_TRUE - _lambda * Y_PROXY) / PI
+    rectified_labels = np.array([2.0, 4.0, 3.0, 5.0])
     std = estimator._compute_std_estimate(rectified_labels)
-    expected = np.sqrt(5.75 / 4)
+    expected = 0.6454972243
     assert std == pytest.approx(expected)
 
 
