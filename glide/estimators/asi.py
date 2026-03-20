@@ -81,7 +81,11 @@ class ASIMeanEstimator:
         b = y_true * xi / pi
         cov_matrix = np.cov(a, b, ddof=1)
         var, cov = cov_matrix[0]
-        _lambda = float(cov / var)
+        # breakpoint()
+        if var == 0:
+            raise ValueError("Input proxy values have zero variance")
+        else:
+            _lambda = float(cov / var)
         return _lambda
 
     def _compute_rectified_labels(
