@@ -34,11 +34,11 @@ nav:
     - Installation: getting-started/installation.md
     - Quickstart: getting-started/quickstart.ipynb
   - Tutorials:
-    - Estimate your AI system's hallucination rate at low cost using PPI: tutorials/ppi.ipynb
+    - Estimate Hallucination rate at low cost with PPI++: tutorials/ppi.ipynb
     - ASI Tutorial: tutorials/asi.ipynb
   - User Guide: user_guide.md
   - Deep Dive:
-    - Scientific Validation of PPI: science/ppi_validation.ipynb
-    - Scientific Validation of ASI: science/asi_validation.ipynb
+    - Scientific Validation of PPI: deep_dive/ppi_validation.ipynb
+    - Scientific Validation of ASI: deep_dive/asi_validation.ipynb
   - Contributing: contributing.md
   - API Reference: api/index.md

@@ -17,7 +17,7 @@ GLIDE addresses this using estimators that combine cheap LLM labels with a small
 
 ## Why it matters
 
-By combining a large pool of cheap LLM labels with a small set of human labels, PPI can achieve the same statistical precision as a purely human-labeled approach — at a fraction of the annotation cost. Actual savings depend on the annotation effort required and how well the LLM judge aligns with human judgement, but the potential gains can be substantial. This makes rigorous performance evaluation tractable even for large-scale AI systems.
+By combining a large pool of cheap LLM labels with a small set of human labels, GLIDE can achieve the same statistical precision as a purely human-labeled approach — at a fraction of the annotation cost. Actual savings depend on the annotation effort required and how well the LLM judge aligns with human judgement, but the potential gains can be substantial. This makes rigorous performance evaluation tractable even for large-scale AI systems.
 
 
 ---
@@ -72,7 +72,7 @@ This method was subsequently extended to **PPI++** ([Angelopoulos et al., 2023](
 
 $$\hat{\theta}_{\lambda} = \frac{1}{n} \sum_{j=1}^{n} Y_j + \lambda \left[\frac{1}{N} \sum_{i=1}^{N} \tilde{Y}_i - \frac{1}{n} \sum_{j=1}^{n} \tilde{Y}_j\right]$$
 
-At $\lambda = 1$ this reduces exactly to the original PPI estimator.
+At $\lambda = 1$ this reduces exactly to the original PPI estimator. This parameter allows to modulate the effect of the LLM labels based on how informative they are. We will see that it can be set to an optimal value below.
 
 ---
 
@@ -93,7 +93,7 @@ where $z_{1-\alpha/2}$ is the standard normal quantile (e.g. $z_{0.975} = 1.96$ 
 
 ### Optimal $\lambda$
 
-PPI++ derives a closed-form plug-in estimator for the $\lambda$ that minimises the CI width:
+The $\lambda$ parameter needs to be  chosen wisely. If left at $\lambda = 1,$ low quality proxy LLM labels with weak or negative covariance to human labels could *degrade* the estimation by inducing larger confidence intervals compared to using human labels only ($\lambda = 0$). PPI++ derives a closed-form plug-in estimator for the $\lambda$ that minimises the CI width:
 
 $$\hat{\lambda} = \frac{\widehat{\text{Cov}}_n(Y,\, \tilde{Y})}{\left(1 + \tfrac{n}{N}\right)\widehat{\text{Var}}_{n+N}(\tilde{Y})}$$
 
