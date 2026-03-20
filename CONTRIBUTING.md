@@ -19,7 +19,7 @@ Depending on what you want to do, jump to the relevant section:
 - **Improving CI, tooling, or the Makefile?** → [Repository hygiene](#4-repository-hygiene)
 - **Restructuring code without changing behaviour?** → [Refactoring](#5-refactoring)
 
-Before writing any code, please [open an issue](https://github.com/EmertonData/glide/issues) to discuss the scope of your change. When you are ready to submit, fork the repository, create a branch off `main`, and open a pull request against `main`.
+Before writing any code, please [open an issue](https://github.com/EmertonData/glide/issues) to discuss the scope of your change. When you are ready to submit, fork the repository, create a branch off `main`, and open a pull request against `main`. The PR template lists all conditions that must be satisfied before requesting a review.
 
 ---
 
