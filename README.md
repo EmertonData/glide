@@ -57,7 +57,6 @@ This project follows [SPEC 0](https://scientific-python.org/specs/spec-0000/) fo
 ## 📄 License & Citation
 
 This project is licensed under the [Apache 2.0 License](https://raw.githubusercontent.com/EmertonData/glide/refs/heads/main/LICENSE).
-
 If you use Glide in your research, please cite:
 
 ```bibtex
