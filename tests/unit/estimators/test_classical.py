@@ -27,7 +27,7 @@ def y() -> NDArray:
 # --- preprocessing ---
 
 
-def test_preprocess_counts(estimator, dataset):
+def test_preprocess(estimator, dataset):
     y = estimator._preprocess(dataset, "y")
     assert len(y) == 4
 
@@ -37,7 +37,8 @@ def test_preprocess_counts(estimator, dataset):
 
 def test_compute_mean_estimate_known_values(estimator, y):
     expected = 5.0
-    assert estimator._compute_mean_estimate(y) == pytest.approx(expected)
+    result = estimator._compute_mean_estimate(y)
+    assert result == pytest.approx(expected)
 
 
 # --- _compute_std_estimate ---
@@ -45,7 +46,8 @@ def test_compute_mean_estimate_known_values(estimator, y):
 
 def test_compute_std_estimate_known_values(estimator, y):
     expected = 1.29
-    assert estimator._compute_std_estimate(y) == pytest.approx(expected, abs=0.01)
+    result = estimator._compute_std_estimate(y)
+    assert result == pytest.approx(expected, abs=0.01)
 
 
 # --- estimate ---

@@ -27,11 +27,6 @@ def estimator() -> ASIMeanEstimator:
 
 
 @pytest.fixture
-def rectified_labels() -> NDArray:
-    return np.array([2.0, 4.0, 3.0, 5.0])
-
-
-@pytest.fixture
 def y_data() -> tuple[NDArray, NDArray, NDArray, NDArray]:
     y_true = np.array([3.0, 5.0, 0.0, 0.0])
     y_proxy = np.array([2.0, 4.0, 5.0, 7.0])
@@ -39,6 +34,11 @@ def y_data() -> tuple[NDArray, NDArray, NDArray, NDArray]:
     pi = np.array([0.5, 0.5, 0.5, 0.5])
     y_data = (y_true, y_proxy, xi, pi)
     return y_data
+
+
+@pytest.fixture
+def rectified_labels() -> NDArray:
+    return np.array([2.0, 4.0, 3.0, 5.0])
 
 
 # --- preprocessing ---
