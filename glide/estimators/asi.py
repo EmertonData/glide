@@ -63,7 +63,7 @@ class ASIMeanEstimator:
         y_proxy = data[:, 1]
         pi = data[:, 2]
         if np.min(pi) <= 0:
-            raise ValueError(f"Minimum annotation probability is <= 0, got {np.min(pi)}")
+            raise ValueError(f"Minimum annotation probability should be > 0, got {np.min(pi)}")
         xi = (~np.isnan(y_true_all)).astype(float)
         # replace NaN values in y_true_all by zero
         y_true = np.nan_to_num(y_true_all, nan=-1.0)

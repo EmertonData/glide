@@ -81,7 +81,7 @@ def test_preprocess_raises_on_non_positive_pi(estimator, bad_pi):
     labeled = [{"y_true": 1.0, "y_proxy": 1.0, "pi": 0.5}]
     unlabeled = [{"y_proxy": 1.0, "pi": bad_pi}]
     dataset = Dataset(labeled + unlabeled)
-    with pytest.raises(ValueError, match="Minimum annotation probability is <= 0"):
+    with pytest.raises(ValueError, match="Minimum annotation probability should be > 0"):
         estimator._preprocess(dataset, "y_true", "y_proxy", "pi")
 
 
