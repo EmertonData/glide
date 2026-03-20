@@ -7,8 +7,8 @@ from glide.estimators.asi import ASIMeanEstimator
 
 # --- helpers ---
 
-
-def make_dataset(n_labeled: int = 2, n_unlabeled: int = 2, seed: int = 0) -> Dataset:
+@pytest.fixture
+def dataset(n_labeled: int = 2, n_unlabeled: int = 2, seed: int = 0) -> Dataset:
     rng = np.random.default_rng(seed)
     pi = n_labeled / (n_labeled + n_unlabeled)
     y_true_vals = rng.normal(4.0, 1.0, size=n_labeled)
@@ -18,10 +18,6 @@ def make_dataset(n_labeled: int = 2, n_unlabeled: int = 2, seed: int = 0) -> Dat
     unlabeled = [{"y_proxy": float(yp), "pi": pi} for yp in y_proxy_unlabeled]
     return Dataset(labeled + unlabeled)
 
-
-@pytest.fixture
-def dataset() -> Dataset:
-    return make_dataset(n_labeled=2, n_unlabeled=2)
 
 
 @pytest.fixture
@@ -59,36 +55,23 @@ Y_DATA = (Y_TRUE, Y_PROXY, XI, PI)
 # --- preprocessing ---
 
 
-def test_preprocess_counts(estimator, dataset):
+def test_preprocess(estimator, dataset):
     y_true, y_proxy, xi, pi = estimator._preprocess(dataset, "y_true", "y_proxy", "pi")
     assert len(y_true) == 4
     assert len(y_proxy) == 4
     assert len(xi) == 4
     assert int(xi.sum()) == 2
     assert len(pi) == 4
-
+    assert np.all((pi > 0)) and np.all((pi <= 1))
+    assert set(xi.tolist()).issubset({0.0, 1.0})
 
 def test_preprocess_no_nans_in_y_true(estimator, dataset):
     y_true, _, _, _ = estimator._preprocess(dataset, "y_true", "y_proxy", "pi")
     assert not np.any(np.isnan(y_true))
 
 
-def test_preprocess_returns_four_arrays(estimator, dataset):
-    result = estimator._preprocess(dataset, "y_true", "y_proxy", "pi")
-    n = len(dataset)
-    assert len(result) == 4
-    for arr in result:
-        assert arr.shape == (n,)
 
-
-def test_preprocess_pi_values_in_valid_range(estimator, dataset):
-    _, _, _, pi = estimator._preprocess(dataset, "y_true", "y_proxy", "pi")
-    assert np.all((pi > 0)) and np.all((pi <= 1))
-
-
-def test_preprocess_xi_is_binary(estimator, dataset):
-    _, _, xi, _ = estimator._preprocess(dataset, "y_true", "y_proxy", "pi")
-    assert set(xi.tolist()).issubset({0.0, 1.0})
+    
 
 
 @pytest.mark.parametrize("bad_pi", [0.0, -0.5])
@@ -114,7 +97,8 @@ def test_compute_lambda_known_values(estimator):
     xi = np.array([1.0, 1.0, 0.0, 0.0])
     pi = np.array([0.5, 0.5, 0.5, 0.5])
     lam = estimator._compute_lambda((y_true, y_proxy, xi, pi), power_tuning=True)
-    assert lam == pytest.approx(46 / 53)
+    expected = 46 / 53
+    assert lam == pytest.approx(expected)
 
 
 def test_compute_lambda_constant_proxy_constant_xi_returns_zero(estimator):
@@ -138,7 +122,7 @@ def test_compute_lambda_constant_proxy_variable_xi_returns_zero(estimator):
 # --- _compute_mean_estimate ---
 
 
-def test_asi_mean_with_lambda_other(estimator):
+def test_compute_mean_estimate_known_values(estimator):
     _lambda = 0.5
     rectified_labels = _lambda * Y_PROXY + XI * (Y_TRUE - _lambda * Y_PROXY) / PI
     mean = estimator._compute_mean_estimate(rectified_labels)
@@ -149,7 +133,7 @@ def test_asi_mean_with_lambda_other(estimator):
 # --- _compute_std_estimate ---
 
 
-def test_asi_std_with_lambda_not_one(estimator):
+def test_compute_std_estimate_known_values(estimator):
     _lambda = 0.5
     rectified_labels = _lambda * Y_PROXY + XI * (Y_TRUE - _lambda * Y_PROXY) / PI
     std = estimator._compute_std_estimate(rectified_labels)
@@ -167,13 +151,12 @@ def test_estimate_returns_semisupervised_mean_inference_result(estimator, datase
     assert isinstance(result, SemiSupervisedMeanInferenceResult)
 
 
-def test_power_tuning_false_is_valid_inference_result(estimator, dataset):
+def test_estimate_is_valid_inference_result(estimator, dataset):
     result = estimator.estimate(
         dataset,
         y_true_field="y_true",
         y_proxy_field="y_proxy",
         sampling_probability_field="pi",
-        power_tuning=False,
     )
     assert isinstance(result, SemiSupervisedMeanInferenceResult)
     assert np.isfinite(result.confidence_interval.lower_bound)

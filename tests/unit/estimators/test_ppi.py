@@ -7,8 +7,8 @@ from glide.estimators.ppi import PPIMeanEstimator
 
 # ── helpers ────────────────────────────────────────────────────────────────────
 
-
-def make_dataset(n_true: int = 2, n_proxy: int = 2, seed: int = 42) -> Dataset:
+@pytest.fixture
+def dataset(n_true: int = 2, n_proxy: int = 2, seed: int = 42) -> Dataset:
     rng = np.random.default_rng(seed)
     y_true = rng.normal(loc=5.0, scale=1.0, size=n_true)
     y_proxy_labeled = y_true + rng.normal(0, 0.5, size=n_true)
@@ -18,9 +18,6 @@ def make_dataset(n_true: int = 2, n_proxy: int = 2, seed: int = 42) -> Dataset:
     return Dataset(labeled + proxy_only)
 
 
-@pytest.fixture
-def dataset() -> Dataset:
-    return make_dataset(n_true=2, n_proxy=2)
 
 
 @pytest.fixture
@@ -32,13 +29,14 @@ def estimator() -> PPIMeanEstimator:
 
 
 def test_preprocess_counts(estimator, dataset):
-    y_data = estimator._preprocess(dataset, "y_true", "y_proxy")
-    y_true, y_proxy_labeled, y_proxy_unlabeled = y_data
+    y_true, y_proxy_labeled, y_proxy_unlabeled = estimator._preprocess(dataset, "y_true", "y_proxy")
     assert len(y_true) == 2
     assert len(y_proxy_labeled) == 2
     assert len(y_proxy_unlabeled) == 2
-    assert not np.any(np.isnan(y_true))
 
+def test_preprocess_no_nans_in_y_true(estimator, dataset):
+    y_true, _, _ = estimator._preprocess(dataset, "y_true", "y_proxy")
+    assert not np.any(np.isnan(y_true))
 
 # --- _compute_lambda ---
 
@@ -71,7 +69,7 @@ def test_compute_lambda_constant_proxy_returns_zero(estimator):
 # --- _compute_mean_estimate ---
 
 
-def test_ppi_mean_with_lambda_other(estimator):
+def test_compute_mean_estimate_known_values(estimator):
     y_true = np.array([5.0, 6.0, 7.0])
     y_proxy_labeled = np.array([4.5, 5.5, 6.5])
     y_proxy_unlabeled = np.array([6.0, 7.0, 8.0])
@@ -84,7 +82,7 @@ def test_ppi_mean_with_lambda_other(estimator):
 # --- _compute_std_estimate ---
 
 
-def test_ppi_std_with_lambda_not_one(estimator):
+def test_compute_std_estimate_known_values(estimator):
     y_true = np.array([5.0, 6.0, 7.0])
     y_proxy_labeled = np.array([4.5, 5.5, 6.5])
     y_proxy_unlabeled = np.array([4.0, 5.0, 6.0, 7.0])
@@ -102,7 +100,7 @@ def test_estimate_returns_semisupervised_mean_inference_result(estimator, datase
     assert isinstance(result, SemiSupervisedMeanInferenceResult)
 
 
-def test_power_tuning_false_is_valid_inference_result(estimator, dataset):
+def test_estimate_power_tuning_false_is_valid_inference_result(estimator, dataset):
     result = estimator.estimate(dataset, y_true_field="y_true", y_proxy_field="y_proxy", power_tuning=False)
     assert isinstance(result, SemiSupervisedMeanInferenceResult)
     assert np.isfinite(result.confidence_interval.lower_bound)

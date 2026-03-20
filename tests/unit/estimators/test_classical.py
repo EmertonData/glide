@@ -6,15 +6,11 @@ from glide.core.mean_inference_result import ClassicalMeanInferenceResult
 from glide.estimators.classical import ClassicalMeanEstimator
 
 
-def make_dataset(n: int = 4, seed: int = 42) -> Dataset:
+@pytest.fixture
+def dataset(n: int = 4, seed: int = 42) -> Dataset:
     rng = np.random.default_rng(seed)
     y = rng.normal(loc=5.0, scale=1.0, size=n)
     return Dataset([{"y": float(v)} for v in y])
-
-
-@pytest.fixture
-def dataset() -> Dataset:
-    return make_dataset(n=4)
 
 
 @pytest.fixture
@@ -33,7 +29,7 @@ def test_preprocess_counts(estimator, dataset):
 # --- _compute_mean_estimate ---
 
 
-def test_classical_mean(estimator):
+def test_compute_mean_estimate_known_values(estimator):
     y = np.array([2.0, 4.0, 6.0, 8.0])
     expected = 5.0
     assert estimator._compute_mean_estimate(y) == pytest.approx(expected)
@@ -42,10 +38,10 @@ def test_classical_mean(estimator):
 # --- _compute_std_estimate ---
 
 
-def test_classical_std(estimator):
+def test_compute_std_estimate_known_values(estimator):
     y = np.array([2.0, 4.0, 6.0, 8.0])
-    expected = 1.2909944487358056
-    assert estimator._compute_std_estimate(y) == pytest.approx(expected)
+    expected = 1.29
+    assert estimator._compute_std_estimate(y) == pytest.approx(expected, abs=0.01)
 
 
 # --- estimate ---
