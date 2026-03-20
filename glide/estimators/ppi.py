@@ -65,7 +65,10 @@ class PPIMeanEstimator:
         y_proxy_all = np.hstack([y_proxy_labeled, y_proxy_unlabeled])
         cov = np.cov(y_true, y_proxy_labeled, ddof=1)[0, 1]
         var = np.var(y_proxy_all, ddof=1)
-        _lambda = cov / ((1 + n / N) * var)
+        if var == 0:
+            raise ValueError("Input proxy values have zero variance")
+        else:
+            _lambda = cov / ((1 + n / N) * var)
         return _lambda
 
     def _compute_mean_estimate(self, y_data: Tuple[NDArray, NDArray, NDArray], _lambda: float) -> float:
