@@ -66,7 +66,7 @@ class PPIMeanEstimator:
         cov = np.cov(y_true, y_proxy_labeled, ddof=1)[0, 1]
         var = np.var(y_proxy_all, ddof=1)
         if var == 0:
-            _lambda = 0
+            raise ValueError("Input proxy values have zero variance")
         else:
             _lambda = cov / ((1 + n / N) * var)
         return _lambda

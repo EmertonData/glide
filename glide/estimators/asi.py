@@ -80,6 +80,7 @@ class ASIMeanEstimator:
         b = y_true * xi / pi
         cov_matrix = np.cov(a, b, ddof=1)
         var, cov = cov_matrix[0]
+        # breakpoint()
         if var == 0:
             raise ValueError("Input proxy values have zero variance")
         else:

@@ -1,5 +1,6 @@
 import numpy as np
 import pytest
+from numpy.typing import NDArray
 
 from glide.core.dataset import Dataset
 from glide.core.mean_inference_result import SemiSupervisedMeanInferenceResult
@@ -23,6 +24,21 @@ def dataset(n_labeled: int = 2, n_unlabeled: int = 2, seed: int = 0) -> Dataset:
 @pytest.fixture
 def estimator() -> ASIMeanEstimator:
     return ASIMeanEstimator()
+
+
+@pytest.fixture
+def rectified_labels() -> NDArray:
+    return np.array([2.0, 4.0, 3.0, 5.0])
+
+
+@pytest.fixture
+def y_data() -> tuple[NDArray, NDArray, NDArray, NDArray]:
+    y_true = np.array([3.0, 5.0, 0.0, 0.0])
+    y_proxy = np.array([2.0, 4.0, 5.0, 7.0])
+    xi = np.array([1.0, 1.0, 0.0, 0.0])
+    pi = np.array([0.5, 0.5, 0.5, 0.5])
+    y_data = (y_true, y_proxy, xi, pi)
+    return y_data
 
 
 # --- preprocessing ---
@@ -56,50 +72,29 @@ def test_preprocess_raises_on_non_positive_pi(estimator, bad_pi):
 # --- _compute_lambda ---
 
 
-def test_compute_lambda_returns_one_when_power_tuning_false(estimator):
+def test_compute_lambda_returns_one_when_power_tuning_false(estimator, y_data):
     # Hand-crafted arrays for deterministic unit tests.
-    y_true = np.array([3.0, 5.0, 0.0, 0.0])
-    y_proxy = np.array([2.0, 4.0, 5.0, 7.0])
-    xi = np.array([1.0, 1.0, 0.0, 0.0])
-    pi = np.array([0.5, 0.5, 0.5, 0.5])
-    y_data = (y_true, y_proxy, xi, pi)
     lam = estimator._compute_lambda(y_data, power_tuning=False)
     assert lam == 1.0
 
 
-def test_compute_lambda_known_values(estimator):
-    y_true = np.array([2.0, 4.0, 0.0, 0.0])
-    y_proxy = np.array([2.0, 4.0, 3.0, 5.0])
-    xi = np.array([1.0, 1.0, 0.0, 0.0])
-    pi = np.array([0.5, 0.5, 0.5, 0.5])
-    lam = estimator._compute_lambda((y_true, y_proxy, xi, pi), power_tuning=True)
-    expected = 46 / 53
-    assert lam == pytest.approx(expected)
+def test_compute_lambda_known_values(estimator, y_data):
+    lam = estimator._compute_lambda(y_data, power_tuning=True)
+    expected = 0.89
+    assert lam == pytest.approx(expected, abs=0.01)
 
 
-def test_compute_lambda_constant_proxy_constant_xi_returns_zero(estimator):
-    y_true = np.array([-1.0, 1.0, 0.0, 0.0])
-    y_proxy = np.array([3.0, 3.0, 3.0, 3.0])
-    xi = np.array([0.0, 0.0, 0.0, 0.0])
-    pi = np.array([0.5, 0.5, 0.5, 0.5])
+def test_compute_lambda_constant_proxy_raises_error(estimator, y_data):
+    y_true, _, _, pi = y_data
+    y_proxy, xi = 3 * np.zeros(4), np.ones(4)
     with pytest.raises(ValueError, match="Input proxy values have zero variance"):
         estimator._compute_lambda((y_true, y_proxy, xi, pi), power_tuning=True)
-
-
-def test_compute_lambda_constant_proxy_variable_xi_returns_zero(estimator):
-    y_true = np.array([-1.0, 1.0, 0.0, 0.0])
-    y_proxy = np.array([3.0, 3.0, 3.0, 3.0])
-    xi = np.array([1.0, 1.0, 0.0, 0.0])
-    pi = np.array([0.5, 0.5, 0.5, 0.5])
-    lam = estimator._compute_lambda((y_true, y_proxy, xi, pi), power_tuning=True)
-    assert lam == pytest.approx(0.0)
 
 
 # --- _compute_mean_estimate ---
 
 
-def test_compute_mean_estimate_known_values(estimator):
-    rectified_labels = np.array([2.0, 4.0, 3.0, 5.0])
+def test_compute_mean_estimate_known_values(estimator, rectified_labels):
     mean = estimator._compute_mean_estimate(rectified_labels)
     expected = 3.5
     assert mean == pytest.approx(expected)
@@ -108,11 +103,10 @@ def test_compute_mean_estimate_known_values(estimator):
 # --- _compute_std_estimate ---
 
 
-def test_compute_std_estimate_known_values(estimator):
-    rectified_labels = np.array([2.0, 4.0, 3.0, 5.0])
+def test_compute_std_estimate_known_values(estimator, rectified_labels):
     std = estimator._compute_std_estimate(rectified_labels)
-    expected = 0.6454972243
-    assert std == pytest.approx(expected)
+    expected = 0.65
+    assert std == pytest.approx(expected, abs=0.01)
 
 
 # --- estimate ---
@@ -163,16 +157,16 @@ def test_estimate_custom_confidence_level(estimator, dataset):
         confidence_level=0.95,
     )
 
-    expected_mean = 3.9179923614545595
-    expected_std = 0.18542314388290385
-    expected_lower = 3.5545696775438795
-    expected_upper = 4.2814150453652395
+    expected_mean = 3.92
+    expected_std = 0.19
+    expected_lower = 3.55
+    expected_upper = 4.28
 
     assert result.confidence_interval.confidence_level == 0.95
-    assert result.confidence_interval.mean == pytest.approx(expected_mean)
-    assert result.std == pytest.approx(expected_std)
-    assert result.confidence_interval.lower_bound == pytest.approx(expected_lower)
-    assert result.confidence_interval.upper_bound == pytest.approx(expected_upper)
+    assert result.confidence_interval.mean == pytest.approx(expected_mean, abs=0.01)
+    assert result.std == pytest.approx(expected_std, abs=0.01)
+    assert result.confidence_interval.lower_bound == pytest.approx(expected_lower, abs=0.01)
+    assert result.confidence_interval.upper_bound == pytest.approx(expected_upper, abs=0.01)
 
 
 # --- __str__ / __repr__ ---

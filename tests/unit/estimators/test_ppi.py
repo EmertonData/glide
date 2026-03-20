@@ -1,11 +1,13 @@
 import numpy as np
 import pytest
+from numpy.typing import NDArray
 
 from glide.core.dataset import Dataset
 from glide.core.mean_inference_result import SemiSupervisedMeanInferenceResult
 from glide.estimators.ppi import PPIMeanEstimator
 
 # ── helpers ────────────────────────────────────────────────────────────────────
+
 
 @pytest.fixture
 def dataset(n_true: int = 2, n_proxy: int = 2, seed: int = 42) -> Dataset:
@@ -18,62 +20,60 @@ def dataset(n_true: int = 2, n_proxy: int = 2, seed: int = 42) -> Dataset:
     return Dataset(labeled + proxy_only)
 
 
-
-
 @pytest.fixture
 def estimator() -> PPIMeanEstimator:
     return PPIMeanEstimator()
 
 
+@pytest.fixture
+def y_data() -> tuple[NDArray, NDArray, NDArray]:
+    y_true = np.array([5.0, 6.0, 7.0])
+    y_proxy_labeled = np.array([4.5, 5.5, 6.5])
+    y_proxy_unlabeled = np.array([6.0, 7.0, 8.0])
+    return (y_true, y_proxy_labeled, y_proxy_unlabeled)
+
+
 # --- preprocessing ---
 
 
-def test_preprocess_counts(estimator, dataset):
+def test_preprocess(estimator, dataset):
     y_true, y_proxy_labeled, y_proxy_unlabeled = estimator._preprocess(dataset, "y_true", "y_proxy")
     assert len(y_true) == 2
     assert len(y_proxy_labeled) == 2
     assert len(y_proxy_unlabeled) == 2
 
+
 def test_preprocess_no_nans_in_y_true(estimator, dataset):
     y_true, _, _ = estimator._preprocess(dataset, "y_true", "y_proxy")
     assert not np.any(np.isnan(y_true))
 
+
 # --- _compute_lambda ---
 
 
-def test_compute_lambda_returns_one_when_power_tuning_false(estimator, dataset):
-    y_data = estimator._preprocess(dataset, "y_true", "y_proxy")
+def test_compute_lambda_returns_one_when_power_tuning_false(estimator, y_data):
     result = estimator._compute_lambda(y_data, power_tuning=False)
     assert result == 1.0
 
 
-def test_compute_lambda_known_values(estimator):
-    y_true = np.array([0.0, 1.0])
-    y_proxy_labeled = np.array([0.0, 1.0])
-    y_proxy_unlabeled = np.array([0.0, 1.0])
-    y_data = (y_true, y_proxy_labeled, y_proxy_unlabeled)
-    expected = 0.75
+def test_compute_lambda_known_values(estimator, y_data):
+    expected = 0.34
     result = estimator._compute_lambda(y_data, power_tuning=True)
-    assert result == pytest.approx(expected)
+    assert result == pytest.approx(expected, abs=0.01)
 
 
-def test_compute_lambda_constant_proxy_returns_zero(estimator):
-    y_true = np.array([-1.0, 1.0, 0.0, 0.0])
-    y_proxy_labeled = np.array([3.0, 3.0, 3.0, 3.0])
-    y_proxy_unlabeled = np.array([3.0, 3.0])
+def test_compute_lambda_constant_proxy_raises_error(estimator, y_data):
+    y_true, _, _ = y_data
+    y_proxy_labeled, y_proxy_unlabeled = 3 * np.ones(3), 3 * np.ones(2)
     y_data = (y_true, y_proxy_labeled, y_proxy_unlabeled)
-    lam = estimator._compute_lambda(y_data, power_tuning=True)
-    assert lam == pytest.approx(0.0)
+    with pytest.raises(ValueError, match="Input proxy values have zero variance"):
+        estimator._compute_lambda(y_data, power_tuning=True)
 
 
 # --- _compute_mean_estimate ---
 
 
-def test_compute_mean_estimate_known_values(estimator):
-    y_true = np.array([5.0, 6.0, 7.0])
-    y_proxy_labeled = np.array([4.5, 5.5, 6.5])
-    y_proxy_unlabeled = np.array([6.0, 7.0, 8.0])
-    y_data = (y_true, y_proxy_labeled, y_proxy_unlabeled)
+def test_compute_mean_estimate_known_values(estimator, y_data):
     expected = 6.75
     result = estimator._compute_mean_estimate(y_data, _lambda=0.5)
     assert result == pytest.approx(expected)
@@ -82,12 +82,8 @@ def test_compute_mean_estimate_known_values(estimator):
 # --- _compute_std_estimate ---
 
 
-def test_compute_std_estimate_known_values(estimator):
-    y_true = np.array([5.0, 6.0, 7.0])
-    y_proxy_labeled = np.array([4.5, 5.5, 6.5])
-    y_proxy_unlabeled = np.array([4.0, 5.0, 6.0, 7.0])
-    y_data = (y_true, y_proxy_labeled, y_proxy_unlabeled)
-    expected = 0.43
+def test_compute_std_estimate_known_values(estimator, y_data):
+    expected = 0.41
     result = estimator._compute_std_estimate(y_data, _lambda=0.5)
     assert result == pytest.approx(expected, abs=1e-2)
 
@@ -122,7 +118,17 @@ def test_estimate_custom_confidence_level(estimator, dataset):
     result = estimator.estimate(
         dataset, y_true_field="y_true", y_proxy_field="y_proxy", metric_name="perf", confidence_level=0.90
     )
+
+    expected_mean = 4.07
+    expected_std = 0.47
+    expected_lower = 3.29
+    expected_upper = 4.85
+
     assert result.confidence_interval.confidence_level == 0.90
+    assert result.confidence_interval.mean == pytest.approx(expected_mean, abs=0.01)
+    assert result.std == pytest.approx(expected_std, abs=0.01)
+    assert result.confidence_interval.lower_bound == pytest.approx(expected_lower, abs=0.01)
+    assert result.confidence_interval.upper_bound == pytest.approx(expected_upper, abs=0.01)
 
 
 # --- __str__ / __repr__ ---
