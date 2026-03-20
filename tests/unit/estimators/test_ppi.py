@@ -100,8 +100,8 @@ def test_estimate_returns_semisupervised_mean_inference_result(estimator, datase
     assert isinstance(result, SemiSupervisedMeanInferenceResult)
 
 
-def test_estimate_power_tuning_false_is_valid_inference_result(estimator, dataset):
-    result = estimator.estimate(dataset, y_true_field="y_true", y_proxy_field="y_proxy", power_tuning=False)
+def test_estimate_is_valid_inference_result(estimator, dataset):
+    result = estimator.estimate(dataset, y_true_field="y_true", y_proxy_field="y_proxy")
     assert isinstance(result, SemiSupervisedMeanInferenceResult)
     assert np.isfinite(result.confidence_interval.lower_bound)
     assert np.isfinite(result.confidence_interval.upper_bound)
