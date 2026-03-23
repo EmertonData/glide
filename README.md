@@ -42,7 +42,7 @@ or
 ```bash
 pip install glide-py
 ```
-And look at our practical [quickstart](https://raw.githubusercontent.com/EmertonData/glide/refs/heads/main/docs/getting-started/quickstart.ipynb).
+And look at our practical [quickstart](getting-started/quickstart.ipynb).
 
 ## 📚 Documentation
 
