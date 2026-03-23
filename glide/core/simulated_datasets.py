@@ -5,7 +5,7 @@ import numpy as np
 from glide.core.dataset import Dataset
 
 
-def generate_dataset_binary(
+def generate_binary_dataset(
     n: int,
     N: int,
     true_mean: float = 0.7,
