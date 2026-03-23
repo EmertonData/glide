@@ -16,8 +16,10 @@ plugins:
           options:
             docstring_style: numpy
             show_submodules: false
-            group_by_category: true
-            show_category_heading: true
+            show_root_heading: false
+            group_by_category: false
+            show_category_heading: false
+            show_root_toc_entry: false
   - mkdocs-jupyter:
       include_source: true
       execute: true

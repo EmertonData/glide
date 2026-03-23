@@ -1,13 +1,13 @@
 # Mean Inference Results
 
-## Base
-
 ::: glide.core.mean_inference_result.base
-
-## Classical
+    options:
+      show_root_heading: false
 
 ::: glide.core.mean_inference_result.classical
-
-## Semi-Supervised
+    options:
+      show_root_heading: false
 
 ::: glide.core.mean_inference_result.semi_supervised
+    options:
+      show_root_heading: false
