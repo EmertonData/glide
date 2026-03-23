@@ -47,6 +47,8 @@ Moreover, $C_\alpha$ should be as small as possible
 | **Notation** | $\tilde{Y}_i$ | $Y_j$ |
 | **Bias** | Biased: $E[\tilde{Y}] \neq \theta^*$ | Unbiased: $E[Y] = \theta^*$ |
 
+For example, the $n$ human labels can be provided for a set sampled chosen uniformly at random from the whole $N$ samples.
+
 The key insight: even though human labels are scarce, they can be used to **correct** the bias in the cheap LLM labels.
 
 <p align="center">
@@ -112,8 +114,6 @@ When the proxy is informative (high covariance with human labels), $\hat{\lambda
 
 The assumption that the $n$ labeled samples are drawn uniformly from the population for human annotation may not always hold. **Active Statistical Inference (ASI)** relaxes this assumption: each item $i$ can have a distinct, pre-determined probability $\pi_i = \Pr(\xi_i = 1)$ of being selected for human annotation, where $\xi_i \in \{0, 1\}$ is the indicator that item $i$ was annotated. ASI uses **inverse-probability weighting (IPW)** to correct for this non-uniform selection, yielding valid confidence intervals under any sampling rule.
 
-The special case where all $\pi_i$ are constant and equal to $n / N$ recovers PPI++ at $\lambda = 1$.
-
 ---
 
 ## Input data
@@ -124,7 +124,7 @@ The special case where all $\pi_i$ are constant and equal to $n / N$ recovers PP
 | **Notation** | $\tilde{Y}_i$ | $Y_i$ (when $\xi_i = 1$) | $\pi_i$ |
 | **Known?** | Always | Only if $\xi_i = 1$ | Always (by design) |
 
-Every item must carry a proxy label $\tilde{Y}_i$ and a known sampling probability $\pi_i$. Items that received human annotation additionally carry $Y_i$.
+Every item must carry a proxy label $\tilde{Y}_i$ and a known sampling probability $\pi_i$. Items that received human annotation additionally carry $Y_i$ which is observed with probability $\Pr(\xi_i = 1) = \pi_i$.
 
 ---
 
@@ -141,7 +141,7 @@ The division by $\pi_i$ up-weights items that had a low probability of being sel
 
 $$\hat{\theta}_\text{ASI}(\lambda) = \frac{1}{N} \sum_{i=1}^{N} z_i(\lambda)$$
 
-At $\lambda = 0$, this reduces to the classical **Horvitz-Thompson estimator** (human labels only, IPW-corrected). At $\lambda = 1$ with uniform $\pi_i = n / N$, it recovers PPI++.
+At $\lambda = 0$, this reduces to the classical **Horvitz-Thompson estimator** (human labels only, IPW-corrected).
 
 ---
 
@@ -155,11 +155,11 @@ This gives a confidence interval at level $1 - \alpha$:
 
 $$\Pr\!\left(\theta^* \in \left[\hat{\theta}_\text{ASI}(\lambda) - z_{1-\alpha/2}\,\hat{\sigma}_\text{se}(\lambda),\; \hat{\theta}_\text{ASI}(\lambda) + z_{1-\alpha/2}\,\hat{\sigma}_\text{se}(\lambda)\right]\right) \geq 1 - \alpha$$
 
-Note that unlike PPI++, the variance formula does not decompose into labeled and unlabeled terms: because the IPW correction folds both sources of information into $z_i(\lambda)$, a single variance term over all $N$ effective samples suffices.
+Note that, the variance formula does not decompose into labeled and unlabeled terms: because the IPW correction folds both sources of information into $z_i(\lambda)$, a single variance term over all $N$ effective samples suffices.
 
 ### Optimal $\lambda$
 
-As in PPI++, the weight $\lambda$ can be chosen analytically to minimise asymptotic variance. The closed-form plug-in estimator (Appendix A.2 of Gligoric et al., 2024) is:
+The weight $\lambda$ can be chosen analytically to minimise asymptotic variance. The closed-form plug-in estimator (Appendix A.2 of Gligoric et al., 2024) is:
 
 $$\hat{\lambda} = \frac{\widehat{\text{Cov}}(a, b)}{\widehat{\text{Var}}(a)}$$
 
@@ -181,4 +181,4 @@ Angelopoulos, Anastasios N., John C. Duchi, and Tijana Zrnic. "PPI++: Efficient 
 
 Zrnic, Tijana, and Emmanuel Candès. "Active statistical inference." *arXiv preprint arXiv:2403.03208* (2024).
 
-Gligoric, Kristina, Tiziano Piccardi, Cinoo Lee, Emmanuel Candès, and Robert West. "Confidence-driven inference." *arXiv preprint arXiv:2408.15204* (2024).
+Gligoric, Kristina, Tiziano Piccardi, Cinoo Lee, Emmanuel Candès, and Robert West. "Can Unconfident LLM Annotations Be Used for Confident Conclusions?" *arXiv preprint arXiv:2408.15204* (2024).
