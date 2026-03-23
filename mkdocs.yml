@@ -40,7 +40,6 @@ nav:
   - Examples:
     - examples/scientific_validation_PPI.ipynb
   - API Reference:
-    - Overview: api/index.md
     - Core:
       - Datasets: api/core/datasets.md
       - Mean Inference Results: api/core/mean_inference_results.md
