@@ -3,6 +3,10 @@
 ## Installation
 
 ```bash
+uv add glide-py
+```
+or
+```bash
 pip install glide-py
 ```
 
