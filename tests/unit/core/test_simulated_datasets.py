@@ -26,8 +26,21 @@ def test_generate_binary_dataset_record_structure():
         assert record.get("y_true", 0) in (0, 1)
 
 
+def test_generate_binary_dataset_invalid_true_mean_raises():
+    with pytest.raises(ValueError, match=r"true_mean must be in \(0, 1\), got 1\.5"):
+        generate_binary_dataset(n=1, N=1, true_mean=1.5)
+
+
+def test_generate_binary_dataset_invalid_proxy_mean_raises():
+    with pytest.raises(ValueError, match=r"proxy_mean must be in \(0, 1\), got 0"):
+        generate_binary_dataset(n=1, N=1, proxy_mean=0.0)
+
+
 def test_generate_binary_dataset_impossible_correlation_raises():
-    with pytest.raises(AssertionError):
+    with pytest.raises(
+        ValueError,
+        match=r"Impossible combination of true_mean=0\.7, proxy_mean=0\.6, and correlation=0\.95",
+    ):
         generate_binary_dataset(n=1, N=9, true_mean=0.7, proxy_mean=0.6, correlation=0.95)
 
 
