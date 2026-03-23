@@ -53,11 +53,6 @@ def test_compute_std_estimate_known_values(estimator, y):
 # --- estimate ---
 
 
-def test_estimate_returns_classical_inference_result(estimator, dataset):
-    result = estimator.estimate(dataset, y_field="y")
-    assert isinstance(result, ClassicalMeanInferenceResult)
-
-
 def test_estimate_is_valid_inference_result(estimator, dataset):
     result = estimator.estimate(dataset, y_field="y")
     assert isinstance(result, ClassicalMeanInferenceResult)

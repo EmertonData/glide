@@ -525,7 +525,6 @@ name = "glide-py"
 version = "0.2.0"
 source = { editable = "." }
 dependencies = [
-    { name = "matplotlib" },
     { name = "scipy" },
 ]
 
@@ -538,6 +537,7 @@ dev = [
     { name = "ty" },
 ]
 doc = [
+    { name = "matplotlib" },
     { name = "mkdocs" },
     { name = "mkdocs-jupyter" },
     { name = "mkdocs-material" },
@@ -545,10 +545,7 @@ doc = [
 ]
 
 [package.metadata]
-requires-dist = [
-    { name = "matplotlib", specifier = ">=3.10.8" },
-    { name = "scipy", specifier = ">=1.17.1" },
-]
+requires-dist = [{ name = "scipy", specifier = ">=1.17.1" }]
 
 [package.metadata.requires-dev]
 dev = [
@@ -559,6 +556,7 @@ dev = [
     { name = "ty", specifier = ">=0.0.20" },
 ]
 doc = [
+    { name = "matplotlib", specifier = ">=3.10.8" },
     { name = "mkdocs", specifier = ">=1.6.1" },
     { name = "mkdocs-jupyter", specifier = ">=0.25.1" },
     { name = "mkdocs-material", specifier = ">=9.7.4" },
