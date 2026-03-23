@@ -15,9 +15,12 @@ plugins:
         python:
           options:
             docstring_style: numpy
+            show_submodules: false
+            group_by_category: true
+            show_category_heading: true
   - mkdocs-jupyter:
       include_source: true
-      execute: true
+      execute: false
 
 markdown_extensions:
   - pymdownx.snippets
@@ -34,6 +37,12 @@ nav:
   - Quickstart: examples/quickstart.ipynb
   - Why use Glide ?: examples/why_use_glide.ipynb
   - User guide: user_guide/guide.md
-  - Examples: 
+  - Examples:
     - examples/scientific_validation_PPI.ipynb
-  - API Reference: api/index.md
+  - API Reference:
+    - Overview: api/index.md
+    - Core:
+      - Datasets: api/core/datasets.md
+      - Mean Inference Results: api/core/mean_inference_results.md
+    - Estimators: api/estimators.md
+    - I/O: api/io.md
