@@ -110,8 +110,66 @@ When the proxy is informative (high covariance with human labels), $\hat{\lambda
 
 # Active Statistical Inference (ASI)
 
-> **Note:** This section is a work in progress.
+The assumption that the $n$ labeled samples are drawn uniformly from the population for human annotation may not always hold. **Active Statistical Inference (ASI)** relaxes this assumption: each item $i$ can have a distinct, pre-determined probability $\pi_i = \Pr(\xi_i = 1)$ of being selected for human annotation, where $\xi_i \in \{0, 1\}$ is the indicator that item $i$ was annotated. ASI uses **inverse-probability weighting (IPW)** to correct for this non-uniform selection, yielding valid confidence intervals under any sampling rule.
 
+The special case where all $\pi_i$ are constant and equal to $n / N$ recovers PPI++ at $\lambda = 1$.
+
+---
+
+## Input data
+
+| | Proxy labels (LLM) | Human labels | Sampling probabilities |
+|---|---|---|---|
+| **Size** | $N$ (all items) | $n$ (annotated items) | $N$ (all items) |
+| **Notation** | $\tilde{Y}_i$ | $Y_i$ (when $\xi_i = 1$) | $\pi_i$ |
+| **Known?** | Always | Only if $\xi_i = 1$ | Always (by design) |
+
+Every item must carry a proxy label $\tilde{Y}_i$ and a known sampling probability $\pi_i$. Items that received human annotation additionally carry $Y_i$.
+
+---
+
+## The ASI estimator
+
+ASI builds an IPW-corrected effective sample $z_i(\lambda)$ for each item:
+
+$$z_i(\lambda) = \lambda\tilde{Y}_i + \xi_i \cdot \frac{Y_i - \lambda\tilde{Y}_i}{\pi_i}$$
+
+- For **unlabeled** items ($\xi_i = 0$): $z_i = \lambda\tilde{Y}_i$ — only the proxy contributes.
+- For **labeled** items ($\xi_i = 1$): $z_i = \lambda\tilde{Y}_i + (Y_i - \lambda\tilde{Y}_i) / \pi_i$ — the proxy is corrected by the IPW-scaled residual.
+
+The division by $\pi_i$ up-weights items that had a low probability of being selected, ensuring the estimator remains unbiased regardless of the sampling design. The ASI point estimate is then simply the mean of these effective samples:
+
+$$\hat{\theta}_\text{ASI}(\lambda) = \frac{1}{N} \sum_{i=1}^{N} z_i(\lambda)$$
+
+At $\lambda = 0$, this reduces to the classical **Horvitz-Thompson estimator** (human labels only, IPW-corrected). At $\lambda = 1$ with uniform $\pi_i = n / N$, it recovers PPI++.
+
+---
+
+## Variance and confidence intervals
+
+For large enough sample sizes, the Central Limit Theorem applies. The asymptotic standard error is the sample standard deviation of $z(\lambda)$ divided by $\sqrt{N}$:
+
+$$\hat{\sigma}_\text{se}(\lambda) = \sqrt{\frac{\widehat{\text{Var}}(z(\lambda))}{N}}$$
+
+This gives a confidence interval at level $1 - \alpha$:
+
+$$\Pr\!\left(\theta^* \in \left[\hat{\theta}_\text{ASI}(\lambda) - z_{1-\alpha/2}\,\hat{\sigma}_\text{se}(\lambda),\; \hat{\theta}_\text{ASI}(\lambda) + z_{1-\alpha/2}\,\hat{\sigma}_\text{se}(\lambda)\right]\right) \geq 1 - \alpha$$
+
+Note that unlike PPI++, the variance formula does not decompose into labeled and unlabeled terms: because the IPW correction folds both sources of information into $z_i(\lambda)$, a single variance term over all $N$ effective samples suffices.
+
+### Optimal $\lambda$
+
+As in PPI++, the weight $\lambda$ can be chosen analytically to minimise asymptotic variance. The closed-form plug-in estimator (Appendix A.2 of Gligoric et al., 2024) is:
+
+$$\hat{\lambda} = \frac{\widehat{\text{Cov}}(a, b)}{\widehat{\text{Var}}(a)}$$
+
+where, for each item $i$:
+
+$$a_i = \tilde{Y}_i \left(\frac{\xi_i}{\pi_i} - 1\right), \qquad b_i = Y_i \cdot \frac{\xi_i}{\pi_i}$$
+
+Crucially, $a_i$ is computable for every item (no $Y_i$ needed), while $b_i$ uses $Y_i$ only for labeled items (and is zero otherwise). This means optimal $\lambda$ can be estimated from the full dataset.
+
+When the proxy is informative, $\hat{\lambda}$ is close to 1 and the CI is narrower than the plain IPW estimator. When the proxy is uninformative or misleading, $\hat{\lambda}$ shrinks toward 0, falling back toward the Horvitz-Thompson baseline. ASI uses optimal $\hat{\lambda}$ by default; passing `power_tuning=False` forces $\lambda = 1$.
 
 ---
 
@@ -120,3 +178,7 @@ When the proxy is informative (high covariance with human labels), $\hat{\lambda
 Angelopoulos, Anastasios N., Stephen Bates, Clara Fannjiang, Michael I. Jordan, and Tijana Zrnic. "Prediction-powered inference." *Science* 382, no. 6671 (2023): 669–674.
 
 Angelopoulos, Anastasios N., John C. Duchi, and Tijana Zrnic. "PPI++: Efficient prediction-powered inference." *arXiv preprint arXiv:2311.01453* (2023).
+
+Zrnic, Tijana, and Emmanuel Candès. "Active statistical inference." *arXiv preprint arXiv:2403.03208* (2024).
+
+Gligoric, Kristina, Tiziano Piccardi, Cinoo Lee, Emmanuel Candès, and Robert West. "Confidence-driven inference." *arXiv preprint arXiv:2408.15204* (2024).
