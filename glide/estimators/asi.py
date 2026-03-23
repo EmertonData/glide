@@ -62,7 +62,8 @@ class ASIMeanEstimator:
         y_true_all = data[:, 0]
         y_proxy = data[:, 1]
         pi = data[:, 2]
-        assert np.min(pi) > 0, "Minimum annotation probability is <= 0 !"
+        if np.min(pi) <= 0:
+            raise ValueError(f"Minimum annotation probability should be > 0, got {np.min(pi)}")
         xi = (~np.isnan(y_true_all)).astype(float)
         # replace NaN values in y_true_all by zero
         y_true = np.nan_to_num(y_true_all, nan=-1.0)
@@ -80,7 +81,11 @@ class ASIMeanEstimator:
         b = y_true * xi / pi
         cov_matrix = np.cov(a, b, ddof=1)
         var, cov = cov_matrix[0]
-        _lambda = float(cov / var)
+        # breakpoint()
+        if var == 0:
+            raise ValueError("Input proxy values have zero variance")
+        else:
+            _lambda = float(cov / var)
         return _lambda
 
     def _compute_rectified_labels(
