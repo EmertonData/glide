@@ -167,11 +167,13 @@ class ASIMeanEstimator:
         n_true = int(xi.sum())
         n_proxy = len(y_proxy)
 
-        ci = CLTConfidenceInterval(mean=mean_estimate, std=std_estimate, confidence_level=confidence_level)
+        confidence_interval = CLTConfidenceInterval(
+            mean=mean_estimate, std=std_estimate, confidence_level=confidence_level
+        )
         effective_sample_size = compute_effective_sample_size(y_true[xi == 1], std_estimate)
 
         return SemiSupervisedMeanInferenceResult(
-            confidence_interval=ci,
+            confidence_interval=confidence_interval,
             metric_name=metric_name,
             estimator_name=self.__class__.__name__,
             n_true=n_true,
