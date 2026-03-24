@@ -5,9 +5,8 @@ from glide.core.simulated_datasets import generate_binary_dataset
 
 
 def test_generate_binary_dataset_structure_and_counts():
-    ds = generate_binary_dataset(n=1, N=2, random_seed=0)
-    labeled = [r for r in ds if "y_true" in r]
-    unlabeled = [r for r in ds if "y_true" not in r]
+    labeled,unlabeled = generate_binary_dataset(n=1, N=2, random_seed=0)
+    ds = labeled + unlabeled
     assert isinstance(ds, Dataset)
     assert len(ds) == 3
     assert len(labeled) == 1

@@ -5,10 +5,10 @@ from numpy.typing import NDArray
 
 
 class Dataset(list):
-    def __add__(self, other):
+    def __add__(self, other: "Dataset") -> "Dataset":
         return Dataset(list.__add__(self, other))
 
-    def __radd__(self, other):
+    def __radd__(self, other: "Dataset") -> "Dataset":
         return Dataset(list.__add__(other, self))
 
     @property

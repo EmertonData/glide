@@ -26,6 +26,14 @@ def test_dataset_records():
     assert dataset.records == [{"a": 0}, {"b": 1}]
 
 
+def test_dataset_add():
+    dataset1 = Dataset([{"a": 0}])
+    dataset2 = Dataset([{"b": 1}])
+    result = dataset1 + dataset2
+    assert result == [{"a": 0}, {"b": 1}]
+    assert isinstance(result, Dataset)
+
+
 RECORDS = [
     {"human": 0, "llm": 0},
     {"llm": 1},
