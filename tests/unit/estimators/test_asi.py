@@ -69,6 +69,22 @@ def test_preprocess_raises_on_non_positive_pi(estimator, bad_pi):
         estimator._preprocess(dataset, "y_true", "y_proxy", "pi")
 
 
+def test_preprocess_raises_on_constant_proxy(estimator):
+    labeled = [{"y_true": 1.0, "y_proxy": 1.0, "pi": 0.5}]
+    unlabeled = [{"y_proxy": 1.0, "pi": 0.5}]
+    dataset = Dataset(labeled + unlabeled)
+    with pytest.raises(ValueError, match="Input proxy values have zero variance"):
+        estimator._preprocess(dataset, "y_true", "y_proxy", "pi")
+
+
+def test_preprocess_raises_on_nan_proxy(estimator):
+    labeled = [{"y_true": 1.0, "y_proxy": 1.0, "pi": 0.5}]
+    unlabeled = [{"y_proxy": float("nan"), "pi": 0.5}]
+    dataset = Dataset(labeled + unlabeled)
+    with pytest.raises(ValueError, match="Input proxy values contain NaN"):
+        estimator._preprocess(dataset, "y_true", "y_proxy", "pi")
+
+
 # --- _compute_lambda ---
 
 
@@ -82,13 +98,6 @@ def test_compute_lambda_known_values(estimator, y_data):
     lam = estimator._compute_lambda(y_data, power_tuning=True)
     expected = 0.89
     assert lam == pytest.approx(expected, abs=0.01)
-
-
-def test_compute_lambda_constant_proxy_raises_error(estimator, y_data):
-    y_true, _, _, pi = y_data
-    y_proxy, xi = 3 * np.zeros(4), np.ones(4)
-    with pytest.raises(ValueError, match="Input proxy values have zero variance"):
-        estimator._compute_lambda((y_true, y_proxy, xi, pi), power_tuning=True)
 
 
 # --- _compute_mean_estimate ---
