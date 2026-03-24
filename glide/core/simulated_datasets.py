@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, Tuple
 
 import numpy as np
 
@@ -12,7 +12,7 @@ def generate_binary_dataset(
     proxy_mean: float = 0.6,
     correlation: float = 0.8,
     random_seed: Optional[int] = None,
-) -> Dataset:
+) -> Tuple[Dataset, Dataset]:
     """Generate a synthetic binary-label dataset for evaluation.
 
     Parameters
@@ -32,9 +32,10 @@ def generate_binary_dataset(
 
     Returns
     -------
-    Dataset
-        A Dataset of n + N records. Each record contains ``"proxy"`` (always present)
-        and ``"true"`` (only for the first ``n`` records).
+    Tuple[Dataset, Dataset]
+        A Dataset pair, one labeled with n records and the other unlabeled with N records.
+        respectively. Each record in the labeled dataset contains ``"proxy"`` and ``"true"``
+        while the unlabeled dataset records contain only ``"true"``.
 
     Raises
     ------
@@ -84,10 +85,11 @@ def generate_binary_dataset(
     # generate proxy values for un labeled samples
     y_proxy_unlabeled = rng.choice(2, p=[1 - p_mean, p_mean], size=N)
 
-    records = []
+    labeled_records = []
+    unlabeled_records = []
     for y_true_, y_proxy_ in zip(y_true, y_proxy_labeled):
-        records.append({"y_true": int(y_true_), "y_proxy": int(y_proxy_)})
+        labeled_records.append({"y_true": int(y_true_), "y_proxy": int(y_proxy_)})
     for y_proxy_ in y_proxy_unlabeled:
-        records.append({"y_proxy": int(y_proxy_)})
+        unlabeled_records.append({"y_proxy": int(y_proxy_)})
 
-    return Dataset(records)
+    return Dataset(labeled_records), Dataset(unlabeled_records)

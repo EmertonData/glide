@@ -5,6 +5,12 @@ from numpy.typing import NDArray
 
 
 class Dataset(list):
+    def __add__(self, other):
+        return Dataset(list.__add__(self, other))
+
+    def __radd__(self, other):
+        return Dataset(list.__add__(other, self))
+
     @property
     def records(self) -> List[Dict]:
         return list(self)
