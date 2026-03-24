@@ -23,7 +23,7 @@
 
 GLIDE is a Python library for **rigorous evaluation of GenAI systems** using hybrid human/proxy annotations.
 
-GLIDE implements methods from the field of **semi-supervised Inference** — the science of system evaluation that combines a small labeled dataset with a large unlabeled (or proxy-labeled) dataset to produce valid, debiased estimates. See the [implemented papers](#implemented-papers) below.
+GLIDE implements methods from the field of **semi-supervised inference** — the science of system evaluation that combines a small labeled dataset with a large unlabeled (or proxy-labeled) dataset to produce valid, debiased estimates. See the [implemented papers](#implemented-papers) below.
 
 ## 🤔 Why GLIDE?
 
@@ -46,7 +46,7 @@ And look at our practical [quickstart](getting-started/quickstart.ipynb).
 
 ## 📚 Documentation
 
-Explore the full [documentation](https://glide-py.readthedocs.io/en/latest/) — from practical tutorials and a user guide to scientific deep dives into the methods behind GLIDE.
+Explore the full [documentation](https://glide-py.readthedocs.io/en/latest/) — from practical tutorials and user guides to scientific deep dives into the methods behind GLIDE.
 
 ## 🤝 Contributing
 
