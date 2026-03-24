@@ -34,6 +34,13 @@ def test_dataset_add():
     assert isinstance(result, Dataset)
 
 
+def test_dataset_radd():
+    dataset = Dataset([{"b": 1}])
+    result = [{"a": 0}] + dataset
+    assert result == [{"a": 0}, {"b": 1}]
+    assert isinstance(result, Dataset)
+
+
 RECORDS = [
     {"human": 0, "llm": 0},
     {"llm": 1},
