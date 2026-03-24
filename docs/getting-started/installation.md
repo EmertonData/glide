@@ -2,6 +2,11 @@
 
 ## Installation
 
+Install the package with your favorite package manager :
+```bash
+uv add glide-py
+```
+or
 ```bash
 pip install glide-py
 ```
