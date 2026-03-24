@@ -15,6 +15,11 @@ plugins:
         python:
           options:
             docstring_style: numpy
+            show_submodules: false
+            show_root_heading: false
+            group_by_category: false
+            show_category_heading: false
+            show_root_toc_entry: false
   - mkdocs-jupyter:
       include_source: true
       execute: true
@@ -30,15 +35,15 @@ extra_javascript:
 
 nav:
   - Home: index.md
-  - Getting Started:
-    - Installation: getting-started/installation.md
-    - Quickstart: getting-started/quickstart.ipynb
-  - Tutorials:
-    - Estimate Hallucination rate at low cost with PPI++: tutorials/ppi.ipynb
-    - ASI Tutorial: tutorials/asi.ipynb
-  - User Guide: user_guide.md
-  - Deep Dive:
-    - Scientific Validation of PPI: deep_dive/ppi_validation.ipynb
-    - Scientific Validation of ASI: deep_dive/asi_validation.ipynb
-  - Contributing: contributing.md
-  - API Reference: api/index.md
+  - Getting Started: getting-started.md
+  - Quickstart: examples/quickstart.ipynb
+  - Why use Glide ?: examples/why_use_glide.ipynb
+  - User guide: user_guide/guide.md
+  - Examples:
+    - examples/scientific_validation_PPI.ipynb
+  - API Reference:
+    - Core:
+      - Datasets: api/core/datasets.md
+      - Mean Inference Results: api/core/mean_inference_results.md
+    - Estimators: api/estimators.md
+    - I/O: api/io.md

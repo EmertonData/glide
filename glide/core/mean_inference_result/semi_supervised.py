@@ -6,6 +6,8 @@ from glide.core.mean_inference_result.base import MeanInferenceResult
 
 @dataclass(repr=False)
 class SemiSupervisedMeanInferenceResult(MeanInferenceResult):
+    """Mean inference result for semi-supervised methods."""
+
     confidence_interval: CLTConfidenceInterval
     metric_name: str
     estimator_name: str
