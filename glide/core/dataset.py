@@ -16,6 +16,32 @@ class Dataset(list):
     @overload
     def __getitem__(self, key: str) -> NDArray: ...
     def __getitem__(self, key):
+        """Access records or a column from the dataset.
+
+        Parameters
+        ----------
+        key : int or slice or str
+            - ``int``: returns the record at that position as a ``Dict``.
+            - ``slice``: returns a list of records as ``List[Dict]``.
+            - ``str``: returns all values for that field as a 1D ``NDArray``.
+
+        Returns
+        -------
+        Dict or List[Dict] or NDArray
+            See ``key`` above.
+
+        Examples
+        --------
+        >>> from glide.core.dataset import Dataset
+        >>> dataset = Dataset([{"score": i} for i in range(5)])
+        >>> dataset[0]           # first record → Dict
+        {'score': 0}
+        >>> dataset[0:3]         # first five records → List[Dict]
+        [{'score': 0}, {'score': 1}, {'score': 2}]
+        >>> dataset["score"]     # "score" column → NDArray
+        array([0., 1., 2., 3., 4.])
+        """
+
         # If key is a string return a column, else if an integer index return a record
         if isinstance(key, str):
             return self.to_numpy([key])[:, 0]
