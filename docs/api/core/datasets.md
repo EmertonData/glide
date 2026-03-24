@@ -1,4 +1,4 @@
 # Datasets
 
 ::: glide.core.dataset
-::: glide.core.simulated
+::: glide.core.simulated_datasets
