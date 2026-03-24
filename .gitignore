@@ -27,3 +27,6 @@ site/
 .coverage
 htmlcov
 coverage.xml
+
+# VSCode
+.vscode
