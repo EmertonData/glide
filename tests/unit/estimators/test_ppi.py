@@ -91,11 +91,6 @@ def test_compute_std_estimate_known_values(estimator, y_data):
 # --- estimate ---
 
 
-def test_estimate_returns_semisupervised_mean_inference_result(estimator, dataset):
-    result = estimator.estimate(dataset, y_true_field="y_true", y_proxy_field="y_proxy")
-    assert isinstance(result, SemiSupervisedMeanInferenceResult)
-
-
 def test_estimate_is_valid_inference_result(estimator, dataset):
     result = estimator.estimate(dataset, y_true_field="y_true", y_proxy_field="y_proxy")
     assert isinstance(result, SemiSupervisedMeanInferenceResult)
