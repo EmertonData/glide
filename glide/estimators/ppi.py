@@ -50,6 +50,10 @@ class PPIMeanEstimator:
         data = dataset.to_numpy(fields=[y_true_field, y_proxy_field])
         y_true_all = data[:, 0]
         y_proxy_all = data[:, 1]
+        if np.isnan(y_proxy_all).any():
+            raise ValueError("Input proxy values contain NaN")
+        if len(np.unique(y_proxy_all)) == 1:
+            raise ValueError("Input proxy values have zero variance")
         labeled_mask = ~np.isnan(y_true_all)
         y_true = y_true_all[labeled_mask]
         y_proxy_labeled = y_proxy_all[labeled_mask]
@@ -65,10 +69,7 @@ class PPIMeanEstimator:
         y_proxy_all = np.hstack([y_proxy_labeled, y_proxy_unlabeled])
         cov = np.cov(y_true, y_proxy_labeled, ddof=1)[0, 1]
         var = np.var(y_proxy_all, ddof=1)
-        if var == 0:
-            raise ValueError("Input proxy values have zero variance")
-        else:
-            _lambda = cov / ((1 + n / N) * var)
+        _lambda = cov / ((1 + n / N) * var)
         return _lambda
 
     def _compute_mean_estimate(self, y_data: Tuple[NDArray, NDArray, NDArray], _lambda: float) -> float:
