@@ -44,7 +44,7 @@ pip install glide-py
 
 ## 🤝 Contributing
 
-Contributions are welcome! Feel free to open an [issue](https://github.com/EmertonData/glide/issues) to report a bug or suggest a feature, or submit a [pull request](https://github.com/EmertonData/glide/pulls) with your changes.
+Contributions are welcome! Please read the [contributing guide](https://github.com/EmertonData/glide/blob/main/CONTRIBUTING.md) for setup instructions, an architectural overview, and the checklist to follow before opening a pull request. Feel free to open an [issue](https://github.com/EmertonData/glide/issues) to report a bug or suggest a feature.
 
 ## 🔢 Versioning
 
@@ -57,7 +57,6 @@ This project follows [SPEC 0](https://scientific-python.org/specs/spec-0000/) fo
 ## 📄 License & Citation
 
 This project is licensed under the [Apache 2.0 License](https://raw.githubusercontent.com/EmertonData/glide/refs/heads/main/LICENSE).
-
 If you use Glide in your research, please cite:
 
 ```bibtex
