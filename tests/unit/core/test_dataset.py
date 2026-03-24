@@ -32,6 +32,21 @@ RECORDS = [
 ]
 
 
+def test_getitem_string_returns_column_with_nan_for_missing():
+    result = Dataset(RECORDS)["human"]
+    np.testing.assert_array_equal(result, np.array([0.0, np.nan]))
+
+
+def test_getitem_int_returns_record():
+    result = Dataset(RECORDS)[1]
+    assert result == {"llm": 1}
+
+
+def test_getitem_slice_returns_records():
+    result = Dataset(RECORDS)[0:2]
+    assert result == [{"human": 0, "llm": 0}, {"llm": 1}]
+
+
 def test_to_numpy_human_then_llm():
     result = Dataset(RECORDS).to_numpy(fields=["human", "llm"])
     expected = np.array([[0, 0], [np.nan, 1]], dtype=float)
