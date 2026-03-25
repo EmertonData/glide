@@ -82,7 +82,7 @@ def test_getitem_boolean_array_returns_filtered_dataset():
 
 def test_getitem_unsupported_key_type_raises():
     with pytest.raises(TypeError):
-        Dataset(RECORDS)[3.14]
+        Dataset(RECORDS)[3.14]  # type: ignore[index]
 
 
 def test_to_numpy_human_then_llm():
