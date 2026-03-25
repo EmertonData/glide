@@ -6,12 +6,12 @@ from glide.core.simulated_datasets import generate_binary_dataset
 
 def test_generate_binary_dataset_structure_and_counts():
     labeled, unlabeled = generate_binary_dataset(n=1, N=2, random_seed=0)
-    ds = labeled + unlabeled
-    assert isinstance(ds, Dataset)
-    assert len(ds) == 3
+    dataset = labeled + unlabeled
+    assert isinstance(dataset, Dataset)
+    assert len(dataset) == 3
     assert len(labeled) == 1
     assert len(unlabeled) == 2
-    for record in ds:
+    for record in dataset:
         assert "y_proxy" in record
         assert record["y_proxy"] in (0, 1)
         assert record.get("y_true", 0) in (0, 1)
@@ -36,6 +36,6 @@ def test_generate_binary_dataset_impossible_correlation_raises():
 
 
 def test_generate_binary_dataset_reproducibility():
-    ds1 = generate_binary_dataset(n=1, N=2, random_seed=7)
-    ds2 = generate_binary_dataset(n=1, N=2, random_seed=7)
-    assert ds1 == ds2
+    dataset1 = generate_binary_dataset(n=1, N=2, random_seed=7)
+    dataset2 = generate_binary_dataset(n=1, N=2, random_seed=7)
+    assert dataset1 == dataset2
