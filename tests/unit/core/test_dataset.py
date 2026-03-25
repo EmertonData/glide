@@ -69,11 +69,20 @@ def test_getitem_list_of_strings_returns_2d_array_with_nan_for_missing():
     np.testing.assert_array_equal(result, expected)
 
 
-
 def test_getitem_list_of_strings_returns_2d_array_with_nan_for_missing_column():
     result = Dataset(RECORDS)[["human", "llm", "unknown"]]
     expected = np.array([[0, 0, np.nan], [np.nan, 1, np.nan]], dtype=float)
     np.testing.assert_array_equal(result, expected)
+
+
+def test_getitem_boolean_array_returns_filtered_dataset():
+    result = Dataset(RECORDS)[Dataset(RECORDS)["human"] == 0]
+    assert result == Dataset([{"human": 0, "llm": 0}])
+
+
+def test_getitem_unsupported_key_type_raises():
+    with pytest.raises(TypeError):
+        Dataset(RECORDS)[3.14]
 
 
 def test_to_numpy_human_then_llm():

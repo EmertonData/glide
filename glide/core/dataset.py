@@ -14,6 +14,8 @@ class Dataset(list):
     @overload
     def __getitem__(self, key: slice) -> "Dataset": ...
     @overload
+    def __getitem__(self, key: NDArray[np.bool_]) -> "Dataset": ...
+    @overload
     def __getitem__(self, key: str) -> NDArray: ...
     @overload
     def __getitem__(self, key: List[str]) -> NDArray: ...
@@ -56,6 +58,8 @@ class Dataset(list):
                [ 3.,  0., nan],
                [ 4.,  1., nan],
                [ 5., nan, nan]])
+        >>> dataset[dataset["true"] == 1]
+        [{'score': 0, 'true': True}, {'score': 2, 'true': True}, {'score': 4, 'true': True}]
         """
 
         # If key is a string return a column, else if an integer index return a record
@@ -76,11 +80,17 @@ class Dataset(list):
         if isinstance(key, slice):
             return Dataset(super().__getitem__(key))
 
-        try:
-            record = super().__getitem__(key)
-            return Dataset([record])
-        except IndexError:
-            return Dataset()
+        if isinstance(key, int):
+            try:
+                record = super().__getitem__(key)
+                return Dataset([record])
+            except IndexError:
+                return Dataset()
+
+        if isinstance(key, np.ndarray) and key.dtype == bool:
+            return Dataset([r for i, r in enumerate(self) if key[i]])
+
+        raise TypeError(f"Unsupported key type: {type(key)}")
 
     def _select_columns_with_nan(self, cols: List[str]) -> NDArray:
         """Build 2D array with known columns and NaN-filled missing columns.
