@@ -196,4 +196,4 @@ Angelopoulos, Anastasios N., John C. Duchi, and Tijana Zrnic. "PPI++: Efficient 
 
 Zrnic, Tijana, and Emmanuel Candès. "Active statistical inference." *arXiv preprint arXiv:2403.03208* (2024).
 
-Gligoric, Kristina, et al. "Confidence-driven inference." *arXiv preprint arXiv:2408.15204* (2024).
+Gligoric, Kristina, et al. "Can Unconfident LLM Annotations Be Used for Confident Conclusions?" *arXiv preprint arXiv:2408.15204* (2024).
