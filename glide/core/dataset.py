@@ -65,30 +65,36 @@ class Dataset(list):
         # If key is a string return a column, else if an integer index return a record
         if isinstance(key, str):
             try:
-                return self.to_numpy([key])[:, 0]
+                column = self.to_numpy([key])[:, 0]
+                return column
             except ValueError:
-                return np.full((len(self),), np.nan, dtype=float)
+                empty_column = np.full((len(self),), np.nan, dtype=float)
+                return empty_column
 
         if isinstance(key, list) and all(isinstance(k, str) for k in key):
             # multiple columns
             try:
-                return self.to_numpy(key)
+                multiple_existing_columns = self.to_numpy(key)
+                return multiple_existing_columns
             except ValueError:
                 # missing columns -> NaN columns
-                return self._select_columns_with_nan(key)
+                missing_and_existing_columns = self._select_columns_with_nan(key)
+                return missing_and_existing_columns
 
         if isinstance(key, slice):
-            return Dataset(super().__getitem__(key))
+            records_slice = Dataset(super().__getitem__(key))
+            return records_slice
 
         if isinstance(key, int):
             try:
-                record = super().__getitem__(key)
-                return Dataset([record])
+                record = Dataset([super().__getitem__(key)])
+                return record
             except IndexError:
                 return Dataset()
 
         if isinstance(key, np.ndarray) and key.dtype == bool:
-            return Dataset([r for i, r in enumerate(self) if key[i]])
+            filtered_records = Dataset([r for i, r in enumerate(self) if key[i]])
+            return filtered_records
 
         raise TypeError(f"Unsupported key type: {type(key)}")
 
@@ -112,7 +118,9 @@ class Dataset(list):
         arr_known = self.to_numpy(known) if known else np.empty((len(self), 0), dtype=float)
         arr_missing = np.full((len(self), len(missing)), np.nan, dtype=float)
 
-        return np.concatenate([arr_known, arr_missing], axis=1)
+        final_array = np.concatenate([arr_known, arr_missing], axis=1)
+
+        return final_array
 
     def to_numpy(self, fields: List[str]) -> NDArray:
         """Convert the dataset to a 2D numpy array of floats.
