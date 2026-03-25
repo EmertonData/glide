@@ -1,4 +1,4 @@
-from typing import Dict, List, Any
+from typing import Any, Dict, List
 
 import numpy as np
 from numpy.typing import NDArray
@@ -12,7 +12,7 @@ class Dataset(list):
         return Dataset(list.__add__(other, self))
 
     @property
-    def records(self) -> List[Dict]:
+    def records(self) -> List[Dict[str, Any]]:
         return list(self)
 
     def to_numpy(self, fields: List[str]) -> NDArray:

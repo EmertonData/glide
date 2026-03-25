@@ -33,9 +33,8 @@ def generate_binary_dataset(
     Returns
     -------
     Tuple[Dataset, Dataset]
-        A Dataset pair, one labeled with n records and the other unlabeled with N records.
-        respectively. Each record in the labeled dataset contains ``"proxy"`` and ``"true"``
-        while the unlabeled dataset records contain only ``"proxy"``.
+        [0]: labeled dataset with ``n`` records, containing ``"y_true"`` et ``"y_proxy"`` fields
+        [1]: unlabeld dataset with ``N`` records, containing only `"y_proxy"`` field
 
     Raises
     ------
