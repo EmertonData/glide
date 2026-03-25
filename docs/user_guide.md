@@ -110,8 +110,81 @@ When the proxy is informative (high covariance with human labels), $\hat{\lambda
 
 # Active Statistical Inference (ASI)
 
-> **Note:** This section is a work in progress.
+Standard approaches to combining proxy and human labels assume that the labeled subset is drawn **uniformly at random** from the population. In practice, annotation resources are often allocated strategically — for instance, prioritising uncertain or difficult examples. **Active Statistical Inference (ASI)** handles this general case: each sample $X_i$ may have a distinct, pre-determined probability $\pi_i \in (0, 1]$ of being selected for human annotation. Inverse-probability weighting (IPW) corrects for this non-uniform selection, yielding valid confidence intervals under any fixed sampling rule.
 
+---
+
+## Input data
+
+In ASI, every record carries three values:
+
+| Field | Present for | Description |
+|---|---|---|
+| $\tilde{Y}_i$ | All $n$ records | Proxy label (model / LLM prediction) |
+| $\pi_i$ | All $n$ records | Known, pre-determined sampling probability |
+| $Y_i$ | Labeled records only | Ground-truth label |
+
+We define $\xi_i \in \{0, 1\}$ as the **sampling indicator**: $\xi_i = 1$ if a ground-truth label is present for record $i$, and $\xi_i = 0$ otherwise. Crucially, $\pi_i$ must be known for every record — it is a property of the sampling design, not derived from the data.
+
+---
+
+## IPW-corrected labels
+
+The core of ASI is a per-record **IPW-corrected effective label**:
+
+$$z_i(\lambda) = \lambda\,\tilde{Y}_i + \xi_i\,\frac{Y_i - \lambda\,\tilde{Y}_i}{\pi_i}$$
+
+Expanding by case:
+
+- **Unlabeled** ($\xi_i = 0$): $\quad z_i = \lambda\,\tilde{Y}_i$
+- **Labeled** ($\xi_i = 1$): $\quad z_i = \lambda\,\tilde{Y}_i + \dfrac{Y_i - \lambda\,\tilde{Y}_i}{\pi_i}$
+
+For labeled samples, the residual $Y_i - \lambda\,\tilde{Y}_i$ is divided by $\pi_i$. This **up-weights** records that were less likely to be selected, ensuring each labeled sample represents its fair share of the population. The parameter $\lambda$ modulates how much weight the proxy label receives.
+
+---
+
+## Point estimate
+
+The ASI mean estimator is simply the average of the IPW-corrected labels:
+
+$$\hat{\theta}_{\text{ASI}}(\lambda) = \frac{1}{n}\sum_{i=1}^{n} z_i(\lambda)$$
+
+This estimator is **unbiased** for the population mean under any fixed sampling design, provided $\pi_i > 0$ for all records.
+
+At $\lambda = 0$, this reduces to the classical Horvitz–Thompson estimator, which uses only the labeled samples (each weighted by $1/\pi_i$). As $\lambda$ increases, the proxy labels contribute progressively more to the estimate.
+
+---
+
+## Variance and confidence intervals
+
+The asymptotic variance is the sample variance of the corrected labels divided by $n$:
+
+$$\hat{\sigma}^2_{\text{SE}}(\lambda) = \frac{\widehat{\text{Var}}\!\left(z(\lambda)\right)}{n}$$
+
+where $\widehat{\text{Var}}$ denotes the sample variance with $\text{ddof} = 1$. By the Central Limit Theorem (for $n$ large enough, typically $n \geq 100$), this yields a confidence interval at level $1 - \alpha$:
+
+$$\Pr\!\left(\theta^* \in \left[\hat{\theta}_{\text{ASI}} - z_{1-\alpha/2}\,\hat{\sigma}_{\text{SE}},\; \hat{\theta}_{\text{ASI}} + z_{1-\alpha/2}\,\hat{\sigma}_{\text{SE}}\right]\right) \geq 1 - \alpha$$
+
+where $z_{1-\alpha/2}$ is the standard normal quantile (e.g. $z_{0.975} = 1.96$ for a 95% confidence interval).
+
+---
+
+## Optimal $\lambda$ (power tuning)
+
+The choice of $\lambda$ directly controls the width of the confidence interval. A poor value can increase variance relative to a human-only estimate. ASI derives a closed-form optimal $\lambda$ by minimising $\hat{\sigma}^2_{\text{SE}}(\lambda)$ analytically.
+
+Define two per-record quantities:
+
+$$a_i = \tilde{Y}_i\!\left(\frac{\xi_i}{\pi_i} - 1\right), \qquad b_i = Y_i \cdot \frac{\xi_i}{\pi_i}$$
+
+- $a_i$ is computable for every record (requires only $\tilde{Y}_i$, $\xi_i$, and $\pi_i$).
+- $b_i$ equals $Y_i / \pi_i$ for labeled records and $0$ for unlabeled records.
+
+The variance-minimising $\lambda$ is:
+
+$$\hat{\lambda} = \frac{\widehat{\text{Cov}}(a,\, b)}{\widehat{\text{Var}}(a)}$$
+
+When the proxy is informative, $\hat{\lambda}$ is large and the IPW-corrected labels benefit from the proxy signal, narrowing the confidence interval. When the proxy is uninformative, $\hat{\lambda}$ shrinks toward 0, down-weighting it. Power tuning is enabled by default in GLIDE (`power_tuning=True`). Setting `power_tuning=False` fixes $\lambda = 1$, recovering the plain IPW estimator.
 
 ---
 
@@ -120,3 +193,7 @@ When the proxy is informative (high covariance with human labels), $\hat{\lambda
 Angelopoulos, Anastasios N., Stephen Bates, Clara Fannjiang, Michael I. Jordan, and Tijana Zrnic. "Prediction-powered inference." *Science* 382, no. 6671 (2023): 669–674.
 
 Angelopoulos, Anastasios N., John C. Duchi, and Tijana Zrnic. "PPI++: Efficient prediction-powered inference." *arXiv preprint arXiv:2311.01453* (2023).
+
+Zrnic, Tijana, and Emmanuel Candès. "Active statistical inference." *arXiv preprint arXiv:2403.03208* (2024).
+
+Gligoric, Kristina, et al. "Confidence-driven inference." *arXiv preprint arXiv:2408.15204* (2024).
