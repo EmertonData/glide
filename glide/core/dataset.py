@@ -43,23 +43,23 @@ class Dataset(list):
         Examples
         --------
         >>> from glide.core.dataset import Dataset
-        >>> dataset = Dataset([{"score": i, "true": i % 2 == 0} for i in range(5)])
-        >>> dataset.append({"score": 5})
+        >>> dataset = Dataset([{"y_true": i, "y_proxy": i % 2 == 0} for i in range(5)])
+        >>> dataset.append({"y_true": 5})
         >>> dataset[0]
-        [{'score': 0, 'true': True}]
+        [{'y_true': 0, 'y_proxy': True}]
         >>> dataset[0:3]
-        [{'score': 0, 'true': True}, {'score': 1, 'true': False}, {'score': 2, 'true': True}]
-        >>> dataset["score"]
+        [{'y_true': 0, 'y_proxy': True}, {'y_true': 1, 'y_proxy': False}, {'y_true': 2, 'y_proxy': True}]
+        >>> dataset["y_true"]
         array([0., 1., 2., 3., 4., 5.])
-        >>> dataset[["score", "true", "unknown"]]
+        >>> dataset[["y_true", "y_proxy", "unknown"]]
         array([[ 0.,  1., nan],
                [ 1.,  0., nan],
                [ 2.,  1., nan],
                [ 3.,  0., nan],
                [ 4.,  1., nan],
                [ 5., nan, nan]])
-        >>> dataset[dataset["true"] == 1]
-        [{'score': 0, 'true': True}, {'score': 2, 'true': True}, {'score': 4, 'true': True}]
+        >>> dataset[dataset["y_proxy"] == True]
+        [{'y_true': 0, 'y_proxy': True}, {'y_true': 2, 'y_proxy': True}, {'y_true': 4, 'y_proxy': True}]
         """
 
         # If key is a string return a column, else if an integer index return a record
