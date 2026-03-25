@@ -1,14 +1,14 @@
-from typing import Dict, List
+from typing import Dict, List, Any
 
 import numpy as np
 from numpy.typing import NDArray
 
 
 class Dataset(list):
-    def __add__(self, other: list) -> "Dataset":
+    def __add__(self, other: List[Dict[str, Any]]) -> "Dataset":
         return Dataset(list.__add__(self, other))
 
-    def __radd__(self, other: list) -> "Dataset":
+    def __radd__(self, other: List[Dict[str, Any]]) -> "Dataset":
         return Dataset(list.__add__(other, self))
 
     @property
