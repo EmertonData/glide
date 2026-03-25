@@ -1,0 +1,170 @@
+import numpy as np
+import pytest
+
+from glide.core.dataset import Dataset
+from glide.core.mean_inference_result import SemiSupervisedMeanInferenceResult
+from glide.estimators.stratified_ppi import StratifiedPPIMeanEstimator
+
+# ── helpers ────────────────────────────────────────────────────────────────────
+
+
+@pytest.fixture
+def dataset() -> Dataset:
+    """Two identical strata (A and B), each matching the PPI doctest data.
+
+    Stratum A: labeled = [(5.0, 4.9), (6.0, 6.1)], unlabeled = [5.2, 6.1]
+    Stratum B: same records, different group value.
+    n_true = 4, n_proxy = 8.
+    """
+    return Dataset(
+        [
+            {"y_true": 5.0, "y_proxy": 4.9, "group": "A"},
+            {"y_true": 6.0, "y_proxy": 6.1, "group": "A"},
+            {"y_proxy": 5.2, "group": "A"},
+            {"y_proxy": 6.1, "group": "A"},
+            {"y_true": 5.0, "y_proxy": 4.9, "group": "B"},
+            {"y_true": 6.0, "y_proxy": 6.1, "group": "B"},
+            {"y_proxy": 5.2, "group": "B"},
+            {"y_proxy": 6.1, "group": "B"},
+        ]
+    )
+
+
+@pytest.fixture
+def estimator() -> StratifiedPPIMeanEstimator:
+    return StratifiedPPIMeanEstimator()
+
+
+# --- _get_strata ---
+
+
+def test_get_strata_splits_correctly(estimator, dataset):
+    strata = estimator._get_strata(dataset, "group")
+    assert set(strata.keys()) == {"A", "B"}
+    assert len(strata["A"]) == 4
+    assert len(strata["B"]) == 4
+    assert all(r["group"] == "A" for r in strata["A"])
+    assert all(r["group"] == "B" for r in strata["B"])
+
+
+def test_get_strata_single_stratum(estimator):
+    records = [
+        {"y_true": 5.0, "y_proxy": 4.9, "group": "X"},
+        {"y_true": 6.0, "y_proxy": 6.1, "group": "X"},
+        {"y_proxy": 5.2, "group": "X"},
+    ]
+    single = Dataset(records)
+    strata = estimator._get_strata(single, "group")
+    assert len(strata) == 1
+    assert "X" in strata
+    assert len(strata["X"]) == len(single)
+
+
+def test_get_strata_preserves_records(estimator, dataset):
+    strata = estimator._get_strata(dataset, "group")
+    all_records = [r for dataset in strata.values() for r in dataset]
+    assert len(all_records) == len(dataset)
+    for record in dataset:
+        assert record in all_records
+
+
+# --- estimate ---
+
+
+def test_estimate_is_valid_inference_result(estimator, dataset):
+    result = estimator.estimate(dataset, y_true_field="y_true", y_proxy_field="y_proxy", groups_field="group")
+    assert isinstance(result, SemiSupervisedMeanInferenceResult)
+    assert np.isfinite(result.confidence_interval.lower_bound)
+    assert np.isfinite(result.confidence_interval.upper_bound)
+    assert result.confidence_interval.lower_bound < result.confidence_interval.upper_bound
+    assert result.estimator_name == "StratifiedPPIMeanEstimator"
+
+
+def test_estimate_metadata(estimator, dataset):
+    result = estimator.estimate(
+        dataset,
+        y_true_field="y_true",
+        y_proxy_field="y_proxy",
+        groups_field="group",
+        metric_name="performance",
+    )
+    assert result.metric_name == "performance"
+    assert result.estimator_name == estimator.__class__.__name__
+    assert result.n_true == 4
+    assert result.n_proxy == 8
+    assert result.effective_sample_size == 5
+
+
+def test_estimate_n_true_is_sum_of_stratum_n_true(estimator, dataset):
+    result = estimator.estimate(dataset, y_true_field="y_true", y_proxy_field="y_proxy", groups_field="group")
+    assert result.n_true == 4
+
+
+def test_estimate_n_proxy_is_total_dataset_size(estimator, dataset):
+    result = estimator.estimate(dataset, y_true_field="y_true", y_proxy_field="y_proxy", groups_field="group")
+    assert result.n_proxy == len(dataset)
+
+
+def test_power_tuning_true_is_default(estimator, dataset):
+    result_default = estimator.estimate(dataset, y_true_field="y_true", y_proxy_field="y_proxy", groups_field="group")
+    result_explicit = estimator.estimate(
+        dataset, y_true_field="y_true", y_proxy_field="y_proxy", groups_field="group", power_tuning=True
+    )
+    assert result_default.mean == pytest.approx(result_explicit.mean)
+    assert result_default.std == pytest.approx(result_explicit.std)
+
+
+def test_estimate_custom_confidence_level(estimator, dataset):
+    result = estimator.estimate(
+        dataset,
+        y_true_field="y_true",
+        y_proxy_field="y_proxy",
+        groups_field="group",
+        confidence_level=0.95,
+    )
+
+    expected_mean = 5.618
+    expected_std = 0.250
+    expected_lower = 5.13
+    expected_upper = 6.11
+
+    assert result.confidence_interval.confidence_level == 0.95
+    assert result.confidence_interval.mean == pytest.approx(expected_mean, abs=0.01)
+    assert result.std == pytest.approx(expected_std, abs=0.01)
+    assert result.confidence_interval.lower_bound == pytest.approx(expected_lower, abs=0.01)
+    assert result.confidence_interval.upper_bound == pytest.approx(expected_upper, abs=0.01)
+
+
+# --- __str__ / __repr__ ---
+
+
+def test_str_format(estimator, dataset):
+    result = estimator.estimate(
+        dataset,
+        y_true_field="y_true",
+        y_proxy_field="y_proxy",
+        groups_field="group",
+        metric_name="performance",
+    )
+    output = str(result)
+    expected = (
+        "Metric: performance\n"
+        "Point Estimate: 5.618\n"
+        "Confidence Interval (95%): [5.13, 6.11]\n"
+        "Estimator : StratifiedPPIMeanEstimator\n"
+        "n_true: 4\n"
+        "n_proxy: 8\n"
+        "Effective Sample Size: 5.0"
+    )
+    assert output == expected
+
+
+def test_repr_equals_str(estimator, dataset):
+    result = estimator.estimate(
+        dataset,
+        y_true_field="y_true",
+        y_proxy_field="y_proxy",
+        groups_field="group",
+        metric_name="perf",
+    )
+    assert repr(result) == str(result)
