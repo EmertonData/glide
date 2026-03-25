@@ -110,7 +110,7 @@ When the proxy is informative (high covariance with human labels), $\hat{\lambda
 
 # Active Statistical Inference (ASI)
 
-Standard approaches to combining proxy and human labels assume that the labeled subset is drawn **uniformly at random** from the population. In practice, annotation resources are often allocated strategically — for instance, prioritising uncertain or difficult examples. **Active Statistical Inference (ASI)** handles this general case: each sample $X_i$ may have a distinct, pre-determined probability $\pi_i \in (0, 1]$ of being selected for human annotation. Inverse-probability weighting (IPW) corrects for this non-uniform selection, yielding valid confidence intervals under any fixed sampling rule.
+Standard approaches to combining proxy and human labels assume that the labeled subset is drawn **uniformly at random** from the population. In practice, annotation resources are often allocated strategically. For instance, prioritising uncertain or difficult examples. **Active Statistical Inference (ASI)** handles this general case: each sample $X_i$ may have a distinct, pre-determined probability $\pi_i \in (0, 1]$ of being selected for human annotation. Inverse-probability weighting (IPW) corrects for this non-uniform selection, yielding valid confidence intervals under any fixed sampling rule.
 
 ---
 
@@ -124,7 +124,7 @@ In ASI, every record carries three values:
 | $\pi_i$ | All $n$ records | Known, pre-determined sampling probability |
 | $Y_i$ | Labeled records only | Ground-truth label |
 
-We define $\xi_i \in \{0, 1\}$ as the **sampling indicator**: $\xi_i = 1$ if a ground-truth label is present for record $i$, and $\xi_i = 0$ otherwise. Crucially, $\pi_i$ must be known for every record — it is a property of the sampling design, not derived from the data.
+We define $\xi_i \in \{0, 1\}$ as the **sampling indicator**: $\xi_i = 1$ if a ground-truth label is present for record $i$, and $\xi_i = 0$ otherwise. Crucially, $\pi_i$ must be known for every record. It is a property of the sampling design, not derived from the data.
 
 ---
 
@@ -147,7 +147,7 @@ For labeled samples, the residual $Y_i - \lambda\,\tilde{Y}_i$ is divided by $\p
 
 The ASI mean estimator is simply the average of the IPW-corrected labels:
 
-$$\hat{\theta}_{\text{ASI}}(\lambda) = \frac{1}{n}\sum_{i=1}^{n} z_i(\lambda)$$
+$$\hat{\theta}_{\lambda} = \frac{1}{n}\sum_{i=1}^{n} z_i(\lambda)$$
 
 This estimator is **unbiased** for the population mean under any fixed sampling design, provided $\pi_i > 0$ for all records.
 
@@ -163,7 +163,7 @@ $$\hat{\sigma}^2_{\text{SE}}(\lambda) = \frac{\widehat{\text{Var}}\!\left(z(\lam
 
 where $\widehat{\text{Var}}$ denotes the sample variance with $\text{ddof} = 1$. By the Central Limit Theorem (for $n$ large enough, typically $n \geq 100$), this yields a confidence interval at level $1 - \alpha$:
 
-$$\Pr\!\left(\theta^* \in \left[\hat{\theta}_{\text{ASI}} - z_{1-\alpha/2}\,\hat{\sigma}_{\text{SE}},\; \hat{\theta}_{\text{ASI}} + z_{1-\alpha/2}\,\hat{\sigma}_{\text{SE}}\right]\right) \geq 1 - \alpha$$
+$$\Pr\!\left(\theta^* \in \left[\hat{\theta}_{\lambda} - z_{1-\alpha/2}\,\hat{\sigma}_{\text{SE}},\; \hat{\theta}_{\lambda} + z_{1-\alpha/2}\,\hat{\sigma}_{\text{SE}}\right]\right) \geq 1 - \alpha$$
 
 where $z_{1-\alpha/2}$ is the standard normal quantile (e.g. $z_{0.975} = 1.96$ for a 95% confidence interval).
 
