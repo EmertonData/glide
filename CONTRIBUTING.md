@@ -1,14 +1,5 @@
 # Contributing to GLIDE
 
-<p align="center">
-  <a href="https://github.com/EmertonData/glide/actions/workflows/code_quality.yml"><img src="https://github.com/EmertonData/glide/actions/workflows/code_quality.yml/badge.svg" alt="Code quality"></a>
-  <a href="https://codecov.io/gh/EmertonData/glide"><img src="https://codecov.io/gh/EmertonData/glide/branch/main/graph/badge.svg" alt="Coverage"></a>
-  <a href="https://pypi.org/project/glide-py/"><img src="https://img.shields.io/pypi/v/glide-py" alt="PyPI"></a>
-  <a href="https://pypi.org/project/glide-py/"><img src="https://img.shields.io/pypi/pyversions/glide-py" alt="Python versions"></a>
-  <a href="https://glide-py.readthedocs.io/en/latest/"><img src="https://app.readthedocs.org/projects/glide-py/badge/?version=stable" alt="Docs"></a>
-  <a href="LICENSE"><img src="https://img.shields.io/badge/license-Apache%202.0-blue" alt="License"></a>
-</p>
-
 Thank you for considering a contribution to GLIDE! This guide covers everything you need to set up your environment, understand the codebase, and submit a pull request.
 
 Depending on what you want to do, jump to the relevant section:
@@ -19,7 +10,7 @@ Depending on what you want to do, jump to the relevant section:
 - **Improving CI, tooling, or the Makefile?** → [Repository hygiene](#4-repository-hygiene)
 - **Restructuring code without changing behaviour?** → [Refactoring](#5-refactoring)
 
-Before writing any code, please [open an issue](https://github.com/EmertonData/glide/issues) to discuss the scope of your change. When you are ready to submit, fork the repository, create a branch off `main`, and open a pull request against `main`.
+Before writing any code, please [open an issue](https://github.com/EmertonData/glide/issues) to discuss the scope of your change. When you are ready to submit, fork the repository, create a branch off `main`, and open a pull request against `main`. The PR template lists all conditions that must be satisfied before requesting a review.
 
 ---
 
@@ -84,7 +75,7 @@ Reproduce the bug in a failing test first — this confirms the bug exists and g
 
 New estimators should be backed by a scientific publication; include the reference in the issue and in the class docstring.
 
-#### Adding a new estimator — step by step
+**Adding a new estimator — step by step**
 
 1. **Identify** the inputs, outputs, and any tunable hyperparameters.
 2. **Implement** the estimator class satisfying `EstimatorProtocol` (defined in `estimator_protocol.py`):

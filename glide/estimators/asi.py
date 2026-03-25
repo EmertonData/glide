@@ -62,7 +62,12 @@ class ASIMeanEstimator:
         y_true_all = data[:, 0]
         y_proxy = data[:, 1]
         pi = data[:, 2]
-        assert np.min(pi) > 0, "Minimum annotation probability is <= 0 !"
+        if np.min(pi) <= 0:
+            raise ValueError(f"Minimum annotation probability should be > 0, got {np.min(pi)}")
+        if np.isnan(y_proxy).any():
+            raise ValueError("Input proxy values contain NaN")
+        if len(np.unique(y_proxy)) == 1:
+            raise ValueError("Input proxy values have zero variance")
         xi = (~np.isnan(y_true_all)).astype(float)
         # replace NaN values in y_true_all by zero
         y_true = np.nan_to_num(y_true_all, nan=-1.0)
@@ -162,11 +167,13 @@ class ASIMeanEstimator:
         n_true = int(xi.sum())
         n_proxy = len(y_proxy)
 
-        ci = CLTConfidenceInterval(mean=mean_estimate, std=std_estimate, confidence_level=confidence_level)
+        confidence_interval = CLTConfidenceInterval(
+            mean=mean_estimate, std=std_estimate, confidence_level=confidence_level
+        )
         effective_sample_size = compute_effective_sample_size(y_true[xi == 1], std_estimate)
 
         return SemiSupervisedMeanInferenceResult(
-            confidence_interval=ci,
+            confidence_interval=confidence_interval,
             metric_name=metric_name,
             estimator_name=self.__class__.__name__,
             n_true=n_true,
