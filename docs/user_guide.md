@@ -15,14 +15,14 @@ GLIDE addresses this using estimators that combine cheap LLM labels with a small
 
 ---
 
-## Why it matters
+### Why it matters
 
 By combining a large pool of cheap LLM labels with a small set of human labels, GLIDE can achieve the same statistical precision as a purely human-labeled approach — at a fraction of the annotation cost. Actual savings depend on the annotation effort required and how well the LLM judge aligns with human judgement, but the potential gains can be substantial. This makes rigorous performance evaluation tractable even for large-scale AI systems.
 
 
 ---
 
-## What a good estimator looks like
+### What a good estimator looks like
 
 A good estimator $\hat{\theta}$ of $\theta^*$ must satisfy two criteria:
 
@@ -38,7 +38,13 @@ Moreover, $C_\alpha$ should be as small as possible
 
 ---
 
-## Input data
+## The Prediction-Powered Inference (PPI++)
+
+PPI assumes that the labeled subset is drawn **uniformly at random** from the population. Under this assumption, it constructs an unbiased estimator by combining all available proxy labels with a small set of ground-truth annotations, correcting for the bias of the LLM judge at minimal cost.
+
+### Input data
+
+PPI relies on two complementary sources of labels:
 
 | | LLM-as-Judge labels | Human labels |
 |---|---|---|
@@ -59,24 +65,26 @@ The key insight: even though human labels are scarce, they can be used to **corr
 
 ---
 
-## The Prediction-Powered Inference (PPI++) estimator
+### Point estimate
 
-PPI ([Angelopoulos et al., *Science* 2023](https://www.science.org/doi/10.1126/science.adi6000)) combines both sources of data into a single unbiased estimate:
-
-$$\hat{\theta} = \underbrace{\frac{1}{N} \sum_{i=1}^{N} \tilde{Y}_i}_{\text{Biased estimate}} + \underbrace{\frac{1}{n} \sum_{j=1}^{n} \left(Y_j - \tilde{Y}_j\right)}_{\text{Bias rectifier}}$$
-
-- The **biased estimate** uses all $N$ LLM labels to get a low-variance but biased estimate.
-- The **bias rectifier** uses the $n$ paired samples (items that have both a human label and an LLM label) to measure and subtract the average bias.
-
-This method was subsequently extended to **PPI++** ([Angelopoulos et al., 2023](https://arxiv.org/abs/2311.01453)), which introduces power tuning through a weight $\lambda \in [0, 1]$ on the proxy labels:
+**PPI++** [[2]](#ref-2) is an extension of the original PPI [[1]](#ref-1) that introduces a weight $\lambda \in [0, 1]$ on the proxy labels. The point estimate is:
 
 $$\hat{\theta}_{\lambda} = \frac{1}{n} \sum_{j=1}^{n} Y_j + \lambda \left[\frac{1}{N} \sum_{i=1}^{N} \tilde{Y}_i - \frac{1}{n} \sum_{j=1}^{n} \tilde{Y}_j\right]$$
 
-At $\lambda = 1$ this reduces exactly to the original PPI estimator. This parameter allows to modulate the effect of the LLM labels based on how informative they are. We will see that it can be set to an optimal value below.
+This combines two components:
+
+- The **human-label mean** $\frac{1}{n}\sum_{j} Y_j$, which is unbiased but high-variance due to the small labeled set.
+- A **bias correction term** that uses all $N$ proxy labels to reduce variance, scaled by $\lambda$ to control how much weight the proxy receives.
+
+At $\lambda = 1$, this recovers the original PPI estimator, which can equivalently be written as:
+
+$$\hat{\theta} = \underbrace{\frac{1}{N} \sum_{i=1}^{N} \tilde{Y}_i}_{\text{Biased estimate}} + \underbrace{\frac{1}{n} \sum_{j=1}^{n} \left(Y_j - \tilde{Y}_j\right)}_{\text{Bias rectifier}}$$
+
+The parameter $\lambda$ allows modulating the contribution of the LLM labels based on how informative they are. We will see that it can be set to an optimal value below.
 
 ---
 
-## Variance and confidence intervals
+### Variance and confidence intervals
 
 For large enough sample sizes (typically $n \geq 100$), the **Central Limit Theorem** applies and the variance of the PPI++ estimator decomposes as:
 
@@ -91,7 +99,7 @@ $$\Pr\!\left(\theta^* \in \left[\hat{\theta}_{\lambda} - z_{1-\alpha/2}\, \sigma
 
 where $z_{1-\alpha/2}$ is the standard normal quantile (e.g. $z_{0.975} = 1.96$ for a 95% confidence interval).
 
-### Optimal $\lambda$
+### Optimal $\lambda$ (power tuning)
 
 The $\lambda$ parameter needs to be  chosen wisely. If left at $\lambda = 1,$ low quality proxy LLM labels with weak or negative covariance to human labels could *degrade* the estimation by inducing larger confidence intervals compared to using human labels only ($\lambda = 0$). PPI++ derives a closed-form plug-in estimator for the $\lambda$ that minimises the CI width:
 
@@ -108,13 +116,13 @@ where:
 When the proxy is informative (high covariance with human labels), $\hat{\lambda}$ is close to 1 and the CI is narrower than standard PPI; when the proxy is uninformative, $\hat{\lambda}$ shrinks toward 0, down-weighting it and falling back to the classical human-only mean estimate. PPI++ uses optimal $\hat{\lambda}$ in GLIDE by default. This ensures the resulting estimate always has smaller variance than the classical estimate.
 
 
-# Active Statistical Inference (ASI)
+## Active Statistical Inference (ASI)
 
-Standard approaches to combining proxy and human labels assume that the labeled subset is drawn **uniformly at random** from the population. In practice, annotation resources are often allocated strategically. For instance, prioritising uncertain or difficult examples. **Active Statistical Inference (ASI)** handles this general case: each sample $X_i$ may have a distinct, pre-determined probability $\pi_i \in (0, 1]$ of being selected for human annotation. Inverse-probability weighting (IPW) corrects for this non-uniform selection, yielding valid confidence intervals under any fixed sampling rule.
+Standard approaches to combining proxy and human labels assume that the labeled subset is drawn **uniformly at random** from the population. In practice, annotation resources are often allocated strategically. For instance, prioritising uncertain or difficult examples. **Active Statistical Inference (ASI)** [[3]](#ref-3) handles this general case: each sample $X_i$ may have a distinct, pre-determined probability $\pi_i \in (0, 1]$ of being selected for human annotation. Inverse-probability weighting (IPW) corrects for this non-uniform selection, yielding valid confidence intervals under any fixed sampling rule.
 
 ---
 
-## Input data
+### Input data
 
 In ASI, every record carries three values:
 
@@ -128,7 +136,7 @@ We define $\xi_i \in \{0, 1\}$ as the **sampling indicator**: $\xi_i = 1$ if a g
 
 ---
 
-## IPW-corrected labels
+### IPW-corrected labels
 
 The core of ASI is a per-record **IPW-corrected effective label**:
 
@@ -143,7 +151,7 @@ For labeled samples, the residual $Y_i - \lambda\,\tilde{Y}_i$ is divided by $\p
 
 ---
 
-## Point estimate
+### Point estimate
 
 The ASI mean estimator is simply the average of the IPW-corrected labels:
 
@@ -155,7 +163,7 @@ At $\lambda = 0$, this reduces to the classical Horvitz–Thompson estimator, wh
 
 ---
 
-## Variance and confidence intervals
+### Variance and confidence intervals
 
 The asymptotic variance is the sample variance of the corrected labels divided by $n$:
 
@@ -169,7 +177,7 @@ where $z_{1-\alpha/2}$ is the standard normal quantile (e.g. $z_{0.975} = 1.96$ 
 
 ---
 
-## Optimal $\lambda$ (power tuning)
+### Optimal $\lambda$ (power tuning)
 
 The choice of $\lambda$ directly controls the width of the confidence interval. A poor value can increase variance relative to a human-only estimate. ASI derives a closed-form optimal $\lambda$ by minimising $\hat{\sigma}^2_{\text{SE}}(\lambda)$ analytically.
 
@@ -190,10 +198,10 @@ When the proxy is informative, $\hat{\lambda}$ is large and the IPW-corrected la
 
 ## References
 
-Angelopoulos, Anastasios N., Stephen Bates, Clara Fannjiang, Michael I. Jordan, and Tijana Zrnic. "Prediction-powered inference." *Science* 382, no. 6671 (2023): 669–674.
+<a id="ref-1"></a>[1] <a id="ref-1-link" href="https://www.science.org/doi/10.1126/science.adi6000">Angelopoulos, Anastasios N., Stephen Bates, Clara Fannjiang, Michael I. Jordan, and Tijana Zrnic. "Prediction-powered inference." *Science* 382, no. 6671 (2023): 669–674</a>.
 
-Angelopoulos, Anastasios N., John C. Duchi, and Tijana Zrnic. "PPI++: Efficient prediction-powered inference." *arXiv preprint arXiv:2311.01453* (2023).
+<a id="ref-2"></a>[2] <a id="ref-1-link" href="https://arxiv.org/abs/2311.01453">Angelopoulos, Anastasios N., John C. Duchi, and Tijana Zrnic. "PPI++: Efficient prediction-powered inference." *arXiv preprint arXiv:2311.01453* (2023)</a>.
 
-Zrnic, Tijana, and Emmanuel Candès. "Active statistical inference." *arXiv preprint arXiv:2403.03208* (2024).
+<a id="ref-3"></a>[3] <a id="ref-1-link" href="https://arxiv.org/abs/2403.03208">Zrnic, Tijana, and Emmanuel Candès. "Active statistical inference." *arXiv preprint arXiv:2403.03208* (2024)</a>.
 
-Gligoric, Kristina, et al. "Can Unconfident LLM Annotations Be Used for Confident Conclusions?" *arXiv preprint arXiv:2408.15204* (2024).
+<a id="ref-4"></a>[4] <a id="ref-1-link" href="https://arxiv.org/abs/2408.15204">Gligoric, Kristina, et al. "Can Unconfident LLM Annotations Be Used for Confident Conclusions?" *arXiv preprint arXiv:2408.15204* (2024)</a>.
