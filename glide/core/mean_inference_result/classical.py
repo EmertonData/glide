@@ -6,6 +6,8 @@ from glide.core.mean_inference_result.base import MeanInferenceResult
 
 @dataclass(repr=False)
 class ClassicalMeanInferenceResult(MeanInferenceResult):
+    """Mean inference result for classical (non-bootstrap) methods."""
+
     confidence_interval: CLTConfidenceInterval
     metric_name: str
     estimator_name: str

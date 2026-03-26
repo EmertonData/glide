@@ -50,6 +50,10 @@ class PPIMeanEstimator:
         data = dataset.to_numpy(fields=[y_true_field, y_proxy_field])
         y_true_all = data[:, 0]
         y_proxy_all = data[:, 1]
+        if np.isnan(y_proxy_all).any():
+            raise ValueError("Input proxy values contain NaN")
+        if len(np.unique(y_proxy_all)) == 1:
+            raise ValueError("Input proxy values have zero variance")
         labeled_mask = ~np.isnan(y_true_all)
         y_true = y_true_all[labeled_mask]
         y_proxy_labeled = y_proxy_all[labeled_mask]
@@ -65,18 +69,15 @@ class PPIMeanEstimator:
         y_proxy_all = np.hstack([y_proxy_labeled, y_proxy_unlabeled])
         cov = np.cov(y_true, y_proxy_labeled, ddof=1)[0, 1]
         var = np.var(y_proxy_all, ddof=1)
-        if var == 0:
-            raise ValueError("Input proxy values have zero variance")
-        else:
-            _lambda = cov / ((1 + n / N) * var)
+        _lambda = cov / ((1 + n / N) * var)
         return _lambda
 
     def _compute_mean_estimate(self, y_data: Tuple[NDArray, NDArray, NDArray], _lambda: float) -> float:
         y_true, y_proxy_labeled, y_proxy_unlabeled = y_data
         rectifier = np.mean(y_true) - _lambda * np.mean(y_proxy_labeled)
         proxy_mean = _lambda * np.mean(y_proxy_unlabeled)
-        ppi_mean = proxy_mean + rectifier
-        return ppi_mean
+        mean_estimate = proxy_mean + rectifier
+        return mean_estimate
 
     def _compute_std_estimate(self, y_data: Tuple[NDArray, NDArray, NDArray], _lambda: float) -> float:
         y_true, y_proxy_labeled, y_proxy_unlabeled = y_data
@@ -84,9 +85,9 @@ class PPIMeanEstimator:
         N = len(y_proxy_unlabeled)
         rectifier_var = np.var(y_true - _lambda * y_proxy_labeled, ddof=1) / n
         proxy_var = _lambda**2 * np.var(y_proxy_unlabeled, ddof=1) / N
-        ppi_var = proxy_var + rectifier_var
-        ppi_std = np.sqrt(ppi_var)
-        return ppi_std
+        var_estimate = proxy_var + rectifier_var
+        std_estimate = np.sqrt(var_estimate)
+        return std_estimate
 
     def estimate(
         self,
@@ -143,13 +144,13 @@ class PPIMeanEstimator:
         mean = self._compute_mean_estimate(y_data, _lambda)
         std = self._compute_std_estimate(y_data, _lambda)
         effective_sample_size = compute_effective_sample_size(y_true, std)
-        ci = CLTConfidenceInterval(
+        confidence_interval = CLTConfidenceInterval(
             mean=float(mean),
             std=float(std),
             confidence_level=confidence_level,
         )
         result = SemiSupervisedMeanInferenceResult(
-            confidence_interval=ci,
+            confidence_interval=confidence_interval,
             metric_name=metric_name,
             estimator_name=self.__class__.__name__,
             n_true=len(y_true),
