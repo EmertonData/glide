@@ -70,8 +70,13 @@ def test_getitem_slice_returns_records():
     assert result == Dataset([{"human": 0, "llm": 0}, {"llm": 1}])
 
 
-def test_getitem_list_of_strings_returns_2d_array():
-    result = Dataset(RECORDS)[["human", "llm"]]
+def test_get_unsupported_key_type_raises(records):
+    with pytest.raises(TypeError):
+        Dataset(records)[None]
+
+
+def test_to_numpy_human_then_llm(records):
+    result = Dataset(records).to_numpy(fields=["human", "llm"])
     expected = np.array([[0, 0], [np.nan, 1]], dtype=float)
     np.testing.assert_array_equal(result, expected)
 
