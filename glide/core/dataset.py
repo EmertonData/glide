@@ -25,7 +25,7 @@ class Dataset(list):
     def __getitem__(self, key: str) -> NDArray: ...
     @overload
     def __getitem__(self, key: List[str]) -> NDArray: ...
-    def __getitem__(self, key):
+    def __getitem__(self, key: Any):
         """Access records or a column from the dataset.
 
         Parameters

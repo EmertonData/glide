@@ -49,30 +49,24 @@ def test_dataset_radd():
     assert isinstance(result, Dataset)
 
 
-RECORDS = [
-    {"human": 0, "llm": 0},
-    {"llm": 1},
-]
-
-
-def test_getitem_string_returns_column_with_nan_for_missing():
-    result = Dataset(RECORDS)["human"]
+def test_getitem_string_returns_column_with_nan_for_missing(records):
+    result = Dataset(records)["human"]
     np.testing.assert_array_equal(result, np.array([0.0, np.nan]))
 
 
-def test_getitem_int_returns_record():
-    result = Dataset(RECORDS)[1]
+def test_getitem_int_returns_record(records):
+    result = Dataset(records)[1]
     assert result == Dataset([{"llm": 1}])
 
 
-def test_getitem_slice_returns_records():
-    result = Dataset(RECORDS)[0:2]
+def test_getitem_slice_returns_records(records):
+    result = Dataset(records)[0:2]
     assert result == Dataset([{"human": 0, "llm": 0}, {"llm": 1}])
 
 
 def test_get_unsupported_key_type_raises(records):
     with pytest.raises(TypeError):
-        Dataset(records)[None]
+        Dataset(records)[None]  # type: ignore[index]
 
 
 def test_to_numpy_human_then_llm(records):
