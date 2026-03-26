@@ -54,7 +54,7 @@ PPI relies on two complementary sources of labels. LLM-as-judge labels $\tilde{Y
 The key insight: even though human labels are scarce, they can be used to **correct** the bias in the cheap LLM labels.
 
 <p align="center">
-  <img src="https://github.com/EmertonData/glide/blob/main/docs/assets/schema-PPI.png?raw=true" alt="PPI data schema" width="400">
+  <img src="../assets/schema-PPI.png" alt="PPI data schema" width="400">
 </p>
 
 <p align="center">
