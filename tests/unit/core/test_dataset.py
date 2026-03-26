@@ -34,6 +34,11 @@ def test_dataset_records():
     assert dataset.records == [{"a": 0}, {"b": 1}]
 
 
+def test_get_unsupported_key_type_raises(records):
+    with pytest.raises(TypeError):
+        Dataset(records)[None]
+
+
 def test_to_numpy_human_then_llm(records):
     result = Dataset(records).to_numpy(fields=["human", "llm"])
     expected = np.array([[0, 0], [np.nan, 1]], dtype=float)
