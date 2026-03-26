@@ -44,19 +44,17 @@ PPI assumes that the labeled subset is drawn **uniformly at random** from the po
 
 ### Input data
 
-PPI relies on two complementary sources of labels:
+PPI relies on two complementary sources of labels. LLM-as-judge labels $\tilde{Y}_i$ are available for all $N$ items at low cost but are biased ($E[\tilde{Y}] \neq \theta^*$). Human labels $Y_j$ are unbiased ($E[Y] = \theta^*$) but expensive, and only available for a small labeled subset of $n \ll N$ items.
 
-| | LLM-as-Judge labels | Human labels |
+| Field | Present for | Description |
 |---|---|---|
-| **Size** | $N$ (large) | $n$ (small) |
-| **Cost** | Cheap | Costly |
-| **Notation** | $\tilde{Y}_i$ | $Y_j$ |
-| **Bias** | Biased: $E[\tilde{Y}] \neq \theta^*$ | Unbiased: $E[Y] = \theta^*$ |
+| $\tilde{Y}_i$ | All $N$ items | LLM-as-judge proxy label |
+| $Y_j$ | Labeled subset only ($n$ items) | Human (ground-truth) annotation |
 
 The key insight: even though human labels are scarce, they can be used to **correct** the bias in the cheap LLM labels.
 
 <p align="center">
-  <img src="../../assets/schema-PPI.png" alt="PPI data schema" width="400">
+  <img src="https://github.com/EmertonData/glide/blob/main/docs/assets/schema-PPI.png?raw=true" alt="PPI data schema" width="400">
 </p>
 
 <p align="center">
@@ -67,7 +65,7 @@ The key insight: even though human labels are scarce, they can be used to **corr
 
 ### Point estimate
 
-**PPI++** [[2]](#ref-2) is an extension of the original PPI [[1]](#ref-1) that introduces a weight $\lambda \in [0, 1]$ on the proxy labels. The point estimate is:
+**PPI++** [[2](#ref-2)] is an extension of the original PPI [[1](#ref-1)] that introduces a weight $\lambda \in [0, 1]$ on the proxy labels. The point estimate is:
 
 $$\hat{\theta}_{\lambda} = \frac{1}{n} \sum_{j=1}^{n} Y_j + \lambda \left[\frac{1}{N} \sum_{i=1}^{N} \tilde{Y}_i - \frac{1}{n} \sum_{j=1}^{n} \tilde{Y}_j\right]$$
 
@@ -118,7 +116,7 @@ When the proxy is informative (high covariance with human labels), $\hat{\lambda
 
 ## Active Statistical Inference (ASI)
 
-Standard approaches to combining proxy and human labels assume that the labeled subset is drawn **uniformly at random** from the population. In practice, annotation resources are often allocated strategically. For instance, prioritising uncertain or difficult examples. **Active Statistical Inference (ASI)** [[3]](#ref-3) handles this general case: each sample $X_i$ may have a distinct, pre-determined probability $\pi_i \in (0, 1]$ of being selected for human annotation. Inverse-probability weighting (IPW) corrects for this non-uniform selection, yielding valid confidence intervals under any fixed sampling rule.
+Standard approaches to combining proxy and human labels assume that the labeled subset is drawn **uniformly at random** from the population. In practice, annotation resources are often allocated strategically. For instance, prioritising uncertain or difficult examples. **Active Statistical Inference (ASI)** [[3](#ref-3), [4](#ref-4)] handles this general case: each sample $X_i$ may have a distinct, pre-determined probability $\pi_i \in (0, 1]$ of being selected for human annotation. Inverse-probability weighting (IPW) corrects for this non-uniform selection, yielding valid confidence intervals under any fixed sampling rule.
 
 ---
 
@@ -130,7 +128,8 @@ In ASI, every record carries three values:
 |---|---|---|
 | $\tilde{Y}_i$ | All $n$ records | Proxy label (model / LLM prediction) |
 | $\pi_i$ | All $n$ records | Known, pre-determined sampling probability |
-| $Y_i$ | Labeled records only | Ground-truth label |
+| $\xi_i$ | All $n$ records | Sampling indicator such that $\Pr(\xi_i = 1) = \pi_i = 1 - \Pr(\xi_i = 0)$ |
+| $Y_i$ | Labeled records only ($\xi_i = 1$) | Ground-truth label |
 
 We define $\xi_i \in \{0, 1\}$ as the **sampling indicator**: $\xi_i = 1$ if a ground-truth label is present for record $i$, and $\xi_i = 0$ otherwise. Crucially, $\pi_i$ must be known for every record. It is a property of the sampling design, not derived from the data.
 
@@ -204,4 +203,4 @@ When the proxy is informative, $\hat{\lambda}$ is large and the IPW-corrected la
 
 <a id="ref-3"></a>[3] <a id="ref-1-link" href="https://arxiv.org/abs/2403.03208">Zrnic, Tijana, and Emmanuel Candès. "Active statistical inference." *arXiv preprint arXiv:2403.03208* (2024)</a>.
 
-<a id="ref-4"></a>[4] <a id="ref-1-link" href="https://arxiv.org/abs/2408.15204">Gligoric, Kristina, et al. "Can Unconfident LLM Annotations Be Used for Confident Conclusions?" *arXiv preprint arXiv:2408.15204* (2024)</a>.
+<a id="ref-4"></a>[4] <a id="ref-1-link" href="https://aclanthology.org/2025.naacl-long.179.pdf">Gligorić, Kristina, Tijana Zrnic, Cinoo Lee, Emmanuel Candes, and Dan Jurafsky. "Can unconfident llm annotations be used for confident conclusions?." NAACL 2025: Human Language Technologies (Volume 1: Long Papers), pp. 3514-3533. 2025.</a>.
