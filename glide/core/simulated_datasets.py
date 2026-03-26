@@ -50,6 +50,19 @@ def generate_binary_dataset(
     ----------
     .. [SO] `Correlation between Bernoulli Variables <https://math.stackexchange.com/questions/610443/finding-a-correlation-between-bernoulli-variables>`_
 
+    Examples
+    --------
+    >>> from glide.core.simulated_datasets import generate_binary_dataset
+    >>> labeled, unlabeled = generate_binary_dataset(n=100, N=500, random_seed=42)
+    >>> len(labeled)
+    100
+    >>> len(unlabeled)
+    500
+    >>> list(labeled.records[0].keys())
+    ['y_true', 'y_proxy']
+    >>> list(unlabeled.records[0].keys())
+    ['y_proxy']
+
     """
     if not (0 < true_mean < 1):
         raise ValueError(f"true_mean must be in (0, 1), got {true_mean}")
