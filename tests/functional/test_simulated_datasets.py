@@ -1,6 +1,6 @@
 import numpy as np
 
-from glide.core.simulated_datasets import generate_binary_dataset
+from glide.core.simulated_datasets import generate_binary_dataset, generate_binary_dataset_with_oracle_sampling
 
 
 def test_generate_binary_dataset_empirical_means():
@@ -12,3 +12,38 @@ def test_generate_binary_dataset_empirical_means():
     proxy_mean = np.mean(y_proxy)
     assert abs(true_mean - 0.7) < 0.03
     assert abs(proxy_mean - 0.6) < 0.03
+
+
+def test_generate_binary_dataset_empirical_correlation():
+    labeled, _ = generate_binary_dataset(n=5000, N=0, true_mean=0.7, proxy_mean=0.6, correlation=0.8, random_seed=42)
+    y_true = labeled.to_numpy(fields=["y_true"]).flatten()
+    y_proxy = labeled.to_numpy(fields=["y_proxy"]).flatten()
+    empirical_corr = np.corrcoef(y_true, y_proxy)[0, 1]
+    assert abs(empirical_corr - 0.8) < 0.05
+
+
+def test_generate_binary_dataset_with_oracle_sampling_empirical_means():
+    dataset = generate_binary_dataset_with_oracle_sampling(N=5000, true_mean=0.7, proxy_mean=0.6, random_seed=42)
+    y_true = dataset.to_numpy(fields=["y_true"]).flatten()
+    y_proxy = dataset.to_numpy(fields=["y_proxy"]).flatten()
+    assert abs(np.mean(y_true) - 0.7) < 0.03
+    assert abs(np.mean(y_proxy) - 0.6) < 0.03
+
+
+def test_generate_binary_dataset_with_oracle_sampling_empirical_correlation():
+    dataset = generate_binary_dataset_with_oracle_sampling(
+        N=5000, true_mean=0.7, proxy_mean=0.6, correlation=0.8, random_seed=42
+    )
+    y_true = dataset.to_numpy(fields=["y_true"]).flatten()
+    y_proxy = dataset.to_numpy(fields=["y_proxy"]).flatten()
+    empirical_corr = np.corrcoef(y_true, y_proxy)[0, 1]
+    assert abs(empirical_corr - 0.8) < 0.05
+
+
+def test_generate_binary_dataset_with_oracle_sampling_pi_non_uniform():
+    # With lower correlation, pi variation is more visible
+    dataset = generate_binary_dataset_with_oracle_sampling(
+        N=1000, true_mean=0.5, proxy_mean=0.5, correlation=0.3, random_seed=42
+    )
+    pi_values = np.array([record["pi"] for record in dataset])
+    assert np.std(pi_values) > 1e-6
