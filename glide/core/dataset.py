@@ -1,12 +1,18 @@
-from typing import Dict, List
+from typing import Any, Dict, List
 
 import numpy as np
 from numpy.typing import NDArray
 
 
 class Dataset(list):
+    def __add__(self, other: List[Dict[str, Any]]) -> "Dataset":
+        return Dataset(list.__add__(self, other))
+
+    def __radd__(self, other: List[Dict[str, Any]]) -> "Dataset":
+        return Dataset(list.__add__(other, self))
+
     @property
-    def records(self) -> List[Dict]:
+    def records(self) -> List[Dict[str, Any]]:
         return list(self)
 
     def to_numpy(self, fields: List[str]) -> NDArray:
