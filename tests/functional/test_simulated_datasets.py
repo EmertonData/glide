@@ -4,9 +4,11 @@ from glide.core.simulated_datasets import generate_binary_dataset
 
 
 def test_generate_binary_dataset_empirical_means():
-    ds = generate_binary_dataset(n=500, N=4500, true_mean=0.7, proxy_mean=0.6, random_seed=42)
-    labeled = [r for r in ds if "y_true" in r]
-    true_mean = np.mean([r["y_true"] for r in labeled])
-    proxy_mean = np.mean([r["y_proxy"] for r in ds])
+    labeled, unlabeled = generate_binary_dataset(n=500, N=4500, true_mean=0.7, proxy_mean=0.6, random_seed=42)
+    dataset = labeled + unlabeled
+    y_true = labeled.to_numpy(fields=["y_true"])
+    y_proxy = dataset.to_numpy(fields=["y_proxy"])
+    true_mean = np.mean(y_true)
+    proxy_mean = np.mean(y_proxy)
     assert abs(true_mean - 0.7) < 0.03
     assert abs(proxy_mean - 0.6) < 0.03
