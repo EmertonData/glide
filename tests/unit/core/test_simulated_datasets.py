@@ -54,17 +54,16 @@ def test_generate_binary_dataset_with_oracle_sampling_structure_and_counts():
         assert record["pi"] > 0
 
 
-def test_generate_binary_dataset_with_oracle_sampling_invalid_true_mean_raises():
+def test_generate_binary_dataset_with_oracle_sampling_invalid_values_raise():
+    # invalid true mean
     with pytest.raises(ValueError, match=r"true_mean must be in \(0, 1\), got 1\.5"):
         generate_binary_dataset_with_oracle_sampling(N=10, true_mean=1.5)
 
-
-def test_generate_binary_dataset_with_oracle_sampling_invalid_proxy_mean_raises():
+    # invalid proxy mean
     with pytest.raises(ValueError, match=r"proxy_mean must be in \(0, 1\), got 0"):
         generate_binary_dataset_with_oracle_sampling(N=10, proxy_mean=0.0)
 
-
-def test_generate_binary_dataset_with_oracle_sampling_impossible_correlation_raises():
+    # impossible correlation
     with pytest.raises(
         ValueError,
         match=r"Impossible combination of true_mean=0\.7, proxy_mean=0\.6, and correlation=0\.95",

@@ -63,7 +63,9 @@ def generate_binary_dataset(
 
     # we will generate pairs values (true, proxy) with true and proxy equal to 0 or 1
     # probability of outcome (1, 1)
-    both_1_prob = correlation * np.sqrt(t_mean * p_mean * (1 - t_mean) * (1 - p_mean)) + t_mean * p_mean
+    D = np.sqrt(t_mean * p_mean * (1 - t_mean) * (1 - p_mean))
+    both_1_prob = correlation * D + t_mean * p_mean
+    max_possible_correlation = min(t_mean * (1 - p_mean), p_mean * (1 - t_mean)) / D
     # probabilities of outcomes (0, 0), (0, 1), (1, 0), (1, 1)
     probs = [1 - t_mean - p_mean + both_1_prob, p_mean - both_1_prob, t_mean - both_1_prob, both_1_prob]
     # some combinations of true_mean, proxy_mean and correlation are impossible
@@ -71,7 +73,8 @@ def generate_binary_dataset(
     if min(probs) <= 0:
         raise ValueError(
             f"Impossible combination of true_mean={true_mean}, proxy_mean={proxy_mean}, "
-            f"and correlation={correlation}: leads to negative joint probabilities"
+            f"and correlation={correlation}: leads to negative joint probabilities\n"
+            f"maximum possible correlation is {max_possible_correlation}"
         )
 
     # generate the outcome pairs as integers between 0 and 3 inclusive
@@ -153,12 +156,14 @@ def generate_binary_dataset_with_oracle_sampling(
 
     # Global (marginal) joint distribution — same as generate_binary_dataset
     D = np.sqrt(p_t * p_p * (1 - p_t) * (1 - p_p))
+    max_possible_correlation = min(p_t * (1 - p_p), p_p * (1 - p_t)) / D
     both_1_prob = correlation * D + p_t * p_p
     probs = [1 - p_t - p_p + both_1_prob, p_p - both_1_prob, p_t - both_1_prob, both_1_prob]
     if min(probs) <= 0:
         raise ValueError(
             f"Impossible combination of true_mean={true_mean}, proxy_mean={proxy_mean}, "
-            f"and correlation={correlation}: leads to negative joint probabilities"
+            f"and correlation={correlation}: leads to negative joint probabilities\n"
+            f"maximum possible correlation is {max_possible_correlation}"
         )
 
     # Spread parameter: modulates the conditional correlation across samples
@@ -191,7 +196,6 @@ def generate_binary_dataset_with_oracle_sampling(
     pi = np.sqrt(error_prob_x)
 
     records = [
-        {"y_true": int(yt), "y_proxy": int(yp), "pi": float(p)}
-        for yt, yp, p in zip(y_true_arr, y_proxy_arr, pi)
+        {"y_true": int(yt), "y_proxy": int(yp), "pi": float(p)} for yt, yp, p in zip(y_true_arr, y_proxy_arr, pi)
     ]
     return Dataset(records)
