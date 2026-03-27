@@ -39,11 +39,11 @@ class PPIMeanEstimator:
     >>> print(result)
     Metric: Metric
     Point Estimate: 5.618
-    Confidence Interval (95%): [4.92, 6.31]
+    Confidence Interval (95%): [4.923, 6.312]
     Estimator : PPIMeanEstimator
     n_true: 2
     n_proxy: 4
-    Effective Sample Size: 3.0
+    Effective Sample Size: 3
     """
 
     def _preprocess(self, dataset: Dataset, y_true_field: str, y_proxy_field: str) -> Tuple[NDArray, NDArray, NDArray]:

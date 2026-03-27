@@ -94,7 +94,7 @@ def test_str_format(estimator, dataset):
     expected = (
         "Metric: performance\n"
         "Point Estimate: 5.239\n"
-        "Confidence Interval (95%): [4.36, 6.11]\n"
+        "Confidence Interval (95%): [4.364, 6.114]\n"
         "Estimator : ClassicalMeanEstimator\n"
         "n: 4"
     )

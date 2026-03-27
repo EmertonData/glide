@@ -13,12 +13,12 @@ class SemiSupervisedMeanInferenceResult(MeanInferenceResult):
     estimator_name: str
     n_true: int = 0
     n_proxy: int = 0
-    effective_sample_size: float = 0.0
+    effective_sample_size: int = 0
 
     def __str__(self) -> str:
         lines = self._common_lines() + [
             f"n_true: {self.n_true}",
             f"n_proxy: {self.n_proxy}",
-            f"Effective Sample Size: {self.effective_sample_size:.1f}",
+            f"Effective Sample Size: {self.effective_sample_size:}",
         ]
         return "\n".join(lines)

@@ -186,11 +186,11 @@ def test_str_format(estimator, dataset):
     expected = (
         "Metric: accuracy\n"
         "Point Estimate: 3.918\n"
-        "Confidence Interval (95%): [3.55, 4.28]\n"
+        "Confidence Interval (95%): [3.555, 4.281]\n"
         "Estimator : ASIMeanEstimator\n"
         "n_true: 2\n"
         "n_proxy: 4\n"
-        "Effective Sample Size: 0.0"
+        "Effective Sample Size: 0"
     )
     assert output == expected
 

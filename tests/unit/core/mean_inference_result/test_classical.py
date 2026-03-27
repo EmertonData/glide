@@ -13,6 +13,7 @@ _CLASSICAL = ClassicalMeanInferenceResult(
 
 def test_classical():
     expected = (
-        "Metric: metric1\nPoint Estimate: 0.600\nConfidence Interval (90%): [0.44, 0.76]\nEstimator : Classical\nn: 500"
+        "Metric: metric1\nPoint Estimate: 0.600\nConfidence Interval (90%): [0.436, 0.764]\nEstimator : Classical\n"
+        "n: 500"
     )
     assert str(_CLASSICAL) == expected
