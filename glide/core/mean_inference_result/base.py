@@ -30,7 +30,7 @@ class MeanInferenceResult:
         return [
             f"Metric: {self.metric_name}",
             f"Point Estimate: {self.mean:.3f}",
-            f"Confidence Interval ({confidence_level_pct:.0f}%): [{lower_bound:.2f}, {upper_bound:.2f}]",
+            f"Confidence Interval ({confidence_level_pct:.0f}%): [{lower_bound:.3f}, {upper_bound:.3f}]",
             f"Estimator : {self.estimator_name}",
         ]
 
