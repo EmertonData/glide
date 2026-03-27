@@ -53,10 +53,6 @@ def test_preprocess(estimator, dataset):
     assert len(pi) == 4
     assert np.all((pi > 0)) and np.all((pi <= 1))
     assert set(xi.tolist()).issubset({0.0, 1.0})
-
-
-def test_preprocess_no_nans_in_y_true(estimator, dataset):
-    y_true, _, _, _ = estimator._preprocess(dataset, "y_true", "y_proxy", "pi")
     assert not np.any(np.isnan(y_true))
 
 
