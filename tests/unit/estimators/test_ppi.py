@@ -41,10 +41,6 @@ def test_preprocess(estimator, dataset):
     assert len(y_true) == 2
     assert len(y_proxy_labeled) == 2
     assert len(y_proxy_unlabeled) == 2
-
-
-def test_preprocess_no_nans_in_y_true(estimator, dataset):
-    y_true, _, _ = estimator._preprocess(dataset, "y_true", "y_proxy")
     assert not np.any(np.isnan(y_true))
 
 
