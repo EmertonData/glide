@@ -8,14 +8,14 @@ def test_generate_binary_dataset_empirical_means_and_correlation():
         n=500, N=4500, true_mean=0.7, proxy_mean=0.6, correlation=0.8, random_seed=42
     )
     dataset = labeled + unlabeled
-    y_true = labeled.to_numpy(fields=["y_true"])
-    y_proxy_all = dataset.to_numpy(fields=["y_proxy"])
+    y_true = labeled.to_numpy(fields=["y_true"]).flatten()
+    y_proxy_all = dataset.to_numpy(fields=["y_proxy"]).flatten()
     true_mean = np.mean(y_true)
     proxy_mean = np.mean(y_proxy_all)
     assert abs(true_mean - 0.7) < 0.03
     assert abs(proxy_mean - 0.6) < 0.03
-    y_proxy_labeled = labeled.to_numpy(fields=["y_proxy"])
-    empirical_corr = np.corrcoef(y_true.flatten(), y_proxy_labeled.flatten())[0, 1]
+    y_proxy_labeled = labeled.to_numpy(fields=["y_proxy"]).flatten()
+    empirical_corr = np.corrcoef(y_true, y_proxy_labeled)[0, 1]
     assert abs(empirical_corr - 0.8) < 0.05
 
 
@@ -31,10 +31,10 @@ def test_generate_binary_dataset_with_oracle_sampling_empirical_means_and_correl
     assert abs(empirical_corr - 0.8) < 0.05
 
 
-def test_generate_binary_dataset_with_oracle_sampling_pi_non_uniform():
-    # With lower correlation, pi variation is more visible
+def test_generate_binary_dataset_with_oracle_rms_error_non_uniform():
+    # With lower correlation, rms_error variation is more visible
     dataset = generate_binary_dataset_with_oracle_sampling(
         N=1000, true_mean=0.5, proxy_mean=0.5, correlation=0.3, random_seed=42
     )
-    pi_values = np.array([record["pi"] for record in dataset])
-    assert np.std(pi_values) > 1e-2
+    rms_error_values = np.array([record["rms_error"] for record in dataset])
+    assert np.std(rms_error_values) > 1e-2

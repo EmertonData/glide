@@ -46,6 +46,44 @@ def generate_binary_dataset(
         If the combination of ``true_mean``, ``proxy_mean``, and ``correlation`` is
         impossible (leads to negative joint probabilities).
 
+    Notes
+    -----
+    **Step 1 — Joint distribution**
+
+    For two binary variables with marginals ``p_t = P(y_true=1)`` and
+    ``p_p = P(y_proxy=1)``, the Pearson correlation uniquely determines the
+    joint distribution.  Let ``D = sqrt(p_t * p_p * (1-p_t) * (1-p_p))``
+    (product of standard deviations).  Then:
+
+    ```
+    p11 = P(y_true=1, y_proxy=1) = correlation * D + p_t * p_p
+    p00 = P(y_true=0, y_proxy=0) = 1 - p_t - p_p + p11
+    p01 = P(y_true=0, y_proxy=1) = p_p - p11
+    p10 = P(y_true=1, y_proxy=0) = p_t - p11
+    ```
+
+    These four probabilities must all be strictly positive — otherwise the
+    parameter combination is impossible and a ``ValueError`` is raised.
+
+    **Step 2 — Sampling outcome pairs**
+
+    The four outcomes ``(y_true=0, y_proxy=0)``, ``(y_true=0, y_proxy=1)``,
+    ``(y_true=1, y_proxy=0)``, ``(y_true=1, y_proxy=1)`` are encoded as
+    integers 0–3 with probabilities ``[p00, p01, p10, p11]``.  The ``n``
+    labeled pairs are drawn in one call via ``numpy.random.Generator.choice``.
+
+    **Step 3 — Decoding labels from integers**
+
+    The integer encoding satisfies ``y_true = outcome // 2`` and
+    ``y_proxy = outcome % 2``, so both labels are recovered with cheap
+    integer arithmetic.
+
+    **Step 4 — Unlabeled proxy sampling**
+
+    The ``N`` unlabeled records contain only ``y_proxy``, sampled independently
+    from ``Bernoulli(p_p)`` (marginal proxy distribution), with no dependence
+    on ``y_true``.
+
     References
     ----------
     .. [SO] `Correlation between Bernoulli Variables <https://math.stackexchange.com/questions/610443/finding-a-correlation-between-bernoulli-variables>`_
@@ -110,9 +148,9 @@ def generate_binary_dataset_with_oracle_sampling(
     """Generate a synthetic binary dataset with oracle sampling probabilities.
 
     All N records have ground-truth labels (y_true), proxy predictions (y_proxy),
-    and an oracle sampling probability (pi) derived from the analytical proxy error.
-    The pi values are non-uniform: records where the proxy is less reliable receive
-    higher pi following the optimal sampling rule.
+    and an oracle root mean square error (rms_error) derived from the analytical
+    proxy error. The rms_error values are non-uniform: records where the proxy is less
+    reliable receive higher rms_error following the optimal sampling rule.
 
     The sampling is based on a latent variable which determines the correlation
     between y_true and y_proxy in each record. This variable is sampled uniformly
@@ -137,7 +175,7 @@ def generate_binary_dataset_with_oracle_sampling(
     -------
     Dataset
         Dataset with N records, each containing ``"y_true"`` (int), ``"y_proxy"`` (int),
-        and ``"pi"`` (float > 0). All y_true values are present (no missing values).
+        and ``"rms_error"`` (float > 0). All y_true values are present (no missing values).
 
     Raises
     ------
@@ -167,34 +205,39 @@ def generate_binary_dataset_with_oracle_sampling(
 
     These four probabilities are fully determined by ``(p_t, p_p, correlation)``
     and must all be strictly positive — otherwise the parameter combination is
-    impossible and a ``ValueError`` is raised.
+    impossible and a ``ValueError`` is raised. This happens if the specified
+    correlation value exceeds the threshold :
+
+    ```
+    min(p_t * (1 - p_p), p_p * (1 - p_t)) / D
+    ```
 
     **Step 2 — Latent variable x and per-sample correlation**
 
-    Each record receives a latent value ``x_i ~ Uniform(0, 1)`` representing
+    Each record receives a latent value ``x_i ~ Uniform(-1, 1)`` representing
     "annotation difficulty".  The per-sample Pearson correlation is defined as:
 
     ```
-    corr(x_i) = correlation + correlation_spread * (x_i - 0.5)
+    corr(x_i) = correlation + correlation_spread * x_i
     ```
 
-    Because ``E[x - 0.5] = 0`` for ``x ~ Uniform(0,1)``, the marginal
+    Because ``E[x] = 0`` for ``x ~ Uniform(-1, 1)``, the marginal
     correlation ``E[corr(X)] = correlation`` exactly, preserving the target
     value on average.  Records with low ``x`` have lower conditional
-    correlation (proxy less reliable → higher oracle pi); records with high
-    ``x`` have higher conditional correlation (proxy more reliable → lower pi).
+    correlation (proxy less reliable → higher oracle rms_error); records with high
+    ``x`` have higher conditional correlation (proxy more reliable → lower rms_error).
 
     ``correlation_spread`` is chosen as 90 % of the largest value that keeps
     all four per-sample probabilities strictly positive for every
-    ``x in [0, 1]``:
+    ``x in [-1, 1]``:
 
     ```
-    max_safe_correlation_spread = 2 * min(p00, p01, p10, p11) / D
+    max_safe_correlation_spread = min(p00, p01, p10, p11) / D
     ```
 
     **Step 3 — Per-sample probabilities and error probability**
 
-    Only ``p11`` changes with ``x``; the marginals are preserved:
+    We adapt ``p11`` with ``x`` and this propagates to other values:
 
     ```
     p11(x) = corr(x) * D + p_t * p_p          # varies with x
@@ -214,10 +257,10 @@ def generate_binary_dataset_with_oracle_sampling(
     ``u ~ Uniform(0,1)`` draw:
 
     ```
-    u < p00(x)          → outcome 0 : (y_true=0, y_proxy=0)
-    u < p00(x)+p01(x)   → outcome 1 : (y_true=0, y_proxy=1)
-    u < 1 - p11(x)      → outcome 2 : (y_true=1, y_proxy=0)
-    else                → outcome 3 : (y_true=1, y_proxy=1)
+    u < p00(x)                 → outcome 0 : (y_true=0, y_proxy=0)
+    u < p00(x)+p01(x)          → outcome 1 : (y_true=0, y_proxy=1)
+    u < p00(x)+p01(x)+p10(x)   → outcome 2 : (y_true=1, y_proxy=0)
+    else                       → outcome 3 : (y_true=1, y_proxy=1)
     ```
 
     The crucial simplification is that the second threshold collapses to the
@@ -227,15 +270,20 @@ def generate_binary_dataset_with_oracle_sampling(
     p00(x) + p01(x) = (1-p_t-p_p+p11) + (p_p-p11) = 1 - p_t
     ```
 
+    We also have :
+    ```
+    p00(x) + p01(x) + p10(x) = 1 - p11(x)
+    ```
+
     This means only two of the three thresholds require per-sample arrays.
     The outcome integer encodes both labels: ``y_true = outcome // 2``,
     ``y_proxy = outcome % 2``.
 
-    **Step 5 — Oracle pi**
+    **Step 5 — Oracle rms_error**
 
     The optimal sampling probability satisfies
-    ``pi* ∝ sqrt(E[(y_proxy - y_true)²]) = sqrt(error_prob(x))``.
-    These values are stored directly as ``pi``.
+    ``rms_error = sqrt(E[(y_proxy - y_true)²]) = sqrt(error_prob(x))``.
+    These values are stored directly as ``rms_error``.
     """
     if not (0 < true_mean < 1):
         raise ValueError(f"true_mean must be in (0, 1), got {true_mean}")
@@ -262,14 +310,14 @@ def generate_binary_dataset_with_oracle_sampling(
         )
 
     # Spread parameter: modulates the conditional correlation across samples
-    max_safe_correlation_spread = 2.0 * min(probs) / D
+    max_safe_correlation_spread = min(probs) / D
     correlation_spread = 0.9 * max_safe_correlation_spread
 
     # Latent variable: controls per-sample proxy correlation
-    x = rng.uniform(0.0, 1.0, size=N)
+    x = rng.uniform(-1.0, 1.0, size=N)
 
     # Per-sample conditional joint distribution
-    correlation_x = correlation + correlation_spread * (x - 0.5)
+    correlation_x = correlation + correlation_spread * x
     p11_x = correlation_x * D + p_t * p_p
     error_prob_x = p_t + p_p - 2.0 * p11_x
 
@@ -288,10 +336,11 @@ def generate_binary_dataset_with_oracle_sampling(
     y_true_arr = samples // 2
     y_proxy_arr = samples % 2
 
-    # Oracle pi: proportional to sqrt(P(error | x_i))
-    pi = np.sqrt(error_prob_x)
+    # Oracle rms_error: sqrt(P(error | x_i))
+    rms_error = np.sqrt(error_prob_x)
 
     records = [
-        {"y_true": int(yt), "y_proxy": int(yp), "pi": float(p)} for yt, yp, p in zip(y_true_arr, y_proxy_arr, pi)
+        {"y_true": int(yt), "y_proxy": int(yp), "rms_error": float(p)}
+        for yt, yp, p in zip(y_true_arr, y_proxy_arr, rms_error)
     ]
     return Dataset(records)
