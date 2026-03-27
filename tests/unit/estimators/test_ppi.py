@@ -147,7 +147,7 @@ def test_str_format(estimator, dataset):
         "Estimator : PPIMeanEstimator\n"
         "n_true: 2\n"
         "n_proxy: 4\n"
-        "Effective Sample Size: 4.000"
+        "Effective Sample Size: 4"
     )
     assert output == expected
 

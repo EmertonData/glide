@@ -190,7 +190,7 @@ def test_str_format(estimator, dataset):
         "Estimator : ASIMeanEstimator\n"
         "n_true: 2\n"
         "n_proxy: 4\n"
-        "Effective Sample Size: 0.000"
+        "Effective Sample Size: 0"
     )
     assert output == expected
 

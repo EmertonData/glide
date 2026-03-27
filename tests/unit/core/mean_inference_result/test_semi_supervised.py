@@ -21,6 +21,6 @@ def test_semi_supervised_str():
         "Estimator : PPI\n"
         "n_true: 10\n"
         "n_proxy: 90\n"
-        "Effective Sample Size: 200.000"
+        "Effective Sample Size: 200"
     )
     assert str(_SEMI_SUPERVISED) == expected

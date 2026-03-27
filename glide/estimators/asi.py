@@ -48,7 +48,7 @@ class ASIMeanEstimator:
     Estimator : ASIMeanEstimator
     n_true: 2
     n_proxy: 4
-    Effective Sample Size: 8.000
+    Effective Sample Size: 8
     """
 
     def _preprocess(
