@@ -19,6 +19,6 @@ class SemiSupervisedMeanInferenceResult(MeanInferenceResult):
         lines = self._common_lines() + [
             f"n_true: {self.n_true}",
             f"n_proxy: {self.n_proxy}",
-            f"Effective Sample Size: {self.effective_sample_size:.1f}",
+            f"Effective Sample Size: {self.effective_sample_size:.3f}",
         ]
         return "\n".join(lines)
