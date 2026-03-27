@@ -63,7 +63,22 @@ def generate_binary_dataset(
     ```
 
     These four probabilities must all be strictly positive — otherwise the
-    parameter combination is impossible and a ``ValueError`` is raised.
+    parameter combination is impossible and a ``ValueError`` is raised. The
+    previous probabilities become negative for the following respective
+    values :
+
+    ```
+    p11 < 0 for correlation < -(p_t * p_p) / D
+    p00 < 0 for correlation < (p_t + p_p - p_t * p_p - 1) / D
+    p01 < 0 for correlation > p_p * (1 - p_t) / D
+    p10 < 0 for correlation > p_t * (1 - p_p) / D
+    ```
+
+    Therefore, the correlation needs to satisfy :
+
+    ```
+    max(-p_t * p_p, p_t + p_p - p_t * p_p - 1) <= correlation * D <= min(p_t * (1 - p_p), p_p * (1 - p_t))
+    ```
 
     **Step 2 — Sampling outcome pairs**
 
@@ -111,11 +126,13 @@ def generate_binary_dataset(
     # some combinations of true_mean, proxy_mean and correlation are impossible
     # and lead to negative probabilities
     if min(probs) <= 0:
+        min_possible_correlation = max(-p_t * p_p, p_p + p_t - 1 - p_t * p_p) / D
         max_possible_correlation = min(p_t * (1 - p_p), p_p * (1 - p_t)) / D
         raise ValueError(
             f"Impossible combination of true_mean={true_mean}, proxy_mean={proxy_mean}, "
             f"and correlation={correlation}: leads to negative joint probabilities\n"
-            f"maximum possible correlation is {max_possible_correlation}"
+            f"possible correlation values are in the range ({min_possible_correlation:.3f}"
+            f", {max_possible_correlation:.3f})"
         )
 
     # generate the outcome pairs as integers between 0 and 3 inclusive
@@ -205,11 +222,20 @@ def generate_binary_dataset_with_oracle_sampling(
 
     These four probabilities are fully determined by ``(p_t, p_p, correlation)``
     and must all be strictly positive — otherwise the parameter combination is
-    impossible and a ``ValueError`` is raised. This happens if the specified
-    correlation value exceeds the threshold :
+    impossible and a ``ValueError`` is raised. The previous probabilities become
+    negative for the following respective values :
 
     ```
-    min(p_t * (1 - p_p), p_p * (1 - p_t)) / D
+    p11 < 0 for correlation < -(p_t * p_p) / D
+    p00 < 0 for correlation < (p_t + p_p - p_t * p_p - 1) / D
+    p01 < 0 for correlation > p_p * (1 - p_t) / D
+    p10 < 0 for correlation > p_t * (1 - p_p) / D
+    ```
+
+    Therefore, the correlation needs to satisfy :
+
+    ```
+    max(-p_t * p_p, p_t + p_p - p_t * p_p - 1) <= correlation * D <= min(p_t * (1 - p_p), p_p * (1 - p_t))
     ```
 
     **Step 2 — Latent variable x and per-sample correlation**
@@ -302,11 +328,13 @@ def generate_binary_dataset_with_oracle_sampling(
     p10 = p_t - p11
     probs = [p00, p01, p10, p11]
     if min(probs) <= 0:
+        min_possible_correlation = max(-p_t * p_p, p_p + p_t - 1 - p_t * p_p) / D
         max_possible_correlation = min(p_t * (1 - p_p), p_p * (1 - p_t)) / D
         raise ValueError(
             f"Impossible combination of true_mean={true_mean}, proxy_mean={proxy_mean}, "
             f"and correlation={correlation}: leads to negative joint probabilities\n"
-            f"maximum possible correlation is {max_possible_correlation}"
+            f"possible correlation values are in the range ({min_possible_correlation:.3f}"
+            f", {max_possible_correlation:.3f})"
         )
 
     # Spread parameter: modulates the conditional correlation across samples
