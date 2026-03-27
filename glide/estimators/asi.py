@@ -44,11 +44,11 @@ class ASIMeanEstimator:
     >>> print(result)
     Metric: Metric
     Point Estimate: 5.563
-    Confidence Interval (95%): [5.08, 6.04]
+    Confidence Interval (95%): [5.084, 6.042]
     Estimator : ASIMeanEstimator
     n_true: 2
     n_proxy: 4
-    Effective Sample Size: 8.0
+    Effective Sample Size: 8.000
     """
 
     def _preprocess(

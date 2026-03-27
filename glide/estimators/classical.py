@@ -23,7 +23,7 @@ class ClassicalMeanEstimator:
     >>> print(result)
     Metric: Metric
     Point Estimate: 5.500
-    Confidence Interval (95%): [4.23, 6.77]
+    Confidence Interval (95%): [4.235, 6.765]
     Estimator : ClassicalMeanEstimator
     n: 4
     """

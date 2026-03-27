@@ -17,10 +17,10 @@ def test_semi_supervised_str():
     expected = (
         "Metric: accuracy\n"
         "Point Estimate: 0.700\n"
-        "Confidence Interval (95%): [0.60, 0.80]\n"
+        "Confidence Interval (95%): [0.602, 0.798]\n"
         "Estimator : PPI\n"
         "n_true: 10\n"
         "n_proxy: 90\n"
-        "Effective Sample Size: 200.0"
+        "Effective Sample Size: 200.000"
     )
     assert str(_SEMI_SUPERVISED) == expected

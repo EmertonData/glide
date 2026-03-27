@@ -40,5 +40,7 @@ _MEAN_INFERENCE_RESULT_1 = MeanInferenceResult(
 
 
 def test_base_classical_1():
-    expected = "Metric: metric1\nPoint Estimate: 0.600\nConfidence Interval (90%): [0.44, 0.76]\nEstimator : Classical"
+    expected = (
+        "Metric: metric1\nPoint Estimate: 0.600\nConfidence Interval (90%): [0.436, 0.764]\nEstimator : Classical"
+    )
     assert MeanInferenceResult.__str__(_MEAN_INFERENCE_RESULT_1) == expected
