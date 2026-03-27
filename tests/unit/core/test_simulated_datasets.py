@@ -62,6 +62,9 @@ def test_generate_gaussian_dataset_invalid_correlation_raises():
     with pytest.raises(ValueError, match="Correlation should be strictly between -1 and 1"):
         generate_gaussian_dataset(n=1, N=1, correlation=1.5)
 
+    with pytest.raises(ValueError):
+        generate_gaussian_dataset(n=1, N=1, correlation=-1.5)
+
 
 def test_generate_gaussian_dataset_reproducibility():
     labeled1, unlabeled1 = generate_gaussian_dataset(n=1, N=2, random_seed=7)
