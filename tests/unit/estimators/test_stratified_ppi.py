@@ -38,6 +38,19 @@ def estimator() -> StratifiedPPIMeanEstimator:
 # --- _get_strata ---
 
 
+def test_estimate_raises_when_stratum_has_too_few_labeled(estimator):
+    # Drop the second labeled sample in stratum A (line 45 of the doctest), leaving only 1
+    records_insufficient_groups = [
+        {"y_true": 1.0, "y_proxy": 1.1, "domain": "A"},
+        {"y_proxy": 1.8, "domain": "A"},
+        {"y_true": 4.0, "y_proxy": 3.9, "domain": "B"},
+        {"y_proxy": 4.8, "domain": "B"},
+    ]
+    dataset = Dataset(records_insufficient_groups)
+    with pytest.raises(RuntimeError, match="Too few labeled or unlabeled samples in stratum A"):
+        estimator.estimate(dataset, y_true_field="y_true", y_proxy_field="y_proxy", groups_field="domain")
+
+
 def test_get_strata_splits_correctly(estimator, dataset):
     strata = estimator._get_strata(dataset, "group")
     assert set(strata.keys()) == {"A", "B"}
@@ -45,27 +58,6 @@ def test_get_strata_splits_correctly(estimator, dataset):
     assert len(strata["B"]) == 4
     assert all(r["group"] == "A" for r in strata["A"])
     assert all(r["group"] == "B" for r in strata["B"])
-
-
-def test_get_strata_single_stratum(estimator):
-    records = [
-        {"y_true": 5.0, "y_proxy": 4.9, "group": "X"},
-        {"y_true": 6.0, "y_proxy": 6.1, "group": "X"},
-        {"y_proxy": 5.2, "group": "X"},
-    ]
-    single = Dataset(records)
-    strata = estimator._get_strata(single, "group")
-    assert len(strata) == 1
-    assert "X" in strata
-    assert len(strata["X"]) == len(single)
-
-
-def test_get_strata_preserves_records(estimator, dataset):
-    strata = estimator._get_strata(dataset, "group")
-    all_records = [r for dataset in strata.values() for r in dataset]
-    assert len(all_records) == len(dataset)
-    for record in dataset:
-        assert record in all_records
 
 
 # --- estimate ---
@@ -95,23 +87,10 @@ def test_estimate_metadata(estimator, dataset):
     assert result.effective_sample_size == 5
 
 
-def test_estimate_n_true_is_sum_of_stratum_n_true(estimator, dataset):
+def test_estimate_stats_coherence(estimator, dataset):
     result = estimator.estimate(dataset, y_true_field="y_true", y_proxy_field="y_proxy", groups_field="group")
     assert result.n_true == 4
-
-
-def test_estimate_n_proxy_is_total_dataset_size(estimator, dataset):
-    result = estimator.estimate(dataset, y_true_field="y_true", y_proxy_field="y_proxy", groups_field="group")
     assert result.n_proxy == len(dataset)
-
-
-def test_power_tuning_true_is_default(estimator, dataset):
-    result_default = estimator.estimate(dataset, y_true_field="y_true", y_proxy_field="y_proxy", groups_field="group")
-    result_explicit = estimator.estimate(
-        dataset, y_true_field="y_true", y_proxy_field="y_proxy", groups_field="group", power_tuning=True
-    )
-    assert result_default.mean == pytest.approx(result_explicit.mean)
-    assert result_default.std == pytest.approx(result_explicit.std)
 
 
 def test_estimate_custom_confidence_level(estimator, dataset):

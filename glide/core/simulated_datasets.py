@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, Tuple
 
 import numpy as np
 
@@ -91,3 +91,56 @@ def generate_binary_dataset(
         records.append({"y_proxy": int(y_proxy_)})
 
     return Dataset(records)
+
+
+def generate_gaussian_dataset(
+    n: int,
+    N: int,
+    true_mean: float = 0.7,
+    true_std: float = 1,
+    proxy_mean: float = 0.6,
+    proxy_std: float = 1,
+    correlation: float = 0.8,
+    random_seed: Optional[int] = None,
+) -> Tuple[Dataset, Dataset]:
+    """Generate a synthetic Gaussian dataset for evaluation.
+
+    Parameters
+    ----------
+    n : int
+        Number of records with both true and proxy labels (the labeled subset).
+    N : int
+        Number of records with proxy labels only (the unlabeled subset).
+    true_mean : float
+        Mean of the true label distribution.
+    true_std : float
+        Standard deviation of the true label distribution.
+    proxy_mean : float
+        Mean of the proxy label distribution.
+    proxy_std : float
+        Standard deviation of the proxy label distribution.
+    correlation : float
+        Pearson correlation between true and proxy labels.
+    random_seed : int, optional
+        Seed for reproducibility.
+
+    Returns
+    -------
+    tuple[Dataset, Dataset]
+        A tuple ``(labeled, unlabeled)``. The labeled Dataset contains ``n`` records,
+        each with ``"y_true"`` and ``"y_proxy"``. The unlabeled Dataset contains ``N``
+        records with ``"y_proxy"`` only.
+    """
+    if abs(correlation) > 1:
+        raise ValueError("Correlation should be strictly between -1 and 1")
+    rng = np.random.default_rng(seed=random_seed)
+    angle = np.arccos(correlation)
+    lin_transform = np.array([[true_std, 0], [proxy_std * np.cos(angle), proxy_std * np.sin(angle)]])
+
+    Y = lin_transform @ rng.standard_normal(size=(2, n + N))
+
+    y_true = true_mean + Y[0, :]
+    y_proxy = proxy_mean + Y[1, :]
+    labeled = [{"y_true": y_true[i], "y_proxy": y_proxy[i]} for i in range(n)]
+    unlabeled = [{"y_proxy": y_proxy[i]} for i in range(n, n + N)]
+    return Dataset(labeled), Dataset(unlabeled)

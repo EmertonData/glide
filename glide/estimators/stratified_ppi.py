@@ -41,24 +41,28 @@ class StratifiedPPIMeanEstimator:
     >>> from glide.core.dataset import Dataset
     >>> from glide.estimators.stratified_ppi import StratifiedPPIMeanEstimator
     >>> records = [
-    ...     {"y_true": 1.0, "y_proxy": 1.1, "domain": "A"},
-    ...     {"y_true": 2.0, "y_proxy": 2.2, "domain": "A"},
-    ...     {"y_proxy": 1.5, "domain": "A"},
-    ...     {"y_proxy": 1.8, "domain": "A"},
-    ...     {"y_true": 4.0, "y_proxy": 3.9, "domain": "B"},
-    ...     {"y_true": 5.0, "y_proxy": 5.1, "domain": "B"},
-    ...     {"y_proxy": 4.5, "domain": "B"},
-    ...     {"y_proxy": 4.8, "domain": "B"},
+    ...     {"y_true": 1.0, "y_proxy": 1.1, "group": "A"},
+    ...     {"y_true": 2.0, "y_proxy": 2.2, "group": "A"},
+    ...     {"y_proxy": 1.5, "group": "A"},
+    ...     {"y_proxy": 1.8, "group": "A"},
+    ...     {"y_true": 4.0, "y_proxy": 3.9, "group": "B"},
+    ...     {"y_true": 5.0, "y_proxy": 5.1, "group": "B"},
+    ...     {"y_proxy": 4.5, "group": "B"},
+    ...     {"y_proxy": 4.8, "group": "B"},
     ... ]
     >>> dataset = Dataset(records)
     >>> estimator = StratifiedPPIMeanEstimator()
-    >>> result = estimator.estimate(dataset, y_true_field="y_true", y_proxy_field="y_proxy", groups_field="domain")
+    >>> result = estimator.estimate(dataset, y_true_field="y_true", y_proxy_field="y_proxy", groups_field="group")
     >>> print(result.estimator_name)
     StratifiedPPIMeanEstimator
-    >>> print(result.n_true)
-    4
-    >>> print(result.n_proxy)
-    8
+    >>> print(result)
+    Metric: Metric
+    Point Estimate: 3.086
+    Confidence Interval (95%): [2.72, 3.45]
+    Estimator : StratifiedPPIMeanEstimator
+    n_true: 4
+    n_proxy: 8
+    Effective Sample Size: 95.0
     """
 
     def __init__(self) -> None:
@@ -109,8 +113,8 @@ class StratifiedPPIMeanEstimator:
         estimate within each stratum, and combines them with
         population-proportional weights::
 
-            theta_strat = sum_k  w_k * theta_k(lambda_k)
-            sigma2_strat = sum_k  w_k^2 * sigma2_k(lambda_k)
+            theta = sum_k  w_k * theta_k(lambda_k)
+            sigma2 = sum_k  w_k^2 * sigma2_k(lambda_k)
 
         where ``w_k = N_k / N`` is the fraction of records in stratum *k*.
 
@@ -126,7 +130,6 @@ class StratifiedPPIMeanEstimator:
             Name of the column holding proxy predictions.
         groups_field : str
             Name of the field whose unique values define the strata.
-            **Mandatory** — there is no default value.
         metric_name : str, optional
             Human-readable label for the metric. Defaults to ``"Metric"``.
         confidence_level : float, optional
@@ -153,11 +156,15 @@ class StratifiedPPIMeanEstimator:
 
         weighted_mean = 0.0
         weighted_var = 0.0
-        n_true_total = 0
         y_true_parts = []
 
-        for stratum_dataset in strata.values():
-            w_k = len(stratum_dataset) / N_total
+        for stratum_name, stratum_dataset in strata.items():
+            n_labeled = sum((y_true_field in record) for record in stratum_dataset)
+            # at least 2 labeled and unlabeled samples are needed to compute a variance downstream
+            N_k = len(stratum_dataset)
+            if min(n_labeled, N_k - n_labeled) <= 1:
+                raise RuntimeError(f"Too few labeled or unlabeled samples in stratum {stratum_name}")
+            w_k = N_k / N_total
             y_data = self._ppi_mean_estimator._preprocess(stratum_dataset, y_true_field, y_proxy_field)
             lambda_k = self._ppi_mean_estimator._compute_lambda(y_data, power_tuning)
             mean_k = self._ppi_mean_estimator._compute_mean_estimate(y_data, lambda_k)
@@ -165,15 +172,14 @@ class StratifiedPPIMeanEstimator:
 
             weighted_mean += w_k * mean_k
             weighted_var += w_k**2 * std_k**2
-            n_true_total += len(y_data[0])
             y_true_parts.append(y_data[0])
 
-        std = float(np.sqrt(weighted_var))
+        std = np.sqrt(weighted_var)
         y_true_all = np.concatenate(y_true_parts)
         effective_sample_size = compute_effective_sample_size(y_true_all, std)
 
         confidence_interval = CLTConfidenceInterval(
-            mean=float(weighted_mean),
+            mean=weighted_mean,
             std=std,
             confidence_level=confidence_level,
         )
@@ -181,7 +187,7 @@ class StratifiedPPIMeanEstimator:
             confidence_interval=confidence_interval,
             metric_name=metric_name,
             estimator_name=self.__class__.__name__,
-            n_true=n_true_total,
+            n_true=len(y_true_all),
             n_proxy=N_total,
             effective_sample_size=effective_sample_size,
         )

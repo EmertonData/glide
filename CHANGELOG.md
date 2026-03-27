@@ -9,14 +9,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 ## [Next release]
 
 ### ✨ Added
-- ...
+- Added `StratifiedPPIMeanEstimator` for Stratified PPI-based mean estimation
 
 ---
 
 ## [0.2.0] – 2026-03-19
 
 ### ✨ Added
-- Added `StratifiedPPIMeanEstimator` for Stratified PPI-based mean estimation
 - Added `ASIMeanEstimator` for Active Statistical Inference-based mean estimation
 - Added `ClassicalMeanEstimator` as a standard baseline estimator
 - Added power-tuning support (`λ`) to `PPIMeanEstimator` for narrower confidence intervals

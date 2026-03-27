@@ -55,6 +55,10 @@ class PPIMeanEstimator:
         if len(np.unique(y_proxy_all)) == 1:
             raise ValueError("Input proxy values have zero variance")
         labeled_mask = ~np.isnan(y_true_all)
+        n_labeled = sum(labeled_mask)
+        # at least 2 labeled and unlabeled samples are needed to compute a variance downstream
+        if min(n_labeled, len(dataset) - n_labeled) <= 1:
+            raise RuntimeError("Too few labeled or unlabeled samples in dataset")
         y_true = y_true_all[labeled_mask]
         y_proxy_labeled = y_proxy_all[labeled_mask]
         y_proxy_unlabeled = y_proxy_all[~labeled_mask]
@@ -140,21 +144,23 @@ class PPIMeanEstimator:
         """
         y_data = self._preprocess(dataset, y_true_field, y_proxy_field)
         y_true, y_proxy_labeled, y_proxy_unlabeled = y_data
+        n = len(y_true)
+        N = len(y_proxy_unlabeled)
         _lambda = self._compute_lambda(y_data, power_tuning)
         mean = self._compute_mean_estimate(y_data, _lambda)
         std = self._compute_std_estimate(y_data, _lambda)
         effective_sample_size = compute_effective_sample_size(y_true, std)
         confidence_interval = CLTConfidenceInterval(
-            mean=float(mean),
-            std=float(std),
+            mean=mean,
+            std=std,
             confidence_level=confidence_level,
         )
         result = SemiSupervisedMeanInferenceResult(
             confidence_interval=confidence_interval,
             metric_name=metric_name,
             estimator_name=self.__class__.__name__,
-            n_true=len(y_true),
-            n_proxy=len(y_proxy_unlabeled) + len(y_proxy_labeled),
+            n_true=n,
+            n_proxy=n + N,
             effective_sample_size=effective_sample_size,
         )
         return result
