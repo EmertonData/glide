@@ -10,8 +10,7 @@ The challenge is that computing the **true** metric $\theta^*$ requires reliable
 
 A natural shortcut is to use **proxy labels** — automated predictions (for example, from an **LLM-as-Judge**) — to label all $N$ items cheaply. The problem: proxy labels $\tilde{Y}$ are generally **biased** — so we have $E[\tilde{Y}] \neq \theta^*$. Naively averaging them gives a systematically wrong estimate of $\theta^*$.
 
-GLIDE addresses this by combining large pools of cheap proxy labels with small sets of human labels to produce unbiased, reliable estimates of $\theta^*$. By combining these two sources, GLIDE can achieve the same statistical precision as a purely human-labeled approach — at a fraction of the annotation cost. Actual savings depend on the annotation effort required and how well the proxy aligns with human judgement, but the potential gains can be substantial. This makes rigorous performance evaluation tractable even for large-scale AI systems.
-
+GLIDE addresses this by combining large pools of cheap proxy labels (e.g., LLM-as-Judge) with small sets of human labels to produce unbiased, reliable estimates of $\theta^*$. By combining these two sources, GLIDE can achieve the same statistical precision as a purely human-labeled approach — at a fraction of the annotation cost. Actual savings depend on the annotation effort required and how well the proxy aligns with human judgement, but the potential gains can be substantial. This makes rigorous performance evaluation tractable even for large-scale AI systems.
 
 ---
 
@@ -36,7 +35,7 @@ Moreover, $C_\alpha$ should be as small as possible.
 All estimators in GLIDE rely on two complementary sources of labels. Proxy labels $\tilde{Y}_i$ are available for all $N$ items at low cost but are biased ($E[\tilde{Y}] \neq \theta^*$). Human labels $Y_j$ are unbiased ($E[Y] = \theta^*$) but expensive, and only available for a small labeled subset of $n \ll N$ items. The key insight: even though human labels are scarce, they can be used to **correct** the bias in the cheap proxy labels.
 
 <p align="center">
-  <img src="../assets/schema-PPI.png" alt="Data schema" width="400">
+  <img src="../assets/schema-PPI.png" alt="Data schema" width="550">
 </p>
 
 <p align="center">
@@ -45,9 +44,16 @@ All estimators in GLIDE rely on two complementary sources of labels. Proxy label
 
 ---
 
-## PPI++
+## Prediction-Powered Inference (PPI++)
 
 PPI assumes that the labeled subset is drawn **uniformly at random** from the population. Under this assumption, it constructs an unbiased estimator by combining all available proxy labels with a small set of ground-truth annotations, correcting for the bias of the proxy at minimal cost.
+
+In PPI, every record carries two values:
+
+| Field | Present for | Description |
+|---|---|---|
+| $\tilde{Y}_i$ | All $N$ records | Proxy label |
+| $Y_j$ | Labeled records only ($n < N$) | Ground-truth label |
 
 ### Mean estimation
 
@@ -66,7 +72,6 @@ $$\hat{\theta} = \underbrace{\frac{1}{N} \sum_{i=1}^{N} \tilde{Y}_i}_{\text{Bias
 
 The parameter $\lambda$ allows modulating the contribution of the proxy labels based on how informative they are. We will see that it can be set to an optimal value below.
 
----
 
 ### Variance and confidence intervals
 
@@ -99,10 +104,11 @@ where:
 
 When the proxy is informative (high covariance with human labels), $\hat{\lambda}$ is close to 1 and the CI is narrower than standard PPI; when the proxy is uninformative, $\hat{\lambda}$ shrinks toward 0, down-weighting it and falling back to the classical human-only mean estimate. PPI++ uses optimal $\hat{\lambda}$ in GLIDE by default. This ensures the resulting estimate always has smaller variance than the classical estimate.
 
+---
 
-## ASI
+## Active Statistical Inference (ASI)
 
-Standard approaches to combining proxy and human labels assume that the labeled subset is drawn **uniformly at random** from the population. In practice, annotation resources are often allocated strategically — for instance, prioritizing uncertain or difficult examples. **Active Statistical Inference (ASI)** [[3](#ref-3), [4](#ref-4)] handles this general case: each sample $X_i$ may have a distinct, pre-determined probability $\pi_i \in (0, 1]$ of being selected for human annotation. Inverse-probability weighting (IPW) corrects for this non-uniform selection, yielding valid confidence intervals under any fixed sampling rule.
+Standard approaches to combining proxy and human labels assume that the labeled subset is drawn **uniformly at random** from the population. In practice, annotation resources are often allocated strategically — for instance, prioritizing uncertain or difficult examples. **Active Statistical Inference (ASI)** [[3](#ref-3), [4](#ref-4)] handles this general case: each sample $X_i$ may have a distinct, pre-determined probability $\pi_i \in (0, 1]$ of being selected for human annotation. Inverse-Probability Weighting (IPW) corrects for this non-uniform selection, yielding valid confidence intervals under any fixed sampling rule.
 
 In ASI, every record carries three values:
 
@@ -128,7 +134,6 @@ Expanding by case:
 
 For labeled samples, the residual $Y_i - \lambda\,\tilde{Y}_i$ is divided by $\pi_i$. This **up-weights** records that were less likely to be selected, ensuring each labeled sample represents its fair share of the population. The parameter $\lambda$ modulates how much weight the proxy label receives.
 
----
 
 The ASI mean estimator is simply the average of the IPW-corrected labels:
 
@@ -138,7 +143,6 @@ This estimator is **unbiased** for the population mean under any fixed sampling 
 
 At $\lambda = 0$, this reduces to the classical Horvitz–Thompson estimator, which uses only the labeled samples (each weighted by $1/\pi_i$). As $\lambda$ increases, the proxy labels contribute progressively more to the estimate.
 
----
 
 ### Variance and confidence intervals
 
@@ -152,7 +156,6 @@ $$\Pr\!\left(\theta^* \in \left[\hat{\theta}_{\lambda} - z_{1-\alpha/2}\,\hat{\s
 
 where $z_{1-\alpha/2}$ is the standard normal quantile (e.g. $z_{0.975} = 1.96$ for a 95% two-sided confidence interval).
 
----
 
 ### Power-tuning
 
