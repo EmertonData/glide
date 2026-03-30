@@ -174,9 +174,9 @@ def generate_binary_dataset(
 def generate_stratified_binary_dataset(
     n: List[int],
     N: List[int],
-    true_mean: List[float] = None,
-    proxy_mean: List[float] = None,
-    correlation: List[float] = None,
+    true_mean: Optional[List[float]] = None,
+    proxy_mean: Optional[List[float]] = None,
+    correlation: Optional[List[float]] = None,
     random_seed: Optional[int] = None,
 ) -> Tuple[Dataset, Dataset]:
     """Generate a synthetic stratified binary-label dataset for evaluation.
