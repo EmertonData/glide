@@ -8,7 +8,7 @@ Suppose you have an AI system that produces answers $X$ over a large dataset of 
 
 The challenge is that computing the **true** metric $\theta^*$ requires reliable annotations $Y$ for every item. Human annotations are reliable, but expensive. So in practice, you only have human labels for a small subset of $n$ items.
 
-A natural shortcut is to use **proxy labels** — automated predictions (for example, from an **LLM-as-Judge**) — to label all $N$ items cheaply. The problem: proxy labels are **biased** — their labels $\tilde{Y}$ satisfy $E[\tilde{Y}] \neq \theta^*$. Naively averaging them gives a systematically wrong estimate of $\theta^*$.
+A natural shortcut is to use **proxy labels** — automated predictions (for example, from an **LLM-as-Judge**) — to label all $N$ items cheaply. The problem: proxy labels $\tilde{Y}$ are generally **biased** — so we have $E[\tilde{Y}] \neq \theta^*$. Naively averaging them gives a systematically wrong estimate of $\theta^*$.
 
 GLIDE addresses this by combining large pools of cheap proxy labels with small sets of human labels to produce unbiased, reliable estimates of $\theta^*$. By combining these two sources, GLIDE can achieve the same statistical precision as a purely human-labeled approach — at a fraction of the annotation cost. Actual savings depend on the annotation effort required and how well the proxy aligns with human judgement, but the potential gains can be substantial. This makes rigorous performance evaluation tractable even for large-scale AI systems.
 
