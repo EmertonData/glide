@@ -1,4 +1,5 @@
 import numpy as np
+import pytest
 
 from glide.core.simulated_datasets import generate_binary_dataset, generate_binary_dataset_with_oracle_sampling
 
@@ -12,11 +13,11 @@ def test_generate_binary_dataset_empirical_means_and_correlation():
     y_proxy_all = dataset.to_numpy(fields=["y_proxy"]).flatten()
     true_mean = np.mean(y_true)
     proxy_mean = np.mean(y_proxy_all)
-    assert abs(true_mean - 0.7) < 0.03
-    assert abs(proxy_mean - 0.6) < 0.03
+    assert true_mean == pytest.approx(0.7, abs=0.03)
+    assert proxy_mean == pytest.approx(0.6, abs=0.03)
     y_proxy_labeled = labeled.to_numpy(fields=["y_proxy"]).flatten()
     empirical_corr = np.corrcoef(y_true, y_proxy_labeled)[0, 1]
-    assert abs(empirical_corr - 0.8) < 0.05
+    assert empirical_corr == pytest.approx(0.8, abs=0.05)
 
 
 def test_generate_binary_dataset_with_oracle_sampling_empirical_means_and_correlation():
@@ -25,10 +26,10 @@ def test_generate_binary_dataset_with_oracle_sampling_empirical_means_and_correl
     )
     y_true = dataset.to_numpy(fields=["y_true"]).flatten()
     y_proxy = dataset.to_numpy(fields=["y_proxy"]).flatten()
-    assert abs(np.mean(y_true) - 0.7) < 0.03
-    assert abs(np.mean(y_proxy) - 0.6) < 0.03
+    assert np.mean(y_true) == pytest.approx(0.7, abs=0.03)
+    assert np.mean(y_proxy) == pytest.approx(0.6, abs=0.03)
     empirical_corr = np.corrcoef(y_true, y_proxy)[0, 1]
-    assert abs(empirical_corr - 0.8) < 0.05
+    assert empirical_corr == pytest.approx(0.8, abs=0.05)
 
 
 def test_generate_binary_dataset_with_oracle_rms_error_non_uniform():
