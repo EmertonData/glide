@@ -12,6 +12,12 @@
     options:
       heading_level: 3
 
+## StratifiedPPIMeanEstimator
+
+::: glide.estimators.stratified_ppi.StratifiedPPIMeanEstimator
+    options:
+      heading_level: 3
+
 ## ASIMeanEstimator
 
 ::: glide.estimators.asi.ASIMeanEstimator
