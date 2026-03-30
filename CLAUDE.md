@@ -41,15 +41,6 @@ The package has three layers:
 
 ## Git Workflow
 
-```bash
-git checkout main && git pull origin main && make venv  # Step 0: sync
-git checkout -b feat/my-feature                         # Step 1: branch
-# ... commit with conventional messages: feat:, fix:, doc:, ref:
-# Step 3: open PR on GitHub, link to related issue
-# Step 4: address review comments, push new commits
-# Step 5: squash and merge into main
-```
-
 Branch naming: `feat/`, `fix/`, `doc/`, `ref/` prefixes.
 
 ## Definition of Done
@@ -69,9 +60,15 @@ Every PR must satisfy all of the following before merge:
 ## Testing Requirements
 
 - Tests live in `tests/unit/` and `tests/functional/`
+- `tests/unit/` mirrors the `glide/` folder structure exactly (e.g., `glide/core/foo.py` → `tests/unit/core/test_foo.py`)
 - pytest runs with `--import-mode=importlib --doctest-modules`, so module docstrings are also tested
 - Every new feature needs: doctests in the docstring + unit tests + analytical verification (compare against known closed-form results)
 - 100% coverage is enforced; exempted files: `estimator_protocol.py`, `__init__.py` files
+- Test names: `test_<name_of_tested_function>` with optional descriptive suffixes (e.g., `test_generate_binary_dataset_invalid_correlation`)
+- One test per distinct function call — do not write redundant tests
+- Use the smallest dataset possible (typically 2 records, rarely more than 10); tests must be lightning fast
+- Use fixtures to factorize pervasive test elements (shared datasets, estimator instances, etc.)
+- Existing test files are the canonical reference for structure and patterns — follow `test_ppi.py`, `test_simulated_datasets.py`, etc. when writing new test files
 
 ## Code Conventions
 
@@ -85,18 +82,22 @@ Every PR must satisfy all of the following before merge:
 - **Self-explanatory, no abbreviations** — BAD: `ess`, GOOD: `effective_sample_size`
 - **Consistent across classes** — all estimators must use the same name for equivalent concepts (e.g., don't use `ppi_mean` in one and `asi_mean` in another; use `compute_mean_estimate` everywhere)
 
+### Return Statements
+
+Never compute in a `return` statement. Assign the result to a named variable first, then return it.
+
+```python
+# BAD
+return a * b + c
+
+# GOOD
+result = a * b + c
+return result
+```
+
 ### No Redundancy
 
 Information should appear exactly once. If two classes share logic (e.g., a validation raise), extract it rather than duplicating. If two doc sections say the same thing, remove one.
-
-## Adding a New Estimator
-
-1. Implement the class in a dedicated module under `glide/estimators/`, following the structure of `PPIMeanEstimator`
-2. Mirror the test structure of `tests/unit/estimators/test_ppi.py`
-3. Write a scientific validation notebook in `docs/deep_dive/`
-4. Write a user guide page describing the theory in `docs/user_guide/`
-5. Write a tutorial notebook with a business case scenario in `docs/tutorials/`
-6. Update the README scientific literature mapping
 
 ## Documentation
 
