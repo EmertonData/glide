@@ -47,7 +47,7 @@ def test_estimate_raises_when_stratum_has_too_few_labeled(estimator):
         {"y_proxy": 4.8, "domain": "B"},
     ]
     dataset = Dataset(records_insufficient_groups)
-    with pytest.raises(RuntimeError, match="Too few labeled or unlabeled samples in stratum A"):
+    with pytest.raises(RuntimeError, match="Too few labeled or unlabeled samples in dataset stratum 'A'"):
         estimator.estimate(dataset, y_true_field="y_true", y_proxy_field="y_proxy", groups_field="domain")
 
 

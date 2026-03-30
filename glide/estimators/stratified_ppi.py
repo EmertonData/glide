@@ -159,16 +159,12 @@ class StratifiedPPIMeanEstimator:
         y_true_parts = []
 
         for stratum_name, stratum_dataset in strata.items():
-            y_true_stratum = stratum_dataset.to_numpy(fields=[y_true_field])
-            n_labeled = sum(~np.isnan(y_true_stratum))
-
-            # at least 2 labeled and unlabeled samples are needed to compute a variance downstream
             N_k = len(stratum_dataset)
-            if min(n_labeled, N_k - n_labeled) <= 1:
-                raise RuntimeError(f"Too few labeled or unlabeled samples in stratum {stratum_name}")
-
             w_k = N_k / N_total
-            y_data = self._ppi_mean_estimator._preprocess(stratum_dataset, y_true_field, y_proxy_field)
+            try:
+                y_data = self._ppi_mean_estimator._preprocess(stratum_dataset, y_true_field, y_proxy_field)
+            except RuntimeError as e:
+                raise RuntimeError(f"{e} stratum '{stratum_name}'")
             lambda_k = self._ppi_mean_estimator._compute_lambda(y_data, power_tuning)
             mean_k = self._ppi_mean_estimator._compute_mean_estimate(y_data, lambda_k)
             std_k = self._ppi_mean_estimator._compute_std_estimate(y_data, lambda_k)

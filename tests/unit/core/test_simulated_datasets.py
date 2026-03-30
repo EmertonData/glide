@@ -58,11 +58,13 @@ def test_generate_gaussian_dataset_structure_and_counts():
         assert "y_true" not in record
 
 
-def test_generate_gaussian_dataset_invalid_correlation_raises():
+def test_generate_gaussian_dataset_invalid_positive_correlation_raises():
     with pytest.raises(ValueError, match="Correlation should be between -1 and 1"):
         generate_gaussian_dataset(n=1, N=1, correlation=1.5)
 
-    with pytest.raises(ValueError):
+
+def test_generate_gaussian_dataset_invalid_negative_correlation_raises():
+    with pytest.raises(ValueError, match="Correlation should be between -1 and 1"):
         generate_gaussian_dataset(n=1, N=1, correlation=-1.5)
 
 
