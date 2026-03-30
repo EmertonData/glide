@@ -9,6 +9,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 ## [Next release]
 
 ### ✨ Added
+- Added `ActiveSampler` in `glide/samplers/` for uncertainty-proportional active sampling (draws Bernoulli indicators with probability ∝ 1/uncertainty, normalised to a target annotation budget)
 - Added `generate_binary_dataset_with_oracle_sampling` function to simulate ASI-like data
 - Added overload for the __getitem__ method for Dataset to support `int`, `slice`, `str`, and `list[str]` keys
 - Added ASI scientific validation notebook
