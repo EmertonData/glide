@@ -29,7 +29,7 @@ Run a single test file: `uv run pytest tests/unit/test_foo.py -vsx`
 
 The package has three layers:
 
-**`glide/estimators/`** — Public API. Each estimator implements the `MeanEstimator` Protocol (`estimate(dataset, **fields) -> MeanInferenceResult`). Current estimators: `ClassicalMeanEstimator`, `PPIMeanEstimator`, `ASIMeanEstimator`.
+**`glide/estimators/`** — Public API. Each estimator implements the `MeanEstimator` Protocol (`estimate(dataset) -> MeanInferenceResult`). Current estimators: `ClassicalMeanEstimator`, `PPIMeanEstimator`, `ASIMeanEstimator`.
 
 **`glide/core/`** — Internal building blocks:
 - `dataset.py` — `Dataset` extends `list` with column/record access
@@ -92,8 +92,8 @@ Information should appear exactly once. If two classes share logic (e.g., a vali
 ## Adding a New Estimator
 
 1. Implement the class in a dedicated module under `glide/estimators/`, following the structure of `PPIMeanEstimator`
-2. Mirror the test structure of `tests/unit/test_ppi.py`
-3. Write a scientific validation notebook in `docs/science/`
+2. Mirror the test structure of `tests/unit/estimators/test_ppi.py`
+3. Write a scientific validation notebook in `docs/deep_dive/`
 4. Write a user guide page describing the theory in `docs/user_guide/`
 5. Write a tutorial notebook with a business case scenario in `docs/tutorials/`
 6. Update the README scientific literature mapping
