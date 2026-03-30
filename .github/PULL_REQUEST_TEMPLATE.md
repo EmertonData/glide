@@ -33,6 +33,5 @@ Quality gates that must be satisfied before requesting a review:
 
 Disclose if an LLM was used in writing this PR:
 - [ ] No LLM used
-- [ ] LLM used — tool: ___, purpose: ___
+- [ ] LLM used: ___
 - [ ] I went through and validated all the code myself
-

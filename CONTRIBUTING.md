@@ -47,7 +47,6 @@ The package is organised around three concerns: **estimators**, **core building 
 ```
 glide/
 ├── estimators/          # Public API — statistical estimators
-│   ├── estimator_protocol.py   # Structural protocol every estimator must satisfy
 │   └── ...                     # files implementing estimators grouped by family (PPI, ASI, ...)
 │
 ├── core/                # Shared building blocks (not part of the public API)
@@ -78,7 +77,7 @@ New estimators should be backed by a scientific publication; include the referen
 **Adding a new estimator — step by step**
 
 1. **Identify** the inputs, outputs, and any tunable hyperparameters.
-2. **Implement** the estimator class satisfying `EstimatorProtocol` (defined in `estimator_protocol.py`):
+2. **Implement** the estimator class:
    - If your estimator belongs to an existing family, add it to the corresponding file (e.g. PPI-based methods go in `glide/estimators/ppi.py`). Otherwise, create `glide/estimators/<name>.py`.
    - `estimate(dataset)` runs the method and returns an inference result object. Reuse one from `glide/core` (e.g. a `MeanInferenceResult` subclass) or add a new one there.
    - If your estimator has hyperparameters, these should be optional parameters of `estimate()` with default values.

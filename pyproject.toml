@@ -79,7 +79,7 @@ respect-type-ignore-comments = true
 addopts = "--import-mode=importlib --doctest-modules"
 
 [tool.coverage.run]
-omit = ["glide/estimators/estimator_protocol.py", "glide/__init__.py"]
+omit = ["glide/__init__.py"]
 
 [[tool.uv.index]]
 name = "testpypi"
