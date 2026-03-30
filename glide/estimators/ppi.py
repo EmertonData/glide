@@ -143,7 +143,7 @@ class PPIMeanEstimator:
             prediction).
         """
         y_data = self._preprocess(dataset, y_true_field, y_proxy_field)
-        y_true, y_proxy_labeled, y_proxy_unlabeled = y_data
+        y_true, _, y_proxy_unlabeled = y_data
         n = len(y_true)
         N = len(y_proxy_unlabeled)
         _lambda = self._compute_lambda(y_data, power_tuning)

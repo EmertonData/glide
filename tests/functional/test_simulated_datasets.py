@@ -23,7 +23,7 @@ def test_generate_gaussian_dataset_empirical_means_and_correlation():
     labeled_data_array = labeled.to_numpy(fields=["y_true", "y_proxy"])
     y_true, y_proxy_labeled = labeled_data_array[:, 0], labeled_data_array[:, 1]
 
-    y_proxy_all = np.concat((y_proxy_labeled, y_proxy_unlabeled))
+    y_proxy_all = np.hstack((y_proxy_labeled, y_proxy_unlabeled))
 
     eps = 0.03
     assert np.mean(y_true) == pytest.approx(0.7, abs=eps)

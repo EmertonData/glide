@@ -30,3 +30,6 @@ coverage.xml
 
 # VSCode
 .vscode
+
+# Claude cache
+.claude/

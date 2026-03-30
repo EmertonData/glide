@@ -209,7 +209,7 @@ def generate_gaussian_dataset(
     (only ``y_proxy`` is observed).
     """
     if abs(correlation) > 1:
-        raise ValueError("Correlation should be strictly between -1 and 1")
+        raise ValueError("Correlation should be between -1 and 1")
     rng = np.random.default_rng(seed=random_seed)
     angle = np.arccos(correlation)
     lin_transform = np.array([[true_std, 0], [proxy_std * np.cos(angle), proxy_std * np.sin(angle)]])
