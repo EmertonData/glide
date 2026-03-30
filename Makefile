@@ -10,6 +10,9 @@ pre-commit:
 	uv run prek run --all-files
 
 lint:
+	uv run ruff check --fix
+
+format:
 	uv run ruff format
 
 type-check:
