@@ -95,9 +95,9 @@ def generate_binary_dataset(
 
     **Step 4 — Unlabeled proxy sampling**
 
-    The ``N`` unlabeled records contain only ``y_proxy``, sampled independently
-    from ``Bernoulli(p_p)`` (marginal proxy distribution), with no dependence
-    on ``y_true``.
+    The ``N`` unlabeled records contain only the ``"y_proxy"`` field, sampled
+    independently from ``Bernoulli(p_p)`` (marginal proxy distribution), with
+    no dependence on ``y_true``.
 
     References
     ----------
@@ -114,26 +114,29 @@ def generate_binary_dataset(
     p_t = true_mean
     p_p = proxy_mean
 
-    # we will generate pairs values (true, proxy) with true and proxy equal to 0 or 1
-    # probability of outcome (1, 1)
+    # std product of the variable pair will be used multiple times
     D = np.sqrt(p_t * p_p * (1 - p_t) * (1 - p_p))
-    p11 = correlation * D + p_t * p_p
-    p00 = 1 - p_t - p_p + p11
-    p01 = p_p - p11
-    p10 = p_t - p11
-    # probabilities of outcomes (0, 0), (0, 1), (1, 0), (1, 1)
-    probs = [p00, p01, p10, p11]
+
     # some combinations of true_mean, proxy_mean and correlation are impossible
-    # and lead to negative probabilities
-    if min(probs) <= 0:
-        min_possible_correlation = max(-p_t * p_p, p_p + p_t - 1 - p_t * p_p) / D
-        max_possible_correlation = min(p_t * (1 - p_p), p_p * (1 - p_t)) / D
+    # and lead to negative probabilities, raise an error if this is the case
+    min_possible_correlation = max(-p_t * p_p, p_p + p_t - 1 - p_t * p_p) / D
+    max_possible_correlation = min(p_t * (1 - p_p), p_p * (1 - p_t)) / D
+    if correlation < min_possible_correlation or correlation > max_possible_correlation:
         raise ValueError(
             f"Impossible combination of true_mean={true_mean}, proxy_mean={proxy_mean}, "
             f"and correlation={correlation}: leads to negative joint probabilities\n"
             f"possible correlation values are in the range ({min_possible_correlation:.3f}"
             f", {max_possible_correlation:.3f})"
         )
+
+    # we will generate pairs values (true, proxy) with true and proxy equal to 0 or 1
+    # probability of outcome (1, 1)
+    p11 = correlation * D + p_t * p_p
+    p00 = 1 - p_t - p_p + p11
+    p01 = p_p - p11
+    p10 = p_t - p11
+    # probabilities of outcomes (0, 0), (0, 1), (1, 0), (1, 1)
+    probs = [p00, p01, p10, p11]
 
     # generate the outcome pairs as integers between 0 and 3 inclusive
     samples = rng.choice(4, p=probs, size=n)
@@ -320,22 +323,27 @@ def generate_binary_dataset_with_oracle_sampling(
     p_t = true_mean
     p_p = proxy_mean
 
-    # Global (marginal) joint distribution — same as generate_binary_dataset
+    # std product of the variable pair will be used multiple times
     D = np.sqrt(p_t * p_p * (1 - p_t) * (1 - p_p))
-    p11 = correlation * D + p_t * p_p
-    p00 = 1 - p_t - p_p + p11
-    p01 = p_p - p11
-    p10 = p_t - p11
-    probs = [p00, p01, p10, p11]
-    if min(probs) <= 0:
-        min_possible_correlation = max(-p_t * p_p, p_p + p_t - 1 - p_t * p_p) / D
-        max_possible_correlation = min(p_t * (1 - p_p), p_p * (1 - p_t)) / D
+
+    # some combinations of true_mean, proxy_mean and correlation are impossible
+    # and lead to negative probabilities, raise an error if this is the case
+    min_possible_correlation = max(-p_t * p_p, p_p + p_t - 1 - p_t * p_p) / D
+    max_possible_correlation = min(p_t * (1 - p_p), p_p * (1 - p_t)) / D
+    if correlation < min_possible_correlation or correlation > max_possible_correlation:
         raise ValueError(
             f"Impossible combination of true_mean={true_mean}, proxy_mean={proxy_mean}, "
             f"and correlation={correlation}: leads to negative joint probabilities\n"
             f"possible correlation values are in the range ({min_possible_correlation:.3f}"
             f", {max_possible_correlation:.3f})"
         )
+
+    # Global (marginal) joint distribution — same as generate_binary_dataset
+    p11 = correlation * D + p_t * p_p
+    p00 = 1 - p_t - p_p + p11
+    p01 = p_p - p11
+    p10 = p_t - p11
+    probs = [p00, p01, p10, p11]
 
     # Spread parameter: modulates the conditional correlation across samples
     max_safe_correlation_spread = min(probs) / D
