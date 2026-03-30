@@ -126,7 +126,7 @@ def generate_gaussian_dataset(
 
     Returns
     -------
-    tuple[Dataset, Dataset]
+    Tuple[Dataset, Dataset]
         A tuple ``(labeled, unlabeled)``. The labeled Dataset contains ``n`` records,
         each with ``"y_true"`` and ``"y_proxy"``. The unlabeled Dataset contains ``N``
         records with ``"y_proxy"`` only.

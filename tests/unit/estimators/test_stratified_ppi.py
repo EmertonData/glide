@@ -83,14 +83,8 @@ def test_estimate_metadata(estimator, dataset):
     assert result.metric_name == "performance"
     assert result.estimator_name == estimator.__class__.__name__
     assert result.n_true == 4
-    assert result.n_proxy == 8
+    assert result.n_proxy == 8 == len(dataset)
     assert result.effective_sample_size == 5
-
-
-def test_estimate_stats_coherence(estimator, dataset):
-    result = estimator.estimate(dataset, y_true_field="y_true", y_proxy_field="y_proxy", groups_field="group")
-    assert result.n_true == 4
-    assert result.n_proxy == len(dataset)
 
 
 def test_estimate_custom_confidence_level(estimator, dataset):

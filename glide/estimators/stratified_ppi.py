@@ -1,4 +1,4 @@
-from typing import Dict
+from typing import Dict, Hashable
 
 import numpy as np
 
@@ -68,7 +68,7 @@ class StratifiedPPIMeanEstimator:
     def __init__(self) -> None:
         self._ppi_mean_estimator = PPIMeanEstimator()
 
-    def _get_strata(self, dataset: Dataset, groups_field: str) -> Dict[str, Dataset]:
+    def _get_strata(self, dataset: Dataset, groups_field: str) -> Dict[Hashable, Dataset]:
         """Split a dataset into per-stratum sub-datasets.
 
         Parameters
@@ -80,7 +80,7 @@ class StratifiedPPIMeanEstimator:
 
         Returns
         -------
-        Dict[str, Dataset]
+        Dict[Hashable, Dataset]
             Mapping from each unique group value to the sub-dataset of records
             belonging to that stratum.
 
@@ -89,7 +89,7 @@ class StratifiedPPIMeanEstimator:
         KeyError
             If any record is missing ``groups_field``.
         """
-        groups: Dict[str, Dataset] = {}
+        groups: Dict[Hashable, Dataset] = {}
         for record in dataset:
             group_id = record[groups_field]
             if group_id not in groups:

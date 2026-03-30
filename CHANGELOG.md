@@ -10,6 +10,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### ✨ Added
 - Added `StratifiedPPIMeanEstimator` for Stratified PPI-based mean estimation
+- Enrich the scientific section of the readme with Fish et al. and Fogliato et al.
 
 ---
 
