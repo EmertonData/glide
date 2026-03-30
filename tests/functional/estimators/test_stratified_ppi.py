@@ -70,15 +70,15 @@ def test_stratified_ppi_narrower_ci_with_heterogeneous_strata():
         n_labeled, n_unlabeled, true_mean=0.6, true_std=0.1, random_seed=random_seed
     )
     records_a = labeled_records_a + unlabeled_records_a
-    for i in range(len(records_a)):
-        records_a[i]["group"] = "A"
+    for record in records_a:
+        record["group"] = "A"
     # Stratum B: high proxy noise → lower lambda is optimal
     labeled_records_b, unlabeled_records_b = generate_gaussian_dataset(
         n_labeled, n_unlabeled, true_mean=0.4, true_std=1.5, random_seed=random_seed
     )
     records_b = labeled_records_b + unlabeled_records_b
-    for i in range(len(records_b)):
-        records_b[i]["group"] = "B"
+    for record in records_b:
+        record["group"] = "B"
 
     stratified_dataset = Dataset(records_a + records_b)
 

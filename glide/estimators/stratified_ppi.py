@@ -58,11 +58,11 @@ class StratifiedPPIMeanEstimator:
     >>> print(result)
     Metric: Metric
     Point Estimate: 3.086
-    Confidence Interval (95%): [2.72, 3.45]
+    Confidence Interval (95%): [2.720, 3.452]
     Estimator : StratifiedPPIMeanEstimator
     n_true: 4
     n_proxy: 8
-    Effective Sample Size: 95.0
+    Effective Sample Size: 95
     """
 
     def __init__(self) -> None:

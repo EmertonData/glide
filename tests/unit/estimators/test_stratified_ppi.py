@@ -123,11 +123,11 @@ def test_str_format(estimator, dataset):
     expected = (
         "Metric: performance\n"
         "Point Estimate: 5.618\n"
-        "Confidence Interval (95%): [5.13, 6.11]\n"
+        "Confidence Interval (95%): [5.127, 6.108]\n"
         "Estimator : StratifiedPPIMeanEstimator\n"
         "n_true: 4\n"
         "n_proxy: 8\n"
-        "Effective Sample Size: 5.0"
+        "Effective Sample Size: 5"
     )
     assert output == expected
 

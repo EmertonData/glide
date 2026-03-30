@@ -1,17 +1,11 @@
 import numpy as np
 import pytest
 
-from glide.core.simulated_datasets import generate_binary_dataset, generate_binary_dataset_with_oracle_sampling, generate_gaussian_dataset
-
-
-
-def test_generate_binary_dataset_empirical_means():
-    ds = generate_binary_dataset(n=500, N=4500, true_mean=0.7, proxy_mean=0.6, random_seed=42)
-    labeled = [r for r in ds if "y_true" in r]
-    true_mean = np.mean([r["y_true"] for r in labeled])
-    proxy_mean = np.mean([r["y_proxy"] for r in ds])
-    assert true_mean == pytest.approx(0.7, abs=0.03)
-    assert proxy_mean == pytest.approx(0.6, abs=0.03)
+from glide.core.simulated_datasets import (
+    generate_binary_dataset,
+    generate_binary_dataset_with_oracle_sampling,
+    generate_gaussian_dataset,
+)
 
 
 def test_generate_binary_dataset_empirical_means_and_correlation():
@@ -50,7 +44,7 @@ def test_generate_binary_dataset_with_oracle_rms_error_non_uniform():
     rms_error_values = np.array([record["rms_error"] for record in dataset])
     assert np.std(rms_error_values) > 1e-2
 
-    
+
 def test_generate_gaussian_dataset_empirical_means_and_correlation():
     labeled, unlabeled = generate_gaussian_dataset(
         n=500, N=500, true_mean=0.7, true_std=0.2, proxy_mean=0.6, proxy_std=0.3, correlation=0.8, random_seed=42
@@ -72,4 +66,3 @@ def test_generate_gaussian_dataset_empirical_means_and_correlation():
 
     assert np.std(y_true) == pytest.approx(0.2, abs=eps)
     assert np.std(y_proxy_labeled) == pytest.approx(0.3, abs=eps)
-
