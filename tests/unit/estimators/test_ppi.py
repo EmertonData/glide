@@ -44,6 +44,15 @@ def test_preprocess(estimator, dataset):
     assert not np.any(np.isnan(y_true))
 
 
+def test_preprocess_raises_when_only_one_sample(estimator):
+    # Doctest has 2 labeled samples; keeping only 1 triggers the check
+    labeled = [{"y_true": 5.0, "y_proxy": 4.9}]
+    unlabeled = [{"y_proxy": 5.2}, {"y_proxy": 6.1}]
+    dataset = Dataset(labeled + unlabeled)
+    with pytest.raises(RuntimeError, match="Too few labeled or unlabeled samples in dataset"):
+        estimator._preprocess(dataset, "y_true", "y_proxy")
+
+
 def test_preprocess_raises_on_constant_proxy(estimator):
     labeled = [{"y_true": 1.0, "y_proxy": 1.0}]
     unlabeled = [{"y_proxy": 1.0}]
