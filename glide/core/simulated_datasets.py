@@ -1,4 +1,4 @@
-from typing import Optional, Tuple
+from typing import List, Optional, Tuple
 
 import numpy as np
 
@@ -169,6 +169,134 @@ def generate_binary_dataset(
         unlabeled_records.append({"y_proxy": int(y_proxy_)})
 
     return Dataset(labeled_records), Dataset(unlabeled_records)
+
+
+def generate_stratified_binary_dataset(
+    n: List[int],
+    N: List[int],
+    true_mean: Optional[List[float]] = None,
+    proxy_mean: Optional[List[float]] = None,
+    correlation: Optional[List[float]] = None,
+    random_seed: Optional[int] = None,
+) -> Tuple[Dataset, Dataset]:
+    """Generate a synthetic stratified binary-label dataset for evaluation.
+
+    Generate multiple strata with potentially different parameters (true_mean, proxy_mean,
+    correlation, n, N per stratum). This enables simulation of heterogeneous data where
+    different groups have different proxy-truth relationships.
+
+    Parameters
+    ----------
+    n : List[int]
+        Number of records with both true and proxy labels per stratum.
+        Length must equal number of strata.
+    N : List[int]
+        Number of records with proxy labels only per stratum.
+        Length must equal number of strata.
+    true_mean : List[float], optional
+        Expected mean value of the true labels per stratum.
+        If None, defaults to [0.7, 0.7, ...] for each stratum.
+        Length must equal number of strata.
+    proxy_mean : List[float], optional
+        Expected mean value of the proxy labels per stratum.
+        If None, defaults to [0.6, 0.6, ...] for each stratum.
+        Length must equal number of strata.
+    correlation : List[float], optional
+        Pearson correlation between true and proxy per stratum.
+        If None, defaults to [0.8, 0.8, ...] for each stratum.
+        Length must equal number of strata.
+    random_seed : int, optional
+        Seed for reproducibility. If provided, seeds are derived deterministically.
+
+    Returns
+    -------
+    Tuple[Dataset, Dataset]
+        [0]: labeled dataset with all strata combined, containing ``"y_true"``, ``"y_proxy"``,
+             and ``"stratum_id"`` fields
+        [1]: unlabeled dataset with all strata combined, containing ``"y_proxy"`` and
+             ``"stratum_id"`` fields
+
+    Raises
+    ------
+    ValueError
+        If input lists have different lengths.
+    ValueError
+        If fewer than 1 stratum is specified.
+    ValueError
+        If any stratum has invalid parameters (see generate_binary_dataset).
+
+    Examples
+    --------
+    >>> from glide.core.simulated_datasets import generate_stratified_binary_dataset
+    >>> labeled, unlabeled = generate_stratified_binary_dataset(
+    ...     n=[50, 100],
+    ...     N=[200, 300],
+    ...     correlation=[0.7, 0.8],
+    ...     random_seed=42
+    ... )
+    >>> len(labeled)
+    150
+    >>> len(unlabeled)
+    500
+    >>> list(labeled.records[0].keys())
+    ['y_true', 'y_proxy', 'stratum_id']
+    >>> labeled.records[0]["stratum_id"]
+    0
+    """
+    # Set defaults for optional parameters
+    num_strata = len(n)
+    if num_strata < 1:
+        raise ValueError(f"Number of strata must be at least 1, got {num_strata}")
+
+    true_mean = true_mean if true_mean is not None else [0.7] * num_strata
+    proxy_mean = proxy_mean if proxy_mean is not None else [0.6] * num_strata
+    correlation = correlation if correlation is not None else [0.8] * num_strata
+
+    # Validate all lists have the same length
+    list_params = {
+        "n": len(n),
+        "N": len(N),
+        "true_mean": len(true_mean),
+        "proxy_mean": len(proxy_mean),
+        "correlation": len(correlation),
+    }
+    if not all(length == num_strata for length in list_params.values()):
+        raise ValueError(
+            f"All input lists must have the same length. Got: "
+            f"n={list_params['n']}, N={list_params['N']}, true_mean={list_params['true_mean']}, "
+            f"proxy_mean={list_params['proxy_mean']}, correlation={list_params['correlation']}"
+        )
+
+    # Generate data for each stratum
+    all_labeled_records = []
+    all_unlabeled_records = []
+
+    for stratum_id in range(num_strata):
+        # Determine seed for this stratum if random_seed is provided
+        stratum_seed = None
+        if random_seed is not None:
+            stratum_seed = random_seed + stratum_id
+
+        # Generate data for this stratum
+        labeled, unlabeled = generate_binary_dataset(
+            n=int(n[stratum_id]),
+            N=int(N[stratum_id]),
+            true_mean=float(true_mean[stratum_id]),
+            proxy_mean=float(proxy_mean[stratum_id]),
+            correlation=float(correlation[stratum_id]),
+            random_seed=stratum_seed,
+        )
+
+        # Add stratum_id to all records
+        for record in labeled.records:
+            record["stratum_id"] = stratum_id
+            all_labeled_records.append(record)
+
+        for record in unlabeled.records:
+            record["stratum_id"] = stratum_id
+            all_unlabeled_records.append(record)
+
+    return Dataset(all_labeled_records), Dataset(all_unlabeled_records)
 
 
 def generate_binary_dataset_with_oracle_sampling(
