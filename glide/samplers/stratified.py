@@ -11,16 +11,23 @@ class StratifiedSampler:
 
     This class implements stratified sampling strategies that determine how many records
     to annotate from each stratum, given a fixed annotation budget and proxy labels for
-    all records. It supports two allocation strategies: proportional (baseline) and
-    Neyman allocation (optimal, reduces CI width under heterogeneous proxy variance).
+    all records. It supports two allocation strategies:
 
-    The sampler uses proxy variance within each stratum to guide allocation. Neyman
-    allocation assigns more budget to strata with higher proxy variance, minimising
-    the asymptotic variance of downstream estimators (e.g., StratifiedPPIMeanEstimator,
-    ASIMeanEstimator). Proportional allocation serves as a simple baseline.
+    - **Neyman allocation** (default, optimal): Assigns more budget to strata with higher
+      proxy variance, minimising the asymptotic variance of downstream estimators.
+      Particularly effective when proxy variance varies substantially across strata.
+
+    - **Proportional allocation** (baseline): Allocates budget proportionally to stratum
+      sizes, resulting in uniform sampling probabilities across the dataset.
 
     Both allocators guarantee exact budget compliance via largest-remainder rounding
-    (Hamilton's method).
+    (Hamilton's method). The sampler is typically used upstream of statistical estimators
+    to plan annotation effort. Common downstream workflows include:
+
+    - **ASIMeanEstimator**: Uses per-record sampling probabilities to correct for non-uniform
+      annotation via inverse-probability weighting (IPW).
+    - **StratifiedPPIMeanEstimator**: Leverages per-stratum sample counts to stratify
+      labeled and unlabeled data, improving efficiency under heterogeneous variance.
 
     References
     ----------
@@ -41,20 +48,18 @@ class StratifiedSampler:
     ... ])
     >>> sampler = StratifiedSampler()
     >>> allocation = sampler.allocate_budget(
-    ...     dataset, groups_field="group", y_proxy_field="y_proxy", budget=2
-    ... )
-    >>> allocation  # doctest: +SKIP
-    {'A': 1, 'B': 1}
-    >>> allocation_proportional = sampler.allocate_budget(
     ...     dataset,
     ...     groups_field="group",
     ...     y_proxy_field="y_proxy",
-    ...     budget=2,
-    ...     strategy="proportional"
+    ...     budget=2
     ... )
-    >>> allocation_proportional  # doctest: +SKIP
+    >>> allocation  # doctest: +SKIP
     {'A': 1, 'B': 1}
     """
+
+    def __init__(self) -> None:
+        """Initialize the StratifiedSampler."""
+        pass
 
     def _preprocess(
         self,
@@ -133,6 +138,64 @@ class StratifiedSampler:
 
         return allocation
 
+    def _neyman_allocation(
+        self,
+        y_proxy: NDArray,
+        groups: NDArray,
+        budget: int,
+    ) -> Dict[Hashable, int]:
+        """Allocate budget via Neyman allocation (optimal for heterogeneous variance).
+
+        Allocates more budget to strata with higher proxy variance. If all strata have
+        zero variance, falls back to proportional allocation based on stratum sizes.
+
+        Parameters
+        ----------
+        y_proxy : NDArray
+            Proxy labels, shape (n,).
+        groups : NDArray
+            Stratum identifiers, shape (n,).
+        budget : int
+            Total annotation budget.
+
+        Returns
+        -------
+        allocation : Dict[Hashable, int]
+            Mapping from stratum_id to per-stratum budget (count of annotations).
+
+        Raises
+        ------
+        ValueError
+            If any stratum has exactly zero variance (edge case).
+        """
+        unique_strata = np.unique(groups)
+
+        weights = {}
+        for stratum_id in unique_strata:
+            stratum_mask = groups == stratum_id
+            stratum_size = stratum_mask.sum()
+            stratum_y_proxy = y_proxy[stratum_mask]
+            stratum_variance = np.std(stratum_y_proxy, ddof=1)
+            weight = stratum_size * stratum_variance
+            weights[stratum_id] = weight
+
+        total_weight = sum(weights.values())
+
+        if total_weight == 0:
+            return self._proportional_allocation(y_proxy, groups, budget)
+
+        raw_allocation = {}
+        for stratum_id in unique_strata:
+            raw_allocation[stratum_id] = budget * weights[stratum_id] / total_weight
+
+        allocation = self._apply_largest_remainder_rounding(raw_allocation, budget)
+
+        for stratum_id in allocation:
+            stratum_size = (groups == stratum_id).sum()
+            allocation[stratum_id] = max(1, min(allocation[stratum_id], stratum_size))
+
+        return allocation
+
     def _proportional_allocation(
         self,
         y_proxy: NDArray,
@@ -171,59 +234,6 @@ class StratifiedSampler:
 
         return allocation
 
-    def _neyman_allocation(
-        self,
-        y_proxy: NDArray,
-        groups: NDArray,
-        budget: int,
-    ) -> Dict[Hashable, int]:
-        """Allocate budget via Neyman allocation (optimal for heterogeneous variance).
-
-        Allocates more budget to strata with higher proxy variance. If all strata have
-        zero variance, falls back to proportional allocation.
-
-        Parameters
-        ----------
-        y_proxy : NDArray
-            Proxy labels, shape (n,).
-        groups : NDArray
-            Stratum identifiers, shape (n,).
-        budget : int
-            Total annotation budget.
-
-        Returns
-        -------
-        allocation : Dict[Hashable, int]
-            Mapping from stratum_id to per-stratum budget.
-        """
-        unique_strata = np.unique(groups)
-
-        weights = {}
-        for stratum_id in unique_strata:
-            stratum_mask = groups == stratum_id
-            stratum_size = stratum_mask.sum()
-            stratum_y_proxy = y_proxy[stratum_mask]
-            stratum_variance = np.std(stratum_y_proxy, ddof=1)
-            weight = stratum_size * stratum_variance
-            weights[stratum_id] = weight
-
-        total_weight = sum(weights.values())
-
-        if total_weight == 0:
-            return self._proportional_allocation(y_proxy, groups, budget)
-
-        raw_allocation = {}
-        for stratum_id in unique_strata:
-            raw_allocation[stratum_id] = budget * weights[stratum_id] / total_weight
-
-        allocation = self._apply_largest_remainder_rounding(raw_allocation, budget)
-
-        for stratum_id in allocation:
-            stratum_size = (groups == stratum_id).sum()
-            allocation[stratum_id] = max(1, min(allocation[stratum_id], stratum_size))
-
-        return allocation
-
     def allocate_budget(
         self,
         dataset: Dataset,
@@ -233,6 +243,12 @@ class StratifiedSampler:
         strategy: Literal["proportional", "neyman"] = "neyman",
     ) -> Dict[Hashable, int]:
         """Allocate annotation budget across strata.
+
+        Computes per-stratum sample sizes using the specified allocation strategy.
+        Neyman allocation (default) assigns more budget to strata with higher proxy variance,
+        minimising asymptotic variance of downstream estimators. Proportional allocation
+        allocates budget proportionally to stratum sizes and serves as a baseline.
+        Exact budget compliance is guaranteed via largest-remainder rounding.
 
         Parameters
         ----------
@@ -244,15 +260,16 @@ class StratifiedSampler:
             Field name holding proxy labels. Mandatory.
         budget : int
             Total number of annotations to collect. Must be positive. Mandatory.
-        strategy : Literal["proportional", "neyman"], optional
-            Allocation strategy. "neyman" (default) allocates more budget to strata
-            with higher proxy variance; "proportional" allocates proportionally to
-            stratum sizes.
+        strategy : str, optional
+            Allocation strategy: "neyman" (default) or "proportional".
+            "neyman": assigns more budget to higher-variance strata.
+            "proportional": allocates proportionally to stratum sizes.
 
         Returns
         -------
         allocation : Dict[Hashable, int]
-            Mapping from stratum_id to per-stratum allocation. Sum equals budget exactly.
+            Mapping from stratum_id to per-stratum allocation (sample count).
+            Sum of all values equals budget exactly.
 
         Raises
         ------
