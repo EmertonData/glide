@@ -8,19 +8,16 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 - Package name on PyPI: `glide-py`
 - Python 3.12+, managed with `uv`
-- New features must reference a scientific publication
 
 ## Development Commands
 
 ```bash
 make venv          # Create virtual environment (uv sync --all-groups)
-make tests         # Run tests: uv run pytest . -vsx
-make coverage      # Full coverage report (100% required)
 make lint          # Ruff linting
 make type-check    # Type checking with ty
+make tests         # Run tests: uv run pytest . -vsx
+make coverage      # Full coverage report (100% required)
 make pre-commit    # Run pre-commit hooks (ruff + nbstripout + ty)
-make build         # Build distribution
-make doc           # Serve docs locally (mkdocs)
 ```
 
 Run a single test file: `uv run pytest tests/unit/test_foo.py -vsx`
@@ -29,12 +26,12 @@ Run a single test file: `uv run pytest tests/unit/test_foo.py -vsx`
 
 The package has three layers:
 
-**`glide/estimators/`** — Public API. Current estimators: `ClassicalMeanEstimator`, `PPIMeanEstimator`, `ASIMeanEstimator`.
+**`glide/estimators/`** — Public API.
 
 **`glide/core/`** — Internal building blocks:
 - `dataset.py` — `Dataset` extends `list` with column/record access
 - `clt_confidence_interval.py` — CLT-based confidence intervals
-- `mean_inference_result/` — Result dataclasses (`ClassicalMeanInferenceResult`, `SemiSupervisedMeanInferenceResult`)
+- `mean_inference_result/` — Result dataclasses
 - `simulated_datasets.py` — Test data generators
 
 **`glide/io/`** — Serialisation helpers (JSON export).
@@ -53,9 +50,6 @@ Every PR must satisfy all of the following before merge:
 - [ ] NumPy-style docstrings on all public API
 - [ ] `make doc` builds without warnings, new docstrings rendered in API section
 - [ ] API reference section updated if user-facing
-- [ ] AI code review
-- [ ] Human code review
-- [ ] Lead tech review
 
 ## Testing Requirements
 
@@ -69,6 +63,7 @@ Every PR must satisfy all of the following before merge:
 - Use the smallest dataset possible (typically 2 records, rarely more than 10); tests must be lightning fast
 - Use fixtures to factorize pervasive test elements (shared datasets, estimator instances, etc.)
 - Existing test files are the canonical reference for structure and patterns — follow `test_ppi.py`, `test_simulated_datasets.py`, etc. when writing new test files
+- Always use `pytest.approx` when comparing floating point values in tests.
 
 ## Code Conventions
 
@@ -95,11 +90,10 @@ result = a * b + c
 return result
 ```
 
+### Type Conversions
+
+Do not use needless type conversions like `float()` or `int()` unless required by the caller or for debugging purposes.
+
 ### No Redundancy
 
 Information should appear exactly once. If two classes share logic (e.g., a validation raise), extract it rather than duplicating. If two doc sections say the same thing, remove one.
-
-## Documentation
-
-- MkDocs with mkdocstrings; docs must build without warnings
-- Update `CHANGELOG.md` for any user-facing changes (Keep a Changelog format, SemVer)
