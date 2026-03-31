@@ -5,9 +5,11 @@ from glide.core.dataset import Dataset
 
 
 class ActiveSampler:
-    """Sampler that draws observations with probability proportional to uncertainty.
+    """Sampler that draws elements from a dataset with probabilities based on an
+    uncertainty field.
 
-    Implements active sampling for the Active Statistical Inference (ASI) pipeline.
+    Implements active sampling for inference pipelines which support inverse
+    probability weighting (IPW).
     Each observation is assigned a drawing probability π_i proportional to its
     uncertainty score, then independently selected via a Bernoulli trial. This
     concentrates the annotation budget on the most uncertain observations.
@@ -15,11 +17,6 @@ class ActiveSampler:
     Observations with **exactly zero uncertainty** are rejected outright: a zero
     uncertainty would imply an infinite drawing weight, making normalisation
     ill-defined.
-
-    References
-    ----------
-    Zrnic, Tijana, and Emmanuel Candès. "Active statistical inference."
-    arXiv:2403.03208 (2024). https://arxiv.org/abs/2403.03208
 
     Examples
     --------
