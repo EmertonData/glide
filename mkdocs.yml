@@ -51,4 +51,5 @@ nav:
       - Datasets: api/core/datasets.md
       - Mean Inference Results: api/core/mean_inference_results.md
     - Estimators: api/estimators.md
+    - Samplers: api/samplers.md
     - I/O: api/io.md

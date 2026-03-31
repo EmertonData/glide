@@ -14,10 +14,6 @@ class ActiveSampler:
     uncertainty score, then independently selected via a Bernoulli trial. This
     concentrates the annotation budget on the most uncertain observations.
 
-    Observations with **exactly zero uncertainty** are rejected outright: a zero
-    uncertainty would imply an infinite drawing weight, making normalisation
-    ill-defined.
-
     Examples
     --------
     >>> from glide.core.dataset import Dataset
@@ -67,7 +63,7 @@ class ActiveSampler:
             raise ValueError(
                 f"All uncertainty values must be strictly positive; "
                 f"got exactly zero in field '{uncertainty_field}'. "
-                "Zero uncertainty implies infinite drawing weight and cannot be normalised."
+                "An observation with zero uncertainty would never be selected."
             )
         return uncertainties
 
@@ -83,7 +79,7 @@ class ActiveSampler:
         """Sample observations with probability proportional to uncertainty.
 
         Each observation receives a drawing probability π_i proportional to
-        ``1 / uncertainty_i``, normalised so that the raw probabilities sum to
+        ``uncertainty_i``, normalised so that the raw probabilities sum to
         ``budget`` (the expected number of selected observations). Because each
         π_i must be a valid Bernoulli probability, values are capped at 1 before
         the coin flip; the actual number of selected items is therefore a random
@@ -137,13 +133,13 @@ class ActiveSampler:
         >>> all(0 < record["pi"] <= 1 for record in result)
         True
         """
-        if not isinstance(budget, int) or isinstance(budget, bool) or budget <= 0:
+        if (not isinstance(budget, int)) or budget <= 0:
             raise ValueError(f"'budget' must be a strictly positive integer; got {budget!r}.")
 
         uncertainties = self._preprocess(dataset, uncertainty_field)
         rng = np.random.default_rng(seed)
 
-        raw_weights = 1.0 / uncertainties
+        raw_weights = uncertainties
         drawing_probabilities = raw_weights / raw_weights.sum() * budget
         # Cap at 1: a Bernoulli probability cannot exceed 1.
         clipped_probabilities = np.minimum(drawing_probabilities, 1.0)
@@ -151,7 +147,7 @@ class ActiveSampler:
         indicators = rng.binomial(n=1, p=clipped_probabilities).astype(float)
 
         enriched_records = [
-            {**record, pi_field: float(pi), xi_field: float(xi)}
+            {**record, pi_field: pi, xi_field: xi}
             for record, pi, xi in zip(dataset.records, clipped_probabilities, indicators)
         ]
         result = Dataset(enriched_records)
