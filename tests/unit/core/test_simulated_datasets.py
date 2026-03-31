@@ -83,14 +83,14 @@ def test_generate_binary_dataset_with_oracle_sampling_reproducibility():
     assert dataset1 == dataset2
 
 
-def test_generate_stratified_binary_dataset_structure():
+def test_generate_stratified_binary_dataset_structure_and_counts():
     labeled, unlabeled = generate_stratified_binary_dataset(
         n=[1, 2],
         N=[2, 1],
         true_mean=[0.6, 0.8],
         proxy_mean=[0.5, 0.7],
         correlation=[0.75, 0.75],
-        random_seed=0,
+        random_seed=None,
     )
     assert isinstance(labeled, Dataset)
     assert isinstance(unlabeled, Dataset)
@@ -99,26 +99,24 @@ def test_generate_stratified_binary_dataset_structure():
 
     # Fields that should be in both labeled and unlabeled
     for dataset in [labeled, unlabeled]:
-        assert sum(record.get("y_proxy") is None for record in dataset) == 0
-        assert sum(record.get("stratum_id") is None for record in dataset) == 0
+        for record in dataset:
+            assert "y_proxy" in record
+            assert "stratum_id" in record
 
     # Fields that should be in labeled only
-    assert sum(record.get("y_true") is None for record in labeled) == 0
+    for record in labeled:
+        assert "y_true" in record
 
-
-def test_generate_stratified_binary_dataset_stratum_id():
-    labeled, unlabeled = generate_stratified_binary_dataset(
-        n=[1, 2],
-        N=[2, 1],
-        true_mean=[0.6, 0.8],
-        proxy_mean=[0.5, 0.7],
-        correlation=[0.75, 0.75],
-        random_seed=0,
-    )
+    # Verify stratum_id values
     stratum_ids_labeled = labeled["stratum_id"].tolist()
     stratum_ids_unlabeled = unlabeled["stratum_id"].tolist()
     assert stratum_ids_labeled == [0, 1, 1]
     assert stratum_ids_unlabeled == [0, 0, 1]
+
+
+def test_generate_stratified_binary_dataset_empty_strata_raises():
+    with pytest.raises(ValueError, match=r"Number of strata must be at least 1, got 0"):
+        generate_stratified_binary_dataset(n=[], N=[], true_mean=[], proxy_mean=[], correlation=[])
 
 
 def test_generate_stratified_binary_dataset_mismatched_lists_raises():
@@ -151,24 +149,6 @@ def test_generate_stratified_binary_dataset_reproducibility():
     )
     assert labeled1 == labeled2
     assert unlabeled1 == unlabeled2
-
-
-def test_generate_stratified_binary_dataset_empty_strata_raises():
-    with pytest.raises(ValueError, match=r"Number of strata must be at least 1, got 0"):
-        generate_stratified_binary_dataset(n=[], N=[], true_mean=[], proxy_mean=[], correlation=[])
-
-
-def test_generate_stratified_binary_dataset_no_random_seed():
-    labeled, unlabeled = generate_stratified_binary_dataset(
-        n=[1, 2],
-        N=[2, 1],
-        true_mean=[0.6, 0.8],
-        proxy_mean=[0.5, 0.7],
-        correlation=[0.75, 0.75],
-        random_seed=None,
-    )
-    assert isinstance(labeled, Dataset)
-    assert isinstance(unlabeled, Dataset)
 
 
 def test_generate_gaussian_dataset_structure_and_counts():
