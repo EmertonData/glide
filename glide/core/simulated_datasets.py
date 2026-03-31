@@ -181,9 +181,9 @@ def generate_binary_dataset_with_oracle_sampling(
     """Generate a synthetic binary dataset with oracle sampling probabilities.
 
     All N records have ground-truth labels (y_true), proxy predictions (y_proxy),
-    and an oracle root mean square error (rms_error) derived from the analytical
-    proxy error. The rms_error values are non-uniform: records where the proxy is less
-    reliable receive higher rms_error following the optimal sampling rule.
+    and an oracle root mean square error (RMSE) derived from the analytical
+    proxy error. The RMSE values are non-uniform: records where the proxy is less
+    reliable receive higher RMSE following the optimal sampling rule.
 
     The sampling is based on a latent variable which determines the correlation
     between y_true and y_proxy in each record. This variable is sampled uniformly
@@ -208,7 +208,7 @@ def generate_binary_dataset_with_oracle_sampling(
     -------
     Dataset
         Dataset with N records, each containing ``"y_true"`` (int), ``"y_proxy"`` (int),
-        and ``"rms_error"`` (float > 0). All y_true values are present (no missing values).
+        and ``"RMSE"`` (float > 0). All y_true values are present (no missing values).
 
     Raises
     ------
@@ -266,8 +266,8 @@ def generate_binary_dataset_with_oracle_sampling(
     Because ``E[x] = 0`` for ``x ~ Uniform(-1, 1)``, the marginal
     correlation ``E[corr(X)] = correlation`` exactly, preserving the target
     value on average.  Records with low ``x`` have lower conditional
-    correlation (proxy less reliable → higher oracle rms_error); records with high
-    ``x`` have higher conditional correlation (proxy more reliable → lower rms_error).
+    correlation (proxy less reliable → higher oracle RMSE); records with high
+    ``x`` have higher conditional correlation (proxy more reliable → lower RMSE).
 
     ``correlation_spread`` is chosen as 90 % of the largest value that keeps
     all four per-sample probabilities strictly positive for every
@@ -321,11 +321,11 @@ def generate_binary_dataset_with_oracle_sampling(
     The outcome integer encodes both labels: ``y_true = outcome // 2``,
     ``y_proxy = outcome % 2``.
 
-    **Step 5 — Oracle rms_error**
+    **Step 5 — Oracle RMSE**
 
     The optimal sampling probability satisfies
-    ``rms_error = sqrt(E[(y_proxy - y_true)²]) = sqrt(error_prob(x))``.
-    These values are stored directly as ``rms_error``.
+    ``RMSE = sqrt(E[(y_proxy - y_true)²]) = sqrt(error_prob(x))``.
+    These values are stored directly as ``RMSE``.
     """
     if not (0 < true_mean < 1):
         raise ValueError(f"true_mean must be in (0, 1), got {true_mean}")
@@ -385,11 +385,10 @@ def generate_binary_dataset_with_oracle_sampling(
     y_true_arr = samples // 2
     y_proxy_arr = samples % 2
 
-    # Oracle rms_error: sqrt(P(error | x_i))
-    rms_error = np.sqrt(error_prob_x)
+    # Oracle RMSE: sqrt(P(error | x_i))
+    RMSE = np.sqrt(error_prob_x)
 
     records = [
-        {"y_true": int(yt), "y_proxy": int(yp), "rms_error": float(p)}
-        for yt, yp, p in zip(y_true_arr, y_proxy_arr, rms_error)
+        {"y_true": int(yt), "y_proxy": int(yp), "RMSE": float(p)} for yt, yp, p in zip(y_true_arr, y_proxy_arr, RMSE)
     ]
     return Dataset(records)
