@@ -26,8 +26,26 @@ def test_preprocess_extracts_uncertainties(sampler, dataset):
 
 def test_preprocess_raises_on_zero_uncertainty(sampler):
     zero_dataset = Dataset([{"uncertainty": 0.0}, {"uncertainty": 0.5}])
-    with pytest.raises(ValueError, match="zero"):
+    with pytest.raises(ValueError, match="non-positive"):
         sampler._preprocess(zero_dataset, "uncertainty")
+
+
+def test_preprocess_raises_on_negative_uncertainty(sampler):
+    negative_dataset = Dataset([{"uncertainty": -0.1}, {"uncertainty": 0.5}])
+    with pytest.raises(ValueError, match="non-positive"):
+        sampler._preprocess(negative_dataset, "uncertainty")
+
+
+def test_preprocess_raises_on_nan_uncertainty(sampler):
+    nan_dataset = Dataset([{"uncertainty": float("nan")}, {"uncertainty": 0.5}])
+    with pytest.raises(ValueError, match="NaN or absent"):
+        sampler._preprocess(nan_dataset, "uncertainty")
+
+
+def test_preprocess_raises_on_absent_uncertainty_value(sampler):
+    absent_dataset = Dataset([{"uncertainty": 0.5}, {"score": 0.3}])
+    with pytest.raises(ValueError, match="NaN or absent"):
+        sampler._preprocess(absent_dataset, "uncertainty")
 
 
 def test_preprocess_raises_on_unknown_field(sampler, dataset):
@@ -38,19 +56,30 @@ def test_preprocess_raises_on_unknown_field(sampler, dataset):
 # --- sample ---
 
 
-def test_sample_returns_valid_result(sampler, dataset):
+def test_sample_returns_dataset(sampler, dataset):
     result = sampler.sample(dataset, uncertainty_field="uncertainty", budget=5, seed=0)
-    # returns a dataset
     assert isinstance(result, Dataset)
-    # same length
+
+
+def test_sample_preserves_length(sampler, dataset):
+    result = sampler.sample(dataset, uncertainty_field="uncertainty", budget=5, seed=0)
     assert len(result) == len(dataset)
-    # all records have "pi" and "xi" fields
+
+
+def test_sample_records_have_pi_and_xi_fields(sampler, dataset):
+    result = sampler.sample(dataset, uncertainty_field="uncertainty", budget=5, seed=0)
     assert all("pi" in record and "xi" in record for record in result)
-    # valid probabilities
+
+
+def test_sample_pi_values_are_valid_probabilities(sampler, dataset):
+    result = sampler.sample(dataset, uncertainty_field="uncertainty", budget=5, seed=0)
     pi_values = result["pi"]
     assert np.all(pi_values > 0)
     assert np.all(pi_values <= 1)
-    # xi is binary
+
+
+def test_sample_xi_values_are_binary(sampler, dataset):
+    result = sampler.sample(dataset, uncertainty_field="uncertainty", budget=5, seed=0)
     xi_values = result["xi"]
     assert set(xi_values).issubset({0.0, 1.0})
 
@@ -73,10 +102,10 @@ def test_sample_higher_uncertainty_gets_higher_pi(sampler):
 
 
 def test_sample_pi_clipped_at_one_when_budget_is_large(sampler):
-    # uncertainties=[0.1, 10.0], weights=[0.1, 10.0], sum=10.1, budget=10
-    # raw pi=[0.1/10.1*10, 10/10.1*10] ≈ [0.099, 9.9] → clipped to [0.099, 1.0]
-    skewed_dataset = Dataset([{"uncertainty": 0.1}, {"uncertainty": 10.0}])
-    result = sampler.sample(skewed_dataset, uncertainty_field="uncertainty", budget=10, seed=0)
+    # uncertainties=[0.001, 10.0], sum≈10.001, budget=2
+    # raw pi=[0.001/10.001*2, 10/10.001*2] ≈ [0.0002, 1.9998] → clipped to [0.0002, 1.0]
+    skewed_dataset = Dataset([{"uncertainty": 0.001}, {"uncertainty": 10.0}])
+    result = sampler.sample(skewed_dataset, uncertainty_field="uncertainty", budget=2, seed=0)
     pi_values = result["pi"]
     assert pi_values[1] == pytest.approx(1.0)
     assert pi_values[0] < 1.0
@@ -85,6 +114,11 @@ def test_sample_pi_clipped_at_one_when_budget_is_large(sampler):
 def test_sample_invalid_budget_zero(sampler, dataset):
     with pytest.raises(ValueError, match="budget"):
         sampler.sample(dataset, uncertainty_field="uncertainty", budget=0, seed=0)
+
+
+def test_sample_invalid_boolean_budget(sampler, dataset):
+    with pytest.raises(ValueError, match="budget"):
+        sampler.sample(dataset, uncertainty_field="uncertainty", budget=True, seed=0)
 
 
 def test_sample_invalid_budget_negative(sampler, dataset):
@@ -108,3 +142,14 @@ def test_sample_is_reproducible(sampler, dataset):
     result1 = sampler.sample(dataset, uncertainty_field="uncertainty", budget=5, seed=42)
     result2 = sampler.sample(dataset, uncertainty_field="uncertainty", budget=5, seed=42)
     np.testing.assert_array_equal(result1["xi"], result2["xi"])
+
+
+def test_sample_seed_defaults_to_none(sampler, dataset):
+    # seed is optional — calling without it must not raise
+    result = sampler.sample(dataset, uncertainty_field="uncertainty", budget=5)
+    assert isinstance(result, Dataset)
+
+
+def test_sample_budget_exceeds_dataset_length(sampler, dataset):
+    with pytest.raises(ValueError, match="budget"):
+        sampler.sample(dataset, uncertainty_field="uncertainty", budget=len(dataset) + 1, seed=0)

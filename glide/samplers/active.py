@@ -46,8 +46,9 @@ class ActiveSampler:
         Raises
         ------
         ValueError
-            If any uncertainty value is exactly zero, or if ``uncertainty_field``
-            is not present in any record.
+            If any uncertainty value is NaN or absent (field missing from a record),
+            if any value is zero or negative, or if ``uncertainty_field`` is not
+            present in any record.
 
         Examples
         --------
@@ -59,11 +60,17 @@ class ActiveSampler:
         array([0.2, 0.8])
         """
         uncertainties = dataset[uncertainty_field]
-        if np.any(uncertainties == 0.0):
+        if np.any(np.isnan(uncertainties)):
+            raise ValueError(
+                f"All uncertainty values must be finite; "
+                f"got a NaN or absent value in field '{uncertainty_field}'. "
+                "A missing or NaN uncertainty score cannot be used to compute sampling probabilities."
+            )
+        if np.any(uncertainties <= 0.0):
             raise ValueError(
                 f"All uncertainty values must be strictly positive; "
-                f"got exactly zero in field '{uncertainty_field}'. "
-                "An observation with zero uncertainty would never be selected."
+                f"got a non-positive value in field '{uncertainty_field}'. "
+                "An observation with zero or negative uncertainty would never be selected."
             )
         return uncertainties
 
@@ -72,7 +79,7 @@ class ActiveSampler:
         dataset: Dataset,
         uncertainty_field: str,
         budget: int,
-        seed: int,
+        seed: int | None = None,
         pi_field: str = "pi",
         xi_field: str = "xi",
     ) -> Dataset:
@@ -91,12 +98,15 @@ class ActiveSampler:
             Dataset containing records with an ``uncertainty_field`` column.
         uncertainty_field : str
             Name of the column holding the uncertainty scores. Must not contain
-            exactly zero values.
+            zero or negative values.
         budget : int
             Expected total number of annotations to collect. Must be a strictly
-            positive integer.
-        seed : int
-            Random seed passed to ``numpy.random.default_rng`` for reproducibility.
+            positive integer and must not exceed the number of records in
+            ``dataset``.
+        seed : int or None, optional
+            Random seed passed to ``numpy.random.default_rng`` for
+            reproducibility. Pass ``None`` (the default) to use a
+            non-deterministic seed.
         pi_field : str, optional
             Name of the output column for drawing probabilities. Defaults to
             ``"pi"``.
@@ -114,9 +124,11 @@ class ActiveSampler:
         Raises
         ------
         ValueError
-            If ``budget`` is not a strictly positive integer, if any uncertainty
-            value is exactly zero, or if ``uncertainty_field`` is not present in
-            any record.
+            If ``budget`` is not a strictly positive integer, if ``budget``
+            exceeds the number of records in ``dataset``, if any uncertainty
+            value is NaN or absent (field missing from a record), if any value is
+            zero or negative, or if ``uncertainty_field`` is not present in any
+            record.
 
         Examples
         --------
@@ -133,14 +145,18 @@ class ActiveSampler:
         >>> all(0 < record["pi"] <= 1 for record in result)
         True
         """
-        if (not isinstance(budget, int)) or budget <= 0:
+        if (not isinstance(budget, (int, np.integer))) or isinstance(budget, bool) or budget <= 0:
             raise ValueError(f"'budget' must be a strictly positive integer; got {budget!r}.")
+        if budget > len(dataset):
+            raise ValueError(
+                f"'budget' must not exceed the number of records in the dataset; "
+                f"got budget={budget} but dataset has {len(dataset)} records."
+            )
 
         uncertainties = self._preprocess(dataset, uncertainty_field)
         rng = np.random.default_rng(seed)
 
-        raw_weights = uncertainties
-        drawing_probabilities = raw_weights / raw_weights.sum() * budget
+        drawing_probabilities = uncertainties / uncertainties.sum() * budget
         # Cap at 1: a Bernoulli probability cannot exceed 1.
         clipped_probabilities = np.minimum(drawing_probabilities, 1.0)
 
