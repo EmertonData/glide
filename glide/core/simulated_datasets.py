@@ -247,10 +247,15 @@ def generate_stratified_binary_dataset(
         raise ValueError(f"Number of strata must be at least 1, got {num_strata}")
 
     # Validate all lists have the same length
-    list_lengths = [len(n), len(N), len(true_mean), len(proxy_mean), len(correlation)]
-    if not all(length == num_strata for length in list_lengths):
-        param_names = ["n", "N", "true_mean", "proxy_mean", "correlation"]
-        lengths_str = ", ".join(f"{name}={length}" for name, length in zip(param_names, list_lengths))
+    param_lengths = {
+        "n": len(n),
+        "N": len(N),
+        "true_mean": len(true_mean),
+        "proxy_mean": len(proxy_mean),
+        "correlation": len(correlation),
+    }
+    if not all(length == num_strata for length in param_lengths.values()):
+        lengths_str = ", ".join(f"{name}={length}" for name, length in param_lengths.items())
         raise ValueError(f"All input lists must have the same length. Got: {lengths_str}")
 
     # Generate data for each stratum

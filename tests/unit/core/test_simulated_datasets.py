@@ -101,11 +101,13 @@ def test_generate_stratified_binary_dataset_structure_and_counts():
     for dataset in [labeled, unlabeled]:
         for record in dataset:
             assert "y_proxy" in record
+            assert record["y_proxy"] in (0, 1)
             assert "stratum_id" in record
 
     # Fields that should be in labeled only
     for record in labeled:
         assert "y_true" in record
+        assert record["y_true"] in (0, 1)
 
     # Verify stratum_id values
     stratum_ids_labeled = labeled["stratum_id"].tolist()
