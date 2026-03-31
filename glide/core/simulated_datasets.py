@@ -174,9 +174,9 @@ def generate_binary_dataset(
 def generate_stratified_binary_dataset(
     n: List[int],
     N: List[int],
-    true_mean: Optional[List[float]] = None,
-    proxy_mean: Optional[List[float]] = None,
-    correlation: Optional[List[float]] = None,
+    true_mean: List[float],
+    proxy_mean: List[float],
+    correlation: List[float],
     random_seed: Optional[int] = None,
 ) -> Tuple[Dataset, Dataset]:
     """Generate a synthetic stratified binary-label dataset for evaluation.
@@ -193,17 +193,14 @@ def generate_stratified_binary_dataset(
     N : List[int]
         Number of records with proxy labels only per stratum.
         Length must equal number of strata.
-    true_mean : List[float], optional
+    true_mean : List[float]
         Expected mean value of the true labels per stratum.
-        If None, defaults to [0.7, 0.7, ...] for each stratum.
         Length must equal number of strata.
-    proxy_mean : List[float], optional
+    proxy_mean : List[float]
         Expected mean value of the proxy labels per stratum.
-        If None, defaults to [0.6, 0.6, ...] for each stratum.
         Length must equal number of strata.
-    correlation : List[float], optional
+    correlation : List[float]
         Pearson correlation between true and proxy per stratum.
-        If None, defaults to [0.8, 0.8, ...] for each stratum.
         Length must equal number of strata.
     random_seed : int, optional
         Seed for reproducibility. If provided, seeds are derived deterministically.
@@ -231,7 +228,9 @@ def generate_stratified_binary_dataset(
     >>> labeled, unlabeled = generate_stratified_binary_dataset(
     ...     n=[50, 100],
     ...     N=[200, 300],
-    ...     correlation=[0.7, 0.8],
+    ...     true_mean=[0.6, 0.8],
+    ...     proxy_mean=[0.5, 0.7],
+    ...     correlation=[0.7, 0.75],
     ...     random_seed=42
     ... )
     >>> len(labeled)
@@ -243,14 +242,9 @@ def generate_stratified_binary_dataset(
     >>> labeled.records[0]["stratum_id"]
     0
     """
-    # Set defaults for optional parameters
     num_strata = len(n)
     if num_strata < 1:
         raise ValueError(f"Number of strata must be at least 1, got {num_strata}")
-
-    true_mean = true_mean if true_mean is not None else [0.7] * num_strata
-    proxy_mean = proxy_mean if proxy_mean is not None else [0.6] * num_strata
-    correlation = correlation if correlation is not None else [0.8] * num_strata
 
     # Validate all lists have the same length
     list_params = {
@@ -281,14 +275,14 @@ def generate_stratified_binary_dataset(
         labeled, unlabeled = generate_binary_dataset(
             n=int(n[stratum_id]),
             N=int(N[stratum_id]),
-            true_mean=float(true_mean[stratum_id]),
-            proxy_mean=float(proxy_mean[stratum_id]),
-            correlation=float(correlation[stratum_id]),
+            true_mean=true_mean[stratum_id],
+            proxy_mean=proxy_mean[stratum_id],
+            correlation=correlation[stratum_id],
             random_seed=stratum_seed,
         )
 
         # Add stratum_id to all records
-        for record in labeled.records:
+        for record in labeled:
             record["stratum_id"] = stratum_id
             all_labeled_records.append(record)
 

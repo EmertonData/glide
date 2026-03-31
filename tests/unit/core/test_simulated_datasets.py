@@ -4,8 +4,8 @@ from glide.core.dataset import Dataset
 from glide.core.simulated_datasets import (
     generate_binary_dataset,
     generate_binary_dataset_with_oracle_sampling,
-    generate_stratified_binary_dataset,
     generate_gaussian_dataset,
+    generate_stratified_binary_dataset,
 )
 
 
@@ -84,46 +84,93 @@ def test_generate_binary_dataset_with_oracle_sampling_reproducibility():
 
 
 def test_generate_stratified_binary_dataset_structure():
-    labeled, unlabeled = generate_stratified_binary_dataset(n=[1, 2], N=[2, 1], random_seed=0)
+    labeled, unlabeled = generate_stratified_binary_dataset(
+        n=[1, 2],
+        N=[2, 1],
+        true_mean=[0.6, 0.8],
+        proxy_mean=[0.5, 0.7],
+        correlation=[0.75, 0.75],
+        random_seed=0,
+    )
     assert isinstance(labeled, Dataset)
     assert isinstance(unlabeled, Dataset)
     assert len(labeled) == 3
     assert len(unlabeled) == 3
-    for record in labeled:
-        assert "y_true" in record
-        assert "y_proxy" in record
-        assert "stratum_id" in record
+
+    # Fields that should be in both labeled and unlabeled
+    for dataset in [labeled, unlabeled]:
+        assert sum(record.get("y_proxy") is None for record in dataset) == 0
+        assert sum(record.get("stratum_id") is None for record in dataset) == 0
+
+    # Fields that should be in labeled only
+    assert sum(record.get("y_true") is None for record in labeled) == 0
 
 
 def test_generate_stratified_binary_dataset_stratum_id():
-    labeled, unlabeled = generate_stratified_binary_dataset(n=[1, 2], N=[2, 1], random_seed=0)
-    stratum_ids_labeled = [record["stratum_id"] for record in labeled.records]
-    stratum_ids_unlabeled = [record["stratum_id"] for record in unlabeled.records]
+    labeled, unlabeled = generate_stratified_binary_dataset(
+        n=[1, 2],
+        N=[2, 1],
+        true_mean=[0.6, 0.8],
+        proxy_mean=[0.5, 0.7],
+        correlation=[0.75, 0.75],
+        random_seed=0,
+    )
+    stratum_ids_labeled = labeled["stratum_id"].tolist()
+    stratum_ids_unlabeled = unlabeled["stratum_id"].tolist()
     assert stratum_ids_labeled == [0, 1, 1]
     assert stratum_ids_unlabeled == [0, 0, 1]
 
 
 def test_generate_stratified_binary_dataset_mismatched_lists_raises():
     with pytest.raises(ValueError, match=r"All input lists must have the same length"):
-        generate_stratified_binary_dataset(n=[1, 2], N=[2, 1, 3], true_mean=[0.5, 0.6])
+        generate_stratified_binary_dataset(
+            n=[1, 2],
+            N=[2, 1, 3],
+            true_mean=[0.5, 0.6],
+            proxy_mean=[0.5, 0.6],
+            correlation=[0.8, 0.8],
+        )
 
 
 def test_generate_stratified_binary_dataset_reproducibility():
-    labeled1, unlabeled1 = generate_stratified_binary_dataset(n=[1, 2], N=[2, 1], random_seed=42)
-    labeled2, unlabeled2 = generate_stratified_binary_dataset(n=[1, 2], N=[2, 1], random_seed=42)
+    labeled1, unlabeled1 = generate_stratified_binary_dataset(
+        n=[1, 2],
+        N=[2, 1],
+        true_mean=[0.6, 0.8],
+        proxy_mean=[0.5, 0.7],
+        correlation=[0.75, 0.75],
+        random_seed=42,
+    )
+    labeled2, unlabeled2 = generate_stratified_binary_dataset(
+        n=[1, 2],
+        N=[2, 1],
+        true_mean=[0.6, 0.8],
+        proxy_mean=[0.5, 0.7],
+        correlation=[0.75, 0.75],
+        random_seed=42,
+    )
     assert labeled1 == labeled2
     assert unlabeled1 == unlabeled2
 
 
 def test_generate_stratified_binary_dataset_empty_strata_raises():
     with pytest.raises(ValueError, match=r"Number of strata must be at least 1, got 0"):
-        generate_stratified_binary_dataset(n=[], N=[])
+        generate_stratified_binary_dataset(n=[], N=[], true_mean=[], proxy_mean=[], correlation=[])
 
 
 def test_generate_stratified_binary_dataset_no_random_seed():
-    labeled, unlabeled = generate_stratified_binary_dataset(n=[1, 2], N=[2, 1], random_seed=None)
+    labeled, unlabeled = generate_stratified_binary_dataset(
+        n=[1, 2],
+        N=[2, 1],
+        true_mean=[0.6, 0.8],
+        proxy_mean=[0.5, 0.7],
+        correlation=[0.75, 0.75],
+        random_seed=None,
+    )
     assert isinstance(labeled, Dataset)
     assert isinstance(unlabeled, Dataset)
+
+
 def test_generate_gaussian_dataset_structure_and_counts():
     labeled, unlabeled = generate_gaussian_dataset(n=1, N=2, random_seed=0)
     assert isinstance(labeled, Dataset)
