@@ -1,4 +1,4 @@
-from typing import Optional, Tuple
+from typing import List, Optional, Tuple
 
 import numpy as np
 
@@ -169,6 +169,125 @@ def generate_binary_dataset(
         unlabeled_records.append({"y_proxy": int(y_proxy_)})
 
     return Dataset(labeled_records), Dataset(unlabeled_records)
+
+
+def generate_stratified_binary_dataset(
+    n: List[int],
+    N: List[int],
+    true_mean: List[float],
+    proxy_mean: List[float],
+    correlation: List[float],
+    random_seed: Optional[int] = None,
+) -> Tuple[Dataset, Dataset]:
+    """Generate a synthetic stratified binary-label dataset for evaluation.
+
+    Generate multiple strata with potentially different parameters (true_mean, proxy_mean,
+    correlation, n, N per stratum). This enables simulation of heterogeneous data where
+    different groups have different proxy-truth relationships.
+
+    Parameters
+    ----------
+    n : List[int]
+        Number of records with both true and proxy labels per stratum.
+        Length must equal number of strata.
+    N : List[int]
+        Number of records with proxy labels only per stratum.
+        Length must equal number of strata.
+    true_mean : List[float]
+        Expected mean value of the true labels per stratum.
+        Length must equal number of strata.
+    proxy_mean : List[float]
+        Expected mean value of the proxy labels per stratum.
+        Length must equal number of strata.
+    correlation : List[float]
+        Pearson correlation between true and proxy per stratum.
+        Length must equal number of strata.
+    random_seed : int, optional
+        Seed for reproducibility. If provided, seeds are derived deterministically.
+
+    Returns
+    -------
+    Tuple[Dataset, Dataset]
+        [0]: labeled dataset with all strata combined, containing ``"y_true"``, ``"y_proxy"``,
+             and ``"stratum_id"`` fields
+        [1]: unlabeled dataset with all strata combined, containing ``"y_proxy"`` and
+             ``"stratum_id"`` fields
+
+    Raises
+    ------
+    ValueError
+        If input lists have different lengths.
+    ValueError
+        If fewer than 1 stratum is specified.
+    ValueError
+        If any stratum has invalid parameters (see generate_binary_dataset).
+
+    Examples
+    --------
+    >>> from glide.core.simulated_datasets import generate_stratified_binary_dataset
+    >>> labeled, unlabeled = generate_stratified_binary_dataset(
+    ...     n=[50, 100],
+    ...     N=[200, 300],
+    ...     true_mean=[0.6, 0.8],
+    ...     proxy_mean=[0.5, 0.7],
+    ...     correlation=[0.7, 0.75],
+    ...     random_seed=42
+    ... )
+    >>> len(labeled)
+    150
+    >>> len(unlabeled)
+    500
+    >>> list(labeled.records[0].keys())
+    ['y_true', 'y_proxy', 'stratum_id']
+    >>> labeled.records[0]["stratum_id"]
+    0
+    """
+    num_strata = len(n)
+    if num_strata < 1:
+        raise ValueError(f"Number of strata must be at least 1, got {num_strata}")
+
+    # Validate all lists have the same length
+    param_lengths = {
+        "n": len(n),
+        "N": len(N),
+        "true_mean": len(true_mean),
+        "proxy_mean": len(proxy_mean),
+        "correlation": len(correlation),
+    }
+    if not all(length == num_strata for length in param_lengths.values()):
+        lengths_str = ", ".join(f"{name}={length}" for name, length in param_lengths.items())
+        raise ValueError(f"All input lists must have the same length. Got: {lengths_str}")
+
+    # Generate data for each stratum
+    all_labeled_records = []
+    all_unlabeled_records = []
+
+    for stratum_id in range(num_strata):
+        # Determine seed for this stratum if random_seed is provided
+        stratum_seed = None
+        if random_seed is not None:
+            stratum_seed = random_seed + stratum_id
+
+        # Generate data for this stratum
+        labeled, unlabeled = generate_binary_dataset(
+            n=n[stratum_id],
+            N=N[stratum_id],
+            true_mean=true_mean[stratum_id],
+            proxy_mean=proxy_mean[stratum_id],
+            correlation=correlation[stratum_id],
+            random_seed=stratum_seed,
+        )
+
+        # Add stratum_id to all records
+        for record in labeled:
+            record["stratum_id"] = stratum_id
+            all_labeled_records.append(record)
+
+        for record in unlabeled.records:
+            record["stratum_id"] = stratum_id
+            all_unlabeled_records.append(record)
+
+    return Dataset(all_labeled_records), Dataset(all_unlabeled_records)
 
 
 def generate_binary_dataset_with_oracle_sampling(
@@ -392,3 +511,133 @@ def generate_binary_dataset_with_oracle_sampling(
         {"y_true": int(yt), "y_proxy": int(yp), "RMSE": float(p)} for yt, yp, p in zip(y_true_arr, y_proxy_arr, RMSE)
     ]
     return Dataset(records)
+
+
+def generate_gaussian_dataset(
+    n: int,
+    N: int,
+    true_mean: float = 0.7,
+    true_std: float = 1,
+    proxy_mean: float = 0.6,
+    proxy_std: float = 1,
+    correlation: float = 0.8,
+    random_seed: Optional[int] = None,
+) -> Tuple[Dataset, Dataset]:
+    """Generate a synthetic Gaussian dataset for evaluation.
+
+    Parameters
+    ----------
+    n : int
+        Number of records with both true and proxy labels (the labeled subset).
+    N : int
+        Number of records with proxy labels only (the unlabeled subset).
+    true_mean : float
+        Mean of the true label distribution.
+    true_std : float
+        Standard deviation of the true label distribution.
+    proxy_mean : float
+        Mean of the proxy label distribution.
+    proxy_std : float
+        Standard deviation of the proxy label distribution.
+    correlation : float
+        Pearson correlation between true and proxy labels.
+    random_seed : int, optional
+        Seed for reproducibility.
+
+    Returns
+    -------
+    Tuple[Dataset, Dataset]
+        A tuple ``(labeled, unlabeled)``. The labeled Dataset contains ``n`` records,
+        each with ``"y_true"`` and ``"y_proxy"``. The unlabeled Dataset contains ``N``
+        records with ``"y_proxy"`` only.
+
+    Notes
+    -----
+    **Target distribution**
+
+    The goal is to jointly sample ``(y_true, y_proxy)`` from a bivariate Gaussian:
+
+    ```
+    (y_true, y_proxy) ~ N(μ, Σ)
+    ```
+
+    where:
+
+    ```
+    μ = (true_mean, proxy_mean)
+
+    Σ = [[true_std²,                          ρ · true_std · proxy_std],
+         [ρ · true_std · proxy_std,           proxy_std²              ]]
+    ```
+
+    and ``ρ`` is the target Pearson correlation.
+
+    **Step 1 — Cholesky decomposition of Σ**
+
+    To sample from ``N(0, Σ)``, we find a lower-triangular matrix ``L`` such that
+    ``Σ = L @ Lᵀ`` (Cholesky factor). The construction uses the angle
+    ``θ = arccos(ρ)``, so that ``cos(θ) = ρ`` and ``sin(θ) = √(1 - ρ²)``:
+
+    ```
+    L = [[true_std,                  0                  ],
+         [proxy_std · cos(θ),        proxy_std · sin(θ) ]]
+    ```
+
+    One can verify ``L @ Lᵀ = Σ`` directly:
+
+    ```
+    L @ Lᵀ = [[true_std²,                    true_std · proxy_std · cos(θ)],
+              [true_std · proxy_std · cos(θ), proxy_std² · (cos²(θ)+sin²(θ))]]
+
+           = [[true_std²,                    true_std · proxy_std · ρ],
+              [true_std · proxy_std · ρ,     proxy_std²              ]]  = Σ
+    ```
+
+    **Step 2 — Sampling via the linear transform**
+
+    Let ``Z`` be a ``2 × (n+N)`` matrix whose entries are i.i.d. standard normals
+    ``Z_i ~ N(0, 1)``. Then:
+
+    ```
+    Y = L @ Z
+    ```
+
+    gives a ``2 × (n+N)`` matrix where each column is a zero-mean sample from
+    ``N(0, Σ)``. In component form, each column ``(Z₁, Z₂)`` maps to:
+
+    ```
+    Y₁ = true_std · Z₁
+    Y₂ = proxy_std · cos(θ) · Z₁ + proxy_std · sin(θ) · Z₂
+    ```
+
+    The resulting properties are:
+    - ``Var(Y₁) = true_std²`` and ``Var(Y₂) = proxy_std²`` (correct marginal variances)
+    - ``Cov(Y₁, Y₂) = true_std · proxy_std · cos(θ) = true_std · proxy_std · ρ``
+    - ``Corr(Y₁, Y₂) = ρ`` (correct Pearson correlation)
+
+    **Step 3 — Shifting by the means**
+
+    Adding the desired means shifts the distribution to ``N(μ, Σ)``:
+
+    ```
+    y_true  = true_mean  + Y[0, :]
+    y_proxy = proxy_mean + Y[1, :]
+    ```
+
+    The first ``n`` columns form the labeled set (both ``y_true`` and ``y_proxy``
+    are observed); columns ``n`` through ``n+N-1`` form the unlabeled set
+    (only ``y_proxy`` is observed).
+    """
+    if abs(correlation) > 1:
+        raise ValueError("Correlation should be between -1 and 1")
+    rng = np.random.default_rng(seed=random_seed)
+    angle = np.arccos(correlation)
+    lin_transform = np.array([[true_std, 0], [proxy_std * np.cos(angle), proxy_std * np.sin(angle)]])
+
+    Y = lin_transform @ rng.standard_normal(size=(2, n + N))
+
+    y_true = true_mean + Y[0, :]
+    y_proxy = proxy_mean + Y[1, :]
+    labeled = [{"y_true": y_true[i], "y_proxy": y_proxy[i]} for i in range(n)]
+    unlabeled = [{"y_proxy": y_proxy[i]} for i in range(n, n + N)]
+    return Dataset(labeled), Dataset(unlabeled)
