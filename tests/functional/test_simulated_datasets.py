@@ -31,4 +31,4 @@ def test_generate_binary_dataset_with_oracle_sampling_empirical_means_and_correl
     empirical_corr = np.corrcoef(y_true, y_proxy)[0, 1]
     assert empirical_corr == pytest.approx(0.5, abs=0.05)
     RMSE_array = dataset.to_numpy(fields=["RMSE"])[:, 0]
-    assert np.std(RMSE_array) == pytest.approx(0.074, abs=0.01)
+    assert np.std(RMSE_array) == pytest.approx(0.07, abs=0.01)
