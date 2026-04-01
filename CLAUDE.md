@@ -95,6 +95,15 @@ result = a * b + c
 return result
 ```
 
+### Type Annotations
+
+Use `typing` module generics — never use PEP 604 / PEP 585 built-in aliases:
+
+- BAD: `int | None`, `list[str]`, `dict[str, int]`, `tuple[int, ...]`
+- GOOD: `Optional[int]`, `List[str]`, `Dict[str, int]`, `Tuple[int, ...]`
+
+Always import from `typing`: `from typing import Dict, List, Optional, Tuple`.
+
 ### No Redundancy
 
 Information should appear exactly once. If two classes share logic (e.g., a validation raise), extract it rather than duplicating. If two doc sections say the same thing, remove one.

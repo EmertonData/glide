@@ -22,7 +22,7 @@ plugins:
             show_root_toc_entry: false
   - mkdocs-jupyter:
       include_source: true
-      execute: true
+      execute: false # true
 
 markdown_extensions:
   - pymdownx.snippets
@@ -50,6 +50,6 @@ nav:
     - Core:
       - Datasets: api/core/datasets.md
       - Mean Inference Results: api/core/mean_inference_results.md
-    - Estimators: api/estimators.md
     - Samplers: api/samplers.md
+    - Estimators: api/estimators.md
     - I/O: api/io.md

@@ -1,3 +1,5 @@
+from typing import Optional
+
 import numpy as np
 from numpy.typing import NDArray
 
@@ -20,45 +22,22 @@ class ActiveSampler:
     >>> from glide.samplers.active import ActiveSampler
     >>> dataset = Dataset([
     ...     {"score": 0.9, "uncertainty": 0.1},
-    ...     {"score": 0.5, "uncertainty": 0.5},
+    ...     {"score": 0.5, "uncertainty": 0.4},
     ... ])
     >>> sampler = ActiveSampler()
-    >>> result = sampler.sample(dataset, uncertainty_field="uncertainty", budget=1, seed=0)
+    >>> result = sampler.sample(dataset, uncertainty_field="uncertainty", budget=1, random_seed=0)
+    >>> result["pi"]
+    array([0.2, 0.8])
+    >>> result["xi"]
+    array([0., 1.])
     >>> all("pi" in record and "xi" in record for record in result)
+    True
+    >>> all(0 < record["pi"] <= 1 for record in result)
     True
     """
 
     def _preprocess(self, dataset: Dataset, uncertainty_field: str) -> NDArray:
-        """Extract and validate uncertainty values from the dataset.
 
-        Parameters
-        ----------
-        dataset : Dataset
-            Dataset containing records with an ``uncertainty_field`` column.
-        uncertainty_field : str
-            Name of the column holding the uncertainty scores.
-
-        Returns
-        -------
-        NDArray
-            1D array of uncertainty values of shape ``(n,)``.
-
-        Raises
-        ------
-        ValueError
-            If any uncertainty value is NaN or absent (field missing from a record),
-            if any value is zero or negative, or if ``uncertainty_field`` is not
-            present in any record.
-
-        Examples
-        --------
-        >>> from glide.core.dataset import Dataset
-        >>> from glide.samplers.active import ActiveSampler
-        >>> dataset = Dataset([{"uncertainty": 0.2}, {"uncertainty": 0.8}])
-        >>> sampler = ActiveSampler()
-        >>> sampler._preprocess(dataset, "uncertainty")
-        array([0.2, 0.8])
-        """
         uncertainties = dataset[uncertainty_field]
         if np.any(np.isnan(uncertainties)):
             raise ValueError(
@@ -79,7 +58,7 @@ class ActiveSampler:
         dataset: Dataset,
         uncertainty_field: str,
         budget: int,
-        seed: int | None = None,
+        random_seed: Optional[int] = None,
         pi_field: str = "pi",
         xi_field: str = "xi",
     ) -> Dataset:
@@ -103,10 +82,10 @@ class ActiveSampler:
             Expected total number of annotations to collect. Must be a strictly
             positive integer and must not exceed the number of records in
             ``dataset``.
-        seed : int or None, optional
+        random_seed : int or None, optional
             Random seed passed to ``numpy.random.default_rng`` for
             reproducibility. Pass ``None`` (the default) to use a
-            non-deterministic seed.
+            non-deterministic random_seed.
         pi_field : str, optional
             Name of the output column for drawing probabilities. Defaults to
             ``"pi"``.
@@ -129,21 +108,6 @@ class ActiveSampler:
             value is NaN or absent (field missing from a record), if any value is
             zero or negative, or if ``uncertainty_field`` is not present in any
             record.
-
-        Examples
-        --------
-        >>> from glide.core.dataset import Dataset
-        >>> from glide.samplers.active import ActiveSampler
-        >>> dataset = Dataset([
-        ...     {"score": 0.9, "uncertainty": 0.1},
-        ...     {"score": 0.5, "uncertainty": 0.5},
-        ... ])
-        >>> sampler = ActiveSampler()
-        >>> result = sampler.sample(dataset, uncertainty_field="uncertainty", budget=1, seed=0)
-        >>> all("pi" in record and "xi" in record for record in result)
-        True
-        >>> all(0 < record["pi"] <= 1 for record in result)
-        True
         """
         if (not isinstance(budget, (int, np.integer))) or isinstance(budget, bool) or budget <= 0:
             raise ValueError(f"'budget' must be a strictly positive integer; got {budget!r}.")
@@ -154,9 +118,9 @@ class ActiveSampler:
             )
 
         uncertainties = self._preprocess(dataset, uncertainty_field)
-        rng = np.random.default_rng(seed)
+        rng = np.random.default_rng(random_seed)
 
-        drawing_probabilities = uncertainties / uncertainties.sum() * budget
+        drawing_probabilities = budget * uncertainties / uncertainties.sum()
         # Cap at 1: a Bernoulli probability cannot exceed 1.
         clipped_probabilities = np.minimum(drawing_probabilities, 1.0)
 
