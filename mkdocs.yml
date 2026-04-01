@@ -40,11 +40,11 @@ nav:
     - Quickstart: getting-started/quickstart.ipynb
   - User Guide: user_guide.md
   - Tutorials:
-    - ASI: tutorials/asi.ipynb
     - PPI: tutorials/ppi.ipynb
+    - ASI: tutorials/asi.ipynb
   - Deep Dive:
-    - ASI Validation: deep_dive/asi_validation.ipynb
     - PPI Validation: deep_dive/ppi_validation.ipynb
+    - ASI Validation: deep_dive/asi_validation.ipynb
   - Contributing: contributing.md
   - API Reference:
     - Core:
