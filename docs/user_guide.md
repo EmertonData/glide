@@ -106,6 +106,46 @@ When the proxy is informative (high covariance with human labels), $\hat{\lambda
 
 ---
 
+## Stratified PPI++
+
+Standard PPI++ assumes that labeled and unlabeled samples are drawn uniformly from a single population. In practice, the dataset is often naturally partitioned into **strata** — for example, by language, domain, or question type — and the proxy model may behave very differently across these groups. **Stratified PPI++** [[5](#ref-5), [6](#ref-6)] exploits this structure: rather than applying one global estimate, it runs PPI++ independently within each stratum and combines the results with population-proportional weights. Whenever strata differ in proxy quality or size, this yields narrower confidence intervals than applying PPI++ to the full dataset at once.
+
+Let $K$ denote the number of strata. Stratum $k$ contains $N_k$ total records (labeled + unlabeled), with $n_k$ labeled and $N_k^u = N_k - n_k$ unlabeled. The total dataset size is $N = \sum_k N_k$ and the **population weight** of stratum $k$ is:
+
+$$w_k = \frac{N_k}{N}$$
+
+In Stratified PPI++, every record carries the same fields as PPI++ — a proxy label $\tilde{Y}_i$ and optionally a ground-truth label $Y_j$ — plus a **group identifier** that assigns each record to its stratum.
+
+### Mean estimation
+
+The Stratified PPI++ point estimate is a weighted average of the per-stratum PPI++ estimates:
+
+$$\hat{\theta}_{\text{strat}} = \sum_{k=1}^{K} w_k \cdot \hat{\theta}_k(\lambda_k)$$
+
+where $\hat{\theta}_k(\lambda_k)$ is exactly the PPI++ mean estimator applied to the data in stratum $k$ with its own weight $\lambda_k$. The weights $w_k$ are proportional to stratum size, so larger strata contribute more to the final estimate. Because each $\hat{\theta}_k(\lambda_k)$ is unbiased for the stratum-$k$ mean and the weights sum to one, $\hat{\theta}_{\text{strat}}$ is unbiased for the population mean $\theta^*$.
+
+### Variance and confidence intervals
+
+The asymptotic variance of $\hat{\theta}_{\text{strat}}$ is the sum of the per-stratum PPI++ variances, each scaled by its squared population weight:
+
+$$\sigma^2_{\text{strat}} = \sum_{k=1}^{K} w_k^2 \cdot \sigma^2_k(\lambda_k)$$
+
+where $\sigma^2_k(\lambda_k)$ is the PPI++ variance for stratum $k$. The $w_k^2$ scaling (rather than $w_k$) reflects that the errors from independent strata do not add linearly — their variances do. The reported standard deviation is $\sigma_{\text{strat}} = \sqrt{\sigma^2_{\text{strat}}}$, and a confidence interval at level $1 - \alpha$ is constructed via the CLT exactly as in PPI++.
+
+The key benefit over global PPI++ becomes apparent when strata differ substantially in proxy quality. Strata where the proxy is accurate contribute a small $\sigma^2_k(\lambda_k)$, while strata where it is poor contribute a larger one — but each contribution is isolated to its own stratum instead of polluting the global estimate.
+
+### Power-tuning
+
+Each stratum $k$ receives its **own optimal weight** $\hat{\lambda}_k$, computed with the same closed-form formula as PPI++, restricted to the $n_k$ labeled and $N_k^u$ unlabeled records within that stratum:
+
+$$\hat{\lambda}_k = \frac{\widehat{\text{Cov}}_{n_k}(Y_k,\, \tilde{Y}_k)}{\left(1 + \tfrac{n_k}{N_k^u}\right)\widehat{\text{Var}}_{n_k + N_k^u}(\tilde{Y}_k)}$$
+
+This is the same formula as PPI++ power-tuning, applied stratum by stratum. In strata where the proxy is informative, $\hat{\lambda}_k$ is close to 1 and the stratum estimate benefits from the proxy signal. In strata where the proxy is weak or unreliable, $\hat{\lambda}_k$ shrinks toward 0, falling back to the classical human-only mean for that stratum — without affecting any other stratum.
+
+Setting `power_tuning=False` forces $\lambda_k = 1.0$ for all strata, recovering stratified PPI without the variance-minimising tuning.
+
+---
+
 ## Active Statistical Inference (ASI)
 
 Standard approaches to combining proxy and human labels assume that the labeled subset is drawn **uniformly at random** from the population. In practice, annotation resources are often allocated strategically — for instance, prioritizing uncertain or difficult examples. **Active Statistical Inference (ASI)** [[3](#ref-3), [4](#ref-4)] handles this general case: each sample $X_i$ may have a distinct, pre-determined probability $\pi_i \in (0, 1]$ of being selected for human annotation. Inverse-Probability Weighting (IPW) corrects for this non-uniform selection, yielding valid confidence intervals under any fixed sampling rule.
@@ -185,3 +225,7 @@ When the proxy is informative, $\hat{\lambda}$ is large and the IPW-corrected la
 <a id="ref-3"></a>[3] <a id="ref-1-link" href="https://arxiv.org/abs/2403.03208">Zrnic, Tijana, and Emmanuel Candès. "Active statistical inference." *arXiv preprint arXiv:2403.03208* (2024)</a>.
 
 <a id="ref-4"></a>[4] <a id="ref-1-link" href="https://aclanthology.org/2025.naacl-long.179.pdf">Gligorić, Kristina, Tijana Zrnic, Cinoo Lee, Emmanuel Candes, and Dan Jurafsky. "Can unconfident llm annotations be used for confident conclusions?." NAACL 2025: Human Language Technologies (Volume 1: Long Papers), pp. 3514-3533. 2025.</a>.
+
+<a id="ref-5"></a>[5] <a id="ref-5-link" href="https://arxiv.org/abs/2406.04291">Fisch, Adam, Joshua Maynez, R. Hofer, Bhuwan Dhingra, Amir Globerson, and William W. Cohen. "Stratified prediction-powered inference for effective hybrid evaluation of language models." *Advances in Neural Information Processing Systems* 37 (2024): 111489–111514.</a>.
+
+<a id="ref-6"></a>[6] <a id="ref-6-link" href="https://arxiv.org/abs/2406.07320">Fogliato, Riccardo, Pratik Patil, Mathew Monfort, and Pietro Perona. "A framework for efficient model evaluation through stratification, sampling, and estimation." *European Conference on Computer Vision*, pp. 140–158. Springer Nature Switzerland, 2024.</a>.
