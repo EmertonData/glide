@@ -12,11 +12,13 @@ def sampler() -> StratifiedSampler:
 
 def test_preprocess_groups_preserved(sampler):
     """groups array contains the exact stratum identifiers from the records."""
-    dataset = Dataset([
-        {"group": "A", "y_proxy": 0.5},
-        {"group": "A", "y_proxy": 0.6},
-        {"group": "B", "y_proxy": 0.7},
-    ])
+    dataset = Dataset(
+        [
+            {"group": "A", "y_proxy": 0.5},
+            {"group": "A", "y_proxy": 0.6},
+            {"group": "B", "y_proxy": 0.7},
+        ]
+    )
     y_proxy, groups = sampler._preprocess(dataset, "group", "y_proxy")
 
     assert np.array_equal(groups, np.array(["A", "A", "B"], dtype=object))
@@ -24,12 +26,14 @@ def test_preprocess_groups_preserved(sampler):
 
 def test_proportional_sums_to_budget(sampler):
     """Proportional allocation: Σ n_h ≤ budget."""
-    dataset = Dataset([
-        {"group": "A", "y_proxy": 0.5},
-        {"group": "A", "y_proxy": 0.6},
-        {"group": "B", "y_proxy": 0.7},
-        {"group": "B", "y_proxy": 0.8},
-    ])
+    dataset = Dataset(
+        [
+            {"group": "A", "y_proxy": 0.5},
+            {"group": "A", "y_proxy": 0.6},
+            {"group": "B", "y_proxy": 0.7},
+            {"group": "B", "y_proxy": 0.8},
+        ]
+    )
     y_proxy, groups = sampler._preprocess(dataset, "group", "y_proxy")
     budget = 4
 
@@ -40,12 +44,14 @@ def test_proportional_sums_to_budget(sampler):
 
 def test_proportional_proportional_to_N_h(sampler):
     """n_h/N_h ≈ n/N for all strata (within rounding error)."""
-    dataset = Dataset([
-        {"group": "A", "y_proxy": 0.5},
-        {"group": "A", "y_proxy": 0.6},
-        {"group": "B", "y_proxy": 0.7},
-        {"group": "B", "y_proxy": 0.8},
-    ])
+    dataset = Dataset(
+        [
+            {"group": "A", "y_proxy": 0.5},
+            {"group": "A", "y_proxy": 0.6},
+            {"group": "B", "y_proxy": 0.7},
+            {"group": "B", "y_proxy": 0.8},
+        ]
+    )
     y_proxy, groups = sampler._preprocess(dataset, "group", "y_proxy")
     budget = 4
     total = len(groups)
@@ -63,16 +69,18 @@ def test_proportional_proportional_to_N_h(sampler):
 
 def test_neyman_sums_to_budget(sampler):
     """Neyman allocation: Σ n_h ≤ budget."""
-    dataset = Dataset([
-        {"group": "A", "y_proxy": 0.4},
-        {"group": "A", "y_proxy": 0.6},
-        {"group": "B", "y_proxy": 0.1},
-        {"group": "B", "y_proxy": 0.9},
-        {"group": "C", "y_proxy": 0.3},
-        {"group": "C", "y_proxy": 0.7},
-        {"group": "D", "y_proxy": 0.2},
-        {"group": "D", "y_proxy": 0.8},
-    ])
+    dataset = Dataset(
+        [
+            {"group": "A", "y_proxy": 0.4},
+            {"group": "A", "y_proxy": 0.6},
+            {"group": "B", "y_proxy": 0.1},
+            {"group": "B", "y_proxy": 0.9},
+            {"group": "C", "y_proxy": 0.3},
+            {"group": "C", "y_proxy": 0.7},
+            {"group": "D", "y_proxy": 0.2},
+            {"group": "D", "y_proxy": 0.8},
+        ]
+    )
     y_proxy, groups = sampler._preprocess(dataset, "group", "y_proxy")
     budget = 8
 
@@ -83,16 +91,18 @@ def test_neyman_sums_to_budget(sampler):
 
 def test_neyman_assigns_more_to_high_variance_stratum(sampler):
     """Two strata with equal N_h but different S_h: higher-variance stratum gets more."""
-    dataset = Dataset([
-        {"group": "A", "y_proxy": 0.45},
-        {"group": "A", "y_proxy": 0.50},
-        {"group": "A", "y_proxy": 0.55},
-        {"group": "A", "y_proxy": 0.60},
-        {"group": "B", "y_proxy": 0.0},
-        {"group": "B", "y_proxy": 0.33},
-        {"group": "B", "y_proxy": 0.67},
-        {"group": "B", "y_proxy": 1.0},
-    ])
+    dataset = Dataset(
+        [
+            {"group": "A", "y_proxy": 0.45},
+            {"group": "A", "y_proxy": 0.50},
+            {"group": "A", "y_proxy": 0.55},
+            {"group": "A", "y_proxy": 0.60},
+            {"group": "B", "y_proxy": 0.0},
+            {"group": "B", "y_proxy": 0.33},
+            {"group": "B", "y_proxy": 0.67},
+            {"group": "B", "y_proxy": 1.0},
+        ]
+    )
     y_proxy, groups = sampler._preprocess(dataset, "group", "y_proxy")
     budget = 8
 
@@ -104,16 +114,18 @@ def test_neyman_assigns_more_to_high_variance_stratum(sampler):
 
 def test_neyman_zero_variance_fallback(sampler):
     """If all S_h == 0, result equals proportional allocation."""
-    dataset = Dataset([
-        {"group": "A", "y_proxy": 5.0},
-        {"group": "A", "y_proxy": 5.0},
-        {"group": "B", "y_proxy": 3.0},
-        {"group": "B", "y_proxy": 3.0},
-        {"group": "C", "y_proxy": 7.0},
-        {"group": "C", "y_proxy": 7.0},
-        {"group": "D", "y_proxy": 4.0},
-        {"group": "D", "y_proxy": 4.0},
-    ])
+    dataset = Dataset(
+        [
+            {"group": "A", "y_proxy": 5.0},
+            {"group": "A", "y_proxy": 5.0},
+            {"group": "B", "y_proxy": 3.0},
+            {"group": "B", "y_proxy": 3.0},
+            {"group": "C", "y_proxy": 7.0},
+            {"group": "C", "y_proxy": 7.0},
+            {"group": "D", "y_proxy": 4.0},
+            {"group": "D", "y_proxy": 4.0},
+        ]
+    )
     y_proxy, groups = sampler._preprocess(dataset, "group", "y_proxy")
     budget = 8
 
@@ -125,11 +137,13 @@ def test_neyman_zero_variance_fallback(sampler):
 
 def test_single_stratum_returns_budget(sampler):
     """One stratum → n_h = budget."""
-    dataset = Dataset([
-        {"group": "X", "y_proxy": 0.5},
-        {"group": "X", "y_proxy": 0.6},
-        {"group": "X", "y_proxy": 0.7},
-    ])
+    dataset = Dataset(
+        [
+            {"group": "X", "y_proxy": 0.5},
+            {"group": "X", "y_proxy": 0.6},
+            {"group": "X", "y_proxy": 0.7},
+        ]
+    )
     budget = 3
     result = sampler.sample(dataset, "group", "y_proxy", budget)
 
@@ -138,16 +152,18 @@ def test_single_stratum_returns_budget(sampler):
 
 def test_allocate_budget_default_mode_is_neyman(sampler):
     """Calling without strategy produces same result as strategy='neyman'."""
-    dataset = Dataset([
-        {"group": "A", "y_proxy": 0.45},
-        {"group": "A", "y_proxy": 0.50},
-        {"group": "A", "y_proxy": 0.55},
-        {"group": "A", "y_proxy": 0.60},
-        {"group": "B", "y_proxy": 0.0},
-        {"group": "B", "y_proxy": 0.33},
-        {"group": "B", "y_proxy": 0.67},
-        {"group": "B", "y_proxy": 1.0},
-    ])
+    dataset = Dataset(
+        [
+            {"group": "A", "y_proxy": 0.45},
+            {"group": "A", "y_proxy": 0.50},
+            {"group": "A", "y_proxy": 0.55},
+            {"group": "A", "y_proxy": 0.60},
+            {"group": "B", "y_proxy": 0.0},
+            {"group": "B", "y_proxy": 0.33},
+            {"group": "B", "y_proxy": 0.67},
+            {"group": "B", "y_proxy": 1.0},
+        ]
+    )
     budget = 8
 
     default_result = sampler.sample(dataset, "group", "y_proxy", budget)
@@ -159,16 +175,18 @@ def test_allocate_budget_default_mode_is_neyman(sampler):
 
 def test_allocate_budget_neyman_mode(sampler):
     """strategy='neyman' dispatches to Neyman allocator."""
-    dataset = Dataset([
-        {"group": "A", "y_proxy": 0.45},
-        {"group": "A", "y_proxy": 0.50},
-        {"group": "A", "y_proxy": 0.55},
-        {"group": "A", "y_proxy": 0.60},
-        {"group": "B", "y_proxy": 0.0},
-        {"group": "B", "y_proxy": 0.33},
-        {"group": "B", "y_proxy": 0.67},
-        {"group": "B", "y_proxy": 1.0},
-    ])
+    dataset = Dataset(
+        [
+            {"group": "A", "y_proxy": 0.45},
+            {"group": "A", "y_proxy": 0.50},
+            {"group": "A", "y_proxy": 0.55},
+            {"group": "A", "y_proxy": 0.60},
+            {"group": "B", "y_proxy": 0.0},
+            {"group": "B", "y_proxy": 0.33},
+            {"group": "B", "y_proxy": 0.67},
+            {"group": "B", "y_proxy": 1.0},
+        ]
+    )
     budget = 8
 
     result = sampler.sample(dataset, "group", "y_proxy", budget, strategy="neyman")
@@ -181,10 +199,12 @@ def test_allocate_budget_neyman_mode(sampler):
 
 def test_allocate_budget_invalid_mode_raises(sampler):
     """Passing an unknown strategy string raises ValueError."""
-    dataset = Dataset([
-        {"group": "A", "y_proxy": 0.5},
-        {"group": "B", "y_proxy": 0.7},
-    ])
+    dataset = Dataset(
+        [
+            {"group": "A", "y_proxy": 0.5},
+            {"group": "B", "y_proxy": 0.7},
+        ]
+    )
 
     with pytest.raises(ValueError, match="Unknown strategy"):
         sampler.sample(dataset, "group", "y_proxy", 2, strategy="unknown")
@@ -206,10 +226,12 @@ def test_rounding_sums_to_budget_within_limit(sampler, n_records, n_strata, budg
     for stratum_idx in range(n_strata):
         n_per_stratum = n_records // n_strata
         for i in range(n_per_stratum):
-            records.append({
-                "group": f"s{stratum_idx}",
-                "y_proxy": float(stratum_idx + i * 0.1),
-            })
+            records.append(
+                {
+                    "group": f"s{stratum_idx}",
+                    "y_proxy": float(stratum_idx + i * 0.1),
+                }
+            )
     dataset = Dataset(records)
 
     for strategy in ["proportional", "neyman"]:

@@ -286,9 +286,7 @@ class StratifiedSampler:
         elif strategy == "neyman":
             allocation = self._neyman_allocation(y_proxy, groups, budget)
         else:
-            raise ValueError(
-                f"Unknown strategy '{strategy}'. Expected 'proportional' or 'neyman'."
-            )
+            raise ValueError(f"Unknown strategy '{strategy}'. Expected 'proportional' or 'neyman'.")
 
         result_records = []
         for record in dataset:

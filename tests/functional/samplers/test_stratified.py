@@ -9,7 +9,11 @@ from glide.samplers.stratified import StratifiedSampler
 
 
 def test_neyman_reduces_ci_vs_proportional():
-    """Dataset with heterogeneous proxy variance across strata. After sampling according to Neyman vs. proportional plan, CI width via StratifiedPPIMeanEstimator is narrower with Neyman allocation."""
+    """Neyman allocation reduces CI width vs. proportional with heterogeneous variance.
+
+    After sampling according to Neyman vs. proportional plan, CI width via
+    StratifiedPPIMeanEstimator is narrower with Neyman allocation.
+    """
     random_seed = 42
     n_labeled, n_unlabeled = 5, 10
 
@@ -30,8 +34,7 @@ def test_neyman_reduces_ci_vs_proportional():
     budget = 6
 
     # Get allocations via sample() which returns Dataset with n_h column
-    proportional_sampled = sampler.sample(full_dataset, "group", "y_proxy", budget,
-                                          strategy="proportional")
+    proportional_sampled = sampler.sample(full_dataset, "group", "y_proxy", budget, strategy="proportional")
     neyman_sampled = sampler.sample(full_dataset, "group", "y_proxy", budget, strategy="neyman")
 
     # Extract allocation dict from sampled datasets
@@ -64,7 +67,9 @@ def test_neyman_reduces_ci_vs_proportional():
     proportional_result = estimator.estimate(proportional_dataset, "y_true", "y_proxy", "group")
     neyman_result = estimator.estimate(neyman_dataset, "y_true", "y_proxy", "group")
 
-    proportional_width = proportional_result.confidence_interval.upper_bound - proportional_result.confidence_interval.lower_bound
+    proportional_width = (
+        proportional_result.confidence_interval.upper_bound - proportional_result.confidence_interval.lower_bound
+    )
     neyman_width = neyman_result.confidence_interval.upper_bound - neyman_result.confidence_interval.lower_bound
 
     # Neyman should be narrower or comparable
@@ -80,10 +85,12 @@ def test_proportional_matches_uniform_equal_strata():
     records = []
     for stratum_idx in range(n_strata):
         for i in range(n_per_stratum):
-            records.append({
-                "group": f"stratum_{stratum_idx}",
-                "y_proxy": np.sin(stratum_idx + i * 0.5),
-            })
+            records.append(
+                {
+                    "group": f"stratum_{stratum_idx}",
+                    "y_proxy": np.sin(stratum_idx + i * 0.5),
+                }
+            )
 
     dataset = Dataset(records)
     sampler = StratifiedSampler()
