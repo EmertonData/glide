@@ -108,13 +108,20 @@ When the proxy is informative (high covariance with human labels), $\hat{\lambda
 
 ## Stratified PPI++
 
-Standard PPI++ assumes that labeled and unlabeled samples are drawn uniformly from a single population. In practice, the dataset is often naturally partitioned into **strata** — for example, by language, domain, or question type — and the proxy model may behave very differently across these groups. **Stratified PPI++** [[5](#ref-5), [6](#ref-6)] exploits this structure: rather than applying one global estimate, it runs PPI++ independently within each stratum and combines the results with population-proportional weights. Whenever strata differ in proxy quality or size, this yields narrower confidence intervals than applying PPI++ to the full dataset at once.
+Standard PPI++ assumes that labeled and unlabeled samples are drawn uniformly from a single population. In practice, the dataset is often naturally partitioned into **strata** — for example, by language, domain, or question type — and the proxy model may behave very differently across these groups. **Stratified PPI++** [[5](#ref-5), [6](#ref-6)] exploits this structure: rather than applying one global estimate, it runs PPI++ independently within each stratum and combines the results with population-proportional weights.
 
-Let $K$ denote the number of strata. Stratum $k$ contains $N_k$ total records (labeled + unlabeled), with $n_k$ labeled and $N_k^u = N_k - n_k$ unlabeled. The total dataset size is $N = \sum_k N_k$ and the **population weight** of stratum $k$ is:
+Let $K$ denote the number of strata. Stratum $k$ contains $N_k$ total records (labeled + unlabeled), of which $n_k$ are labeled. The total dataset size is $N = \sum_k N_k$ and the **population weight** of stratum $k$ is:
 
 $$w_k = \frac{N_k}{N}$$
 
 In Stratified PPI++, every record carries the same fields as PPI++ — a proxy label $\tilde{Y}_i$ and optionally a ground-truth label $Y_j$ — plus a **group identifier** indicating which stratum the record belongs to.
+
+| Field | Present for | Description |
+|---|---|---|
+| $\tilde{Y}_i$ | All $N$ records | Proxy label |
+| $Y_j$ | Labeled records only ($n < N$) | Ground-truth label |
+| $g_j$ | All $N$ records | Group identifier |
+
 
 ### Mean estimation
 
@@ -130,15 +137,17 @@ The asymptotic variance of $\hat{\theta}_{\text{strat}}$ is the sum of the per-s
 
 $$\sigma^2_{\text{strat}} = \sum_{k=1}^{K} w_k^2 \cdot \sigma^2_k(\lambda_k)$$
 
-where $\sigma^2_k(\lambda_k)$ is the PPI++ variance for stratum $k$. When strata are internally homogeneous but differ from one another, the stratified computation yields a smaller variance than applying PPI++ globally, leading to narrower confidence intervals. The reported standard deviation is $\sigma_{\text{strat}} = \sqrt{\sigma^2_{\text{strat}}}$, and a confidence interval at level $1 - \alpha$ is constructed via the CLT exactly as in PPI++.
+where $\sigma^2_k(\lambda_k)$ is the PPI++ variance for stratum $k$. The reported standard deviation $\sigma_{\text{strat}}$ serves to construct a confidence interval at level $1 - \alpha$ via the CLT exactly as in PPI++.
 
 The key benefit over global PPI++ becomes apparent when strata differ substantially in proxy quality. Strata where the proxy is accurate contribute a small $\sigma^2_k(\lambda_k)$, while strata where it is poor contribute a larger one — but each contribution is isolated to its own stratum instead of polluting the global estimate.
 
+Keep in mind that Stratified PPI++ is designed for a small number of large strata. The theoretical guarantees assume that the number of strata $K$ stays fixed as sample size grows and that each stratum contains a non-vanishing share of the data. In practice, many small strata mean that per-stratum estimates of $\lambda_k$ and $\sigma^2_k$ become unreliable, and the CLT approximation underlying the confidence interval may break down. When in doubt, prefer a coarser stratification with fewer, larger groups.
+
 ### Power-tuning
 
-Each stratum $k$ receives its **own optimal weight** $\hat{\lambda}_k$, computed with the same closed-form formula as PPI++, restricted to the $n_k$ labeled and $N_k^u$ unlabeled records within that stratum:
+Each stratum $k$ receives its **own optimal weight** $\hat{\lambda}_k$, computed with the same closed-form formula as PPI++, restricted to the $n_k$ labeled and $N_k$ unlabeled records within that stratum:
 
-$$\hat{\lambda}_k = \frac{\widehat{\text{Cov}}_{n_k}(Y_k,\, \tilde{Y}_k)}{\left(1 + \tfrac{n_k}{N_k^u}\right)\widehat{\text{Var}}_{n_k + N_k^u}(\tilde{Y}_k)}$$
+$$\hat{\lambda}_k = \frac{\widehat{\text{Cov}}_{n_k}(Y_k,\, \tilde{Y}_k)}{\left(1 + \tfrac{n_k}{N_k}\right)\widehat{\text{Var}}_{n_k + N_k}(\tilde{Y}_k)}$$
 
 This is the same formula as PPI++ power-tuning, applied stratum by stratum. In strata where the proxy is informative, $\hat{\lambda}_k$ is close to 1 and the stratum estimate benefits from the proxy signal. In strata where the proxy is weak or unreliable, $\hat{\lambda}_k$ shrinks toward 0, falling back to the classical human-only mean for that stratum — without affecting any other stratum.
 
