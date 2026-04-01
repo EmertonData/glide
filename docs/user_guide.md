@@ -114,7 +114,7 @@ Let $K$ denote the number of strata. Stratum $k$ contains $N_k$ total records (l
 
 $$w_k = \frac{N_k}{N}$$
 
-In Stratified PPI++, every record carries the same fields as PPI++ — a proxy label $\tilde{Y}_i$ and optionally a ground-truth label $Y_j$ — plus a **group identifier** that assigns each record to its stratum.
+In Stratified PPI++, every record carries the same fields as PPI++ — a proxy label $\tilde{Y}_i$ and optionally a ground-truth label $Y_j$ — plus a **group identifier** indicating which stratum the record belongs to.
 
 ### Mean estimation
 
@@ -122,7 +122,7 @@ The Stratified PPI++ point estimate is a weighted average of the per-stratum PPI
 
 $$\hat{\theta}_{\text{strat}} = \sum_{k=1}^{K} w_k \cdot \hat{\theta}_k(\lambda_k)$$
 
-where $\hat{\theta}_k(\lambda_k)$ is exactly the PPI++ mean estimator applied to the data in stratum $k$ with its own weight $\lambda_k$. The weights $w_k$ are proportional to stratum size, so larger strata contribute more to the final estimate. Because each $\hat{\theta}_k(\lambda_k)$ is unbiased for the stratum-$k$ mean and the weights sum to one, $\hat{\theta}_{\text{strat}}$ is unbiased for the population mean $\theta^*$.
+where $\hat{\theta}_k(\lambda_k)$ is exactly the PPI++ mean estimator applied to the data in stratum $k$ with its own weight $\lambda_k$. The weights $w_k$ are proportional to stratum size, so larger strata contribute more to the final estimate. Since each $\hat{\theta}_k(\lambda_k)$ is an unbiased estimator for the stratum-$k$ mean and the weights sum to one, $\hat{\theta}_{\text{strat}}$ is an unbiased estimator for the population mean $\theta^*$.
 
 ### Variance and confidence intervals
 
@@ -130,7 +130,7 @@ The asymptotic variance of $\hat{\theta}_{\text{strat}}$ is the sum of the per-s
 
 $$\sigma^2_{\text{strat}} = \sum_{k=1}^{K} w_k^2 \cdot \sigma^2_k(\lambda_k)$$
 
-where $\sigma^2_k(\lambda_k)$ is the PPI++ variance for stratum $k$. The $w_k^2$ scaling (rather than $w_k$) reflects that the errors from independent strata do not add linearly — their variances do. The reported standard deviation is $\sigma_{\text{strat}} = \sqrt{\sigma^2_{\text{strat}}}$, and a confidence interval at level $1 - \alpha$ is constructed via the CLT exactly as in PPI++.
+where $\sigma^2_k(\lambda_k)$ is the PPI++ variance for stratum $k$. When strata are internally homogeneous but differ from one another, the stratified computation yields a smaller variance than applying PPI++ globally, leading to narrower confidence intervals. The reported standard deviation is $\sigma_{\text{strat}} = \sqrt{\sigma^2_{\text{strat}}}$, and a confidence interval at level $1 - \alpha$ is constructed via the CLT exactly as in PPI++.
 
 The key benefit over global PPI++ becomes apparent when strata differ substantially in proxy quality. Strata where the proxy is accurate contribute a small $\sigma^2_k(\lambda_k)$, while strata where it is poor contribute a larger one — but each contribution is isolated to its own stratum instead of polluting the global estimate.
 
