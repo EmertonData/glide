@@ -112,3 +112,4 @@ Information should appear exactly once. If two classes share logic (e.g., a vali
 
 - MkDocs with mkdocstrings; docs must build without warnings
 - Update `CHANGELOG.md` for any user-facing changes (Keep a Changelog format, SemVer)
+- Do not write docstrings for private methods

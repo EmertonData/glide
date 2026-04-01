@@ -22,7 +22,7 @@ plugins:
             show_root_toc_entry: false
   - mkdocs-jupyter:
       include_source: true
-      execute: false # true
+      execute: true
 
 markdown_extensions:
   - pymdownx.snippets

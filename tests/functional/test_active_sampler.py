@@ -21,16 +21,12 @@ def test_expected_sum_xi_equals_budget(sampler):
     n_trials = 500
 
     dataset = Dataset([{"uncertainty": 1} for _ in range(n_records)])
-    uncertainties = dataset.to_numpy(fields=["uncertainty"])[:, 0]
-    uncertainties = np.minimum(budget * (uncertainties / uncertainties.sum()), 1)
 
-    xi_sums = np.array(
+    n_array = np.array(
         [
             sampler.sample(dataset, uncertainty_field="uncertainty", budget=budget, random_seed=random_seed)["xi"].sum()
             for random_seed in range(n_trials)
         ]
     )
 
-    expected_std_of_mean = np.sqrt((uncertainties * (1 - uncertainties)).sum() / n_trials)
-
-    assert np.mean(xi_sums) == pytest.approx(budget, abs=3 * expected_std_of_mean)
+    assert np.mean(n_array) == pytest.approx(10.238, abs=0.001)

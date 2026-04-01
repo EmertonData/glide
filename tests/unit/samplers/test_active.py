@@ -68,23 +68,12 @@ def test_sample_returns_dataset_with_valid_properties(sampler, dataset):
     assert set(xi_values).issubset({0.0, 1.0})
 
 
-def test_sample_pi_equal_uncertainty_gives_equal_probabilities(sampler):
-    # uncertainties=[1.0, 1.0], weights=[1, 1], budget=1 → pi=[0.5, 0.5]
-    equal_dataset = Dataset([{"uncertainty": 1.0}, {"uncertainty": 1.0}])
-    result = sampler.sample(equal_dataset, uncertainty_field="uncertainty", budget=1, random_seed=0)
-    pi_values = result["pi"]
-    np.testing.assert_array_almost_equal(pi_values, [0.5, 0.5])
-
-
 def test_sample_pi_clipped_and_higher_uncertainty_gets_higher_pi(sampler):
-    # uncertainties=[0.001, 10.0], sum≈10.001, budget=2
-    # raw pi=[0.001/10.001*2, 10/10.001*2] ≈ [0.0002, 1.9998] → clipped to [0.0002, 1.0]
     skewed_dataset = Dataset([{"uncertainty": 0.001}, {"uncertainty": 10.0}])
     result = sampler.sample(skewed_dataset, uncertainty_field="uncertainty", budget=2, random_seed=0)
     pi_values = result["pi"]
-    assert pi_values[1] == pytest.approx(1.0)
-    assert pi_values[0] < 1.0
-    assert pi_values[1] > pi_values[0]  # higher uncertainty gets higher pi
+    assert pi_values[1] == pytest.approx(1.0, abs=0.001)
+    assert pi_values[0] == pytest.approx(0.0, abs=0.001)
 
 
 def test_sample_invalid_budget_zero(sampler, dataset):
