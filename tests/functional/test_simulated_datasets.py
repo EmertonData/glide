@@ -40,12 +40,12 @@ def test_generate_binary_dataset_with_oracle_sampling_empirical_means_and_correl
 
 
 def test_generate_binary_dataset_with_oracle_rms_error_non_uniform():
-    # With lower correlation, rms_error variation is more visible
+    # With lower correlation, RMSE variation is more visible
     dataset = generate_binary_dataset_with_oracle_sampling(
         N=1000, true_mean=0.5, proxy_mean=0.5, correlation=0.3, random_seed=42
     )
-    rms_error_values = np.array([record["rms_error"] for record in dataset])
-    assert np.std(rms_error_values) > 1e-2
+    RMSE_values = np.array([record["RMSE"] for record in dataset])
+    assert np.std(RMSE_values) > 1e-2
 
 
 def test_generate_gaussian_dataset_empirical_means_and_correlation():
