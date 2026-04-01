@@ -11,11 +11,6 @@ def sampler() -> ActiveSampler:
 
 
 def test_expected_sum_xi_equals_budget(sampler):
-    """E[sum(xi)] ≈ budget when no probability is clipped.
-
-    With uniform uncertainties, pi_i = budget / n for every record (no clipping).
-    By linearity of expectation, E[sum(xi)] = sum(pi_i) = budget exactly.
-    """
     n_records = 50
     budget = 10
     n_trials = 500

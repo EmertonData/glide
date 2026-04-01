@@ -72,8 +72,8 @@ def test_sample_pi_clipped_and_higher_uncertainty_gets_higher_pi(sampler):
     skewed_dataset = Dataset([{"uncertainty": 0.001}, {"uncertainty": 10.0}])
     result = sampler.sample(skewed_dataset, uncertainty_field="uncertainty", budget=2, random_seed=0)
     pi_values = result["pi"]
-    assert pi_values[1] == pytest.approx(1.0, abs=0.001)
     assert pi_values[0] == pytest.approx(0.0, abs=0.001)
+    assert pi_values[1] == pytest.approx(1.0, abs=0.001)
 
 
 def test_sample_invalid_budget_zero(sampler, dataset):
@@ -93,7 +93,7 @@ def test_sample_invalid_budget_negative(sampler, dataset):
 
 def test_sample_invalid_budget_float(sampler, dataset):
     with pytest.raises(ValueError, match="budget"):
-        sampler.sample(dataset, uncertainty_field="uncertainty", budget=1.5, random_seed=0)  # type: ignore[arg-type]
+        sampler.sample(dataset, uncertainty_field="uncertainty", budget=1.5, random_seed=0)
 
 
 def test_sample_custom_field_names(sampler, dataset):
@@ -109,8 +109,7 @@ def test_sample_is_reproducible(sampler, dataset):
     np.testing.assert_array_equal(result1["xi"], result2["xi"])
 
 
-def test_sample_seed_defaults_to_none(sampler, dataset):
-    # seed is optional — calling without it must not raise
+def test_sample_seed_defaults_to_none_without_exception(sampler, dataset):
     result = sampler.sample(dataset, uncertainty_field="uncertainty", budget=5)
     assert isinstance(result, Dataset)
 
