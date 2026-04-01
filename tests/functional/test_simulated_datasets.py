@@ -18,32 +18,34 @@ def test_generate_binary_dataset_empirical_means_and_correlation():
     y_proxy_all = dataset.to_numpy(fields=["y_proxy"]).flatten()
     true_mean = np.mean(y_true)
     proxy_mean = np.mean(y_proxy_all)
-    assert abs(true_mean - 0.7) < 0.03
-    assert abs(proxy_mean - 0.6) < 0.03
+    assert true_mean == pytest.approx(0.7, abs=0.03)
+    assert proxy_mean == pytest.approx(0.6, abs=0.03)
     y_proxy_labeled = labeled.to_numpy(fields=["y_proxy"]).flatten()
     empirical_corr = np.corrcoef(y_true, y_proxy_labeled)[0, 1]
-    assert abs(empirical_corr - 0.8) < 0.05
+    assert empirical_corr == pytest.approx(0.8, abs=0.05)
 
 
 def test_generate_binary_dataset_with_oracle_sampling_empirical_means_and_correlation():
     dataset = generate_binary_dataset_with_oracle_sampling(
-        N=5000, true_mean=0.7, proxy_mean=0.6, correlation=0.8, random_seed=42
+        N=5000, true_mean=0.7, proxy_mean=0.6, correlation=0.5, random_seed=42
     )
     y_true = dataset.to_numpy(fields=["y_true"]).flatten()
     y_proxy = dataset.to_numpy(fields=["y_proxy"]).flatten()
-    assert abs(np.mean(y_true) - 0.7) < 0.03
-    assert abs(np.mean(y_proxy) - 0.6) < 0.03
+    assert np.mean(y_true) == pytest.approx(0.7, abs=0.03)
+    assert np.mean(y_proxy) == pytest.approx(0.6, abs=0.03)
     empirical_corr = np.corrcoef(y_true, y_proxy)[0, 1]
-    assert abs(empirical_corr - 0.8) < 0.05
+    assert empirical_corr == pytest.approx(0.5, abs=0.05)
+    RMSE_array = dataset.to_numpy(fields=["RMSE"])[:, 0]
+    assert np.std(RMSE_array) == pytest.approx(0.07, abs=0.01)
 
 
 def test_generate_binary_dataset_with_oracle_rms_error_non_uniform():
-    # With lower correlation, rms_error variation is more visible
+    # With lower correlation, RMSE variation is more visible
     dataset = generate_binary_dataset_with_oracle_sampling(
         N=1000, true_mean=0.5, proxy_mean=0.5, correlation=0.3, random_seed=42
     )
-    rms_error_values = np.array([record["rms_error"] for record in dataset])
-    assert np.std(rms_error_values) > 1e-2
+    RMSE_values = np.array([record["RMSE"] for record in dataset])
+    assert np.std(RMSE_values) > 1e-2
 
 
 def test_generate_gaussian_dataset_empirical_means_and_correlation():

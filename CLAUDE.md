@@ -94,6 +94,12 @@ return result
 
 Do not use needless type conversions like `float()` or `int()` unless required by the caller or for debugging purposes.
 
+### Documentation
+
+- MkDocs with mkdocstrings; docs must build without warnings
+- Update `CHANGELOG.md` for any user-facing changes (Keep a Changelog format, SemVer)
+- Avoid using and escaping underscores in math mode in jupyter notebooks.
+
 ### No Redundancy
 
 Information should appear exactly once. If two classes share logic (e.g., a validation raise), extract it rather than duplicating. If two doc sections say the same thing, remove one.
