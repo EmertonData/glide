@@ -11,6 +11,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 ### ✨ Added
 - Added `ActiveSampler` in `glide/samplers/` for uncertainty-proportional active sampling
 - Added ASI scientific validation notebook
+- Added `StratifiedSampler` for optimal per-stratum annotation budget allocation with Neyman and proportional strategies
 - Added `StratifiedPPIMeanEstimator` for Stratified PPI-based mean estimation
 - Added `generate_binary_dataset_with_oracle_sampling` function to simulate ASI-like data
 - Added overload for the __getitem__ method for Dataset to support `int`, `slice`, `str`, and `list[str]` keys

@@ -1,7 +1,6 @@
 """Functional tests for StratifiedSampler."""
 
 import numpy as np
-import pytest
 
 from glide.core.dataset import Dataset
 from glide.core.simulated_datasets import generate_gaussian_dataset
@@ -30,9 +29,22 @@ def test_neyman_reduces_ci_vs_proportional():
     sampler = StratifiedSampler()
     budget = 6
 
-    # Get allocations
-    proportional_alloc = sampler.allocate_budget(full_dataset, "group", "y_proxy", budget, strategy="proportional")
-    neyman_alloc = sampler.allocate_budget(full_dataset, "group", "y_proxy", budget, strategy="neyman")
+    # Get allocations via sample() which returns Dataset with n_h column
+    proportional_sampled = sampler.sample(full_dataset, "group", "y_proxy", budget,
+                                          strategy="proportional")
+    neyman_sampled = sampler.sample(full_dataset, "group", "y_proxy", budget, strategy="neyman")
+
+    # Extract allocation dict from sampled datasets
+    def extract_allocation(sampled_ds):
+        alloc = {}
+        for record in sampled_ds:
+            group_id = record["group"]
+            if group_id not in alloc:
+                alloc[group_id] = record["n_h"]
+        return alloc
+
+    proportional_alloc = extract_allocation(proportional_sampled)
+    neyman_alloc = extract_allocation(neyman_sampled)
 
     # Build datasets according to allocations
     def make_dataset(full_ds, alloc):
@@ -75,7 +87,14 @@ def test_proportional_matches_uniform_equal_strata():
 
     dataset = Dataset(records)
     sampler = StratifiedSampler()
-    allocation = sampler.allocate_budget(dataset, "group", "y_proxy", budget, strategy="proportional")
+    result = sampler.sample(dataset, "group", "y_proxy", budget, strategy="proportional")
+
+    # Extract unique allocations per stratum from the result dataset
+    allocation = {}
+    for record in result:
+        group_id = record["group"]
+        if group_id not in allocation:
+            allocation[group_id] = record["n_h"]
 
     # All strata should get equal allocation
     expected_per_stratum = budget // n_strata

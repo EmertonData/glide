@@ -20,9 +20,11 @@ class StratifiedSampler:
     - **Proportional allocation** (baseline): Allocates budget proportionally to stratum
       sizes, resulting in uniform sampling probabilities across the dataset.
 
-    Both allocators guarantee exact budget compliance via largest-remainder rounding
-    (Hamilton's method). The sampler is typically used upstream of statistical estimators
-    to plan annotation effort. Common downstream workflows include:
+    Both allocators use largest-remainder rounding (Hamilton's method) to allocate budget
+    across strata. Per-stratum sample sizes are capped at stratum size, so total allocated
+    budget Σ n_h ≤ budget (may be less if strata are small). The sampler is typically used
+    upstream of statistical estimators to plan annotation effort. Common downstream workflows
+    include:
 
     - **ASIMeanEstimator**: Uses per-record sampling probabilities to correct for non-uniform
       annotation via inverse-probability weighting (IPW).
@@ -47,14 +49,16 @@ class StratifiedSampler:
     ...     {"group": "B", "y_proxy": 0.3},
     ... ])
     >>> sampler = StratifiedSampler()
-    >>> allocation = sampler.allocate_budget(
+    >>> result = sampler.sample(
     ...     dataset,
     ...     groups_field="group",
     ...     y_proxy_field="y_proxy",
     ...     budget=2
     ... )
-    >>> allocation  # doctest: +SKIP
-    {'A': 1, 'B': 1}
+    >>> type(result)
+    <class 'glide.core.dataset.Dataset'>
+    >>> result[0]["n_h"]  # doctest: +SKIP
+    1
     """
 
     def __init__(self) -> None:
@@ -102,22 +106,23 @@ class StratifiedSampler:
         raw_allocation: Dict[Hashable, float],
         budget: int,
     ) -> Dict[Hashable, int]:
-        """Apply largest-remainder rounding to ensure exact budget sum.
+        """Apply largest-remainder rounding to distribute budget across strata.
 
         Assigns the floor value to each stratum, then distributes remaining slots
-        one-by-one to strata with the largest fractional parts.
+        one-by-one to strata with the largest fractional parts. Result sums to budget
+        before clipping; after clipping to stratum sizes, sum may be less than budget.
 
         Parameters
         ----------
         raw_allocation : Dict[Hashable, float]
             Dictionary mapping stratum_id to raw (float) allocation.
         budget : int
-            Target budget sum.
+            Target budget for distribution before clipping.
 
         Returns
         -------
         allocation : Dict[Hashable, int]
-            Dictionary mapping stratum_id to integer allocation that sums to budget.
+            Dictionary mapping stratum_id to integer allocation summing to budget.
         """
         allocation = {}
         remainders = {}
@@ -162,11 +167,6 @@ class StratifiedSampler:
         -------
         allocation : Dict[Hashable, int]
             Mapping from stratum_id to per-stratum budget (count of annotations).
-
-        Raises
-        ------
-        ValueError
-            If any stratum has exactly zero variance (edge case).
         """
         unique_strata = np.unique(groups)
 
@@ -192,7 +192,7 @@ class StratifiedSampler:
 
         for stratum_id in allocation:
             stratum_size = (groups == stratum_id).sum()
-            allocation[stratum_id] = max(1, min(allocation[stratum_id], stratum_size))
+            allocation[stratum_id] = min(allocation[stratum_id], stratum_size)
 
         return allocation
 
@@ -230,25 +230,26 @@ class StratifiedSampler:
 
         for stratum_id in allocation:
             stratum_size = (groups == stratum_id).sum()
-            allocation[stratum_id] = max(1, min(allocation[stratum_id], stratum_size))
+            allocation[stratum_id] = min(allocation[stratum_id], stratum_size)
 
         return allocation
 
-    def allocate_budget(
+    def sample(
         self,
         dataset: Dataset,
         groups_field: str,
         y_proxy_field: str,
         budget: int,
         strategy: Literal["proportional", "neyman"] = "neyman",
-    ) -> Dict[Hashable, int]:
-        """Allocate annotation budget across strata.
+    ) -> Dataset:
+        """Allocate annotation budget across strata and augment dataset with allocations.
 
-        Computes per-stratum sample sizes using the specified allocation strategy.
+        Computes per-stratum sample sizes using the specified allocation strategy and adds
+        an `n_h` column to the dataset indicating the allocated budget for each record's stratum.
         Neyman allocation (default) assigns more budget to strata with higher proxy variance,
         minimising asymptotic variance of downstream estimators. Proportional allocation
         allocates budget proportionally to stratum sizes and serves as a baseline.
-        Exact budget compliance is guaranteed via largest-remainder rounding.
+        Per-stratum allocations are capped at stratum size, so total Σ n_h ≤ budget.
 
         Parameters
         ----------
@@ -259,7 +260,7 @@ class StratifiedSampler:
         y_proxy_field : str
             Field name holding proxy labels. Mandatory.
         budget : int
-            Total number of annotations to collect. Must be positive. Mandatory.
+            Target annotation budget. Must be positive. Mandatory.
         strategy : str, optional
             Allocation strategy: "neyman" (default) or "proportional".
             "neyman": assigns more budget to higher-variance strata.
@@ -267,9 +268,9 @@ class StratifiedSampler:
 
         Returns
         -------
-        allocation : Dict[Hashable, int]
-            Mapping from stratum_id to per-stratum allocation (sample count).
-            Sum of all values equals budget exactly.
+        result : Dataset
+            Input dataset augmented with `n_h` column. For each record, `n_h` contains
+            the per-stratum allocation for that record's stratum. Total Σ n_h ≤ budget.
 
         Raises
         ------
@@ -281,12 +282,19 @@ class StratifiedSampler:
         y_proxy, groups = self._preprocess(dataset, groups_field, y_proxy_field)
 
         if strategy == "proportional":
-            result = self._proportional_allocation(y_proxy, groups, budget)
+            allocation = self._proportional_allocation(y_proxy, groups, budget)
         elif strategy == "neyman":
-            result = self._neyman_allocation(y_proxy, groups, budget)
+            allocation = self._neyman_allocation(y_proxy, groups, budget)
         else:
             raise ValueError(
                 f"Unknown strategy '{strategy}'. Expected 'proportional' or 'neyman'."
             )
 
-        return result
+        result_records = []
+        for record in dataset:
+            stratum_id = record[groups_field]
+            new_record = dict(record)
+            new_record["n_h"] = allocation[stratum_id]
+            result_records.append(new_record)
+
+        return Dataset(result_records)
