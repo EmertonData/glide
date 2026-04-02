@@ -39,19 +39,10 @@ def test_neyman_reduces_ci_vs_proportional(sampler):
         full_dataset, "y_proxy", "group", budget, strategy="neyman", random_seed=random_seed
     )
 
-    # Build datasets: keep labeled records selected by sampler (xi=1) + all unlabeled
-    def make_dataset(sampled_ds):
-        labeled = [r for r in sampled_ds if "y_true" in r and r["xi"] == 1]
-        unlabeled = [r for r in sampled_ds if "y_true" not in r]
-        return Dataset(labeled + unlabeled)
-
-    proportional_dataset = make_dataset(proportional_sampled)
-    neyman_dataset = make_dataset(neyman_sampled)
-
     # Estimate via StratifiedPPIMeanEstimator
     estimator = StratifiedPPIMeanEstimator()
-    proportional_result = estimator.estimate(proportional_dataset, "y_true", "y_proxy", "group")
-    neyman_result = estimator.estimate(neyman_dataset, "y_true", "y_proxy", "group")
+    proportional_result = estimator.estimate(proportional_sampled, "y_true", "y_proxy", "group")
+    neyman_result = estimator.estimate(neyman_sampled, "y_true", "y_proxy", "group")
 
     proportional_width = (
         proportional_result.confidence_interval.upper_bound - proportional_result.confidence_interval.lower_bound
@@ -72,7 +63,7 @@ def test_proportional_matches_uniform_equal_strata(sampler):
             records.append(
                 {
                     "group": f"stratum_{stratum_idx}",
-                    "y_proxy": np.sin(stratum_idx + i * 0.5),
+                    "y_proxy": stratum_idx + i * 0.1,
                 }
             )
 

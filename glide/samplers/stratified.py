@@ -38,9 +38,9 @@ class StratifiedSampler:
     >>> from glide.samplers.stratified import StratifiedSampler
     >>> dataset = Dataset([
     ...     {"group": "A", "y_proxy": 0.9},
-    ...     {"group": "A", "y_proxy": 0.8},
-    ...     {"group": "B", "y_proxy": 0.2},
-    ...     {"group": "B", "y_proxy": 0.3},
+    ...     {"group": "A", "y_proxy": 0.95},
+    ...     {"group": "B", "y_proxy": 0.1},
+    ...     {"group": "B", "y_proxy": 0.9},
     ... ])
     >>> sampler = StratifiedSampler()
     >>> result = sampler.sample(
@@ -51,10 +51,10 @@ class StratifiedSampler:
     ...     random_seed=0
     ... )
     >>> result  # doctest: +NORMALIZE_WHITESPACE
-    [{'group': 'A', 'y_proxy': 0.9, 'n_h': 1, 'pi': np.float64(0.5), 'xi': 1},
-     {'group': 'A', 'y_proxy': 0.8, 'n_h': 1, 'pi': np.float64(0.5), 'xi': 0},
-     {'group': 'B', 'y_proxy': 0.2, 'n_h': 1, 'pi': np.float64(0.5), 'xi': 0},
-     {'group': 'B', 'y_proxy': 0.3, 'n_h': 1, 'pi': np.float64(0.5), 'xi': 0}]
+    [{'group': 'A', 'y_proxy': 0.9, 'pi': np.float64(0.0), 'xi': 0},
+     {'group': 'A', 'y_proxy': 0.95, 'pi': np.float64(0.0), 'xi': 0},
+     {'group': 'B', 'y_proxy': 0.1, 'pi': np.float64(1.0), 'xi': 1},
+     {'group': 'B', 'y_proxy': 0.9, 'pi': np.float64(1.0), 'xi': 1}]
     """
 
     def _preprocess(
@@ -67,7 +67,25 @@ class StratifiedSampler:
             raise ValueError("Dataset cannot be empty.")
         data = dataset.to_numpy(fields=[y_proxy_field])
         y_proxy = data[:, 0]
+        if np.isnan(y_proxy).any():
+            raise ValueError("Input proxy values contain NaN")
+        if len(np.unique(y_proxy)) == 1:
+            raise ValueError("Input proxy values have zero variance")
         groups = np.array([record[groups_field] for record in dataset])
+
+        unique_strata = np.unique(groups)
+        has_nonzero_variance = False
+        for stratum_id in unique_strata:
+            stratum_mask = groups == stratum_id
+            stratum_y_proxy = y_proxy[stratum_mask]
+            stratum_std = np.std(stratum_y_proxy, ddof=1)
+            if not np.isnan(stratum_std) and stratum_std > 0:
+                has_nonzero_variance = True
+                break
+
+        if not has_nonzero_variance:
+            raise ValueError("All strata have zero variance in proxy values")
+
         return y_proxy, groups
 
     def _apply_largest_remainder_rounding(
@@ -88,8 +106,7 @@ class StratifiedSampler:
         remaining_slots = budget - current_sum
 
         sorted_strata = sorted(remainders.items(), key=lambda x: x[1], reverse=True)
-        for i in range(remaining_slots):
-            stratum_id = sorted_strata[i][0]
+        for stratum_id, _ in sorted_strata[:remaining_slots]:
             allocation[stratum_id] += 1
 
         return allocation
@@ -116,9 +133,6 @@ class StratifiedSampler:
             stratum_sizes[stratum_id] = stratum_size
 
         total_weight = sum(weights.values())
-
-        if total_weight == 0:
-            return self._proportional_allocation(y_proxy, groups, budget)
 
         raw_allocation = {}
         for stratum_id in unique_strata:
@@ -244,7 +258,6 @@ class StratifiedSampler:
             xi = rng.binomial(n=1, p=pi)
 
             new_record = dict(record)
-            new_record["n_h"] = n_h
             new_record[pi_field] = pi
             new_record[xi_field] = xi
             result_records.append(new_record)

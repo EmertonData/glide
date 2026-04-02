@@ -64,7 +64,6 @@ Every PR must satisfy all of the following before merge:
 - Use fixtures to factorize pervasive test elements (shared datasets, estimator instances, etc.)
 - Existing test files are the canonical reference for structure and patterns — follow `test_ppi.py`, `test_simulated_datasets.py`, etc. when writing new test files
 - Always use `pytest.approx` when comparing floating point values in tests.
-- **No docstrings for test functions or private methods** — test code is self-documenting via clear variable names and assertion structure; private methods are internal only.
 
 ## Code Conventions
 
@@ -108,8 +107,11 @@ Do not use needless type conversions like `float()` or `int()` unless required b
 
 - MkDocs with mkdocstrings; docs must build without warnings
 - Update `CHANGELOG.md` for any user-facing changes (Keep a Changelog format, SemVer)
-- Do not write docstrings for private methods
 - Avoid using and escaping underscores in math mode in jupyter notebooks.
+
+### Docstrings
+
+- **No docstrings for test functions or private methods** — test code is self-documenting via clear variable names and assertion structure; private methods are internal only.
 
 ### No Redundancy
 
