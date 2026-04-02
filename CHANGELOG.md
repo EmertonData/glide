@@ -9,6 +9,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 ## [Next release]
 
 ### ✨ Added
+- Added section about Stratified PPI into user guide
 - Added Stratified PPI scientific validation notebook
 - Added `ActiveSampler` in `glide/samplers/` for uncertainty-proportional active sampling
 - Added ASI scientific validation notebook
