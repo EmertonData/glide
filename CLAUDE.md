@@ -57,7 +57,7 @@ Every PR must satisfy all of the following before merge:
 - `tests/unit/` mirrors the `glide/` folder structure exactly (e.g., `glide/core/foo.py` → `tests/unit/core/test_foo.py`)
 - pytest runs with `--import-mode=importlib --doctest-modules`, so module docstrings are also tested
 - Every new feature needs: doctests in the docstring + unit tests + analytical verification (compare against known closed-form results)
-- 100% coverage is enforced; exempted files: `__init__.py` files
+- 100% coverage is enforced
 - Test names: `test_<name_of_tested_function>` with optional descriptive suffixes (e.g., `test_generate_binary_dataset_invalid_correlation`)
 - One test per distinct function call — do not write redundant tests
 - Use the smallest dataset possible (typically 2 records, rarely more than 10); tests must be lightning fast
