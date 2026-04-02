@@ -90,7 +90,16 @@ result = a * b + c
 return result
 ```
 
-### Type Conversions
+### Type Annotations
+
+Use `typing` module generics — never use PEP 604 / PEP 585 built-in aliases:
+
+- BAD: `int | None`, `list[str]`, `dict[str, int]`, `tuple[int, ...]`
+- GOOD: `Optional[int]`, `List[str]`, `Dict[str, int]`, `Tuple[int, ...]`
+
+Always import from `typing`: `from typing import Dict, List, Optional, Tuple`.
+
+### No Redundancy
 
 Do not use needless type conversions like `float()` or `int()` unless required by the caller or for debugging purposes.
 
@@ -98,6 +107,7 @@ Do not use needless type conversions like `float()` or `int()` unless required b
 
 - MkDocs with mkdocstrings; docs must build without warnings
 - Update `CHANGELOG.md` for any user-facing changes (Keep a Changelog format, SemVer)
+- Do not write docstrings for private methods
 - Avoid using and escaping underscores in math mode in jupyter notebooks.
 
 ### No Redundancy
