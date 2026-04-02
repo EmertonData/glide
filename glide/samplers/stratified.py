@@ -1,4 +1,4 @@
-from typing import Dict, Hashable, Literal, Tuple
+from typing import Dict, Hashable, Literal, Optional, Tuple
 
 import numpy as np
 from numpy.typing import NDArray
@@ -7,29 +7,23 @@ from glide.core.dataset import Dataset
 
 
 class StratifiedSampler:
-    """Sampler for optimal per-stratum annotation budget allocation.
+    """Sampler for per-stratum annotation budget allocation.
 
     This class implements stratified sampling strategies that determine how many records
     to annotate from each stratum, given a fixed annotation budget and proxy labels for
     all records. It supports two allocation strategies:
 
+    - **Proportional allocation** (baseline): Allocates budget proportionally to stratum
+      sizes, resulting in uniform sampling probabilities across the dataset.
+
     - **Neyman allocation** (default, optimal): Assigns more budget to strata with higher
       proxy variance, minimising the asymptotic variance of downstream estimators.
       Particularly effective when proxy variance varies substantially across strata.
 
-    - **Proportional allocation** (baseline): Allocates budget proportionally to stratum
-      sizes, resulting in uniform sampling probabilities across the dataset.
-
     Both allocators use largest-remainder rounding (Hamilton's method) to allocate budget
     across strata. Per-stratum sample sizes are capped at stratum size, so total allocated
     budget Σ n_h ≤ budget (may be less if strata are small). The sampler is typically used
-    upstream of statistical estimators to plan annotation effort. Common downstream workflows
-    include:
-
-    - **ASIMeanEstimator**: Uses per-record sampling probabilities to correct for non-uniform
-      annotation via inverse-probability weighting (IPW).
-    - **StratifiedPPIMeanEstimator**: Leverages per-stratum sample counts to stratify
-      labeled and unlabeled data, improving efficiency under heterogeneous variance.
+    upstream of statistical estimators to plan annotation effort.
 
     References
     ----------
@@ -51,51 +45,26 @@ class StratifiedSampler:
     >>> sampler = StratifiedSampler()
     >>> result = sampler.sample(
     ...     dataset,
-    ...     groups_field="group",
     ...     y_proxy_field="y_proxy",
-    ...     budget=2
+    ...     groups_field="group",
+    ...     budget=2,
+    ...     random_seed=0
     ... )
-    >>> type(result)
-    <class 'glide.core.dataset.Dataset'>
-    >>> result[0]["n_h"]  # doctest: +SKIP
-    1
+    >>> result  # doctest: +NORMALIZE_WHITESPACE
+    [{'group': 'A', 'y_proxy': 0.9, 'pi': np.float64(0.5), 'xi': 1},
+     {'group': 'A', 'y_proxy': 0.8, 'pi': np.float64(0.5), 'xi': 0},
+     {'group': 'B', 'y_proxy': 0.2, 'pi': np.float64(0.5), 'xi': 0},
+     {'group': 'B', 'y_proxy': 0.3, 'pi': np.float64(0.5), 'xi': 0}]
     """
-
-    def __init__(self) -> None:
-        """Initialize the StratifiedSampler."""
-        pass
 
     def _preprocess(
         self,
         dataset: Dataset,
-        groups_field: str,
         y_proxy_field: str,
+        groups_field: str,
     ) -> Tuple[NDArray, NDArray]:
-        """Extract proxy labels and stratum identifiers from dataset.
-
-        Parameters
-        ----------
-        dataset : Dataset
-            Input dataset with records.
-        groups_field : str
-            Name of the field holding stratum identifiers.
-        y_proxy_field : str
-            Name of the field holding proxy labels.
-
-        Returns
-        -------
-        y_proxy : NDArray
-            1D array of proxy labels, shape (n,).
-        groups : NDArray
-            1D array of stratum identifiers, shape (n,).
-
-        Raises
-        ------
-        KeyError
-            If groups_field is missing from a record.
-        ValueError
-            If y_proxy_field is not present in any record.
-        """
+        if len(dataset) == 0:
+            raise ValueError("Dataset cannot be empty.")
         data = dataset.to_numpy(fields=[y_proxy_field])
         y_proxy = data[:, 0]
         groups = np.array([record[groups_field] for record in dataset])
@@ -106,24 +75,6 @@ class StratifiedSampler:
         raw_allocation: Dict[Hashable, float],
         budget: int,
     ) -> Dict[Hashable, int]:
-        """Apply largest-remainder rounding to distribute budget across strata.
-
-        Assigns the floor value to each stratum, then distributes remaining slots
-        one-by-one to strata with the largest fractional parts. Result sums to budget
-        before clipping; after clipping to stratum sizes, sum may be less than budget.
-
-        Parameters
-        ----------
-        raw_allocation : Dict[Hashable, float]
-            Dictionary mapping stratum_id to raw (float) allocation.
-        budget : int
-            Target budget for distribution before clipping.
-
-        Returns
-        -------
-        allocation : Dict[Hashable, int]
-            Dictionary mapping stratum_id to integer allocation summing to budget.
-        """
         allocation = {}
         remainders = {}
 
@@ -149,28 +100,11 @@ class StratifiedSampler:
         groups: NDArray,
         budget: int,
     ) -> Dict[Hashable, int]:
-        """Allocate budget via Neyman allocation (optimal for heterogeneous variance).
 
-        Allocates more budget to strata with higher proxy variance. If all strata have
-        zero variance, falls back to proportional allocation based on stratum sizes.
-
-        Parameters
-        ----------
-        y_proxy : NDArray
-            Proxy labels, shape (n,).
-        groups : NDArray
-            Stratum identifiers, shape (n,).
-        budget : int
-            Total annotation budget.
-
-        Returns
-        -------
-        allocation : Dict[Hashable, int]
-            Mapping from stratum_id to per-stratum budget (count of annotations).
-        """
         unique_strata = np.unique(groups)
 
         weights = {}
+        stratum_sizes = {}
         for stratum_id in unique_strata:
             stratum_mask = groups == stratum_id
             stratum_size = stratum_mask.sum()
@@ -178,6 +112,7 @@ class StratifiedSampler:
             stratum_variance = np.std(stratum_y_proxy, ddof=1)
             weight = stratum_size * stratum_variance
             weights[stratum_id] = weight
+            stratum_sizes[stratum_id] = stratum_size
 
         total_weight = sum(weights.values())
 
@@ -191,8 +126,7 @@ class StratifiedSampler:
         allocation = self._apply_largest_remainder_rounding(raw_allocation, budget)
 
         for stratum_id in allocation:
-            stratum_size = (groups == stratum_id).sum()
-            allocation[stratum_id] = min(allocation[stratum_id], stratum_size)
+            allocation[stratum_id] = min(allocation[stratum_id], stratum_sizes[stratum_id])
 
         return allocation
 
@@ -202,75 +136,75 @@ class StratifiedSampler:
         groups: NDArray,
         budget: int,
     ) -> Dict[Hashable, int]:
-        """Allocate budget proportionally to stratum sizes.
 
-        Parameters
-        ----------
-        y_proxy : NDArray
-            Proxy labels, shape (n,).
-        groups : NDArray
-            Stratum identifiers, shape (n,).
-        budget : int
-            Total annotation budget.
-
-        Returns
-        -------
-        allocation : Dict[Hashable, int]
-            Mapping from stratum_id to per-stratum budget.
-        """
         unique_strata = np.unique(groups)
         total_size = len(groups)
 
         raw_allocation = {}
+        stratum_sizes = {}
         for stratum_id in unique_strata:
-            stratum_size = (groups == stratum_id).sum()
+            stratum_mask = groups == stratum_id
+            stratum_size = stratum_mask.sum()
             raw_allocation[stratum_id] = budget * stratum_size / total_size
+            stratum_sizes[stratum_id] = stratum_size
 
         allocation = self._apply_largest_remainder_rounding(raw_allocation, budget)
 
         for stratum_id in allocation:
-            stratum_size = (groups == stratum_id).sum()
-            allocation[stratum_id] = min(allocation[stratum_id], stratum_size)
+            allocation[stratum_id] = min(allocation[stratum_id], stratum_sizes[stratum_id])
 
         return allocation
 
     def sample(
         self,
         dataset: Dataset,
-        groups_field: str,
         y_proxy_field: str,
+        groups_field: str,
         budget: int,
         strategy: Literal["proportional", "neyman"] = "neyman",
+        random_seed: Optional[int] = None,
+        pi_field: str = "pi",
+        xi_field: str = "xi",
     ) -> Dataset:
-        """Allocate annotation budget across strata and augment dataset with allocations.
+        """Allocate annotation budget across strata and perform stratified sampling.
 
-        Computes per-stratum sample sizes using the specified allocation strategy and adds
-        an `n_h` column to the dataset indicating the allocated budget for each record's stratum.
-        Neyman allocation (default) assigns more budget to strata with higher proxy variance,
-        minimising asymptotic variance of downstream estimators. Proportional allocation
-        allocates budget proportionally to stratum sizes and serves as a baseline.
-        Per-stratum allocations are capped at stratum size, so total Σ n_h ≤ budget.
+        Computes per-stratum sample sizes using the specified allocation strategy and performs
+        Bernoulli sampling for each record based on its stratum's allocation. Neyman allocation
+        (default) assigns more budget to strata with higher proxy variance, minimising asymptotic
+        variance of downstream estimators. Proportional allocation allocates budget proportionally
+        to stratum sizes and serves as a baseline.
+
+        Each record receives a drawing probability π_i = n_h / stratum_size (capped at 1), and
+        is independently selected via a Bernoulli trial. The actual number of selected items is
+        a random variable with expectation ≤ budget.
 
         Parameters
         ----------
         dataset : Dataset
             Dataset with all records and proxy labels.
-        groups_field : str
-            Field name holding stratum identifiers. Mandatory.
         y_proxy_field : str
             Field name holding proxy labels. Mandatory.
+        groups_field : str
+            Field name holding stratum identifiers. Mandatory.
         budget : int
             Target annotation budget. Must be positive. Mandatory.
         strategy : str, optional
             Allocation strategy: "neyman" (default) or "proportional".
             "neyman": assigns more budget to higher-variance strata.
             "proportional": allocates proportionally to stratum sizes.
+        random_seed : int or None, optional
+            Random seed for reproducible sampling. Defaults to None (non-deterministic).
+        pi_field : str, optional
+            Name of the output column for drawing probabilities. Defaults to "pi".
+        xi_field : str, optional
+            Name of the output column for selection indicators. Defaults to "xi".
 
         Returns
         -------
         result : Dataset
-            Input dataset augmented with `n_h` column. For each record, `n_h` contains
-            the per-stratum allocation for that record's stratum. Total Σ n_h ≤ budget.
+            Input dataset augmented with two columns:
+            - `pi_field`: drawing probability π_i ∈ (0, 1] for each record.
+            - `xi_field`: 1 if selected for annotation, 0 otherwise.
 
         Raises
         ------
@@ -279,7 +213,7 @@ class StratifiedSampler:
         ValueError
             If y_proxy_field is not present in any record, or if strategy is unknown.
         """
-        y_proxy, groups = self._preprocess(dataset, groups_field, y_proxy_field)
+        y_proxy, groups = self._preprocess(dataset, y_proxy_field, groups_field)
 
         if strategy == "proportional":
             allocation = self._proportional_allocation(y_proxy, groups, budget)
@@ -288,11 +222,20 @@ class StratifiedSampler:
         else:
             raise ValueError(f"Unknown strategy '{strategy}'. Expected 'proportional' or 'neyman'.")
 
+        rng = np.random.default_rng(random_seed)
+
         result_records = []
         for record in dataset:
             stratum_id = record[groups_field]
+            stratum_size = (groups == stratum_id).sum()
+            n_h = allocation[stratum_id]
+            pi = min(n_h / stratum_size, 1.0)
+            xi = rng.binomial(n=1, p=pi)
+
             new_record = dict(record)
-            new_record["n_h"] = allocation[stratum_id]
+            new_record["n_h"] = n_h
+            new_record[pi_field] = pi
+            new_record[xi_field] = xi
             result_records.append(new_record)
 
         return Dataset(result_records)
