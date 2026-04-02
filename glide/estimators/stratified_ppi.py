@@ -116,7 +116,10 @@ class StratifiedPPIMeanEstimator:
             theta = sum_k  w_k * theta_k(lambda_k)
             sigma2 = sum_k  w_k^2 * sigma2_k(lambda_k)
 
-        where ``w_k = N_k / N`` is the fraction of records in stratum *k*.
+        where ``w_k = (n_k + N_k) / (n + N)`` is the fraction of records in stratum *k*.
+
+        Note that this assumes n_k / n and N_k / N are approximately the same for all k
+        which is important for statistical validity.
 
         Parameters
         ----------
@@ -152,15 +155,14 @@ class StratifiedPPIMeanEstimator:
             If any record is missing ``groups_field``.
         """
         strata = self._get_strata(dataset, groups_field)
-        N_total = len(dataset)
 
         weighted_mean = 0.0
         weighted_var = 0.0
         y_true_parts = []
 
         for stratum_name, stratum_dataset in strata.items():
-            N_k = len(stratum_dataset)
-            w_k = N_k / N_total
+            stratum_k_size = len(stratum_dataset)
+            w_k = stratum_k_size / len(dataset)
             try:
                 y_data = self._ppi_mean_estimator._preprocess(stratum_dataset, y_true_field, y_proxy_field)
             except RuntimeError as e:
@@ -187,6 +189,6 @@ class StratifiedPPIMeanEstimator:
             metric_name=metric_name,
             estimator_name=self.__class__.__name__,
             n_true=len(y_true_all),
-            n_proxy=N_total,
+            n_proxy=len(dataset),
             effective_sample_size=effective_sample_size,
         )
