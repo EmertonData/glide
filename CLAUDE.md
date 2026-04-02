@@ -64,6 +64,7 @@ Every PR must satisfy all of the following before merge:
 - Use fixtures to factorize pervasive test elements (shared datasets, estimator instances, etc.)
 - Existing test files are the canonical reference for structure and patterns — follow `test_ppi.py`, `test_simulated_datasets.py`, etc. when writing new test files
 - Always use `pytest.approx` when comparing floating point values in tests.
+- **No docstrings for test functions or private methods** — test code is self-documenting via clear variable names and assertion structure; private methods are internal only.
 
 ## Code Conventions
 

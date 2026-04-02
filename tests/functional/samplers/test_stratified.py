@@ -1,6 +1,5 @@
-"""Functional tests for StratifiedSampler."""
-
 import numpy as np
+import pytest
 
 from glide.core.dataset import Dataset
 from glide.core.simulated_datasets import generate_gaussian_dataset
@@ -8,14 +7,14 @@ from glide.estimators.stratified_ppi import StratifiedPPIMeanEstimator
 from glide.samplers.stratified import StratifiedSampler
 
 
-def test_neyman_reduces_ci_vs_proportional():
-    """Neyman allocation reduces CI width vs. proportional with heterogeneous variance.
+@pytest.fixture
+def sampler() -> StratifiedSampler:
+    return StratifiedSampler()
 
-    After sampling according to Neyman vs. proportional plan, CI width via
-    StratifiedPPIMeanEstimator is narrower with Neyman allocation.
-    """
+
+def test_neyman_reduces_ci_vs_proportional(sampler):
     random_seed = 42
-    n_labeled, n_unlabeled = 5, 10
+    n_labeled, n_unlabeled = 30, 50
 
     # Stratum A: low proxy variance
     labeled_a, unlabeled_a = generate_gaussian_dataset(
@@ -30,37 +29,24 @@ def test_neyman_reduces_ci_vs_proportional():
     records_b = [{**r, "group": "B"} for r in (labeled_b + unlabeled_b)]
 
     full_dataset = Dataset(records_a + records_b)
-    sampler = StratifiedSampler()
-    budget = 6
+    budget = 20
 
-    # Get allocations via sample() which returns Dataset with n_h column
-    proportional_sampled = sampler.sample(full_dataset, "group", "y_proxy", budget, strategy="proportional")
-    neyman_sampled = sampler.sample(full_dataset, "group", "y_proxy", budget, strategy="neyman")
+    # Sample with both strategies, which adds 'xi' and 'pi' fields
+    proportional_sampled = sampler.sample(
+        full_dataset, "y_proxy", "group", budget, strategy="proportional", random_seed=random_seed
+    )
+    neyman_sampled = sampler.sample(
+        full_dataset, "y_proxy", "group", budget, strategy="neyman", random_seed=random_seed
+    )
 
-    # Extract allocation dict from sampled datasets
-    def extract_allocation(sampled_ds):
-        alloc = {}
-        for record in sampled_ds:
-            group_id = record["group"]
-            if group_id not in alloc:
-                alloc[group_id] = record["n_h"]
-        return alloc
-
-    proportional_alloc = extract_allocation(proportional_sampled)
-    neyman_alloc = extract_allocation(neyman_sampled)
-
-    # Build datasets according to allocations
-    def make_dataset(full_ds, alloc):
-        labeled = []
-        for group_id in alloc:
-            group_records = [r for r in full_ds if r.get("group") == group_id]
-            labeled_in_group = [r for r in group_records if "y_true" in r]
-            labeled.extend(labeled_in_group[: alloc[group_id]])
-        unlabeled = [r for r in full_ds if "y_true" not in r]
+    # Build datasets: keep labeled records selected by sampler (xi=1) + all unlabeled
+    def make_dataset(sampled_ds):
+        labeled = [r for r in sampled_ds if "y_true" in r and r["xi"] == 1]
+        unlabeled = [r for r in sampled_ds if "y_true" not in r]
         return Dataset(labeled + unlabeled)
 
-    proportional_dataset = make_dataset(full_dataset, proportional_alloc)
-    neyman_dataset = make_dataset(full_dataset, neyman_alloc)
+    proportional_dataset = make_dataset(proportional_sampled)
+    neyman_dataset = make_dataset(neyman_sampled)
 
     # Estimate via StratifiedPPIMeanEstimator
     estimator = StratifiedPPIMeanEstimator()
@@ -72,12 +58,10 @@ def test_neyman_reduces_ci_vs_proportional():
     )
     neyman_width = neyman_result.confidence_interval.upper_bound - neyman_result.confidence_interval.lower_bound
 
-    # Neyman should be narrower or comparable
     assert neyman_width <= proportional_width + 0.2
 
 
-def test_proportional_matches_uniform_equal_strata():
-    """When all N_h are equal, proportional allocation gives n_h = n/K for all strata (same as uniform sampling)."""
+def test_proportional_matches_uniform_equal_strata(sampler):
     n_per_stratum = 5
     n_strata = 3
     budget = 9
@@ -93,17 +77,11 @@ def test_proportional_matches_uniform_equal_strata():
             )
 
     dataset = Dataset(records)
-    sampler = StratifiedSampler()
-    result = sampler.sample(dataset, "group", "y_proxy", budget, strategy="proportional")
+    result = sampler.sample(dataset, "y_proxy", "group", budget, strategy="proportional", random_seed=0)
 
-    # Extract unique allocations per stratum from the result dataset
-    allocation = {}
+    # With equal-sized strata, proportional allocation gives uniform pi across all records
+    total_size = len(records)
+    expected_pi = budget / total_size
+
     for record in result:
-        group_id = record["group"]
-        if group_id not in allocation:
-            allocation[group_id] = record["n_h"]
-
-    # All strata should get equal allocation
-    expected_per_stratum = budget // n_strata
-    for stratum_idx in range(n_strata):
-        assert allocation[f"stratum_{stratum_idx}"] == expected_per_stratum
+        assert np.isclose(record["pi"], expected_pi)

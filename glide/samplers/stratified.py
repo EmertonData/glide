@@ -51,10 +51,10 @@ class StratifiedSampler:
     ...     random_seed=0
     ... )
     >>> result  # doctest: +NORMALIZE_WHITESPACE
-    [{'group': 'A', 'y_proxy': 0.9, 'pi': np.float64(0.5), 'xi': 1},
-     {'group': 'A', 'y_proxy': 0.8, 'pi': np.float64(0.5), 'xi': 0},
-     {'group': 'B', 'y_proxy': 0.2, 'pi': np.float64(0.5), 'xi': 0},
-     {'group': 'B', 'y_proxy': 0.3, 'pi': np.float64(0.5), 'xi': 0}]
+    [{'group': 'A', 'y_proxy': 0.9, 'n_h': 1, 'pi': np.float64(0.5), 'xi': 1},
+     {'group': 'A', 'y_proxy': 0.8, 'n_h': 1, 'pi': np.float64(0.5), 'xi': 0},
+     {'group': 'B', 'y_proxy': 0.2, 'n_h': 1, 'pi': np.float64(0.5), 'xi': 0},
+     {'group': 'B', 'y_proxy': 0.3, 'n_h': 1, 'pi': np.float64(0.5), 'xi': 0}]
     """
 
     def _preprocess(
@@ -110,6 +110,7 @@ class StratifiedSampler:
             stratum_size = stratum_mask.sum()
             stratum_y_proxy = y_proxy[stratum_mask]
             stratum_variance = np.std(stratum_y_proxy, ddof=1)
+            stratum_variance = np.nan_to_num(stratum_variance, nan=0.0)
             weight = stratum_size * stratum_variance
             weights[stratum_id] = weight
             stratum_sizes[stratum_id] = stratum_size
@@ -211,8 +212,18 @@ class StratifiedSampler:
         KeyError
             If groups_field is missing from a record.
         ValueError
-            If y_proxy_field is not present in any record, or if strategy is unknown.
+            If y_proxy_field is not present in any record, if strategy is unknown,
+            if budget is not a strictly positive integer, or if budget exceeds
+            the number of records in the dataset.
         """
+        if (not isinstance(budget, (int, np.integer))) or isinstance(budget, bool) or budget <= 0:
+            raise ValueError(f"'budget' must be a strictly positive integer; got {budget!r}.")
+        if budget > len(dataset):
+            raise ValueError(
+                f"'budget' must not exceed the number of records in the dataset; "
+                f"got budget={budget} but dataset has {len(dataset)} records."
+            )
+
         y_proxy, groups = self._preprocess(dataset, y_proxy_field, groups_field)
 
         if strategy == "proportional":
