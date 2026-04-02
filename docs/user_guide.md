@@ -52,7 +52,7 @@ In PPI, every record carries two values:
 
 | Field | Present for | Description |
 |---|---|---|
-| $\tilde{Y}_i$ | All $N$ records | Proxy label |
+| $\tilde{Y}_i$ | All $n+N$ records | Proxy label |
 | $Y_j$ | Labeled records only ($n < N$) | Ground-truth label |
 
 ### Mean estimation
@@ -108,19 +108,19 @@ When the proxy is informative (high covariance with human labels), $\hat{\lambda
 
 ## Stratified PPI++
 
-Standard PPI++ assumes that labeled and unlabeled samples are drawn uniformly from a single population. In practice, the dataset is often naturally partitioned into **strata** — for example, by language, domain, or question type — and the proxy model may behave very differently across these groups. **Stratified PPI++** [[5](#ref-5), [6](#ref-6)] exploits this structure: rather than applying one global estimate, it runs PPI++ independently within each stratum and combines the results with population-proportional weights.
+Standard PPI++ assumes that labeled and unlabeled samples are drawn uniformly from a single population. In practice, the dataset is often naturally partitioned into **strata** — for example, by language, domain, or question type — and the proxy model may behave very differently across these strata. **Stratified PPI++** [[5](#ref-5), [6](#ref-6)] exploits this structure: rather than applying one global estimate, it runs PPI++ independently within each stratum and combines the results with population-proportional weights.
 
-Let $K$ denote the number of strata. Stratum $k$ contains $N_k$ total records (labeled + unlabeled), of which $n_k$ are labeled. The total dataset size is $N = \sum_k N_k$ and the **population weight** of stratum $k$ is:
+Let $K$ denote the number of strata. Stratum $k$ contains $n_k+N_k$ total records (labeled + unlabeled), of which $n_k$ are labeled. We let $n = \sum_k n_k$ and $N = \sum_k N_k$ be the total numbers of labeled and unlabeled samples respectively. We assume that $n_k/n \approx N_k/N$ for all $k$ and compute the **population weight** of stratum $k$ as:
 
-$$w_k = \frac{N_k}{N}$$
+$$w_k = \frac{n_k+N_k}{n+N}$$
 
-In Stratified PPI++, every record carries the same fields as PPI++ — a proxy label $\tilde{Y}_i$ and optionally a ground-truth label $Y_j$ — plus a **group identifier** indicating which stratum the record belongs to.
+In Stratified PPI++, every record carries the same fields as PPI++ — a proxy label $\tilde{Y}_i$ and optionally a ground-truth label $Y_j$ — plus a **stratum identifier** indicating which stratum the record belongs to.
 
 | Field | Present for | Description |
 |---|---|---|
-| $\tilde{Y}_i$ | All $N$ records | Proxy label |
+| $\tilde{Y}_i$ | All $n+N$ records | Proxy label |
 | $Y_j$ | Labeled records only ($n < N$) | Ground-truth label |
-| $g_j$ | All $N$ records | Group identifier |
+| $g_j$ | All $n+N$ records | Stratum identifier |
 
 
 ### Mean estimation
@@ -133,6 +133,8 @@ where $\hat{\theta}_k(\lambda_k)$ is exactly the PPI++ mean estimator applied to
 
 ### Variance and confidence intervals
 
+Keep in mind that Stratified PPI++ is designed for a small number of large strata. The theoretical guarantees assume that the number of strata $K$ stays fixed as sample size grows and that each stratum contains a non-vanishing share of the data. In practice, many small strata mean that per-stratum statistical estimates become unreliable, and the CLT approximation underlying the confidence interval may break down. When in doubt, prefer a coarser stratification with fewer, larger strata.
+
 The asymptotic variance of $\hat{\theta}_{\text{strat}}$ is the sum of the per-stratum PPI++ variances, each scaled by its squared population weight:
 
 $$\sigma^2_{\text{strat}} = \sum_{k=1}^{K} w_k^2 \cdot \sigma^2_k(\lambda_k)$$
@@ -140,8 +142,6 @@ $$\sigma^2_{\text{strat}} = \sum_{k=1}^{K} w_k^2 \cdot \sigma^2_k(\lambda_k)$$
 where $\sigma^2_k(\lambda_k)$ is the PPI++ variance for stratum $k$. The reported standard deviation $\sigma_{\text{strat}}$ serves to construct a confidence interval at level $1 - \alpha$ via the CLT exactly as in PPI++.
 
 The key benefit over global PPI++ becomes apparent when strata differ substantially in proxy quality. Strata where the proxy is accurate contribute a small $\sigma^2_k(\lambda_k)$, while strata where it is poor contribute a larger one — but each contribution is isolated to its own stratum instead of polluting the global estimate.
-
-Keep in mind that Stratified PPI++ is designed for a small number of large strata. The theoretical guarantees assume that the number of strata $K$ stays fixed as sample size grows and that each stratum contains a non-vanishing share of the data. In practice, many small strata mean that per-stratum estimates of $\lambda_k$ and $\sigma^2_k$ become unreliable, and the CLT approximation underlying the confidence interval may break down. When in doubt, prefer a coarser stratification with fewer, larger groups.
 
 ### Power-tuning
 
