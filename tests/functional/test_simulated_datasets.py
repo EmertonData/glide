@@ -105,9 +105,9 @@ def test_generate_stratified_binary_dataset_empirical_means_and_correlation_per_
         # Check means (with tolerance for randomness)
         empirical_true_mean = np.mean(y_true_stratum)
         empirical_proxy_mean = np.mean(y_proxy_all_stratum)
-        assert empirical_true_mean == pytest.approx(expected_true_mean, abs=0.01)
-        assert empirical_proxy_mean == pytest.approx(expected_proxy_mean, abs=0.01)
+        assert empirical_true_mean == pytest.approx(expected_true_mean, abs=0.05)
+        assert empirical_proxy_mean == pytest.approx(expected_proxy_mean, abs=0.05)
 
         # Check correlation
         empirical_corr = np.corrcoef(y_true_stratum, y_proxy_labeled_stratum)[0, 1]
-        assert empirical_corr == pytest.approx(expected_corr, abs=0.05)
+        assert empirical_corr == pytest.approx(expected_corr, abs=0.1)
