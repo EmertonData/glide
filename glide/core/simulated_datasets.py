@@ -27,7 +27,7 @@ def generate_binary_dataset(
         Expected mean value of the proxy labels.
     correlation : float
         Pearson correlation between true and proxy on the labeled subset.
-    random_seed : int, optional
+    random_seed : int or np.random.SeedSequence, optional
         Seed for reproducibility.
 
     Returns
@@ -263,7 +263,7 @@ def generate_stratified_binary_dataset(
     all_unlabeled_records = []
 
     seed_sequence = np.random.SeedSequence(random_seed)
-    child_sequences = seed_sequence.spawn(num_strata)
+    seeds = seed_sequence.spawn(num_strata)
 
     for stratum_id in range(num_strata):
         # Generate data for this stratum
@@ -273,7 +273,7 @@ def generate_stratified_binary_dataset(
             true_mean=true_mean[stratum_id],
             proxy_mean=proxy_mean[stratum_id],
             correlation=correlation[stratum_id],
-            random_seed=child_sequences[stratum_id],
+            random_seed=seeds[stratum_id],
         )
 
         # Add stratum_id to all records
