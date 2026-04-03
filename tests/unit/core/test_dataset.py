@@ -66,7 +66,7 @@ def test_getitem_slice_returns_records(records):
 
 def test_get_unsupported_key_type_raises(records):
     with pytest.raises(TypeError):
-        Dataset(records)[None]  # type: ignore[index]
+        Dataset(records)[None]  # ty: ignore[invalid-argument-type]
 
 
 def test_to_numpy_human_then_llm(records):
