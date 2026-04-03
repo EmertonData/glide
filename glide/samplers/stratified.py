@@ -37,10 +37,12 @@ class StratifiedSampler:
     >>> from glide.core.dataset import Dataset
     >>> from glide.samplers.stratified import StratifiedSampler
     >>> dataset = Dataset([
+    ...     {"group": "A", "y_proxy": 0.8},
     ...     {"group": "A", "y_proxy": 0.9},
-    ...     {"group": "A", "y_proxy": 0.95},
-    ...     {"group": "B", "y_proxy": 0.1},
-    ...     {"group": "B", "y_proxy": 0.9},
+    ...     {"group": "A", "y_proxy": 0.85},
+    ...     {"group": "A", "y_proxy": 0.88},
+    ...     {"group": "B", "y_proxy": 0.2},
+    ...     {"group": "B", "y_proxy": 0.3},
     ... ])
     >>> sampler = StratifiedSampler()
     >>> result = sampler.sample(
@@ -51,10 +53,12 @@ class StratifiedSampler:
     ...     random_seed=0
     ... )
     >>> result  # doctest: +NORMALIZE_WHITESPACE
-    [{'group': 'A', 'y_proxy': 0.9, 'pi': np.float64(0.0), 'xi': 0},
-     {'group': 'A', 'y_proxy': 0.95, 'pi': np.float64(0.0), 'xi': 0},
-     {'group': 'B', 'y_proxy': 0.1, 'pi': np.float64(1.0), 'xi': 1},
-     {'group': 'B', 'y_proxy': 0.9, 'pi': np.float64(1.0), 'xi': 1}]
+    [{'group': 'A', 'y_proxy': 0.8, 'pi': np.float64(0.25), 'xi': 0},
+     {'group': 'A', 'y_proxy': 0.9, 'pi': np.float64(0.25), 'xi': 0},
+     {'group': 'A', 'y_proxy': 0.85, 'pi': np.float64(0.25), 'xi': 0},
+     {'group': 'A', 'y_proxy': 0.88, 'pi': np.float64(0.25), 'xi': 0},
+     {'group': 'B', 'y_proxy': 0.2, 'pi': np.float64(0.5), 'xi': 1},
+     {'group': 'B', 'y_proxy': 0.3, 'pi': np.float64(0.5), 'xi': 1}]
     """
 
     def _preprocess(
@@ -74,16 +78,17 @@ class StratifiedSampler:
         groups = np.array([record[groups_field] for record in dataset])
 
         unique_strata = np.unique(groups)
-        has_nonzero_variance = False
+        has_zero_variance = True
         for stratum_id in unique_strata:
             stratum_mask = groups == stratum_id
+            stratum_size = stratum_mask.sum()
+            if stratum_size < 2:
+                raise ValueError(f"Stratum '{stratum_id}' has fewer than 2 records; std(ddof=1) requires ≥2.")
             stratum_y_proxy = y_proxy[stratum_mask]
-            stratum_std = np.std(stratum_y_proxy, ddof=1)
-            if not np.isnan(stratum_std) and stratum_std > 0:
-                has_nonzero_variance = True
-                break
+            if len(np.unique(stratum_y_proxy)) > 1:
+                has_zero_variance = False
 
-        if not has_nonzero_variance:
+        if has_zero_variance:
             raise ValueError("All strata have zero variance in proxy values")
 
         return y_proxy, groups
@@ -126,9 +131,8 @@ class StratifiedSampler:
             stratum_mask = groups == stratum_id
             stratum_size = stratum_mask.sum()
             stratum_y_proxy = y_proxy[stratum_mask]
-            stratum_variance = np.std(stratum_y_proxy, ddof=1)
-            stratum_variance = np.nan_to_num(stratum_variance, nan=0.0)
-            weight = stratum_size * stratum_variance
+            stratum_std = np.std(stratum_y_proxy, ddof=1)
+            weight = stratum_size * stratum_std
             weights[stratum_id] = weight
             stratum_sizes[stratum_id] = stratum_size
 
@@ -147,7 +151,6 @@ class StratifiedSampler:
 
     def _proportional_allocation(
         self,
-        y_proxy: NDArray,
         groups: NDArray,
         budget: int,
     ) -> Dict[Hashable, int]:
@@ -241,7 +244,7 @@ class StratifiedSampler:
         y_proxy, groups = self._preprocess(dataset, y_proxy_field, groups_field)
 
         if strategy == "proportional":
-            allocation = self._proportional_allocation(y_proxy, groups, budget)
+            allocation = self._proportional_allocation(groups, budget)
         elif strategy == "neyman":
             allocation = self._neyman_allocation(y_proxy, groups, budget)
         else:

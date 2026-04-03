@@ -57,11 +57,12 @@ def test_preprocess_groups_preserved(sampler):
             {"group": "A", "y_proxy": 0.5},
             {"group": "A", "y_proxy": 0.6},
             {"group": "B", "y_proxy": 0.7},
+            {"group": "B", "y_proxy": 0.8},
         ]
     )
     y_proxy, groups = sampler._preprocess(dataset, "y_proxy", "group")
 
-    assert np.array_equal(groups, np.array(["A", "A", "B"], dtype=object))
+    assert np.array_equal(groups, np.array(["A", "A", "B", "B"], dtype=object))
 
 
 def test_preprocess_raises_on_empty_dataset(sampler):
@@ -95,23 +96,17 @@ def test_preprocess_raises_on_unknown_groups_field(sampler):
         sampler._preprocess(dataset, "y_proxy", "nonexistent_group_field")
 
 
-# --- _proportional_allocation ---
+def test_preprocess_raises_on_stratum_size_less_than_two(sampler):
+    dataset = Dataset(
+        [
+            {"group": "A", "y_proxy": 0.5},
+            {"group": "A", "y_proxy": 0.6},
+            {"group": "B", "y_proxy": 0.7},
+        ]
+    )
 
-
-def test_proportional_allocation_proportional_to_N_h(sampler, y_proxy, groups):
-    budget = 4
-    total = len(groups)
-
-    allocation = sampler._proportional_allocation(y_proxy, groups, budget)
-
-    expected_ratio = budget / total
-    for stratum_id, n_h in allocation.items():
-        N_h = (groups == stratum_id).sum()
-        actual_ratio = n_h / N_h
-        assert actual_ratio == pytest.approx(expected_ratio, abs=0.01)
-
-
-# --- _neyman_allocation ---
+    with pytest.raises(ValueError, match="fewer than 2 records"):
+        sampler._preprocess(dataset, "y_proxy", "group")
 
 
 def test_preprocess_raises_on_nan_proxy(sampler):
@@ -152,6 +147,22 @@ def test_preprocess_raises_on_all_strata_zero_variance(sampler):
 
     with pytest.raises(ValueError, match="All strata have zero variance"):
         sampler._preprocess(dataset, "y_proxy", "group")
+
+
+# --- _proportional_allocation ---
+
+
+def test_proportional_allocation_proportional_to_N_h(sampler, y_proxy, groups):
+    budget = 4
+    total = len(groups)
+
+    allocation = sampler._proportional_allocation(groups, budget)
+
+    expected_ratio = budget / total
+    for stratum_id, n_h in allocation.items():
+        N_h = (groups == stratum_id).sum()
+        actual_ratio = n_h / N_h
+        assert actual_ratio == pytest.approx(expected_ratio, abs=0.01)
 
 
 # --- sample ---
