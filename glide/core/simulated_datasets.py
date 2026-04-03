@@ -1,4 +1,4 @@
-from typing import List, Optional, Tuple
+from typing import List, Optional, Tuple, Union
 
 import numpy as np
 
@@ -11,7 +11,7 @@ def generate_binary_dataset(
     true_mean: float = 0.7,
     proxy_mean: float = 0.6,
     correlation: float = 0.8,
-    random_seed: Optional[int] = None,
+    random_seed: Optional[Union[int, np.random.SeedSequence]] = None,
 ) -> Tuple[Dataset, Dataset]:
     """Generate a synthetic binary-label dataset for evaluation.
 
@@ -27,7 +27,7 @@ def generate_binary_dataset(
         Expected mean value of the proxy labels.
     correlation : float
         Pearson correlation between true and proxy on the labeled subset.
-    random_seed : int, optional
+    random_seed : int or np.random.SeedSequence, optional
         Seed for reproducibility.
 
     Returns
@@ -262,12 +262,10 @@ def generate_stratified_binary_dataset(
     all_labeled_records = []
     all_unlabeled_records = []
 
-    for stratum_id in range(num_strata):
-        # Determine seed for this stratum if random_seed is provided
-        stratum_seed = None
-        if random_seed is not None:
-            stratum_seed = random_seed + stratum_id
+    seed_sequence = np.random.SeedSequence(random_seed)
+    seeds = seed_sequence.spawn(num_strata)
 
+    for stratum_id in range(num_strata):
         # Generate data for this stratum
         labeled, unlabeled = generate_binary_dataset(
             n=n[stratum_id],
@@ -275,7 +273,7 @@ def generate_stratified_binary_dataset(
             true_mean=true_mean[stratum_id],
             proxy_mean=proxy_mean[stratum_id],
             correlation=correlation[stratum_id],
-            random_seed=stratum_seed,
+            random_seed=seeds[stratum_id],
         )
 
         # Add stratum_id to all records
