@@ -55,17 +55,16 @@ def test_sample_rounding_sums_to_budget(sampler):
     for strategy in ["proportional", "neyman"]:
         result = sampler.sample(dataset, "y_proxy", "group", 7, strategy=strategy)
 
-        groups_array = np.array([record["group"] for record in result])
-        pi_array = np.array([record["pi"] for record in result])
+        groups = np.array([record["group"] for record in result])
+        pi = np.array([record["pi"] for record in result])
 
-        unique_groups, counts = np.unique(groups_array, return_counts=True)
-        group_sizes_array = np.array(counts)
+        unique_groups, group_sizes = np.unique(groups, return_counts=True)
 
         # Get first pi value for each unique group
-        group_pi_array = np.array([pi_array[groups_array == group][0] for group in unique_groups])
+        group_pi = np.array([pi[groups == group][0] for group in unique_groups])
 
         # Vectorized allocation calculation
-        allocations = np.minimum(group_pi_array * group_sizes_array, group_sizes_array)
+        allocations = np.minimum(group_pi * group_sizes, group_sizes)
         total_allocation = np.sum(allocations)
 
         assert total_allocation <= 7

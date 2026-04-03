@@ -16,24 +16,14 @@ def dataset() -> Dataset:
         [
             {"group": "A", "y_proxy": 0.60},
             {"group": "A", "y_proxy": 0.45},
-            {"group": "B", "y_proxy": 0.67},
-            {"group": "B", "y_proxy": 0.33},
-        ]
-    )
-
-
-@pytest.fixture
-def dataset_with_varied(dataset) -> Dataset:
-    extended_records = list(dataset)
-    extended_records.extend(
-        [
             {"group": "A", "y_proxy": 0.50},
             {"group": "A", "y_proxy": 0.55},
+            {"group": "B", "y_proxy": 0.67},
+            {"group": "B", "y_proxy": 0.33},
             {"group": "B", "y_proxy": 0.0},
             {"group": "B", "y_proxy": 1.0},
         ]
     )
-    return Dataset(extended_records)
 
 
 # --- _preprocess ---
@@ -42,7 +32,7 @@ def dataset_with_varied(dataset) -> Dataset:
 def test_preprocess_groups_preserved(sampler, dataset):
     _, groups = sampler._preprocess(dataset, "y_proxy", "group")
 
-    assert np.array_equal(groups, np.array(["A", "A", "B", "B"], dtype=object))
+    assert np.array_equal(groups, np.array(["A", "A", "A", "A", "B", "B", "B", "B"], dtype=object))
 
 
 def test_preprocess_raises_on_empty_dataset(sampler):
@@ -122,7 +112,7 @@ def test_proportional_allocation_proportional_to_N_h(sampler):
 
 
 def test_sample_returns_dataset_with_valid_properties(sampler, dataset):
-    result = sampler.sample(dataset, "y_proxy", "group", 2, random_seed=0)
+    result = sampler.sample(dataset, "y_proxy", "group", 4, random_seed=0)
 
     assert isinstance(result, Dataset)
     assert len(result) == len(dataset)
@@ -159,20 +149,20 @@ def test_sample_budget_exceeds_dataset_length(sampler, dataset):
         sampler.sample(dataset, "y_proxy", "group", len(dataset) + 1)
 
 
-def test_sample_default_strategy_is_neyman(sampler, dataset_with_varied):
+def test_sample_default_strategy_is_neyman(sampler, dataset):
     budget = 8
 
-    default_result = sampler.sample(dataset_with_varied, "y_proxy", "group", budget)
-    neyman_result = sampler.sample(dataset_with_varied, "y_proxy", "group", budget, strategy="neyman")
+    default_result = sampler.sample(dataset, "y_proxy", "group", budget)
+    neyman_result = sampler.sample(dataset, "y_proxy", "group", budget, strategy="neyman")
 
     assert [r["pi"] for r in default_result] == [r["pi"] for r in neyman_result]
 
 
-def test_sample_neyman_strategy(sampler, dataset_with_varied):
-    result = sampler.sample(dataset_with_varied, "y_proxy", "group", 8, strategy="neyman")
+def test_sample_neyman_strategy(sampler, dataset):
+    result = sampler.sample(dataset, "y_proxy", "group", 8, strategy="neyman")
 
     pi_a = result[0]["pi"]  # Group A
-    pi_b = result[2]["pi"]  # Group B
+    pi_b = result[4]["pi"]  # Group B (index 4 since 4 A records come first)
     assert pi_b > pi_a
 
 
