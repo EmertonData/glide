@@ -33,12 +33,12 @@ class ClassicalMeanEstimator:
         return y
 
     def _compute_mean_estimate(self, y: NDArray) -> float:
-        mean = float(np.nanmean(y))
+        mean = np.nanmean(y)
         return mean
 
     def _compute_std_estimate(self, y: NDArray) -> float:
         n_not_nan = np.sum(~np.isnan(y))
-        std = float(np.nanstd(y, ddof=1) / np.sqrt(n_not_nan))
+        std = np.nanstd(y, ddof=1) / np.sqrt(n_not_nan)
         return std
 
     def estimate(
