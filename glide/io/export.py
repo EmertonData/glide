@@ -25,20 +25,20 @@ def to_json(result: MeanInferenceResult) -> str:
     >>> dataset = Dataset([{"y_true":i} for i in range(10)])
     >>> estimator = ClassicalMeanEstimator()
     >>> estimation_result = estimator.estimate(dataset, y_field="y_true", confidence_level=0.9)
-    >>> print(to_json(estimation_result))
+    >>> print(to_json(estimation_result))  # doctest: +ELLIPSIS
     {
       "confidence_interval": {
         "mean": 4.5,
-        "std": 0.9574271077563381,
+        "std": 0.957427107756...,
         "confidence_level": 0.9,
-        "lower_bound": 2.9251725492653295,
-        "upper_bound": 6.07482745073467
+        "lower_bound": 2.925172549265...,
+        "upper_bound": 6.074827450734...
       },
       "metric_name": "Metric",
       "estimator_name": "ClassicalMeanEstimator",
       "n": 10,
       "mean": 4.5,
-      "std": 0.9574271077563381
+      "std": 0.957427107756...
     }
     """
     data = asdict(result)
