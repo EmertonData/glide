@@ -16,8 +16,8 @@ format:
 	uv run ruff format
 
 type-check:
-	uv run --group doc ty check
-
+	uv run ty check
+	
 tests:
 	uv run pytest . -vsx
 
