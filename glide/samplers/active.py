@@ -1,6 +1,7 @@
-from typing import Optional
+from typing import Optional, Union
 
 import numpy as np
+from numpy.random.bit_generator import SeedSequence
 from numpy.typing import NDArray
 
 from glide.core.dataset import Dataset
@@ -58,7 +59,7 @@ class ActiveSampler:
         dataset: Dataset,
         uncertainty_field: str,
         budget: int,
-        random_seed: Optional[int] = None,
+        random_seed: Optional[Union[int, SeedSequence]] = None,
         pi_field: str = "pi",
         xi_field: str = "xi",
     ) -> Dataset:
@@ -82,10 +83,10 @@ class ActiveSampler:
             Expected total number of annotations to collect. Must be a strictly
             positive integer and must not exceed the number of records in
             ``dataset``.
-        random_seed : int or None, optional
+        random_seed : int or SeedSequence or None, optional
             Random seed passed to ``numpy.random.default_rng`` for
             reproducibility. Pass ``None`` (the default) to use a
-            non-deterministic random_seed.
+            non-deterministic seed.
         pi_field : str, optional
             Name of the output column for drawing probabilities. Defaults to
             ``"pi"``.

@@ -14,6 +14,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - Added `StratifiedSampler` for optimal per-stratum annotation budget allocation with Neyman and proportional strategies
 - Added `StratifiedPPIMeanEstimator` for Stratified PPI-based mean estimation
 - Added `generate_stratified_binary_dataset` function for generating synthetic stratified binary-label datasets
+- 
+
+---
+
+## [0.3.0] – 2026-04-03
+
+### ✨ Added
+- Added section about Stratified PPI into user guide
+- Added Stratified PPI scientific validation notebook
+- Added `StratifiedPPIMeanEstimator` for Stratified PPI-based mean estimation
+- Added section about ASI into user guide
+- Added ASI scientific validation notebook
+- Added `ActiveSampler` in `glide/samplers/` for uncertainty-proportional active sampling
 - Added `generate_binary_dataset_with_oracle_sampling` function to simulate ASI-like data
 - Added overload for the __getitem__ method for Dataset to support `int`, `slice`, `str`, and `list[str]` keys
 
@@ -36,7 +49,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - Fixed broken badge links in the README
 
 ### 💛 Contributors
-Thank you to everyone who contributed to this release: @gmartinon-ed, @gherouville-ed, @imerad
+Thank you to everyone who contributed to this release: @gmartinon-ed, @gherouville-ed, @imerad, @mraki-ed, @vwoelffel-ed, @awolf-ed, @iben-ed, @msoro-ed
 
 ---
 
