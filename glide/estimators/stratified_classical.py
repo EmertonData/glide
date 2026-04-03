@@ -11,9 +11,9 @@ from glide.estimators.classical import ClassicalMeanEstimator
 class StratifiedClassicalMeanEstimator:
     """Stratified classical estimator for population mean.
 
-    Extends `ClassicalMeanEstimator` to datasets partitioned into strata
-    (e.g. by language, domain, or data source). A per-stratum sample mean and
-    standard error are computed independently, then combined with
+    Extends mean estimation as in `ClassicalMeanEstimator` to datasets partitioned
+    into strata (e.g. by language, domain, or data source). A per-stratum sample
+    mean and standard error are computed independently, then combined with
     population-proportional weights:
 
         theta = sum_k  w_k * theta_k
