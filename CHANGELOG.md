@@ -15,6 +15,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - Added `StratifiedPPIMeanEstimator` for Stratified PPI-based mean estimation
 - Added `generate_stratified_binary_dataset` function for generating synthetic stratified binary-label datasets
 - 
+- Added doctest for `glide.io.to_json`
 
 ---
 
