@@ -50,15 +50,15 @@ class StratifiedSampler:
     ...     y_proxy_field="y_proxy",
     ...     groups_field="group",
     ...     budget=2,
-    ...     random_seed=0
+    ...     random_seed=1
     ... )
     >>> result  # doctest: +NORMALIZE_WHITESPACE
     [{'group': 'A', 'y_proxy': 0.8, 'pi': np.float64(0.25), 'xi': 0},
-     {'group': 'A', 'y_proxy': 0.9, 'pi': np.float64(0.25), 'xi': 0},
+     {'group': 'A', 'y_proxy': 0.9, 'pi': np.float64(0.25), 'xi': 1},
      {'group': 'A', 'y_proxy': 0.85, 'pi': np.float64(0.25), 'xi': 0},
-     {'group': 'A', 'y_proxy': 0.88, 'pi': np.float64(0.25), 'xi': 0},
-     {'group': 'B', 'y_proxy': 0.2, 'pi': np.float64(0.5), 'xi': 1},
-     {'group': 'B', 'y_proxy': 0.3, 'pi': np.float64(0.5), 'xi': 1}]
+     {'group': 'A', 'y_proxy': 0.88, 'pi': np.float64(0.25), 'xi': 1},
+     {'group': 'B', 'y_proxy': 0.2, 'pi': np.float64(0.5), 'xi': 0},
+     {'group': 'B', 'y_proxy': 0.3, 'pi': np.float64(0.5), 'xi': 0}]
     """
 
     def _preprocess(
@@ -78,18 +78,14 @@ class StratifiedSampler:
         groups = np.array([record[groups_field] for record in dataset])
 
         unique_strata = np.unique(groups)
-        has_zero_variance = True
         for stratum_id in unique_strata:
             stratum_mask = groups == stratum_id
             stratum_size = stratum_mask.sum()
             if stratum_size < 2:
                 raise ValueError(f"Stratum '{stratum_id}' has fewer than 2 records; std(ddof=1) requires ≥2.")
             stratum_y_proxy = y_proxy[stratum_mask]
-            if len(np.unique(stratum_y_proxy)) > 1:
-                has_zero_variance = False
-
-        if has_zero_variance:
-            raise ValueError("All strata have zero variance in proxy values")
+            if len(np.unique(stratum_y_proxy)) < 2:
+                raise ValueError(f"Stratum '{stratum_id}' has zero variance in proxy values")
 
         return y_proxy, groups
 

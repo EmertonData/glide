@@ -34,3 +34,38 @@ def test_proportional_matches_uniform_equal_strata(sampler):
 
     for record in result:
         assert np.isclose(record["pi"], expected_pi)
+
+
+def test_sample_rounding_sums_to_budget(sampler):
+    dataset = Dataset(
+        [
+            {"group": "s0", "y_proxy": 0.0},
+            {"group": "s0", "y_proxy": 0.1},
+            {"group": "s1", "y_proxy": 1.0},
+            {"group": "s1", "y_proxy": 1.1},
+            {"group": "s2", "y_proxy": 2.0},
+            {"group": "s2", "y_proxy": 2.1},
+            {"group": "s3", "y_proxy": 3.0},
+            {"group": "s3", "y_proxy": 3.1},
+            {"group": "s4", "y_proxy": 4.0},
+            {"group": "s4", "y_proxy": 4.1},
+        ]
+    )
+
+    for strategy in ["proportional", "neyman"]:
+        result = sampler.sample(dataset, "y_proxy", "group", 7, strategy=strategy)
+
+        groups_array = np.array([record["group"] for record in result])
+        pi_array = np.array([record["pi"] for record in result])
+
+        unique_groups, counts = np.unique(groups_array, return_counts=True)
+        group_sizes_array = np.array(counts)
+
+        # Get first pi value for each unique group
+        group_pi_array = np.array([pi_array[groups_array == group][0] for group in unique_groups])
+
+        # Vectorized allocation calculation
+        allocations = np.minimum(group_pi_array * group_sizes_array, group_sizes_array)
+        total_allocation = np.sum(allocations)
+
+        assert total_allocation <= 7

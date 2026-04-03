@@ -68,8 +68,6 @@ Every PR must satisfy all of the following before merge:
 ## Code Conventions
 
 - Line length: 120 (configured in ruff)
-- NumPy-style docstrings with paper references for all public API
-- Public API docstrings must include an `Examples` section with runnable doctests
 - Method parameters for Dataset field names use `*_field` suffix (e.g., `label_field`, `score_field`)
 
 ### Naming

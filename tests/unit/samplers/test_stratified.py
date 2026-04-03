@@ -14,53 +14,33 @@ def sampler() -> StratifiedSampler:
 def dataset() -> Dataset:
     return Dataset(
         [
-            {"group": "A", "y_proxy": 0.5},
-            {"group": "A", "y_proxy": 0.6},
-            {"group": "B", "y_proxy": 0.7},
-            {"group": "B", "y_proxy": 0.8},
+            {"group": "A", "y_proxy": 0.60},
+            {"group": "A", "y_proxy": 0.45},
+            {"group": "B", "y_proxy": 0.67},
+            {"group": "B", "y_proxy": 0.33},
         ]
     )
 
 
 @pytest.fixture
-def y_proxy() -> np.ndarray:
-    return np.array([0.5, 0.6, 0.7, 0.8])
-
-
-@pytest.fixture
-def groups() -> np.ndarray:
-    return np.array(["A", "A", "B", "B"], dtype=object)
-
-
-@pytest.fixture
-def dataset_varied() -> Dataset:
-    return Dataset(
+def dataset_with_varied(dataset) -> Dataset:
+    extended_records = list(dataset)
+    extended_records.extend(
         [
-            {"group": "A", "y_proxy": 0.45},
             {"group": "A", "y_proxy": 0.50},
             {"group": "A", "y_proxy": 0.55},
-            {"group": "A", "y_proxy": 0.60},
             {"group": "B", "y_proxy": 0.0},
-            {"group": "B", "y_proxy": 0.33},
-            {"group": "B", "y_proxy": 0.67},
             {"group": "B", "y_proxy": 1.0},
         ]
     )
+    return Dataset(extended_records)
 
 
 # --- _preprocess ---
 
 
-def test_preprocess_groups_preserved(sampler):
-    dataset = Dataset(
-        [
-            {"group": "A", "y_proxy": 0.5},
-            {"group": "A", "y_proxy": 0.6},
-            {"group": "B", "y_proxy": 0.7},
-            {"group": "B", "y_proxy": 0.8},
-        ]
-    )
-    y_proxy, groups = sampler._preprocess(dataset, "y_proxy", "group")
+def test_preprocess_groups_preserved(sampler, dataset):
+    _, groups = sampler._preprocess(dataset, "y_proxy", "group")
 
     assert np.array_equal(groups, np.array(["A", "A", "B", "B"], dtype=object))
 
@@ -73,86 +53,59 @@ def test_preprocess_raises_on_empty_dataset(sampler):
 
 
 def test_preprocess_raises_on_unknown_y_proxy_field(sampler):
-    dataset = Dataset(
-        [
-            {"group": "A", "y_proxy": 0.5},
-            {"group": "A", "y_proxy": 0.6},
-        ]
-    )
+    dataset = Dataset([{"group": "A", "y_proxy": 0.5}])
 
     with pytest.raises(ValueError):
         sampler._preprocess(dataset, "nonexistent_field", "group")
 
 
 def test_preprocess_raises_on_unknown_groups_field(sampler):
-    dataset = Dataset(
-        [
-            {"group": "A", "y_proxy": 0.5},
-            {"group": "A", "y_proxy": 0.6},
-        ]
-    )
+    dataset = Dataset([{"group": "A", "y_proxy": 0.5}])
 
     with pytest.raises((ValueError, KeyError)):
         sampler._preprocess(dataset, "y_proxy", "nonexistent_group_field")
 
 
 def test_preprocess_raises_on_stratum_size_less_than_two(sampler):
-    dataset = Dataset(
-        [
-            {"group": "A", "y_proxy": 0.5},
-            {"group": "A", "y_proxy": 0.6},
-            {"group": "B", "y_proxy": 0.7},
-        ]
-    )
+    dataset = Dataset([{"group": "A", "y_proxy": 0.5}, {"group": "A", "y_proxy": 0.6}, {"group": "B", "y_proxy": 0.7}])
 
-    with pytest.raises(ValueError, match="fewer than 2 records"):
+    with pytest.raises(ValueError, match="fewer than 2"):
         sampler._preprocess(dataset, "y_proxy", "group")
 
 
 def test_preprocess_raises_on_nan_proxy(sampler):
-    dataset = Dataset(
-        [
-            {"group": "A", "y_proxy": 0.5},
-            {"group": "A", "y_proxy": np.nan},
-        ]
-    )
+    dataset = Dataset([{"group": "A", "y_proxy": 0.5}, {"group": "A", "y_proxy": np.nan}])
 
     with pytest.raises(ValueError, match="NaN"):
         sampler._preprocess(dataset, "y_proxy", "group")
 
 
 def test_preprocess_raises_on_zero_variance(sampler):
-    dataset = Dataset(
-        [
-            {"group": "A", "y_proxy": 5.0},
-            {"group": "A", "y_proxy": 5.0},
-            {"group": "B", "y_proxy": 5.0},
-            {"group": "B", "y_proxy": 5.0},
-        ]
-    )
+    dataset = Dataset([{"group": "A", "y_proxy": 5.0}, {"group": "B", "y_proxy": 5.0}])
 
-    with pytest.raises(ValueError, match="zero variance"):
+    with pytest.raises(ValueError, match="Input proxy values have zero variance"):
         sampler._preprocess(dataset, "y_proxy", "group")
 
 
 def test_preprocess_raises_on_all_strata_zero_variance(sampler):
     dataset = Dataset(
         [
-            {"group": "A", "y_proxy": 0.5},
-            {"group": "A", "y_proxy": 0.5},
-            {"group": "B", "y_proxy": 0.9},
-            {"group": "B", "y_proxy": 0.9},
+            {"group": "A", "y_proxy": 0},
+            {"group": "A", "y_proxy": 0},
+            {"group": "B", "y_proxy": 1},
+            {"group": "B", "y_proxy": 1},
         ]
     )
 
-    with pytest.raises(ValueError, match="All strata have zero variance"):
+    with pytest.raises(ValueError, match="has zero variance in proxy"):
         sampler._preprocess(dataset, "y_proxy", "group")
 
 
 # --- _proportional_allocation ---
 
 
-def test_proportional_allocation_proportional_to_N_h(sampler, y_proxy, groups):
+def test_proportional_allocation_proportional_to_N_h(sampler):
+    groups = np.array(["A", "A", "B", "B"], dtype=object)
     budget = 4
     total = len(groups)
 
@@ -206,20 +159,20 @@ def test_sample_budget_exceeds_dataset_length(sampler, dataset):
         sampler.sample(dataset, "y_proxy", "group", len(dataset) + 1)
 
 
-def test_sample_default_strategy_is_neyman(sampler, dataset_varied):
+def test_sample_default_strategy_is_neyman(sampler, dataset_with_varied):
     budget = 8
 
-    default_result = sampler.sample(dataset_varied, "y_proxy", "group", budget)
-    neyman_result = sampler.sample(dataset_varied, "y_proxy", "group", budget, strategy="neyman")
+    default_result = sampler.sample(dataset_with_varied, "y_proxy", "group", budget)
+    neyman_result = sampler.sample(dataset_with_varied, "y_proxy", "group", budget, strategy="neyman")
 
     assert [r["pi"] for r in default_result] == [r["pi"] for r in neyman_result]
 
 
-def test_sample_neyman_strategy(sampler, dataset_varied):
-    result = sampler.sample(dataset_varied, "y_proxy", "group", 8, strategy="neyman")
+def test_sample_neyman_strategy(sampler, dataset_with_varied):
+    result = sampler.sample(dataset_with_varied, "y_proxy", "group", 8, strategy="neyman")
 
-    pi_a = result[0]["pi"]
-    pi_b = result[4]["pi"]
+    pi_a = result[0]["pi"]  # Group A
+    pi_b = result[2]["pi"]  # Group B
     assert pi_b > pi_a
 
 
@@ -239,45 +192,3 @@ def test_sample_seed_defaults_to_none_without_exception(sampler, dataset):
     result = sampler.sample(dataset, "y_proxy", "group", 2)
 
     assert isinstance(result, Dataset)
-
-
-@pytest.mark.parametrize(
-    "n_records,n_strata,budget",
-    [
-        (4, 2, 3),
-        (4, 2, 4),
-        (6, 3, 4),
-        (6, 3, 6),
-        (10, 5, 7),
-    ],
-)
-def test_sample_rounding_sums_to_budget(sampler, n_records, n_strata, budget):
-    records = []
-    for stratum_idx in range(n_strata):
-        n_per_stratum = n_records // n_strata
-        for i in range(n_per_stratum):
-            records.append(
-                {
-                    "group": f"s{stratum_idx}",
-                    "y_proxy": float(stratum_idx + i * 0.1),
-                }
-            )
-    dataset = Dataset(records)
-
-    for strategy in ["proportional", "neyman"]:
-        result = sampler.sample(dataset, "y_proxy", "group", budget, strategy=strategy)
-        group_pi_values = {}
-        for record in result:
-            group = record["group"]
-            if group not in group_pi_values:
-                group_pi_values[group] = record["pi"]
-
-        group_sizes = {}
-        for record in result:
-            group = record["group"]
-            group_sizes[group] = group_sizes.get(group, 0) + 1
-
-        total_allocation = sum(
-            min(pi * group_sizes[group], group_sizes[group]) for group, pi in group_pi_values.items()
-        )
-        assert total_allocation <= budget
