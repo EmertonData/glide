@@ -107,9 +107,9 @@ class Dataset(list):
         --------
         >>> from glide.core.dataset import Dataset
         >>> dataset = Dataset([{"y_true": 0}, {"y_true": 1}])
-        >>> dataset["split"] = "train"
+        >>> dataset["group"] = "pilot"
         >>> dataset
-        [{'y_true': 0, 'split': 'train'}, {'y_true': 1, 'split': 'train'}]
+        [{'y_true': 0, 'split': 'pilot'}, {'y_true': 1, 'split': 'pilot'}]
         """
         if isinstance(key, str):
             for record in self:
