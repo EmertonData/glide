@@ -1,3 +1,4 @@
 from glide.samplers.active import ActiveSampler
+from glide.samplers.stratified import StratifiedSampler
 
-__all__ = ["ActiveSampler"]
+__all__ = ["StratifiedSampler", "ActiveSampler"]

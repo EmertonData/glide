@@ -68,8 +68,6 @@ Every PR must satisfy all of the following before merge:
 ## Code Conventions
 
 - Line length: 120 (configured in ruff)
-- NumPy-style docstrings with paper references for all public API
-- Public API docstrings must include an `Examples` section with runnable doctests
 - Method parameters for Dataset field names use `*_field` suffix (e.g., `label_field`, `score_field`)
 
 ### Naming
@@ -99,15 +97,20 @@ Use `typing` module generics — never use PEP 604 / PEP 585 built-in aliases:
 
 Always import from `typing`: `from typing import Dict, List, Optional, Tuple`.
 
-### No Redundancy
+### Type Conversions
 
 Do not use needless type conversions like `float()` or `int()` unless required by the caller or for debugging purposes.
+
+### Docstrings
+
+- NumPy-style docstrings with paper references for all public API
+- Public API docstrings must include an `Examples` section with runnable doctests
+- **No docstrings for test functions or private methods** — test code is self-documenting via clear variable names and assertion structure; private methods are internal only.
 
 ### Documentation
 
 - MkDocs with mkdocstrings; docs must build without warnings
 - Update `CHANGELOG.md` for any user-facing changes (Keep a Changelog format, SemVer)
-- Do not write docstrings for private methods
 - Avoid using and escaping underscores in math mode in jupyter notebooks.
 
 ### No Redundancy
