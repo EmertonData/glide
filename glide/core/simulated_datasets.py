@@ -327,7 +327,8 @@ def generate_binary_dataset_with_oracle_sampling(
     -------
     Dataset
         Dataset with N records, each containing ``"y_true"`` (int), ``"y_proxy"`` (int),
-        and ``"RMSE"`` (float > 0). All y_true values are present (no missing values).
+        and ``"uncertainty"`` (float > 0), where ``"uncertainty"`` is the oracle RMSE.
+        All y_true values are present (no missing values).
 
     Raises
     ------
@@ -444,7 +445,7 @@ def generate_binary_dataset_with_oracle_sampling(
 
     The optimal sampling probability satisfies
     ``RMSE = sqrt(E[(y_proxy - y_true)²]) = sqrt(error_prob(x))``.
-    These values are stored directly as ``RMSE``.
+    These values are stored directly as ``uncertainty``.
     """
     if not (0 < true_mean < 1):
         raise ValueError(f"true_mean must be in (0, 1), got {true_mean}")
@@ -505,10 +506,11 @@ def generate_binary_dataset_with_oracle_sampling(
     y_proxy_arr = samples % 2
 
     # Oracle RMSE: sqrt(P(error | x_i))
-    RMSE = np.sqrt(error_prob_x)
+    uncertainty = np.sqrt(error_prob_x)
 
     records = [
-        {"y_true": int(yt), "y_proxy": int(yp), "RMSE": float(p)} for yt, yp, p in zip(y_true_arr, y_proxy_arr, RMSE)
+        {"y_true": int(yt), "y_proxy": int(yp), "uncertainty": float(p)}
+        for yt, yp, p in zip(y_true_arr, y_proxy_arr, uncertainty)
     ]
     return Dataset(records)
 
