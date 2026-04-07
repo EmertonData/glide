@@ -155,10 +155,8 @@ def test_sample_raises_on_zero_allocation(sampler, dataset):
 
 
 def test_sample_default_strategy_is_neyman(sampler, dataset):
-    budget = 8
-
-    default_result = sampler.sample(dataset, "y_proxy", "group", budget)
-    neyman_result = sampler.sample(dataset, "y_proxy", "group", budget, strategy="neyman")
+    default_result = sampler.sample(dataset, "y_proxy", "group", 8)
+    neyman_result = sampler.sample(dataset, "y_proxy", "group", 8, strategy="neyman")
 
     assert [r["pi"] for r in default_result] == [r["pi"] for r in neyman_result]
 
