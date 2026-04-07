@@ -31,8 +31,8 @@ def dataset() -> Dataset:
 
 def test_preprocess_groups_preserved(sampler, dataset):
     _, groups = sampler._preprocess(dataset, "y_proxy", "group")
-
-    assert np.array_equal(groups, np.array(["A", "A", "A", "A", "B", "B", "B", "B"], dtype=object))
+    expected_groups = np.array(["A", "A", "A", "A", "B", "B", "B", "B"], dtype=object)
+    assert np.array_equal(groups, expected_groups)
 
 
 def test_preprocess_raises_on_empty_dataset(sampler):
@@ -149,6 +149,11 @@ def test_sample_budget_exceeds_dataset_length(sampler, dataset):
         sampler.sample(dataset, "y_proxy", "group", len(dataset) + 1)
 
 
+def test_sample_raises_on_zero_allocation(sampler, dataset):
+    with pytest.raises(ValueError, match="zero allocation"):
+        sampler.sample(dataset, "y_proxy", "group", 2)
+
+
 def test_sample_default_strategy_is_neyman(sampler, dataset):
     budget = 8
 
@@ -161,24 +166,25 @@ def test_sample_default_strategy_is_neyman(sampler, dataset):
 def test_sample_neyman_strategy(sampler, dataset):
     result = sampler.sample(dataset, "y_proxy", "group", 8, strategy="neyman")
 
-    pi_a = result[0]["pi"]  # Group A
-    pi_b = result[4]["pi"]  # Group B (index 4 since 4 A records come first)
-    assert pi_b > pi_a
+    pi_a = result[0]["pi"]
+    pi_b = result[4]["pi"]
+    assert pi_a == pytest.approx(0.25)
+    assert pi_b == pytest.approx(1.0)
 
 
 def test_sample_invalid_strategy_raises(sampler, dataset):
     with pytest.raises(ValueError, match="Unknown strategy"):
-        sampler.sample(dataset, "y_proxy", "group", 2, strategy="unknown")
+        sampler.sample(dataset, "y_proxy", "group", 4, strategy="unknown")
 
 
 def test_sample_is_reproducible(sampler, dataset):
-    result1 = sampler.sample(dataset, "y_proxy", "group", 2, random_seed=42)
-    result2 = sampler.sample(dataset, "y_proxy", "group", 2, random_seed=42)
+    result1 = sampler.sample(dataset, "y_proxy", "group", 4, random_seed=42)
+    result2 = sampler.sample(dataset, "y_proxy", "group", 4, random_seed=42)
 
     np.testing.assert_array_equal(result1["xi"], result2["xi"])
 
 
 def test_sample_seed_defaults_to_none_without_exception(sampler, dataset):
-    result = sampler.sample(dataset, "y_proxy", "group", 2)
+    result = sampler.sample(dataset, "y_proxy", "group", 4)
 
     assert isinstance(result, Dataset)

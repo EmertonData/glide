@@ -246,6 +246,14 @@ class StratifiedSampler:
         else:
             raise ValueError(f"Unknown strategy '{strategy}'. Expected 'proportional' or 'neyman'.")
 
+        # Validate that all strata received non-zero allocation
+        for stratum_id, n_h in allocation.items():
+            if n_h == 0:
+                raise ValueError(
+                    f"Stratum '{stratum_id}' has zero allocation. All strata must receive at least "
+                    f"one annotation slot. Consider increasing the budget or reducing the number of strata."
+                )
+
         rng = np.random.default_rng(random_seed)
 
         result_records = []
