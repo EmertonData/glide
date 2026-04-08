@@ -9,40 +9,53 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 ## [Next release]
 
 ### ✨ Added
-- Added issue templates
+- Issue templates
+- `StratifiedSampler` for optimal per-stratum annotation budget allocation with Neyman and proportional strategies
 - Added overload for the __setitem__ method for Dataset to support `str`
-- Added `ActiveSampler` in `glide/samplers/` for uncertainty-proportional active sampling
-- Added ASI scientific validation notebook
-- Added `StratifiedSampler` for optimal per-stratum annotation budget allocation with Neyman and proportional strategies
-- Added `StratifiedPPIMeanEstimator` for Stratified PPI-based mean estimation
-- Added `generate_stratified_binary_dataset` function for generating synthetic stratified binary-label datasets
-- 
-- Added doctest for `glide.io.to_json`
+- Doctest for `glide.io.to_json`
+
+### 💛 Contributors
+Thank you to everyone who contributed to this release: @gmartinon-ed, @imerad, @mraki-ed
+
 
 ---
 
 ## [0.3.0] – 2026-04-03
 
 ### ✨ Added
-- Added section about Stratified PPI into user guide
-- Added Stratified PPI scientific validation notebook
-- Added `StratifiedPPIMeanEstimator` for Stratified PPI-based mean estimation
-- Added section about ASI into user guide
-- Added ASI scientific validation notebook
-- Added `ActiveSampler` in `glide/samplers/` for uncertainty-proportional active sampling
-- Added `generate_binary_dataset_with_oracle_sampling` function to simulate ASI-like data
-- Added overload for the __getitem__ method for Dataset to support `int`, `slice`, `str`, and `list[str]` keys
+- Section about Stratified PPI into user guide
+- Stratified PPI scientific validation notebook
+- `StratifiedPPIMeanEstimator` for Stratified PPI-based mean estimation
+- Section about ASI into user guide
+- ASI scientific validation notebook
+- `ActiveSampler` in `glide/samplers/` for uncertainty-proportional active sampling
+- `generate_binary_dataset_with_oracle_sampling` function to simulate ASI-like data
+- `generate_stratified_binary_dataset` function for generating synthetic stratified binary-label datasets
+- Overload for the __getitem__ method for Dataset to support `int`, `slice`, `str`, and `list[str]` keys
+
+### 🔄 Changed
+- Raise exception in `PPIMeanEstimator` and `ASIMeanEstimator` when the proxy is constant
+- `generate_binary_dataset` now outputs a tuple of labeled/unlabeled dataset
+- User guide table of contents and structure
+- Getting started section with improved structure
+- PPI tutorial improved readability
+
+### 🐛 Fixed
+- Useless `EstimatorProtocol` removed
+
+### 💛 Contributors
+Thank you to everyone who contributed to this release: @gmartinon-ed, @gherouville-ed, @imerad, @mraki-ed, @awolf-ed, @iben-ed, @msoro-ed
 
 ---
 
 ## [0.2.0] – 2026-03-19
 
 ### ✨ Added
-- Added `ASIMeanEstimator` for Active Statistical Inference-based mean estimation
-- Added `ClassicalMeanEstimator` as a standard baseline estimator
-- Added power-tuning support (`λ`) to `PPIMeanEstimator` for narrower confidence intervals
-- Added `to_json()` method on inference result objects for easy serialisation
-- Added a Quickstart guide to the documentation
+- `ASIMeanEstimator` for Active Statistical Inference-based mean estimation
+- `ClassicalMeanEstimator` as a standard baseline estimator
+- Power-tuning support (`λ`) to `PPIMeanEstimator` for narrower confidence intervals
+- `to_json()` method on inference result objects for easy serialisation
+- Quickstart guide to the documentation
 
 ### 🔄 Changed
 - Refactored `InferenceResult` into dedicated result objects with clearer structure
@@ -52,7 +65,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - Fixed broken badge links in the README
 
 ### 💛 Contributors
-Thank you to everyone who contributed to this release: @gmartinon-ed, @gherouville-ed, @imerad, @mraki-ed, @vwoelffel-ed, @awolf-ed, @iben-ed, @msoro-ed
+Thank you to everyone who contributed to this release: @gmartinon-ed, @gherouville-ed, @imerad, @mraki-ed, @vwoelffel-ed
 
 ---
 
