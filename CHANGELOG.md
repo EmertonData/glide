@@ -9,6 +9,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 ## [Next release]
 
 ### ✨ Added
+- Code of conduct
 - Tutorial for ASI
 - Issue templates
 - `StratifiedSampler` for optimal per-stratum annotation budget allocation with Neyman and proportional strategies
