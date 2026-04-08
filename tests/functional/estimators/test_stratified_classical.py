@@ -25,12 +25,11 @@ def test_two_equal_strata_matches_classical():
     """
     n_labeled = 4
 
-    labeled_records, _ = generate_gaussian_dataset(n_labeled, 0, random_seed=0)
-    single_dataset = Dataset(labeled_records)
+    single_labeled_dataset, _ = generate_gaussian_dataset(n_labeled, 0, random_seed=0)
 
-    classical_single = ClassicalMeanEstimator().estimate(single_dataset, y_field="y_true")
+    classical_single = ClassicalMeanEstimator().estimate(single_labeled_dataset, y_field="y_true")
 
-    y_values = np.array([record["y_true"] for record in single_dataset])
+    y_values = single_labeled_dataset["y_true"]
     y = np.concatenate([y_values, y_values])
     groups = np.array(["A"] * len(y_values) + ["B"] * len(y_values))
 
@@ -57,13 +56,13 @@ def test_stratified_classical_narrower_ci_with_heterogeneous_strata():
     labeled_a, _ = generate_gaussian_dataset(n_labeled, 0, true_mean=0.0, true_std=0.1, random_seed=random_seed)
     labeled_b, _ = generate_gaussian_dataset(n_labeled, 0, true_mean=1.0, true_std=0.1, random_seed=random_seed)
 
-    y_a = np.array([r["y_true"] for r in labeled_a])
-    y_b = np.array([r["y_true"] for r in labeled_b])
+    y_a, y_b = labeled_a["y_true"], labeled_b["y_true"]
 
     y_stratified = np.concatenate([y_a, y_b])
     groups = np.array(["A"] * len(y_a) + ["B"] * len(y_b))
+    dataset_obj = Dataset([{"y": val} for val in y_stratified])
 
-    classical_result = ClassicalMeanEstimator().estimate(Dataset([{"y": val} for val in y_stratified]), y_field="y")
+    classical_result = ClassicalMeanEstimator().estimate(dataset_obj, y_field="y")
     stratified_result = StratifiedClassicalMeanEstimator().estimate(y_stratified, groups)
 
     # Stratified CI must be strictly narrower
