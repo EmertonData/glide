@@ -28,9 +28,9 @@ def test_two_equal_strata_matches_classical():
 
     classical_single = ClassicalMeanEstimator().estimate(single_labeled_dataset, y_field="y_true")
 
-    y_single = np.array(single_labeled_dataset["y_true"])
+    y_single = single_labeled_dataset["y_true"]
     y = np.concatenate([y_single, y_single])
-    groups = np.tile(["A", "B"], (n_labeled, 1)).flatten(order="F")
+    groups = np.repeat(["A", "B"], n_labeled)
 
     result = StratifiedClassicalMeanEstimator().estimate(y, groups)
 
@@ -57,7 +57,7 @@ def test_stratified_classical_narrower_ci_with_heterogeneous_strata():
 
     y_a, y_b = np.array(labeled_a["y_true"]), np.array(labeled_b["y_true"])
     y = np.concatenate([y_a, y_b])
-    groups = np.tile(["A", "B"], (n_labeled, 1)).flatten(order="F")
+    groups = np.repeat(["A", "B"], n_labeled)
     pooled_dataset = Dataset([{"y": v} for v in y])
 
     classical_result = ClassicalMeanEstimator().estimate(pooled_dataset, y_field="y")
