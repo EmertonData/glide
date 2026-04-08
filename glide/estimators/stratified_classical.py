@@ -65,6 +65,8 @@ class StratifiedClassicalMeanEstimator:
     ) -> ClassicalMeanInferenceResult:
         """Estimate the population mean using stratified classical inference.
 
+        Splits the observations by ``groups``, computes a classical sample-mean
+        estimate within each stratum, and combines them with
         Splits the data by unique values in ``groups``, computes a classical
         sample-mean estimate within each stratum, and combines them with
         population-proportional weights:
@@ -76,6 +78,11 @@ class StratifiedClassicalMeanEstimator:
 
         Parameters
         ----------
+        y : NDArray
+            1-D array of observed values, one entry per record.
+        groups : NDArray
+            1-D array of group identifiers, parallel to ``y``. Unique values
+            define the strata.
         y : NDArray
             Array of observations.
         groups : NDArray

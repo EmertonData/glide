@@ -1,5 +1,6 @@
 import numpy as np
 import pytest
+from numpy.typing import NDArray
 
 from glide.core.mean_inference_result import ClassicalMeanInferenceResult
 from glide.estimators.stratified_classical import StratifiedClassicalMeanEstimator
@@ -8,8 +9,8 @@ from glide.estimators.stratified_classical import StratifiedClassicalMeanEstimat
 
 
 @pytest.fixture
-def y() -> np.ndarray:
-    """Array of observations for two strata (A and B) with two records each.
+def y() -> NDArray:
+    """Observations for two strata (A and B) with two records each.
 
     Stratum A: y=[1.0, 3.0]  → mean=2.0, std_mean=1.0
     Stratum B: y=[5.0, 7.0]  → mean=6.0, std_mean=1.0
@@ -19,7 +20,7 @@ def y() -> np.ndarray:
 
 
 @pytest.fixture
-def groups() -> np.ndarray:
+def groups() -> NDArray:
     return np.array(["A", "A", "B", "B"])
 
 
@@ -36,8 +37,8 @@ def test_get_strata_splits_correctly(estimator, y, groups):
     assert set(strata.keys()) == {"A", "B"}
     assert len(strata["A"]) == 2
     assert len(strata["B"]) == 2
-    assert np.array_equal(strata["A"], np.array([1.0, 3.0]))
-    assert np.array_equal(strata["B"], np.array([5.0, 7.0]))
+    np.testing.assert_array_equal(strata["A"], [1.0, 3.0])
+    np.testing.assert_array_equal(strata["B"], [5.0, 7.0])
 
 
 # --- estimate ---

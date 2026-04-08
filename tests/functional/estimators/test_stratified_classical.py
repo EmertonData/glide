@@ -28,9 +28,9 @@ def test_two_equal_strata_matches_classical():
 
     classical_single = ClassicalMeanEstimator().estimate(single_labeled_dataset, y_field="y_true")
 
-    y_values = single_labeled_dataset["y_true"]
-    y = np.concatenate([y_values, y_values])
-    groups = np.array(["A"] * len(y_values) + ["B"] * len(y_values))
+    y_single = np.array(single_labeled_dataset["y_true"])
+    y = np.concatenate([y_single, y_single])
+    groups = np.array(["A"] * n_labeled + ["B"] * n_labeled)
 
     result = StratifiedClassicalMeanEstimator().estimate(y, groups)
 
