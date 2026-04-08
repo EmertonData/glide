@@ -79,9 +79,9 @@ If you use Glide in your research, please cite:
 |------|-------|-------|------|----------------|
 | 2023 | [Prediction-powered inference](https://www.science.org/doi/10.1126/science.adi6000) |Science|[Link](https://github.com/aangelopoulos/ppi_py/)| estimators.PPIMeanEstimator (with `power_tuning=False`) |
 | 2023 | [PPI++: Efficient Prediction-Powered Inference](https://arxiv.org/abs/2311.01453) |Preprint|[Link](https://github.com/aangelopoulos/ppi_py/tree/ppi++)| estimators.PPIMeanEstimator |
-| 2024 | [Active Statistical Inference](https://dl.acm.org/doi/10.5555/3692070.3694680) |ICML'24|[Link](https://github.com/tijana-zrnic/active-inference)| estimators.ASIMeanEstimator |
 | 2024 | [Stratified Prediction-Powered Inference for Hybrid Language Model Evaluation](https://proceedings.neurips.cc/paper_files/paper/2024/hash/c9fcd02e6445c7dfbad6986abee53d0d-Abstract-Conference.html) |NeurIPS'24|NA| estimators.StratifiedPPIMeanEstimator |
-| 2024 | [A framework for efficient model evaluation through stratification, sampling, and estimation](https://link.springer.com/chapter/10.1007/978-3-031-73223-2_9) |ECCV'24|[Link](https://github.com/amazon-science/ssepy)| estimators.StratifiedPPIMeanEstimator |
+| 2024 | [A framework for efficient model evaluation through stratification, sampling, and estimation](https://link.springer.com/chapter/10.1007/978-3-031-73223-2_9) |ECCV'24|[Link](https://github.com/amazon-science/ssepy)| samplers.StratifiedSampler, estimators.StratifiedPPIMeanEstimator |
+| 2024 | [Active Statistical Inference](https://dl.acm.org/doi/10.5555/3692070.3694680) |ICML'24|[Link](https://github.com/tijana-zrnic/active-inference)| estimators.ASIMeanEstimator |
 | 2025 | [Can Unconfident LLM Annotations Be Used for Confident Conclusions?](https://aclanthology.org/2025.naacl-long.179/) |NAACL'25|[Link](https://github.com/kristinagligoric/confidence-driven-inference)| estimators.ASIMeanEstimator |
 
 
