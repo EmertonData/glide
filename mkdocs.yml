@@ -45,11 +45,13 @@ nav:
     - ASI: tutorials/asi.ipynb
   - Deep Dive:
     - PPI Validation: deep_dive/ppi_validation.ipynb
+    - Stratified PPI Validation: deep_dive/stratified_ppi_validation.ipynb
     - ASI Validation: deep_dive/asi_validation.ipynb
   - Contributing: contributing.md
   - API Reference:
     - Core:
       - Datasets: api/core/datasets.md
       - Mean Inference Results: api/core/mean_inference_results.md
+    - Samplers: api/samplers.md
     - Estimators: api/estimators.md
     - I/O: api/io.md

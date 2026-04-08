@@ -1,6 +1,6 @@
 [project]
 name = "glide-py"
-version = "0.2.0"
+version = "0.3.0"
 authors = [
   {name = "Grégoire Martinon", email = "gregoire.martinon@emerton-data.com"},
   {name = "Ibrahim Merad", email = "ibrahim.merad@kaukana-ventures.com"},
@@ -77,9 +77,6 @@ respect-type-ignore-comments = true
 
 [tool.pytest.ini_options]
 addopts = "--import-mode=importlib --doctest-modules"
-
-[tool.coverage.run]
-omit = ["glide/__init__.py"]
 
 [[tool.uv.index]]
 name = "testpypi"

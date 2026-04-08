@@ -52,7 +52,7 @@ In PPI, every record carries two values:
 
 | Field | Present for | Description |
 |---|---|---|
-| $\tilde{Y}_i$ | All $N$ records | Proxy label |
+| $\tilde{Y}_i$ | All $n+N$ records | Proxy label |
 | $Y_j$ | Labeled records only ($n < N$) | Ground-truth label |
 
 ### Mean estimation
@@ -103,6 +103,55 @@ where:
 - $n$ and $N$ are the numbers of labeled and unlabeled items respectively.
 
 When the proxy is informative (high covariance with human labels), $\hat{\lambda}$ is close to 1 and the CI is narrower than standard PPI; when the proxy is uninformative, $\hat{\lambda}$ shrinks toward 0, down-weighting it and falling back to the classical human-only mean estimate. PPI++ uses optimal $\hat{\lambda}$ in GLIDE by default. This ensures the resulting estimate always has smaller variance than the classical estimate.
+
+---
+
+## Stratified PPI++
+
+Standard PPI++ assumes that labeled and unlabeled samples are drawn uniformly from a single population. In practice, the dataset is often naturally partitioned into **strata** — for example, by language, domain, or question type — and the proxy model may behave very differently across these strata. **Stratified PPI++** [[5](#ref-5), [6](#ref-6)] exploits this structure: rather than applying one global estimate, it runs PPI++ independently within each stratum and combines the results with population-proportional weights.
+
+Let $K$ denote the number of strata. Stratum $k$ contains $n_k+N_k$ total records (labeled + unlabeled), of which $n_k$ are labeled. We let $n = \sum_k n_k$ and $N = \sum_k N_k$ be the total numbers of labeled and unlabeled samples respectively. We assume that $n_k/n \approx N_k/N$ for all $k$ and compute the **population weight** of stratum $k$ as:
+
+$$w_k = \frac{n_k+N_k}{n+N}$$
+
+In Stratified PPI++, every record carries the same fields as PPI++ — a proxy label $\tilde{Y}_i$ and optionally a ground-truth label $Y_j$ — plus a **stratum identifier** indicating which stratum the record belongs to.
+
+| Field | Present for | Description |
+|---|---|---|
+| $\tilde{Y}_i$ | All $n+N$ records | Proxy label |
+| $Y_j$ | Labeled records only ($n < N$) | Ground-truth label |
+| $g_j$ | All $n+N$ records | Stratum identifier |
+
+
+### Mean estimation
+
+The Stratified PPI++ point estimate is a weighted average of the per-stratum PPI++ estimates:
+
+$$\hat{\theta}_{\text{strat}} = \sum_{k=1}^{K} w_k \cdot \hat{\theta}_k(\lambda_k)$$
+
+where $\hat{\theta}_k(\lambda_k)$ is exactly the PPI++ mean estimator applied to the data in stratum $k$ with its own weight $\lambda_k$. The weights $w_k$ are proportional to stratum size, so larger strata contribute more to the final estimate. Since each $\hat{\theta}_k(\lambda_k)$ is an unbiased estimator for the stratum-$k$ mean and the weights sum to one, $\hat{\theta}_{\text{strat}}$ is an unbiased estimator for the population mean $\theta^*$.
+
+### Variance and confidence intervals
+
+Keep in mind that Stratified PPI++ is designed for a small number of large strata. The theoretical guarantees assume that the number of strata $K$ stays fixed as sample size grows and that each stratum contains a non-vanishing share of the data. In practice, many small strata mean that per-stratum statistical estimates become unreliable, and the CLT approximation underlying the confidence interval may break down. When in doubt, prefer a coarser stratification with fewer, larger strata.
+
+The asymptotic variance of $\hat{\theta}_{\text{strat}}$ is the sum of the per-stratum PPI++ variances, each scaled by its squared population weight:
+
+$$\sigma^2_{\text{strat}} = \sum_{k=1}^{K} w_k^2 \cdot \sigma^2_k(\lambda_k)$$
+
+where $\sigma^2_k(\lambda_k)$ is the PPI++ variance for stratum $k$. The reported standard deviation $\sigma_{\text{strat}}$ serves to construct a confidence interval at level $1 - \alpha$ via the CLT exactly as in PPI++.
+
+The key benefit over global PPI++ becomes apparent when strata differ substantially in proxy quality. Strata where the proxy is accurate contribute a small $\sigma^2_k(\lambda_k)$, while strata where it is poor contribute a larger one — but each contribution is isolated to its own stratum instead of polluting the global estimate.
+
+### Power-tuning
+
+Each stratum $k$ receives its **own optimal weight** $\hat{\lambda}_k$, computed with the same closed-form formula as PPI++, restricted to the $n_k$ labeled and $N_k$ unlabeled records within that stratum:
+
+$$\hat{\lambda}_k = \frac{\widehat{\text{Cov}}_{n_k}(Y_k,\, \tilde{Y}_k)}{\left(1 + \tfrac{n_k}{N_k}\right)\widehat{\text{Var}}_{n_k + N_k}(\tilde{Y}_k)}$$
+
+This is the same formula as PPI++ power-tuning, applied stratum by stratum. In strata where the proxy is informative, $\hat{\lambda}_k$ is close to 1 and the stratum estimate benefits from the proxy signal. In strata where the proxy is weak or unreliable, $\hat{\lambda}_k$ shrinks toward 0, falling back to the classical human-only mean for that stratum — without affecting any other stratum.
+
+Setting `power_tuning=False` forces $\lambda_k = 1.0$ for all strata, recovering stratified PPI without the variance-minimising tuning.
 
 ---
 
@@ -185,3 +234,7 @@ When the proxy is informative, $\hat{\lambda}$ is large and the IPW-corrected la
 <a id="ref-3"></a>[3] <a id="ref-1-link" href="https://arxiv.org/abs/2403.03208">Zrnic, Tijana, and Emmanuel Candès. "Active statistical inference." *arXiv preprint arXiv:2403.03208* (2024)</a>.
 
 <a id="ref-4"></a>[4] <a id="ref-1-link" href="https://aclanthology.org/2025.naacl-long.179.pdf">Gligorić, Kristina, Tijana Zrnic, Cinoo Lee, Emmanuel Candes, and Dan Jurafsky. "Can unconfident llm annotations be used for confident conclusions?." NAACL 2025: Human Language Technologies (Volume 1: Long Papers), pp. 3514-3533. 2025.</a>.
+
+<a id="ref-5"></a>[5] <a id="ref-5-link" href="https://arxiv.org/abs/2406.04291">Fisch, Adam, Joshua Maynez, R. Hofer, Bhuwan Dhingra, Amir Globerson, and William W. Cohen. "Stratified prediction-powered inference for effective hybrid evaluation of language models." *Advances in Neural Information Processing Systems* 37 (2024): 111489–111514.</a>.
+
+<a id="ref-6"></a>[6] <a id="ref-6-link" href="https://arxiv.org/abs/2406.07320">Fogliato, Riccardo, Pratik Patil, Mathew Monfort, and Pietro Perona. "A framework for efficient model evaluation through stratification, sampling, and estimation." *European Conference on Computer Vision*, pp. 140–158. Springer Nature Switzerland, 2024.</a>.

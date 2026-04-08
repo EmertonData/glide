@@ -1,4 +1,4 @@
-from typing import List, Optional, Tuple
+from typing import List, Optional, Tuple, Union
 
 import numpy as np
 
@@ -11,7 +11,7 @@ def generate_binary_dataset(
     true_mean: float = 0.7,
     proxy_mean: float = 0.6,
     correlation: float = 0.8,
-    random_seed: Optional[int] = None,
+    random_seed: Optional[Union[int, np.random.SeedSequence]] = None,
 ) -> Tuple[Dataset, Dataset]:
     """Generate a synthetic binary-label dataset for evaluation.
 
@@ -27,7 +27,7 @@ def generate_binary_dataset(
         Expected mean value of the proxy labels.
     correlation : float
         Pearson correlation between true and proxy on the labeled subset.
-    random_seed : int, optional
+    random_seed : int or np.random.SeedSequence, optional
         Seed for reproducibility.
 
     Returns
@@ -262,12 +262,10 @@ def generate_stratified_binary_dataset(
     all_labeled_records = []
     all_unlabeled_records = []
 
-    for stratum_id in range(num_strata):
-        # Determine seed for this stratum if random_seed is provided
-        stratum_seed = None
-        if random_seed is not None:
-            stratum_seed = random_seed + stratum_id
+    seed_sequence = np.random.SeedSequence(random_seed)
+    seeds = seed_sequence.spawn(num_strata)
 
+    for stratum_id in range(num_strata):
         # Generate data for this stratum
         labeled, unlabeled = generate_binary_dataset(
             n=n[stratum_id],
@@ -275,17 +273,15 @@ def generate_stratified_binary_dataset(
             true_mean=true_mean[stratum_id],
             proxy_mean=proxy_mean[stratum_id],
             correlation=correlation[stratum_id],
-            random_seed=stratum_seed,
+            random_seed=seeds[stratum_id],
         )
 
         # Add stratum_id to all records
-        for record in labeled:
-            record["stratum_id"] = stratum_id
-            all_labeled_records.append(record)
+        labeled["stratum_id"] = stratum_id
+        all_labeled_records.extend(labeled)
 
-        for record in unlabeled.records:
-            record["stratum_id"] = stratum_id
-            all_unlabeled_records.append(record)
+        unlabeled["stratum_id"] = stratum_id
+        all_unlabeled_records.extend(unlabeled)
 
     return Dataset(all_labeled_records), Dataset(all_unlabeled_records)
 
@@ -327,7 +323,8 @@ def generate_binary_dataset_with_oracle_sampling(
     -------
     Dataset
         Dataset with N records, each containing ``"y_true"`` (int), ``"y_proxy"`` (int),
-        and ``"RMSE"`` (float > 0). All y_true values are present (no missing values).
+        and ``"uncertainty"`` (float > 0), where ``"uncertainty"`` is the oracle RMSE.
+        All y_true values are present (no missing values).
 
     Raises
     ------
@@ -444,7 +441,7 @@ def generate_binary_dataset_with_oracle_sampling(
 
     The optimal sampling probability satisfies
     ``RMSE = sqrt(E[(y_proxy - y_true)²]) = sqrt(error_prob(x))``.
-    These values are stored directly as ``RMSE``.
+    These values are stored directly as ``uncertainty``.
     """
     if not (0 < true_mean < 1):
         raise ValueError(f"true_mean must be in (0, 1), got {true_mean}")
@@ -505,10 +502,11 @@ def generate_binary_dataset_with_oracle_sampling(
     y_proxy_arr = samples % 2
 
     # Oracle RMSE: sqrt(P(error | x_i))
-    RMSE = np.sqrt(error_prob_x)
+    uncertainty = np.sqrt(error_prob_x)
 
     records = [
-        {"y_true": int(yt), "y_proxy": int(yp), "RMSE": float(p)} for yt, yp, p in zip(y_true_arr, y_proxy_arr, RMSE)
+        {"y_true": int(yt), "y_proxy": int(yp), "uncertainty": float(p)}
+        for yt, yp, p in zip(y_true_arr, y_proxy_arr, uncertainty)
     ]
     return Dataset(records)
 

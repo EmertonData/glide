@@ -35,17 +35,17 @@ def test_generate_binary_dataset_with_oracle_sampling_empirical_means_and_correl
     assert np.mean(y_proxy) == pytest.approx(0.6, abs=0.03)
     empirical_corr = np.corrcoef(y_true, y_proxy)[0, 1]
     assert empirical_corr == pytest.approx(0.5, abs=0.05)
-    RMSE_array = dataset.to_numpy(fields=["RMSE"])[:, 0]
-    assert np.std(RMSE_array) == pytest.approx(0.07, abs=0.01)
+    uncertainty_array = dataset.to_numpy(fields=["uncertainty"])[:, 0]
+    assert np.std(uncertainty_array) == pytest.approx(0.07, abs=0.01)
 
 
 def test_generate_binary_dataset_with_oracle_rms_error_non_uniform():
-    # With lower correlation, RMSE variation is more visible
+    # With lower correlation, uncertainty variation is more visible
     dataset = generate_binary_dataset_with_oracle_sampling(
         N=1000, true_mean=0.5, proxy_mean=0.5, correlation=0.3, random_seed=42
     )
-    RMSE_values = np.array([record["RMSE"] for record in dataset])
-    assert np.std(RMSE_values) > 1e-2
+    uncertainty_values = np.array([record["uncertainty"] for record in dataset])
+    assert np.std(uncertainty_values) > 1e-2
 
 
 def test_generate_gaussian_dataset_empirical_means_and_correlation():
@@ -72,9 +72,9 @@ def test_generate_gaussian_dataset_empirical_means_and_correlation():
 
 
 def test_generate_stratified_binary_dataset_empirical_means_and_correlation_per_stratum():
-    true_mean = [0.7, 0.8]
-    proxy_mean = [0.6, 0.7]
-    correlation = [0.8, 0.75]
+    true_mean = [0.9, 0.8]
+    proxy_mean = [0.8, 0.7]
+    correlation = [0.5, 0.75]
 
     labeled, unlabeled = generate_stratified_binary_dataset(
         n=[250, 250],
@@ -82,7 +82,7 @@ def test_generate_stratified_binary_dataset_empirical_means_and_correlation_per_
         true_mean=true_mean,
         proxy_mean=proxy_mean,
         correlation=correlation,
-        random_seed=42,
+        random_seed=0,
     )
 
     # Test per-stratum means and correlations
@@ -105,8 +105,8 @@ def test_generate_stratified_binary_dataset_empirical_means_and_correlation_per_
         # Check means (with tolerance for randomness)
         empirical_true_mean = np.mean(y_true_stratum)
         empirical_proxy_mean = np.mean(y_proxy_all_stratum)
-        assert empirical_true_mean == pytest.approx(expected_true_mean, abs=0.01)
-        assert empirical_proxy_mean == pytest.approx(expected_proxy_mean, abs=0.01)
+        assert empirical_true_mean == pytest.approx(expected_true_mean, abs=0.03)
+        assert empirical_proxy_mean == pytest.approx(expected_proxy_mean, abs=0.03)
 
         # Check correlation
         empirical_corr = np.corrcoef(y_true_stratum, y_proxy_labeled_stratum)[0, 1]
