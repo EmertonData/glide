@@ -53,10 +53,10 @@ def test_generate_binary_dataset_with_oracle_sampling_structure_and_counts():
     for record in dataset:
         assert "y_true" in record
         assert "y_proxy" in record
-        assert "RMSE" in record
+        assert "uncertainty" in record
         assert record["y_true"] in (0, 1)
         assert record["y_proxy"] in (0, 1)
-        assert record["RMSE"] > 0
+        assert record["uncertainty"] > 0
 
 
 def test_generate_binary_dataset_with_oracle_sampling_invalid_true_mean_raises():
