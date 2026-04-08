@@ -13,15 +13,14 @@ class StratifiedClassicalMeanEstimator:
     Extends mean estimation as in `ClassicalMeanEstimator` to datasets partitioned
     into strata (e.g. by language, domain, or data source). A per-stratum sample
     mean and standard error are computed independently, then combined with
-    population-proportional weights:
+    population-proportional weights.
 
-        theta = sum_k  w_k * theta_k
-        sigma2 = sum_k  w_k^2 * sigma2_k
+    This yields narrower confidence intervals than a flat classical estimate
+    whenever strata differ in mean or variance, because variance is reduced by
+    stratification.
 
-    where ``w_k = n_k / n`` is the fraction of records in stratum *k*.
-
-    It is assumed that ``w_k`` reflects the true weight of stratum *k* for all
-    *k*.
+    All per-stratum computations are delegated to an internal
+    :class:`ClassicalMeanEstimator` instance — no formulas are duplicated.
 
     Examples
     --------
@@ -65,7 +64,7 @@ class StratifiedClassicalMeanEstimator:
     ) -> ClassicalMeanInferenceResult:
         """Estimate the population mean using stratified classical inference.
 
-        Splits the observations by ``groups``, computes a classical sample-mean
+        Splits observations by ``groups``, computes a classical sample-mean
         estimate within each stratum, and combines them with
         Splits the data by unique values in ``groups``, computes a classical
         sample-mean estimate within each stratum, and combines them with
@@ -75,6 +74,9 @@ class StratifiedClassicalMeanEstimator:
             sigma2 = sum_k  w_k^2 * sigma2_k
 
         where ``w_k = n_k / n`` is the fraction of records in stratum *k*.
+
+        It is assumed that ``w_k`` reflects the true weight of stratum *k* for
+        all *k*.
 
         Parameters
         ----------

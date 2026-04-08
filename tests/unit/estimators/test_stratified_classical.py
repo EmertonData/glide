@@ -60,15 +60,15 @@ def test_estimate_metadata(estimator, y, groups):
     assert result.n == 4
 
 
-def test_estimate_known_values(estimator, y, groups):
-    result = estimator.estimate(y, groups, confidence_level=0.95)
+def test_estimate_custom_confidence_level(estimator, y, groups):
+    result = estimator.estimate(y, groups, confidence_level=0.85)
 
     expected_mean = 4.0
     expected_std = np.sqrt(0.5)
-    expected_lower = 2.614
-    expected_upper = 5.386
+    expected_lower = 2.982
+    expected_upper = 5.018
 
-    assert result.confidence_interval.confidence_level == 0.95
+    assert result.confidence_interval.confidence_level == 0.85
     assert result.confidence_interval.mean == pytest.approx(expected_mean)
     assert result.std == pytest.approx(expected_std)
     assert result.confidence_interval.lower_bound == pytest.approx(expected_lower, abs=0.001)
