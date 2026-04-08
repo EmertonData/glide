@@ -38,6 +38,16 @@ This installs the main package, test dependencies, and documentation dependencie
 make tests
 ```
 
+**4. Install the git pre-commit hooks:**
+
+GLIDE uses [prek](https://github.com/rec/prek) (a lightweight pre-commit hook runner) configured in `prek.toml`. The hooks run automatically on every `git commit` and enforce formatting, type checking, and notebook output stripping.
+
+Install the hooks once after cloning:
+
+```bash
+uv run prek install
+```
+
 ---
 
 ## Architectural overview
