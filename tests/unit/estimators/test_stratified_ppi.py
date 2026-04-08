@@ -38,6 +38,19 @@ def estimator() -> StratifiedPPIMeanEstimator:
 # --- _get_strata ---
 
 
+def test_preprocess_raises_on_nan_proxy(estimator):
+    dataset = Dataset(
+        [
+            {"y_true": 1.0, "y_proxy": float("nan"), "group": "A"},
+            {"y_true": 2.0, "y_proxy": 2.2, "group": "A"},
+            {"y_proxy": 1.5, "group": "A"},
+            {"y_proxy": 1.8, "group": "A"},
+        ]
+    )
+    with pytest.raises(ValueError, match="Input proxy values contain NaN"):
+        estimator._preprocess(dataset, "y_true", "y_proxy", "group")
+
+
 def test_estimate_raises_when_stratum_has_too_few_labeled(estimator):
     # Drop the second labeled sample in stratum A (line 45 of the doctest), leaving only 1
     records_insufficient_groups = [
@@ -58,6 +71,17 @@ def test_get_strata_splits_correctly(estimator, dataset):
     assert len(strata["B"]) == 4
     assert all(r["group"] == "A" for r in strata["A"])
     assert all(r["group"] == "B" for r in strata["B"])
+
+
+# --- _compute_lambda ---
+
+
+def test_compute_lambda_returns_one_when_power_tuning_false(estimator):
+    y_true = np.array([5.0, 6.0])
+    y_proxy_labeled = np.array([4.9, 6.1])
+    y_proxy_unlabeled = np.array([5.2, 6.1])
+    result = estimator._compute_lambda(y_true, y_proxy_labeled, y_proxy_unlabeled, power_tuning=False)
+    assert result == 1.0
 
 
 # --- estimate ---
