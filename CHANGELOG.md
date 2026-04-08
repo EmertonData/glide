@@ -13,6 +13,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - `StratifiedSampler` for optimal per-stratum annotation budget allocation with Neyman and proportional strategies
 - Added overload for the __setitem__ method for Dataset to support `str`
 - Doctest for `glide.io.to_json`
+  
+### 🔄 Changed
+- Image in the user guide explaining the control sample
 
 ### 💛 Contributors
 Thank you to everyone who contributed to this release: @gmartinon-ed, @imerad, @mraki-ed
