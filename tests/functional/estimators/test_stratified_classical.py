@@ -55,12 +55,11 @@ def test_stratified_classical_narrower_ci_with_heterogeneous_strata():
     labeled_a, _ = generate_gaussian_dataset(n_labeled, 0, true_mean=0.0, true_std=0.1, random_seed=random_seed)
     labeled_b, _ = generate_gaussian_dataset(n_labeled, 0, true_mean=1.0, true_std=0.1, random_seed=random_seed)
 
-    y_a = np.array(labeled_a["y_true"])
-    y_b = np.array(labeled_b["y_true"])
+    y_a, y_b = np.array(labeled_a["y_true"]), np.array(labeled_b["y_true"])
     y = np.concatenate([y_a, y_b])
     groups = np.tile(["A", "B"], (n_labeled, 1)).flatten(order="F")
-
     pooled_dataset = Dataset([{"y": v} for v in y])
+
     classical_result = ClassicalMeanEstimator().estimate(pooled_dataset, y_field="y")
     stratified_result = StratifiedClassicalMeanEstimator().estimate(y, groups)
 

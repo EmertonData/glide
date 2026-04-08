@@ -15,13 +15,6 @@ class StratifiedClassicalMeanEstimator:
     mean and standard error are computed independently, then combined with
     population-proportional weights.
 
-    This yields narrower confidence intervals than a flat classical estimate
-    whenever strata differ in mean or variance, because variance is reduced by
-    stratification.
-
-    All per-stratum computations are delegated to an internal
-    :class:`ClassicalMeanEstimator` instance — no formulas are duplicated.
-
     Examples
     --------
     >>> import numpy as np
@@ -66,8 +59,6 @@ class StratifiedClassicalMeanEstimator:
 
         Splits observations by ``groups``, computes a classical sample-mean
         estimate within each stratum, and combines them with
-        Splits the data by unique values in ``groups``, computes a classical
-        sample-mean estimate within each stratum, and combines them with
         population-proportional weights:
 
             theta = sum_k  w_k * theta_k
@@ -80,11 +71,6 @@ class StratifiedClassicalMeanEstimator:
 
         Parameters
         ----------
-        y : NDArray
-            1-D array of observed values, one entry per record.
-        groups : NDArray
-            1-D array of group identifiers, parallel to ``y``. Unique values
-            define the strata.
         y : NDArray
             Array of observations.
         groups : NDArray
