@@ -19,6 +19,7 @@ site/
 .env
 
 # Cache files
+.cache
 .ruff_cache
 .mypy_cache
 .pytest_cache

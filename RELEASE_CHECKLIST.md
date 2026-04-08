@@ -25,4 +25,5 @@
         - `uv pip install glide-py` (you might need to run `uv cache clean` first).
         - import glide and verify version: `python -c "import glide; print(glide.__version__)"`
 - [ ] Create new release on GitHub for this tag
+- [ ] Copy-paste the relevant `CHANGELOG.md` section in the body of the release
 
