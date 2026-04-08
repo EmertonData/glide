@@ -93,15 +93,15 @@ def test_estimate_custom_confidence_level(estimator, dataset):
         y_true_field="y_true",
         y_proxy_field="y_proxy",
         groups_field="group",
-        confidence_level=0.95,
+        confidence_level=0.85,
     )
 
     expected_mean = 5.618
     expected_std = 0.250
-    expected_lower = 5.13
-    expected_upper = 6.11
+    expected_lower = 5.257
+    expected_upper = 5.978
 
-    assert result.confidence_interval.confidence_level == 0.95
+    assert result.confidence_interval.confidence_level == 0.85
     assert result.confidence_interval.mean == pytest.approx(expected_mean, abs=0.01)
     assert result.std == pytest.approx(expected_std, abs=0.01)
     assert result.confidence_interval.lower_bound == pytest.approx(expected_lower, abs=0.01)

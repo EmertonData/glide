@@ -111,7 +111,7 @@ class StratifiedPPIMeanEstimator:
 
         Splits the dataset by ``groups_field``, computes a power-tuned PPI++
         estimate within each stratum, and combines them with
-        population-proportional weights::
+        population-proportional weights:
 
             theta = sum_k  w_k * theta_k(lambda_k)
             sigma2 = sum_k  w_k^2 * sigma2_k(lambda_k)
