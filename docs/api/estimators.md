@@ -6,6 +6,12 @@
     options:
       heading_level: 3
 
+## StratifiedClassicalMeanEstimator
+
+::: glide.estimators.stratified_classical.StratifiedClassicalMeanEstimator
+    options:
+      heading_level: 3
+
 ## PPIMeanEstimator
 
 ::: glide.estimators.ppi.PPIMeanEstimator
