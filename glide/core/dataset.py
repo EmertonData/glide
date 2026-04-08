@@ -109,7 +109,7 @@ class Dataset(list):
         >>> dataset = Dataset([{"y_true": 0}, {"y_true": 1}])
         >>> dataset["group"] = "pilot"
         >>> dataset
-        [{'y_true': 0, 'split': 'pilot'}, {'y_true': 1, 'split': 'pilot'}]
+        [{'y_true': 0, 'group': 'pilot'}, {'y_true': 1, 'group': 'pilot'}]
         """
         if isinstance(key, str):
             for record in self:
