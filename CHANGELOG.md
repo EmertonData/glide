@@ -9,6 +9,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 ## [Next release]
 
 ### ✨ Added
+<<<<<<< docs/stratified-scenarise
+- Stratified PPI tutorial notebook
+- Added ASI scientific validation notebook
+- Added `StratifiedPPIMeanEstimator` for Stratified PPI-based mean estimation
+- Added `generate_binary_dataset_with_oracle_sampling` function to simulate ASI-like data
+- Added overload for the __getitem__ method for Dataset to support `int`, `slice`, `str`, and `list[str]` keys
+=======
 - Code of conduct
 - Tutorial for ASI
 - Issue templates
@@ -51,6 +58,7 @@ Thank you to everyone who contributed to this release: @gmartinon-ed, @imerad, @
 
 ### 💛 Contributors
 Thank you to everyone who contributed to this release: @gmartinon-ed, @gherouville-ed, @imerad, @mraki-ed, @awolf-ed, @iben-ed, @msoro-ed
+>>>>>>> main
 
 ---
 
