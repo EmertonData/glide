@@ -30,11 +30,11 @@ def test_two_equal_strata_matches_classical():
 
     classical_single = ClassicalMeanEstimator().estimate(single_dataset, y_field="y_true")
 
-    records_a = [{"y": record["y_true"], "group": "A"} for record in single_dataset]
-    records_b = [{"y": record["y_true"], "group": "B"} for record in single_dataset]
-    stratified_dataset = Dataset(records_a + records_b)
+    y_values = np.array([record["y_true"] for record in single_dataset])
+    y = np.concatenate([y_values, y_values])
+    groups = np.array(["A"] * len(y_values) + ["B"] * len(y_values))
 
-    result = StratifiedClassicalMeanEstimator().estimate(stratified_dataset, y_field="y", groups_field="group")
+    result = StratifiedClassicalMeanEstimator().estimate(y, groups)
 
     # Mean must match the single-stratum classical mean (both strata are identical)
     assert result.mean == pytest.approx(classical_single.mean, abs=1e-10)
@@ -57,16 +57,14 @@ def test_stratified_classical_narrower_ci_with_heterogeneous_strata():
     labeled_a, _ = generate_gaussian_dataset(n_labeled, 0, true_mean=0.0, true_std=0.1, random_seed=random_seed)
     labeled_b, _ = generate_gaussian_dataset(n_labeled, 0, true_mean=1.0, true_std=0.1, random_seed=random_seed)
 
-    records_a = [{"y": r["y_true"], "group": "A"} for r in labeled_a]
-    records_b = [{"y": r["y_true"], "group": "B"} for r in labeled_b]
+    y_a = np.array([r["y_true"] for r in labeled_a])
+    y_b = np.array([r["y_true"] for r in labeled_b])
 
-    stratified_dataset = Dataset(records_a + records_b)
-    pooled_dataset = Dataset([{"y": r["y"]} for r in stratified_dataset])
+    y_stratified = np.concatenate([y_a, y_b])
+    groups = np.array(["A"] * len(y_a) + ["B"] * len(y_b))
 
-    classical_result = ClassicalMeanEstimator().estimate(pooled_dataset, y_field="y")
-    stratified_result = StratifiedClassicalMeanEstimator().estimate(
-        stratified_dataset, y_field="y", groups_field="group"
-    )
+    classical_result = ClassicalMeanEstimator().estimate(Dataset([{"y": val} for val in y_stratified]), y_field="y")
+    stratified_result = StratifiedClassicalMeanEstimator().estimate(y_stratified, groups)
 
     # Stratified CI must be strictly narrower
     eps = 1e-1

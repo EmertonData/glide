@@ -1,7 +1,6 @@
 import numpy as np
 import pytest
 
-from glide.core.dataset import Dataset
 from glide.core.mean_inference_result import ClassicalMeanInferenceResult
 from glide.estimators.stratified_classical import StratifiedClassicalMeanEstimator
 
@@ -9,21 +8,19 @@ from glide.estimators.stratified_classical import StratifiedClassicalMeanEstimat
 
 
 @pytest.fixture
-def dataset() -> Dataset:
-    """Two strata (A and B) with two records each.
+def y() -> np.ndarray:
+    """Array of observations for two strata (A and B) with two records each.
 
     Stratum A: y=[1.0, 3.0]  → mean=2.0, std_mean=1.0
     Stratum B: y=[5.0, 7.0]  → mean=6.0, std_mean=1.0
     Weighted: mean=4.0, std=sqrt(0.5)≈0.707, n=4.
     """
-    return Dataset(
-        [
-            {"y": 1.0, "group": "A"},
-            {"y": 3.0, "group": "A"},
-            {"y": 5.0, "group": "B"},
-            {"y": 7.0, "group": "B"},
-        ]
-    )
+    return np.array([1.0, 3.0, 5.0, 7.0])
+
+
+@pytest.fixture
+def groups() -> np.ndarray:
+    return np.array(["A", "A", "B", "B"])
 
 
 @pytest.fixture
@@ -34,20 +31,20 @@ def estimator() -> StratifiedClassicalMeanEstimator:
 # --- _get_strata ---
 
 
-def test_get_strata_splits_correctly(estimator, dataset):
-    strata = estimator._get_strata(dataset, "group")
+def test_get_strata_splits_correctly(estimator, y, groups):
+    strata = estimator._get_strata(y, groups)
     assert set(strata.keys()) == {"A", "B"}
     assert len(strata["A"]) == 2
     assert len(strata["B"]) == 2
-    assert all(r["group"] == "A" for r in strata["A"])
-    assert all(r["group"] == "B" for r in strata["B"])
+    assert np.array_equal(strata["A"], np.array([1.0, 3.0]))
+    assert np.array_equal(strata["B"], np.array([5.0, 7.0]))
 
 
 # --- estimate ---
 
 
-def test_estimate_is_valid_inference_result(estimator, dataset):
-    result = estimator.estimate(dataset, y_field="y", groups_field="group")
+def test_estimate_is_valid_inference_result(estimator, y, groups):
+    result = estimator.estimate(y, groups)
     assert isinstance(result, ClassicalMeanInferenceResult)
     assert np.isfinite(result.confidence_interval.lower_bound)
     assert np.isfinite(result.confidence_interval.upper_bound)
@@ -55,15 +52,15 @@ def test_estimate_is_valid_inference_result(estimator, dataset):
     assert result.estimator_name == "StratifiedClassicalMeanEstimator"
 
 
-def test_estimate_metadata(estimator, dataset):
-    result = estimator.estimate(dataset, y_field="y", groups_field="group", metric_name="performance")
+def test_estimate_metadata(estimator, y, groups):
+    result = estimator.estimate(y, groups, metric_name="performance")
     assert result.metric_name == "performance"
     assert result.estimator_name == estimator.__class__.__name__
     assert result.n == 4
 
 
-def test_estimate_known_values(estimator, dataset):
-    result = estimator.estimate(dataset, y_field="y", groups_field="group", confidence_level=0.95)
+def test_estimate_known_values(estimator, y, groups):
+    result = estimator.estimate(y, groups, confidence_level=0.95)
 
     expected_mean = 4.0
     expected_std = np.sqrt(0.5)
@@ -80,8 +77,8 @@ def test_estimate_known_values(estimator, dataset):
 # --- __str__ / __repr__ ---
 
 
-def test_str_format(estimator, dataset):
-    result = estimator.estimate(dataset, y_field="y", groups_field="group", metric_name="performance")
+def test_str_format(estimator, y, groups):
+    result = estimator.estimate(y, groups, metric_name="performance")
     output = str(result)
     expected = (
         "Metric: performance\n"
@@ -93,6 +90,6 @@ def test_str_format(estimator, dataset):
     assert output == expected
 
 
-def test_repr_equals_str(estimator, dataset):
-    result = estimator.estimate(dataset, y_field="y", groups_field="group", metric_name="perf")
+def test_repr_equals_str(estimator, y, groups):
+    result = estimator.estimate(y, groups, metric_name="perf")
     assert repr(result) == str(result)
