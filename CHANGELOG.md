@@ -16,6 +16,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
   
 ### 🔄 Changed
 - Image in the user guide explaining the control sample
+- `CONTRIBUTING.md` now explains how to setup pre-commits
 
 ### 💛 Contributors
 Thank you to everyone who contributed to this release: @gmartinon-ed, @imerad, @mraki-ed
