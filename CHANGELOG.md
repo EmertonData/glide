@@ -10,12 +10,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### ✨ Added
 - Code of conduct
+- Tutorial for ASI
 - Issue templates
 - `StratifiedSampler` for optimal per-stratum annotation budget allocation with Neyman and proportional strategies
-- Added overload for the __setitem__ method for Dataset to support `str`
+- Overload for the __setitem__ method for Dataset to support `str`
 - Doctest for `glide.io.to_json`
   
 ### 🔄 Changed
+- `CONTRIBUTING.md` now explains how to setup pre-commits
 - Image in the user guide explaining the control sample
 
 ### 💛 Contributors
