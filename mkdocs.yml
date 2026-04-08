@@ -41,6 +41,7 @@ nav:
   - User Guide: user_guide.md
   - Tutorials:
     - PPI: tutorials/ppi.ipynb
+    - Stratified PPI: tutorials/stratified_ppi.ipynb
     - ASI: tutorials/asi.ipynb
   - Deep Dive:
     - PPI Validation: deep_dive/ppi_validation.ipynb
