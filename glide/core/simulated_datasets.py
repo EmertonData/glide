@@ -277,13 +277,11 @@ def generate_stratified_binary_dataset(
         )
 
         # Add stratum_id to all records
-        for record in labeled:
-            record["stratum_id"] = stratum_id
-            all_labeled_records.append(record)
+        labeled["stratum_id"] = stratum_id
+        all_labeled_records.extend(labeled)
 
-        for record in unlabeled.records:
-            record["stratum_id"] = stratum_id
-            all_unlabeled_records.append(record)
+        unlabeled["stratum_id"] = stratum_id
+        all_unlabeled_records.extend(unlabeled)
 
     return Dataset(all_labeled_records), Dataset(all_unlabeled_records)
 

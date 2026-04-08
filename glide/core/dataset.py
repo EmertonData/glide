@@ -94,6 +94,29 @@ class Dataset(list):
 
         raise TypeError(f"Unsupported key type: {type(key)}")
 
+    def __setitem__(self, key: Any, value: Any) -> None:
+        """Set a column or a record in the dataset.
+
+        Parameters
+        ----------
+        key : str or int or slice
+            - str: sets ``key`` to ``value`` on **every** record in place.
+            - int or slice: standard list item assignment (replaces record(s)).
+
+        Examples
+        --------
+        >>> from glide.core.dataset import Dataset
+        >>> dataset = Dataset([{"y_true": 0}, {"y_true": 1}])
+        >>> dataset["group"] = "pilot"
+        >>> dataset
+        [{'y_true': 0, 'group': 'pilot'}, {'y_true': 1, 'group': 'pilot'}]
+        """
+        if isinstance(key, str):
+            for record in self:
+                record[key] = value
+        else:
+            super().__setitem__(key, value)
+
     def to_numpy(self, fields: List[str]) -> NDArray:
         """Convert the dataset to a 2D numpy array of floats.
 
