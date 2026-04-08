@@ -23,6 +23,7 @@ site/
 .ruff_cache
 .mypy_cache
 .pytest_cache
+.cache
 
 # Coverage
 .coverage
