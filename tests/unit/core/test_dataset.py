@@ -66,7 +66,7 @@ def test_getitem_slice_returns_records(records):
 
 def test_get_unsupported_key_type_raises(records):
     with pytest.raises(TypeError):
-        Dataset(records)[None]  # type: ignore[index]
+        Dataset(records)[None]  # ty: ignore[invalid-argument-type]
 
 
 def test_to_numpy_human_then_llm(records):
@@ -90,3 +90,19 @@ def test_to_numpy_single_field(records):
 def test_to_numpy_unknown_field_raises(records):
     with pytest.raises(ValueError):
         Dataset(records).to_numpy(fields=["unknown"])
+
+
+@pytest.fixture
+def dataset():
+    return Dataset([{"y_true": 0}, {"y_true": 1}])
+
+
+def test_setitem_string_adds_column(dataset):
+    dataset["group"] = "A"
+    assert all(record["group"] == "A" for record in dataset)
+
+
+def test_setitem_int_replaces_record(dataset):
+    new_record = {"y_true": 999}
+    dataset[0] = new_record
+    assert list(dataset)[0] == new_record

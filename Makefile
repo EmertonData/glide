@@ -17,7 +17,7 @@ format:
 
 type-check:
 	uv run ty check
-
+	
 tests:
 	uv run pytest . -vsx
 
