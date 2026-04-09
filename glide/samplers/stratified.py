@@ -67,14 +67,10 @@ class StratifiedSampler:
         y_proxy_field: str,
         groups_field: str,
     ) -> Tuple[NDArray, NDArray]:
-        if len(dataset) == 0:
-            raise ValueError("Dataset cannot be empty.")
         data = dataset.to_numpy(fields=[y_proxy_field])
         y_proxy = data[:, 0]
         if np.isnan(y_proxy).any():
             raise ValueError("Input proxy values contain NaN")
-        if len(np.unique(y_proxy)) == 1:
-            raise ValueError("Input proxy values have zero variance")
         groups = np.array([record[groups_field] for record in dataset])
 
         unique_strata = np.unique(groups)
