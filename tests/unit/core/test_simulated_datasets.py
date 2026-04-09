@@ -48,6 +48,7 @@ def test_generate_binary_dataset_with_oracle_sampling_structure_and_counts():
     data = generate_binary_dataset_with_oracle_sampling(N=10, random_seed=0)
     assert isinstance(data, np.ndarray)
     assert len(data) == 10
+    assert data.dtype.names is not None
     assert "y_true" in data.dtype.names
     assert "y_proxy" in data.dtype.names
     assert "uncertainty" in data.dtype.names
