@@ -48,10 +48,12 @@ def y_data():
 
 def test_preprocess_returns_correct_shapes(estimator, dataset):
     y_true_all, y_proxy_all, groups = estimator._preprocess(dataset, "y_true", "y_proxy", "group")
+    expected_groups = np.array(["A", "A", "A", "A", "B", "B", "B", "B"], dtype=object)
     assert len(y_true_all) == 8
     assert len(y_proxy_all) == 8
     assert len(groups) == 8
     assert np.sum(~np.isnan(y_true_all)) == 4
+    assert np.array_equal(groups, expected_groups)
 
 
 def test_preprocess_raises_on_nan_proxy(estimator):
@@ -67,21 +69,7 @@ def test_preprocess_raises_on_nan_proxy(estimator):
         estimator._preprocess(dataset, "y_true", "y_proxy", "group")
 
 
-def test_preprocess_raises_on_zero_variance_proxy_in_stratum(estimator):
-    dataset = Dataset(
-        [
-            {"y_true": 1.0, "y_proxy": 1.0, "group": "A"},
-            {"y_true": 2.0, "y_proxy": 1.0, "group": "A"},
-            {"y_proxy": 1.0, "group": "A"},
-            {"y_proxy": 1.0, "group": "A"},
-        ]
-    )
-    with pytest.raises(ValueError, match="Input proxy values have zero variance in stratum 'A'"):
-        estimator._preprocess(dataset, "y_true", "y_proxy", "group")
-
-
-def test__preprocess_raises_when_stratum_has_too_few_labeled(estimator):
-    # Drop the second labeled sample in stratum A (line 45 of the doctest), leaving only 1
+def test_preprocess_raises_on_stratum_size_too_small(estimator):
     records_insufficient_groups = [
         {"y_true": 1.0, "y_proxy": 1.1, "domain": "A"},
         {"y_proxy": 1.8, "domain": "A"},
@@ -91,12 +79,6 @@ def test__preprocess_raises_when_stratum_has_too_few_labeled(estimator):
     dataset = Dataset(records_insufficient_groups)
     with pytest.raises(RuntimeError, match="Too few labeled or unlabeled samples in dataset stratum 'A'"):
         estimator._preprocess(dataset, y_true_field="y_true", y_proxy_field="y_proxy", groups_field="domain")
-
-
-def test_preprocess_groups_preserved(estimator, dataset):
-    _, _, groups = estimator._preprocess(dataset, "y_true", "y_proxy", "group")
-    expected = np.array(["A", "A", "A", "A", "B", "B", "B", "B"], dtype=object)
-    assert np.array_equal(groups, expected)
 
 
 def test_preprocess_raises_on_unknown_y_proxy_field(estimator, dataset):
@@ -109,20 +91,16 @@ def test_preprocess_raises_on_unknown_groups_field(estimator, dataset):
         estimator._preprocess(dataset, "y_true", "y_proxy", "nonexistent_group_field")
 
 
-def test_preprocess_raises_on_all_strata_zero_variance(estimator):
+def test_preprocess_raises_on_zero_variance_proxy_in_stratum(estimator):
     dataset = Dataset(
         [
-            {"y_true": 1.0, "y_proxy": 0.0, "group": "A"},
-            {"y_true": 2.0, "y_proxy": 0.0, "group": "A"},
-            {"y_proxy": 0.0, "group": "A"},
-            {"y_proxy": 0.0, "group": "A"},
-            {"y_true": 3.0, "y_proxy": 1.0, "group": "B"},
-            {"y_true": 4.0, "y_proxy": 1.0, "group": "B"},
-            {"y_proxy": 1.0, "group": "B"},
-            {"y_proxy": 1.0, "group": "B"},
+            {"y_true": 1.0, "y_proxy": 1.0, "group": "A"},
+            {"y_true": 2.0, "y_proxy": 1.0, "group": "A"},
+            {"y_proxy": 1.0, "group": "A"},
+            {"y_proxy": 1.0, "group": "A"},
         ]
     )
-    with pytest.raises(ValueError, match="zero variance in stratum"):
+    with pytest.raises(ValueError, match="Input proxy values have zero variance in stratum 'A'"):
         estimator._preprocess(dataset, "y_true", "y_proxy", "group")
 
 
