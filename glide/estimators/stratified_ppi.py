@@ -201,7 +201,8 @@ class StratifiedPPIMeanEstimator:
         weighted_mean = 0.0
         weighted_var = 0.0
 
-        for stratum_id in np.unique(groups):
+        unique_strata = np.unique(groups)
+        for stratum_id in unique_strata:
             stratum_mask = groups == stratum_id
             w_k = stratum_mask.sum() / len(dataset)
 
