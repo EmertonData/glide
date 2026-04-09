@@ -1,4 +1,4 @@
-from typing import Dict, Hashable, Tuple
+from typing import Tuple
 
 import numpy as np
 from numpy.typing import NDArray
@@ -69,36 +69,6 @@ class StratifiedPPIMeanEstimator:
         y_proxy_field: str,
         groups_field: str,
     ) -> Tuple[NDArray, NDArray, NDArray]:
-        """Validate the dataset and return aligned arrays for all records.
-
-        Parameters
-        ----------
-        dataset : Dataset
-            Full dataset; every record must contain ``y_proxy_field`` and
-            ``groups_field``. Records with ``y_true_field`` present are treated
-            as labeled; the rest are unlabeled (``y_true`` encoded as NaN).
-        y_true_field : str
-            Name of the column holding ground-truth labels.
-        y_proxy_field : str
-            Name of the column holding proxy predictions.
-        groups_field : str
-            Name of the field whose unique values define the strata.
-
-        Returns
-        -------
-        Tuple[NDArray, NDArray, NDArray]
-            ``(y_true_all, y_proxy_all, groups)`` where ``y_true_all`` contains
-            NaN for unlabeled records, ``y_proxy_all`` contains proxy values for
-            all records, and ``groups`` contains the stratum identifier for each
-            record.
-
-        Raises
-        ------
-        ValueError
-            If any proxy value is NaN.
-        RuntimeError
-            If any stratum has fewer than 2 labeled or fewer than 2 unlabeled records.
-        """
         data = dataset.to_numpy(fields=[y_true_field, y_proxy_field])
         y_true_all = data[:, 0]
         y_proxy_all = data[:, 1]
@@ -111,42 +81,16 @@ class StratifiedPPIMeanEstimator:
         for stratum_id in np.unique(groups):
             stratum_mask = groups == stratum_id
             stratum_y_true = y_true_all[stratum_mask]
+            stratum_y_proxy = y_proxy_all[stratum_mask]
             labeled_mask = ~np.isnan(stratum_y_true)
             n_labeled = labeled_mask.sum()
             n_unlabeled = stratum_mask.sum() - n_labeled
             if min(n_labeled, n_unlabeled) <= 1:
                 raise RuntimeError(f"Too few labeled or unlabeled samples in dataset stratum '{stratum_id}'")
+            if len(np.unique(stratum_y_proxy)) == 1:
+                raise ValueError(f"Input proxy values have zero variance in stratum '{stratum_id}'")
 
         return y_true_all, y_proxy_all, groups
-
-    def _get_strata(self, dataset: Dataset, groups_field: str) -> Dict[Hashable, Dataset]:
-        """Split a dataset into per-stratum sub-datasets.
-
-        Parameters
-        ----------
-        dataset : Dataset
-            Full dataset; every record must contain ``groups_field``.
-        groups_field : str
-            Field whose unique values define the strata.
-
-        Returns
-        -------
-        Dict[Hashable, Dataset]
-            Mapping from each unique group value to the sub-dataset of records
-            belonging to that stratum.
-
-        Raises
-        ------
-        KeyError
-            If any record is missing ``groups_field``.
-        """
-        groups: Dict[Hashable, Dataset] = {}
-        for record in dataset:
-            group_id = record[groups_field]
-            if group_id not in groups:
-                groups[group_id] = Dataset()
-            groups[group_id].append(record)
-        return groups
 
     def _compute_lambda(
         self,
@@ -155,25 +99,6 @@ class StratifiedPPIMeanEstimator:
         y_proxy_unlabeled: NDArray,
         power_tuning: bool,
     ) -> float:
-        """Compute the optimal power-tuning weight λ for one stratum.
-
-        Parameters
-        ----------
-        y_true : NDArray
-            Ground-truth labels for the labeled subset of this stratum.
-        y_proxy_labeled : NDArray
-            Proxy predictions aligned with ``y_true``.
-        y_proxy_unlabeled : NDArray
-            Proxy predictions for the unlabeled subset of this stratum.
-        power_tuning : bool
-            If ``True``, compute the optimal λ via the PPI++ formula.
-            If ``False``, return 1.0 (classic PPI).
-
-        Returns
-        -------
-        float
-            The per-stratum weight λ.
-        """
         if not power_tuning:
             return 1.0
         n = len(y_true)
@@ -191,24 +116,6 @@ class StratifiedPPIMeanEstimator:
         y_proxy_unlabeled: NDArray,
         _lambda: float,
     ) -> float:
-        """Compute the PPI++ mean estimate for one stratum.
-
-        Parameters
-        ----------
-        y_true : NDArray
-            Ground-truth labels for the labeled subset of this stratum.
-        y_proxy_labeled : NDArray
-            Proxy predictions aligned with ``y_true``.
-        y_proxy_unlabeled : NDArray
-            Proxy predictions for the unlabeled subset of this stratum.
-        _lambda : float
-            Per-stratum weight λ.
-
-        Returns
-        -------
-        float
-            The PPI++ mean estimate for this stratum.
-        """
         rectifier = np.mean(y_true) - _lambda * np.mean(y_proxy_labeled)
         proxy_mean = _lambda * np.mean(y_proxy_unlabeled)
         mean_estimate = proxy_mean + rectifier
@@ -221,24 +128,6 @@ class StratifiedPPIMeanEstimator:
         y_proxy_unlabeled: NDArray,
         _lambda: float,
     ) -> float:
-        """Compute the PPI++ standard deviation estimate for one stratum.
-
-        Parameters
-        ----------
-        y_true : NDArray
-            Ground-truth labels for the labeled subset of this stratum.
-        y_proxy_labeled : NDArray
-            Proxy predictions aligned with ``y_true``.
-        y_proxy_unlabeled : NDArray
-            Proxy predictions for the unlabeled subset of this stratum.
-        _lambda : float
-            Per-stratum weight λ.
-
-        Returns
-        -------
-        float
-            The standard deviation of the PPI++ mean estimate for this stratum.
-        """
         n = len(y_true)
         N = len(y_proxy_unlabeled)
         rectifier_var = np.var(y_true - _lambda * y_proxy_labeled, ddof=1) / n
@@ -302,7 +191,8 @@ class StratifiedPPIMeanEstimator:
         Raises
         ------
         ValueError
-            If any proxy value is NaN.
+            If any proxy value is NaN, or if all proxy values within a stratum are identical
+            (zero variance), which would cause a division by zero when computing lambda.
         RuntimeError
             If any stratum has fewer than 2 labeled or fewer than 2 unlabeled records.
         """
@@ -310,7 +200,6 @@ class StratifiedPPIMeanEstimator:
 
         weighted_mean = 0.0
         weighted_var = 0.0
-        y_true_parts = []
 
         for stratum_id in np.unique(groups):
             stratum_mask = groups == stratum_id
@@ -330,11 +219,10 @@ class StratifiedPPIMeanEstimator:
 
             weighted_mean += w_k * mean_k
             weighted_var += w_k**2 * std_k**2
-            y_true_parts.append(y_true)
 
         std = np.sqrt(weighted_var)
-        y_true_labeled = np.hstack(y_true_parts)
-        effective_sample_size = compute_effective_sample_size(y_true_labeled, std)
+        n_true = np.sum(~np.isnan(y_true_all))
+        effective_sample_size = compute_effective_sample_size(y_true_all, std)
 
         confidence_interval = CLTConfidenceInterval(
             mean=weighted_mean,
@@ -345,7 +233,7 @@ class StratifiedPPIMeanEstimator:
             confidence_interval=confidence_interval,
             metric_name=metric_name,
             estimator_name=self.__class__.__name__,
-            n_true=len(y_true_labeled),
+            n_true=n_true,
             n_proxy=len(dataset),
             effective_sample_size=effective_sample_size,
         )
