@@ -1,5 +1,3 @@
-from typing import Dict, Hashable
-
 import numpy as np
 from numpy.typing import NDArray
 
@@ -39,14 +37,6 @@ class StratifiedClassicalMeanEstimator:
         n_not_nan = np.sum(~np.isnan(y))
         std = np.nanstd(y, ddof=1) / np.sqrt(n_not_nan)
         return std
-
-    def _get_strata(self, y: NDArray, groups: NDArray) -> Dict[Hashable, NDArray]:
-        strata: Dict[Hashable, NDArray] = {}
-        unique_groups = np.unique(groups)
-        for group_id in unique_groups:
-            mask = groups == group_id
-            strata[group_id] = y[mask]
-        return strata
 
     def estimate(
         self,
@@ -90,12 +80,13 @@ class StratifiedClassicalMeanEstimator:
             ``n`` (total number of records).
         """
         n_total = len(y)
-        strata = self._get_strata(y, groups)
-
         weighted_mean = 0.0
         weighted_var = 0.0
 
-        for y_stratum in strata.values():
+        unique_strata = np.unique(groups)
+        for stratum_id in unique_strata:
+            stratum_mask = groups == stratum_id
+            y_stratum = y[stratum_mask]
             w_k = len(y_stratum) / n_total
             mean_k = self._compute_mean_estimate(y_stratum)
             std_k = self._compute_std_estimate(y_stratum)
