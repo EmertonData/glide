@@ -2,16 +2,15 @@ import numpy as np
 import pytest
 from numpy.typing import NDArray
 
-from glide.core.dataset import Dataset
 from glide.core.mean_inference_result import ClassicalMeanInferenceResult
 from glide.estimators.classical import ClassicalMeanEstimator
 
 
 @pytest.fixture
-def dataset(n: int = 4, seed: int = 42) -> Dataset:
+def y_array(n: int = 4, seed: int = 42) -> NDArray:
     rng = np.random.default_rng(seed)
     y = rng.normal(loc=5.0, scale=1.0, size=n)
-    return Dataset([{"y": float(v)} for v in y])
+    return y
 
 
 @pytest.fixture
@@ -27,8 +26,8 @@ def y() -> NDArray:
 # --- preprocessing ---
 
 
-def test_preprocess(estimator, dataset):
-    y = estimator._preprocess(dataset, "y")
+def test_preprocess(estimator, y_array):
+    y = estimator._preprocess(y_array)
     assert len(y) == 4
 
 
@@ -53,8 +52,8 @@ def test_compute_std_estimate_known_values(estimator, y):
 # --- estimate ---
 
 
-def test_estimate_is_valid_inference_result(estimator, dataset):
-    result = estimator.estimate(dataset, y_field="y")
+def test_estimate_is_valid_inference_result(estimator, y_array):
+    result = estimator.estimate(y_array)
     assert isinstance(result, ClassicalMeanInferenceResult)
     assert np.isfinite(result.confidence_interval.lower_bound)
     assert np.isfinite(result.confidence_interval.upper_bound)
@@ -62,15 +61,15 @@ def test_estimate_is_valid_inference_result(estimator, dataset):
     assert result.estimator_name == "ClassicalMeanEstimator"
 
 
-def test_estimate_metadata(estimator, dataset):
-    result = estimator.estimate(dataset, y_field="y", metric_name="performance")
+def test_estimate_metadata(estimator, y_array):
+    result = estimator.estimate(y_array, metric_name="performance")
     assert result.metric_name == "performance"
     assert result.estimator_name == estimator.__class__.__name__
     assert result.n == 4
 
 
-def test_estimate_custom_confidence_level(estimator, dataset):
-    result = estimator.estimate(dataset, y_field="y", confidence_level=0.90)
+def test_estimate_custom_confidence_level(estimator, y_array):
+    result = estimator.estimate(y_array, confidence_level=0.90)
     assert result.confidence_interval.confidence_level == 0.90
 
     expected_mean = 5.24
@@ -88,8 +87,8 @@ def test_estimate_custom_confidence_level(estimator, dataset):
 # --- __str__ / __repr__ ---
 
 
-def test_str_format(estimator, dataset):
-    result = estimator.estimate(dataset, y_field="y", metric_name="performance")
+def test_str_format(estimator, y_array):
+    result = estimator.estimate(y_array, metric_name="performance")
     output = str(result)
     expected = (
         "Metric: performance\n"
@@ -101,6 +100,6 @@ def test_str_format(estimator, dataset):
     assert output == expected
 
 
-def test_repr_equals_str(estimator, dataset):
-    result = estimator.estimate(dataset, y_field="y", metric_name="perf")
+def test_repr_equals_str(estimator, y_array):
+    result = estimator.estimate(y_array, metric_name="perf")
     assert repr(result) == str(result)
