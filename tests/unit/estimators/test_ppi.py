@@ -33,10 +33,10 @@ def y_data() -> tuple[NDArray, NDArray, NDArray]:
     return (y_true, y_proxy_labeled, y_proxy_unlabeled)
 
 
-# --- preprocessing ---
+# --- _preprocess ---
 
 
-def test_preprocess(estimator, dataset):
+def test_preprocess_returns_correct_shapes(estimator, dataset):
     y_true, y_proxy_labeled, y_proxy_unlabeled = estimator._preprocess(dataset, "y_true", "y_proxy")
     assert len(y_true) == 2
     assert len(y_proxy_labeled) == 2
