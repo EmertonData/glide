@@ -42,7 +42,7 @@ class IPWClassicalMeanEstimator:
     def _compute_std_estimate(self, y: NDArray, sampling_probability: NDArray, budget: int) -> float:
         mean_of_square = np.nansum((y**2) / sampling_probability) / (budget)
         square_of_mean = (np.nansum(y / sampling_probability) / budget) ** 2
-        std = np.sqrt(mean_of_square - square_of_mean)
+        std = np.sqrt((mean_of_square - square_of_mean) * (budget / (budget - 1)))
         return std
 
     def estimate(
