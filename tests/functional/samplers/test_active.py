@@ -1,7 +1,6 @@
 import numpy as np
 import pytest
 
-from glide.core.dataset import Dataset
 from glide.samplers.active import ActiveSampler
 
 
@@ -15,11 +14,11 @@ def test_expected_sum_xi_equals_budget(sampler):
     budget = 10
     n_trials = 500
 
-    dataset = Dataset([{"uncertainty": 1} for _ in range(n_records)])
+    uncertainties = np.ones(n_records)
 
     n_array = np.array(
         [
-            sampler.sample(dataset, uncertainty_field="uncertainty", budget=budget, random_seed=random_seed)["xi"].sum()
+            sampler.sample(uncertainties, budget=budget, random_seed=random_seed)[1].sum()
             for random_seed in range(n_trials)
         ]
     )

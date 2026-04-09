@@ -3,8 +3,6 @@ from typing import List, Optional, Tuple, Union
 import numpy as np
 from numpy.typing import NDArray
 
-from glide.core.dataset import Dataset
-
 
 def generate_binary_dataset(
     n: int,
@@ -291,7 +289,7 @@ def generate_binary_dataset_with_oracle_sampling(
     proxy_mean: float = 0.6,
     correlation: float = 0.8,
     random_seed: Optional[int] = None,
-) -> Dataset:
+) -> Tuple[NDArray, NDArray, NDArray]:
     """Generate a synthetic binary dataset with oracle sampling probabilities.
 
     All N records have ground-truth labels (y_true), proxy predictions (y_proxy),
@@ -320,10 +318,11 @@ def generate_binary_dataset_with_oracle_sampling(
 
     Returns
     -------
-    Dataset
-        Dataset with N records, each containing ``"y_true"`` (int), ``"y_proxy"`` (int),
-        and ``"uncertainty"`` (float > 0), where ``"uncertainty"`` is the oracle RMSE.
-        All y_true values are present (no missing values).
+    Tuple[NDArray, NDArray, NDArray]
+        A tuple ``(y_true, y_proxy, uncertainty)``, each of shape ``(N,)``.
+        ``y_true`` contains the full ground-truth labels for all N records (no NaN);
+        the caller is responsible for masking unlabeled rows. ``y_proxy`` contains
+        the proxy predictions. ``uncertainty`` is the oracle RMSE per record.
 
     Raises
     ------
@@ -441,6 +440,23 @@ def generate_binary_dataset_with_oracle_sampling(
     The optimal sampling probability satisfies
     ``RMSE = sqrt(E[(y_proxy - y_true)²]) = sqrt(error_prob(x))``.
     These values are stored directly as ``uncertainty``.
+
+    Examples
+    --------
+    >>> from glide.core.simulated_datasets import generate_binary_dataset_with_oracle_sampling
+    >>> y_true, y_proxy, uncertainty = generate_binary_dataset_with_oracle_sampling(N=4, random_seed=0)
+    >>> len(y_true)
+    4
+    >>> len(y_proxy)
+    4
+    >>> len(uncertainty)
+    4
+    >>> all(v in (0.0, 1.0) for v in y_true)
+    True
+    >>> all(v in (0.0, 1.0) for v in y_proxy)
+    True
+    >>> all(v > 0 for v in uncertainty)
+    True
     """
     if not (0 < true_mean < 1):
         raise ValueError(f"true_mean must be in (0, 1), got {true_mean}")
@@ -503,11 +519,7 @@ def generate_binary_dataset_with_oracle_sampling(
     # Oracle RMSE: sqrt(P(error | x_i))
     uncertainty = np.sqrt(error_prob_x)
 
-    records = [
-        {"y_true": int(yt), "y_proxy": int(yp), "uncertainty": float(p)}
-        for yt, yp, p in zip(y_true_arr, y_proxy_arr, uncertainty)
-    ]
-    return Dataset(records)
+    return y_true_arr.astype(float), y_proxy_arr.astype(float), uncertainty
 
 
 def generate_gaussian_dataset(
