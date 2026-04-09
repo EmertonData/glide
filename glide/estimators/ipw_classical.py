@@ -15,8 +15,9 @@ class IPWClassicalMeanEstimator:
     pre-determined probability that record i was selected for labeling.
     Some values of y_i may be NaN corresponding to unsampled instances.
 
-    The ``budget`` parameter is optional and defaults to ``len(y)``, its value
-    should be close to the sum of π_i to make the computation statistically valid.
+    The ``budget`` parameter is optional and defaults to ``len(y)``. For the
+    computation to be statistically valid, the sum of π_i should approxximately
+    equal to ``budget``.
 
     Examples
     --------
@@ -34,17 +35,14 @@ class IPWClassicalMeanEstimator:
     n: 4
     """
 
-    def _compute_ipw_weighted_values(self, y: NDArray, sampling_probability: NDArray) -> NDArray:
-        ipw_weighted_values = y / sampling_probability
-        return ipw_weighted_values
-
-    def _compute_mean_estimate(self, ipw_weighted_values: NDArray, budget: int) -> float:
-        mean = float(np.nansum(ipw_weighted_values) / budget)
+    def _compute_mean_estimate(self, y: NDArray, sampling_probability: NDArray, budget: int) -> float:
+        mean = np.nansum(y / sampling_probability) / budget
         return mean
 
-    def _compute_std_estimate(self, ipw_weighted_values: NDArray, budget: int) -> float:
-        n = np.sum(~np.isnan(ipw_weighted_values))
-        std = float(np.nanstd(ipw_weighted_values, ddof=1) * np.sqrt(n) / budget)
+    def _compute_std_estimate(self, y: NDArray, sampling_probability: NDArray, budget: int) -> float:
+        mean_of_square = np.nansum((y**2) / sampling_probability) / (budget)
+        square_of_mean = (np.nansum(y / sampling_probability) / budget) ** 2
+        std = np.sqrt(mean_of_square - square_of_mean)
         return std
 
     def estimate(
@@ -82,9 +80,8 @@ class IPWClassicalMeanEstimator:
         if np.min(sampling_probability) <= 0:
             raise ValueError(f"Minimum sampling probability should be > 0, got {np.min(sampling_probability)}")
         effective_budget = len(y) if budget is None else budget
-        ipw_weighted_values = self._compute_ipw_weighted_values(y, sampling_probability)
-        mean = self._compute_mean_estimate(ipw_weighted_values, effective_budget)
-        std = self._compute_std_estimate(ipw_weighted_values, effective_budget)
+        mean = self._compute_mean_estimate(y, sampling_probability, effective_budget)
+        std = self._compute_std_estimate(y, sampling_probability, effective_budget)
         ci = CLTConfidenceInterval(mean=mean, std=std, confidence_level=confidence_level)
         result = ClassicalMeanInferenceResult(
             confidence_interval=ci,
