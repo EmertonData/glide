@@ -164,7 +164,10 @@ class StratifiedPPIMeanEstimator:
             stratum_k_size = len(stratum_dataset)
             w_k = stratum_k_size / len(dataset)
             try:
-                y_data = self._ppi_mean_estimator._preprocess(stratum_dataset, y_true_field, y_proxy_field)
+                data = stratum_dataset.to_numpy(fields=[y_true_field, y_proxy_field])
+                y_true_all_k = data[:, 0]
+                y_proxy_all_k = data[:, 1]
+                y_data = self._ppi_mean_estimator._preprocess(y_true_all_k, y_proxy_all_k)
             except RuntimeError as e:
                 raise RuntimeError(f"{e} stratum '{stratum_name}'")
             lambda_k = self._ppi_mean_estimator._compute_lambda(y_data, power_tuning)

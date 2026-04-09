@@ -2,7 +2,6 @@ import numpy as np
 import pytest
 from numpy.typing import NDArray
 
-from glide.core.dataset import Dataset
 from glide.core.mean_inference_result import SemiSupervisedMeanInferenceResult
 from glide.estimators.ppi import PPIMeanEstimator
 
@@ -10,14 +9,14 @@ from glide.estimators.ppi import PPIMeanEstimator
 
 
 @pytest.fixture
-def dataset(n_true: int = 2, n_proxy: int = 2, seed: int = 42) -> Dataset:
+def y_arrays(n_true: int = 2, n_proxy: int = 2, seed: int = 42) -> tuple[NDArray, NDArray]:
     rng = np.random.default_rng(seed)
     y_true = rng.normal(loc=5.0, scale=1.0, size=n_true)
     y_proxy_labeled = y_true + rng.normal(0, 0.5, size=n_true)
     y_proxy_unlabeled = rng.normal(loc=5.0, scale=1.0, size=n_proxy) + rng.normal(0, 0.5, size=n_proxy)
-    labeled = [{"y_true": float(y), "y_proxy": float(yh)} for y, yh in zip(y_true, y_proxy_labeled)]
-    proxy_only = [{"y_proxy": float(yh)} for yh in y_proxy_unlabeled]
-    return Dataset(labeled + proxy_only)
+    y_true_all = np.concatenate([y_true.astype(float), np.full(n_proxy, np.nan)])
+    y_proxy_all = np.concatenate([y_proxy_labeled.astype(float), y_proxy_unlabeled.astype(float)])
+    return y_true_all, y_proxy_all
 
 
 @pytest.fixture
@@ -36,8 +35,9 @@ def y_data() -> tuple[NDArray, NDArray, NDArray]:
 # --- preprocessing ---
 
 
-def test_preprocess(estimator, dataset):
-    y_true, y_proxy_labeled, y_proxy_unlabeled = estimator._preprocess(dataset, "y_true", "y_proxy")
+def test_preprocess(estimator, y_arrays):
+    y_true_all, y_proxy_all = y_arrays
+    y_true, y_proxy_labeled, y_proxy_unlabeled = estimator._preprocess(y_true_all, y_proxy_all)
     assert len(y_true) == 2
     assert len(y_proxy_labeled) == 2
     assert len(y_proxy_unlabeled) == 2
@@ -45,28 +45,31 @@ def test_preprocess(estimator, dataset):
 
 
 def test_preprocess_raises_when_only_one_sample(estimator):
-    # Doctest has 2 labeled samples; keeping only 1 triggers the check
-    labeled = [{"y_true": 5.0, "y_proxy": 4.9}]
-    unlabeled = [{"y_proxy": 5.2}, {"y_proxy": 6.1}]
-    dataset = Dataset(labeled + unlabeled)
+    y_true = np.array([5.0, np.nan, np.nan])
+    y_proxy = np.array([4.9, 5.2, 6.1])
     with pytest.raises(RuntimeError, match="Too few labeled or unlabeled samples in dataset"):
-        estimator._preprocess(dataset, "y_true", "y_proxy")
+        estimator._preprocess(y_true, y_proxy)
 
 
 def test_preprocess_raises_on_constant_proxy(estimator):
-    labeled = [{"y_true": 1.0, "y_proxy": 1.0}]
-    unlabeled = [{"y_proxy": 1.0}]
-    dataset = Dataset(labeled + unlabeled)
+    y_true = np.array([1.0, np.nan])
+    y_proxy = np.array([1.0, 1.0])
     with pytest.raises(ValueError, match="Input proxy values have zero variance"):
-        estimator._preprocess(dataset, "y_true", "y_proxy")
+        estimator._preprocess(y_true, y_proxy)
 
 
 def test_preprocess_raises_on_nan_proxy(estimator):
-    labeled = [{"y_true": 1.0, "y_proxy": 1.0}]
-    unlabeled = [{"y_proxy": float("nan")}]
-    dataset = Dataset(labeled + unlabeled)
+    y_true = np.array([1.0, np.nan])
+    y_proxy = np.array([1.0, np.nan])
     with pytest.raises(ValueError, match="Input proxy values contain NaN"):
-        estimator._preprocess(dataset, "y_true", "y_proxy")
+        estimator._preprocess(y_true, y_proxy)
+
+
+def test_preprocess_raises_on_length_mismatch(estimator):
+    y_true = np.array([1.0, 2.0, np.nan])
+    y_proxy = np.array([1.0, 2.0])
+    with pytest.raises(ValueError, match="y_true and y_proxy must have the same length"):
+        estimator._preprocess(y_true, y_proxy)
 
 
 # --- _compute_lambda ---
@@ -104,8 +107,9 @@ def test_compute_std_estimate_known_values(estimator, y_data):
 # --- estimate ---
 
 
-def test_estimate_is_valid_inference_result(estimator, dataset):
-    result = estimator.estimate(dataset, y_true_field="y_true", y_proxy_field="y_proxy")
+def test_estimate_is_valid_inference_result(estimator, y_arrays):
+    y_true, y_proxy = y_arrays
+    result = estimator.estimate(y_true, y_proxy)
     assert isinstance(result, SemiSupervisedMeanInferenceResult)
     assert np.isfinite(result.confidence_interval.lower_bound)
     assert np.isfinite(result.confidence_interval.upper_bound)
@@ -113,8 +117,9 @@ def test_estimate_is_valid_inference_result(estimator, dataset):
     assert result.estimator_name == "PPIMeanEstimator"
 
 
-def test_estimate_metadata(estimator, dataset):
-    result = estimator.estimate(dataset, y_true_field="y_true", y_proxy_field="y_proxy", metric_name="performance")
+def test_estimate_metadata(estimator, y_arrays):
+    y_true, y_proxy = y_arrays
+    result = estimator.estimate(y_true, y_proxy, metric_name="performance")
     assert result.metric_name == "performance"
     assert result.estimator_name == estimator.__class__.__name__
     assert result.n_true == 2
@@ -122,10 +127,9 @@ def test_estimate_metadata(estimator, dataset):
     assert result.effective_sample_size == 4
 
 
-def test_estimate_custom_confidence_level(estimator, dataset):
-    result = estimator.estimate(
-        dataset, y_true_field="y_true", y_proxy_field="y_proxy", metric_name="perf", confidence_level=0.90
-    )
+def test_estimate_custom_confidence_level(estimator, y_arrays):
+    y_true, y_proxy = y_arrays
+    result = estimator.estimate(y_true, y_proxy, metric_name="perf", confidence_level=0.90)
 
     expected_mean = 4.07
     expected_std = 0.47
@@ -142,8 +146,9 @@ def test_estimate_custom_confidence_level(estimator, dataset):
 # --- __str__ / __repr__ ---
 
 
-def test_str_format(estimator, dataset):
-    result = estimator.estimate(dataset, y_true_field="y_true", y_proxy_field="y_proxy", metric_name="performance")
+def test_str_format(estimator, y_arrays):
+    y_true, y_proxy = y_arrays
+    result = estimator.estimate(y_true, y_proxy, metric_name="performance")
     output = str(result)
     expected = (
         "Metric: performance\n"
@@ -157,6 +162,7 @@ def test_str_format(estimator, dataset):
     assert output == expected
 
 
-def test_repr_equals_str(estimator, dataset):
-    result = estimator.estimate(dataset, y_true_field="y_true", y_proxy_field="y_proxy", metric_name="perf")
+def test_repr_equals_str(estimator, y_arrays):
+    y_true, y_proxy = y_arrays
+    result = estimator.estimate(y_true, y_proxy, metric_name="perf")
     assert repr(result) == str(result)

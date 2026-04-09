@@ -24,24 +24,23 @@ def test_two_equal_strata_matches_ppi():
     """
     n_labeled, n_unlabeled = 3, 4
 
-    # Build base records (no group)
-    single_labeled, single_unlabeled = generate_gaussian_dataset(n_labeled, n_unlabeled, random_seed=0)
+    # Generate base numpy arrays
+    y_true_base, y_proxy_base = generate_gaussian_dataset(n_labeled, n_unlabeled, random_seed=0)
 
     # Per-stratum PPI reference (single copy)
-    single_dataset = Dataset(single_labeled + single_unlabeled)
-    ppi_single = PPIMeanEstimator().estimate(single_dataset, y_true_field="y_true", y_proxy_field="y_proxy")
+    ppi_single = PPIMeanEstimator().estimate(y_true_base, y_proxy_base)
 
-    # Stratified dataset: stratum A and B are identical copies of the base data
-    records_a = [
-        {"y_true": record["y_true"], "y_proxy": record["y_proxy"], "group": "A"}
-        for record in single_dataset[:n_labeled]
-    ]
-    records_a += [{"y_proxy": record["y_proxy"], "group": "A"} for record in single_dataset[n_labeled:]]
-    records_b = [
-        {"y_true": record["y_true"], "y_proxy": record["y_proxy"], "group": "B"}
-        for record in single_dataset[:n_labeled]
-    ]
-    records_b += [{"y_proxy": record["y_proxy"], "group": "B"} for record in single_dataset[n_labeled:]]
+    # Build Dataset for StratifiedPPIMeanEstimator: stratum A and B are identical copies
+    records_a = []
+    records_b = []
+    # Labeled records (first n_labeled rows)
+    for i in range(n_labeled):
+        records_a.append({"y_true": float(y_true_base[i]), "y_proxy": float(y_proxy_base[i]), "group": "A"})
+        records_b.append({"y_true": float(y_true_base[i]), "y_proxy": float(y_proxy_base[i]), "group": "B"})
+    # Unlabeled records (remaining rows)
+    for i in range(n_labeled, n_labeled + n_unlabeled):
+        records_a.append({"y_proxy": float(y_proxy_base[i]), "group": "A"})
+        records_b.append({"y_proxy": float(y_proxy_base[i]), "group": "B"})
     stratified_dataset = Dataset(records_a + records_b)
 
     result = StratifiedPPIMeanEstimator().estimate(
@@ -65,26 +64,35 @@ def test_stratified_ppi_narrower_ci_with_heterogeneous_strata():
     random_seed = 42
     n_labeled, n_unlabeled = 5, 6
 
-    # Stratum A: low proxy noise → high lambda should be beneficial
-    labeled_records_a, unlabeled_records_a = generate_gaussian_dataset(
+    # Stratum A: low proxy noise
+    y_true_a, y_proxy_a = generate_gaussian_dataset(
         n_labeled, n_unlabeled, true_mean=0.6, true_std=0.1, random_seed=random_seed
     )
-    records_a = Dataset(labeled_records_a + unlabeled_records_a)
-    records_a["group"] = "A"
-    # Stratum B: high proxy noise → lower lambda is optimal
-    labeled_records_b, unlabeled_records_b = generate_gaussian_dataset(
+    # Stratum B: high proxy noise
+    y_true_b, y_proxy_b = generate_gaussian_dataset(
         n_labeled, n_unlabeled, true_mean=0.4, true_std=1.5, random_seed=random_seed
     )
-    records_b = Dataset(labeled_records_b + unlabeled_records_b)
-    records_b["group"] = "B"
 
+    # Build Dataset for StratifiedPPIMeanEstimator
+    records_a = []
+    records_b = []
+    # Stratum A
+    for i in range(n_labeled):
+        records_a.append({"y_true": float(y_true_a[i]), "y_proxy": float(y_proxy_a[i]), "group": "A"})
+    for i in range(n_labeled, n_labeled + n_unlabeled):
+        records_a.append({"y_proxy": float(y_proxy_a[i]), "group": "A"})
+    # Stratum B
+    for i in range(n_labeled):
+        records_b.append({"y_true": float(y_true_b[i]), "y_proxy": float(y_proxy_b[i]), "group": "B"})
+    for i in range(n_labeled, n_labeled + n_unlabeled):
+        records_b.append({"y_proxy": float(y_proxy_b[i]), "group": "B"})
     stratified_dataset = Dataset(records_a + records_b)
 
     # Standard PPI on the pooled dataset (ignores group structure)
-    pooled_records = [{k: v for k, v in r.items() if k != "group"} for r in stratified_dataset]
-    pooled_dataset = Dataset(pooled_records)
+    y_true_pooled = np.concatenate([y_true_a, y_true_b])
+    y_proxy_pooled = np.concatenate([y_proxy_a, y_proxy_b])
+    ppi_result = PPIMeanEstimator().estimate(y_true_pooled, y_proxy_pooled)
 
-    ppi_result = PPIMeanEstimator().estimate(pooled_dataset, y_true_field="y_true", y_proxy_field="y_proxy")
     stratified_result = StratifiedPPIMeanEstimator().estimate(
         stratified_dataset, y_true_field="y_true", y_proxy_field="y_proxy", groups_field="group"
     )
