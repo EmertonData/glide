@@ -1,6 +1,6 @@
+import numpy as np
 import pytest
 
-from glide.core.dataset import Dataset
 from glide.core.simulated_datasets import (
     generate_binary_dataset,
     generate_binary_dataset_with_oracle_sampling,
@@ -10,16 +10,13 @@ from glide.core.simulated_datasets import (
 
 
 def test_generate_binary_dataset_structure_and_counts():
-    labeled, unlabeled = generate_binary_dataset(n=1, N=2, random_seed=0)
-    dataset = labeled + unlabeled
-    assert isinstance(dataset, Dataset)
-    assert len(dataset) == 3
-    assert len(labeled) == 1
-    assert len(unlabeled) == 2
-    for record in dataset:
-        assert "y_proxy" in record
-        assert record["y_proxy"] in (0, 1)
-        assert record.get("y_true", 0) in (0, 1)
+    y_true, y_proxy = generate_binary_dataset(n=1, N=2, random_seed=0)
+    assert isinstance(y_true, np.ndarray)
+    assert isinstance(y_proxy, np.ndarray)
+    assert len(y_true) == 3
+    assert len(y_proxy) == 3
+    assert np.sum(~np.isnan(y_true)) == 1
+    assert np.sum(~np.isnan(y_proxy)) == 3
 
 
 def test_generate_binary_dataset_invalid_true_mean_raises():
@@ -41,22 +38,22 @@ def test_generate_binary_dataset_impossible_correlation_raises():
 
 
 def test_generate_binary_dataset_reproducibility():
-    dataset1 = generate_binary_dataset(n=1, N=2, random_seed=7)
-    dataset2 = generate_binary_dataset(n=1, N=2, random_seed=7)
-    assert dataset1 == dataset2
+    y_true1, y_proxy1 = generate_binary_dataset(n=1, N=2, random_seed=7)
+    y_true2, y_proxy2 = generate_binary_dataset(n=1, N=2, random_seed=7)
+    assert np.array_equal(y_true1, y_true2, equal_nan=True)
+    assert np.array_equal(y_proxy1, y_proxy2, equal_nan=True)
 
 
 def test_generate_binary_dataset_with_oracle_sampling_structure_and_counts():
-    dataset = generate_binary_dataset_with_oracle_sampling(N=10, random_seed=0)
-    assert isinstance(dataset, Dataset)
-    assert len(dataset) == 10
-    for record in dataset:
-        assert "y_true" in record
-        assert "y_proxy" in record
-        assert "uncertainty" in record
-        assert record["y_true"] in (0, 1)
-        assert record["y_proxy"] in (0, 1)
-        assert record["uncertainty"] > 0
+    data = generate_binary_dataset_with_oracle_sampling(N=10, random_seed=0)
+    assert isinstance(data, np.ndarray)
+    assert len(data) == 10
+    assert "y_true" in data.dtype.names
+    assert "y_proxy" in data.dtype.names
+    assert "uncertainty" in data.dtype.names
+    assert np.all((data["y_true"] == 0) | (data["y_true"] == 1))
+    assert np.all((data["y_proxy"] == 0) | (data["y_proxy"] == 1))
+    assert np.all(data["uncertainty"] > 0)
 
 
 def test_generate_binary_dataset_with_oracle_sampling_invalid_true_mean_raises():
@@ -78,13 +75,13 @@ def test_generate_binary_dataset_with_oracle_sampling_impossible_correlation_rai
 
 
 def test_generate_binary_dataset_with_oracle_sampling_reproducibility():
-    dataset1 = generate_binary_dataset_with_oracle_sampling(N=10, random_seed=7)
-    dataset2 = generate_binary_dataset_with_oracle_sampling(N=10, random_seed=7)
-    assert dataset1 == dataset2
+    data1 = generate_binary_dataset_with_oracle_sampling(N=10, random_seed=7)
+    data2 = generate_binary_dataset_with_oracle_sampling(N=10, random_seed=7)
+    assert np.array_equal(data1, data2)
 
 
 def test_generate_stratified_binary_dataset_structure_and_counts():
-    labeled, unlabeled = generate_stratified_binary_dataset(
+    y_true, y_proxy = generate_stratified_binary_dataset(
         n=[1, 2],
         N=[2, 1],
         true_mean=[0.6, 0.8],
@@ -92,28 +89,12 @@ def test_generate_stratified_binary_dataset_structure_and_counts():
         correlation=[0.75, 0.75],
         random_seed=None,
     )
-    assert isinstance(labeled, Dataset)
-    assert isinstance(unlabeled, Dataset)
-    assert len(labeled) == 3
-    assert len(unlabeled) == 3
-
-    # Fields that should be in both labeled and unlabeled
-    for dataset in [labeled, unlabeled]:
-        for record in dataset:
-            assert "y_proxy" in record
-            assert record["y_proxy"] in (0, 1)
-            assert "stratum_id" in record
-
-    # Fields that should be in labeled only
-    for record in labeled:
-        assert "y_true" in record
-        assert record["y_true"] in (0, 1)
-
-    # Verify stratum_id values
-    stratum_ids_labeled = labeled["stratum_id"].tolist()
-    stratum_ids_unlabeled = unlabeled["stratum_id"].tolist()
-    assert stratum_ids_labeled == [0, 1, 1]
-    assert stratum_ids_unlabeled == [0, 0, 1]
+    assert isinstance(y_true, np.ndarray)
+    assert isinstance(y_proxy, np.ndarray)
+    assert len(y_true) == 6
+    assert len(y_proxy) == 6
+    assert np.sum(~np.isnan(y_true)) == 3  # 1 + 2 labeled samples
+    assert np.sum(~np.isnan(y_proxy)) == 6  # all proxy samples present
 
 
 def test_generate_stratified_binary_dataset_empty_strata_raises():
@@ -133,7 +114,7 @@ def test_generate_stratified_binary_dataset_mismatched_lists_raises():
 
 
 def test_generate_stratified_binary_dataset_reproducibility():
-    labeled1, unlabeled1 = generate_stratified_binary_dataset(
+    y_true1, y_proxy1 = generate_stratified_binary_dataset(
         n=[1, 2],
         N=[2, 1],
         true_mean=[0.6, 0.8],
@@ -141,7 +122,7 @@ def test_generate_stratified_binary_dataset_reproducibility():
         correlation=[0.75, 0.75],
         random_seed=42,
     )
-    labeled2, unlabeled2 = generate_stratified_binary_dataset(
+    y_true2, y_proxy2 = generate_stratified_binary_dataset(
         n=[1, 2],
         N=[2, 1],
         true_mean=[0.6, 0.8],
@@ -149,24 +130,19 @@ def test_generate_stratified_binary_dataset_reproducibility():
         correlation=[0.75, 0.75],
         random_seed=42,
     )
-    assert labeled1 == labeled2
-    assert unlabeled1 == unlabeled2
+    assert np.array_equal(y_true1, y_true2, equal_nan=True)
+    assert np.array_equal(y_proxy1, y_proxy2, equal_nan=True)
 
 
 def test_generate_gaussian_dataset_structure_and_counts():
-    labeled, unlabeled = generate_gaussian_dataset(n=1, N=2, random_seed=0)
-    assert isinstance(labeled, Dataset)
-    assert isinstance(unlabeled, Dataset)
-    assert len(labeled) == 1
-    assert len(unlabeled) == 2
-    for record in labeled:
-        assert "y_proxy" in record
-        assert "y_true" in record
-        assert isinstance(record["y_proxy"], float)
-        assert isinstance(record["y_true"], float)
-    for record in unlabeled:
-        assert "y_proxy" in record
-        assert "y_true" not in record
+    y_true, y_proxy = generate_gaussian_dataset(n=1, N=2, random_seed=0)
+    assert isinstance(y_true, np.ndarray)
+    assert isinstance(y_proxy, np.ndarray)
+    assert len(y_true) == 3
+    assert len(y_proxy) == 3
+    assert np.sum(~np.isnan(y_true)) == 1
+    assert np.sum(~np.isnan(y_proxy)) == 3
+    assert np.isnan(y_true[1]) and np.isnan(y_true[2])  # unlabeled rows have NaN
 
 
 def test_generate_gaussian_dataset_invalid_positive_correlation_raises():
@@ -180,7 +156,7 @@ def test_generate_gaussian_dataset_invalid_negative_correlation_raises():
 
 
 def test_generate_gaussian_dataset_reproducibility():
-    labeled1, unlabeled1 = generate_gaussian_dataset(n=1, N=2, random_seed=7)
-    labeled2, unlabeled2 = generate_gaussian_dataset(n=1, N=2, random_seed=7)
-    assert labeled1 == labeled2
-    assert unlabeled1 == unlabeled2
+    y_true1, y_proxy1 = generate_gaussian_dataset(n=1, N=2, random_seed=7)
+    y_true2, y_proxy2 = generate_gaussian_dataset(n=1, N=2, random_seed=7)
+    assert np.array_equal(y_true1, y_true2, equal_nan=True)
+    assert np.array_equal(y_proxy1, y_proxy2, equal_nan=True)

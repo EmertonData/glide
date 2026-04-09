@@ -7,7 +7,6 @@ details, and therefore require larger datasets to hold reliably.
 import numpy as np
 import pytest
 
-from glide.core.dataset import Dataset
 from glide.core.simulated_datasets import generate_gaussian_dataset
 from glide.estimators.classical import ClassicalMeanEstimator
 from glide.estimators.stratified_classical import StratifiedClassicalMeanEstimator
@@ -24,11 +23,10 @@ def test_two_equal_strata_matches_classical():
     """
     n_labeled = 4
 
-    single_labeled_dataset, _ = generate_gaussian_dataset(n_labeled, 0, random_seed=0)
+    y_single, _ = generate_gaussian_dataset(n_labeled, 0, random_seed=0)
 
-    classical_single = ClassicalMeanEstimator().estimate(single_labeled_dataset, y_field="y_true")
+    classical_single = ClassicalMeanEstimator().estimate(y_single)
 
-    y_single = single_labeled_dataset["y_true"]
     y = np.concatenate([y_single, y_single])
     groups = np.repeat(["A", "B"], n_labeled)
 
@@ -52,15 +50,13 @@ def test_stratified_classical_narrower_ci_with_heterogeneous_strata():
     random_seed = 42
     n_labeled = 8
 
-    labeled_a, _ = generate_gaussian_dataset(n_labeled, 0, true_mean=0.0, true_std=0.1, random_seed=random_seed)
-    labeled_b, _ = generate_gaussian_dataset(n_labeled, 0, true_mean=1.0, true_std=0.1, random_seed=random_seed)
+    y_a, _ = generate_gaussian_dataset(n_labeled, 0, true_mean=0.0, true_std=0.1, random_seed=random_seed)
+    y_b, _ = generate_gaussian_dataset(n_labeled, 0, true_mean=1.0, true_std=0.1, random_seed=random_seed)
 
-    y_a, y_b = np.array(labeled_a["y_true"]), np.array(labeled_b["y_true"])
     y = np.concatenate([y_a, y_b])
     groups = np.repeat(["A", "B"], n_labeled)
-    pooled_dataset = Dataset([{"y": v} for v in y])
 
-    classical_result = ClassicalMeanEstimator().estimate(pooled_dataset, y_field="y")
+    classical_result = ClassicalMeanEstimator().estimate(y)
     stratified_result = StratifiedClassicalMeanEstimator().estimate(y, groups)
 
     # Stratified CI must be strictly narrower

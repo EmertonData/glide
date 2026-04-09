@@ -1,8 +1,7 @@
 from typing import List, Optional, Tuple, Union
 
 import numpy as np
-
-from glide.core.dataset import Dataset
+from numpy.typing import NDArray
 
 
 def generate_binary_dataset(
@@ -12,7 +11,7 @@ def generate_binary_dataset(
     proxy_mean: float = 0.6,
     correlation: float = 0.8,
     random_seed: Optional[Union[int, np.random.SeedSequence]] = None,
-) -> Tuple[Dataset, Dataset]:
+) -> Tuple[NDArray, NDArray]:
     """Generate a synthetic binary-label dataset for evaluation.
 
     Parameters
@@ -32,9 +31,9 @@ def generate_binary_dataset(
 
     Returns
     -------
-    Tuple[Dataset, Dataset]
-        [0]: labeled dataset with ``n`` records, containing ``"y_true"`` et ``"y_proxy"`` fields
-        [1]: unlabeld dataset with ``N`` records, containing only `"y_proxy"`` field
+    Tuple[NDArray, NDArray]
+        [0]: array of shape ``(n+N,)``, y_true with labeled values and NaN for unlabeled rows
+        [1]: array of shape ``(n+N,)``, y_proxy with all values present
 
     Raises
     ------
@@ -105,16 +104,17 @@ def generate_binary_dataset(
 
     Examples
     --------
+    >>> import numpy as np
     >>> from glide.core.simulated_datasets import generate_binary_dataset
-    >>> labeled, unlabeled = generate_binary_dataset(n=100, N=500, random_seed=42)
-    >>> len(labeled)
+    >>> y_true, y_proxy = generate_binary_dataset(n=100, N=500, random_seed=42)
+    >>> len(y_true)
+    600
+    >>> len(y_proxy)
+    600
+    >>> int(np.sum(~np.isnan(y_true)))
     100
-    >>> len(unlabeled)
-    500
-    >>> list(labeled.records[0].keys())
-    ['y_true', 'y_proxy']
-    >>> list(unlabeled.records[0].keys())
-    ['y_proxy']
+    >>> int(np.sum(~np.isnan(y_proxy)))
+    600
 
     """
     if not (0 < true_mean < 1):
@@ -155,20 +155,17 @@ def generate_binary_dataset(
     samples = rng.choice(4, p=probs, size=n)
     # extract the true and proxy values via integer division and modulo 2
     # we have 0 = (0, 0), 1 = (0, 1), 2 = (1, 0), 3 = (1, 1)
-    y_true = samples // 2
+    y_true_labeled = samples // 2
     y_proxy_labeled = samples % 2
 
-    # generate proxy values for un labeled samples
+    # generate proxy values for unlabeled samples
     y_proxy_unlabeled = rng.choice(2, p=[1 - p_p, p_p], size=N)
 
-    labeled_records = []
-    unlabeled_records = []
-    for y_true_, y_proxy_ in zip(y_true, y_proxy_labeled):
-        labeled_records.append({"y_true": int(y_true_), "y_proxy": int(y_proxy_)})
-    for y_proxy_ in y_proxy_unlabeled:
-        unlabeled_records.append({"y_proxy": int(y_proxy_)})
+    # Combine labeled and unlabeled: NaN for unlabeled y_true, all y_proxy values
+    y_true_all = np.concatenate([y_true_labeled.astype(float), np.full(N, np.nan)])
+    y_proxy_all = np.concatenate([y_proxy_labeled.astype(float), y_proxy_unlabeled.astype(float)])
 
-    return Dataset(labeled_records), Dataset(unlabeled_records)
+    return y_true_all, y_proxy_all
 
 
 def generate_stratified_binary_dataset(
@@ -178,7 +175,7 @@ def generate_stratified_binary_dataset(
     proxy_mean: List[float],
     correlation: List[float],
     random_seed: Optional[int] = None,
-) -> Tuple[Dataset, Dataset]:
+) -> Tuple[NDArray, NDArray]:
     """Generate a synthetic stratified binary-label dataset for evaluation.
 
     Generate multiple strata with potentially different parameters (true_mean, proxy_mean,
@@ -207,11 +204,9 @@ def generate_stratified_binary_dataset(
 
     Returns
     -------
-    Tuple[Dataset, Dataset]
-        [0]: labeled dataset with all strata combined, containing ``"y_true"``, ``"y_proxy"``,
-             and ``"stratum_id"`` fields
-        [1]: unlabeled dataset with all strata combined, containing ``"y_proxy"`` and
-             ``"stratum_id"`` fields
+    Tuple[NDArray, NDArray]
+        [0]: array of shape ``(sum(n)+sum(N),)``, y_true with labeled values and NaN for unlabeled rows
+        [1]: array of shape ``(sum(n)+sum(N),)``, y_proxy with all values present
 
     Raises
     ------
@@ -224,8 +219,9 @@ def generate_stratified_binary_dataset(
 
     Examples
     --------
+    >>> import numpy as np
     >>> from glide.core.simulated_datasets import generate_stratified_binary_dataset
-    >>> labeled, unlabeled = generate_stratified_binary_dataset(
+    >>> y_true, y_proxy = generate_stratified_binary_dataset(
     ...     n=[50, 100],
     ...     N=[200, 300],
     ...     true_mean=[0.6, 0.8],
@@ -233,14 +229,12 @@ def generate_stratified_binary_dataset(
     ...     correlation=[0.7, 0.75],
     ...     random_seed=42
     ... )
-    >>> len(labeled)
+    >>> len(y_true)
+    650
+    >>> len(y_proxy)
+    650
+    >>> int(np.sum(~np.isnan(y_true)))
     150
-    >>> len(unlabeled)
-    500
-    >>> list(labeled.records[0].keys())
-    ['y_true', 'y_proxy', 'stratum_id']
-    >>> labeled.records[0]["stratum_id"]
-    0
     """
     num_strata = len(n)
     if num_strata < 1:
@@ -259,15 +253,15 @@ def generate_stratified_binary_dataset(
         raise ValueError(f"All input lists must have the same length. Got: {lengths_str}")
 
     # Generate data for each stratum
-    all_labeled_records = []
-    all_unlabeled_records = []
+    all_y_true = []
+    all_y_proxy = []
 
     seed_sequence = np.random.SeedSequence(random_seed)
     seeds = seed_sequence.spawn(num_strata)
 
     for stratum_id in range(num_strata):
         # Generate data for this stratum
-        labeled, unlabeled = generate_binary_dataset(
+        y_true_k, y_proxy_k = generate_binary_dataset(
             n=n[stratum_id],
             N=N[stratum_id],
             true_mean=true_mean[stratum_id],
@@ -275,15 +269,13 @@ def generate_stratified_binary_dataset(
             correlation=correlation[stratum_id],
             random_seed=seeds[stratum_id],
         )
+        all_y_true.append(y_true_k)
+        all_y_proxy.append(y_proxy_k)
 
-        # Add stratum_id to all records
-        labeled["stratum_id"] = stratum_id
-        all_labeled_records.extend(labeled)
+    y_true_all = np.concatenate(all_y_true)
+    y_proxy_all = np.concatenate(all_y_proxy)
 
-        unlabeled["stratum_id"] = stratum_id
-        all_unlabeled_records.extend(unlabeled)
-
-    return Dataset(all_labeled_records), Dataset(all_unlabeled_records)
+    return y_true_all, y_proxy_all
 
 
 def generate_binary_dataset_with_oracle_sampling(
@@ -292,7 +284,7 @@ def generate_binary_dataset_with_oracle_sampling(
     proxy_mean: float = 0.6,
     correlation: float = 0.8,
     random_seed: Optional[int] = None,
-) -> Dataset:
+) -> NDArray:
     """Generate a synthetic binary dataset with oracle sampling probabilities.
 
     All N records have ground-truth labels (y_true), proxy predictions (y_proxy),
@@ -321,10 +313,10 @@ def generate_binary_dataset_with_oracle_sampling(
 
     Returns
     -------
-    Dataset
-        Dataset with N records, each containing ``"y_true"`` (int), ``"y_proxy"`` (int),
+    NDArray
+        Structured array with fields ``"y_true"`` (int), ``"y_proxy"`` (int),
         and ``"uncertainty"`` (float > 0), where ``"uncertainty"`` is the oracle RMSE.
-        All y_true values are present (no missing values).
+        Shape is ``(N,)``. All y_true values are present (no missing values).
 
     Raises
     ------
@@ -504,11 +496,13 @@ def generate_binary_dataset_with_oracle_sampling(
     # Oracle RMSE: sqrt(P(error | x_i))
     uncertainty = np.sqrt(error_prob_x)
 
-    records = [
-        {"y_true": int(yt), "y_proxy": int(yp), "uncertainty": float(p)}
-        for yt, yp, p in zip(y_true_arr, y_proxy_arr, uncertainty)
-    ]
-    return Dataset(records)
+    # Create structured array with y_true, y_proxy, and uncertainty fields
+    data = np.zeros(N, dtype=[("y_true", np.int32), ("y_proxy", np.int32), ("uncertainty", np.float64)])
+    data["y_true"] = y_true_arr.astype(np.int32)
+    data["y_proxy"] = y_proxy_arr.astype(np.int32)
+    data["uncertainty"] = uncertainty
+
+    return data
 
 
 def generate_gaussian_dataset(
@@ -520,7 +514,7 @@ def generate_gaussian_dataset(
     proxy_std: float = 1,
     correlation: float = 0.8,
     random_seed: Optional[int] = None,
-) -> Tuple[Dataset, Dataset]:
+) -> Tuple[NDArray, NDArray]:
     """Generate a synthetic Gaussian dataset for evaluation.
 
     Parameters
@@ -544,10 +538,9 @@ def generate_gaussian_dataset(
 
     Returns
     -------
-    Tuple[Dataset, Dataset]
-        A tuple ``(labeled, unlabeled)``. The labeled Dataset contains ``n`` records,
-        each with ``"y_true"`` and ``"y_proxy"``. The unlabeled Dataset contains ``N``
-        records with ``"y_proxy"`` only.
+    Tuple[NDArray, NDArray]
+        A tuple ``(y_true, y_proxy)``. y_true has shape ``(n+N,)`` with labeled values
+        and NaN for unlabeled rows. y_proxy has shape ``(n+N,)`` with all values present.
 
     Notes
     -----
@@ -634,8 +627,12 @@ def generate_gaussian_dataset(
 
     Y = lin_transform @ rng.standard_normal(size=(2, n + N))
 
-    y_true = true_mean + Y[0, :]
-    y_proxy = proxy_mean + Y[1, :]
-    labeled = [{"y_true": y_true[i], "y_proxy": y_proxy[i]} for i in range(n)]
-    unlabeled = [{"y_proxy": y_proxy[i]} for i in range(n, n + N)]
-    return Dataset(labeled), Dataset(unlabeled)
+    y_true_all_values = true_mean + Y[0, :]
+    y_proxy_all_values = proxy_mean + Y[1, :]
+
+    # Labeled subset: both y_true and y_proxy
+    # Unlabeled subset: only y_proxy (y_true is NaN)
+    y_true_all = np.concatenate([y_true_all_values[:n], np.full(N, np.nan)])
+    y_proxy_all = y_proxy_all_values
+
+    return y_true_all, y_proxy_all
