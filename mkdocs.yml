@@ -39,6 +39,7 @@ nav:
     - Installation: getting-started/installation.md
     - Quickstart: getting-started/quickstart.ipynb
   - User Guide: 
+    - Evaluation Workflow: user_guide/evaluation_workflow.md
     - Samplers: user_guide/samplers.md
     - Estimators: user_guide/estimators.md
   - Tutorials:

@@ -100,6 +100,6 @@ The $(\pi_i, \xi_i)$ fields produced by `StratifiedSampler` can be fed directly 
 
 ## References
 
-<a id="ref-1"></a>[1] Fogliato, Riccardo, Pratik Patil, Mathew Monfort, and Pietro Perona. "A framework for efficient model evaluation through stratification, sampling, and estimation." *European Conference on Computer Vision*, pp. 140–158. Springer Nature Switzerland, 2024. <https://arxiv.org/abs/2406.07320>.
+<a id="ref-1"></a>[1] <a id="ref-1-link" href="https://www.ecva.net/papers/eccv_2024/papers_ECCV/papers/12117.pdf">Fogliato, Riccardo, Pratik Patil, Mathew Monfort, and Pietro Perona. "A framework for efficient model evaluation through stratification, sampling, and estimation." *European Conference on Computer Vision*, pp. 140–158. Springer Nature Switzerland, 2024.</a>
 
-<a id="ref-2"></a>[2] Zrnic, Tijana, and Emmanuel Candès. "Active statistical inference." *arXiv preprint arXiv:2403.03208* (2024). <https://arxiv.org/abs/2403.03208>.
+<a id="ref-2"></a>[2] <a id="ref-2-link" href="https://proceedings.mlr.press/v235/zrnic24a.html">Zrnic, Tijana, and Emmanuel J. Candès. "Active statistical inference." Proceedings of the 41st International Conference on Machine Learning. 2024</a>.
