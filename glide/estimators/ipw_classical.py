@@ -73,6 +73,14 @@ class IPWClassicalMeanEstimator:
             Contains the CLT-based confidence interval, the metric name,
             the estimator name (``"IPWClassicalMeanEstimator"``), and ``n``
             (number of observations).
+
+        Raises
+        ------
+        ValueError
+            If any value in ``sampling_probability`` is not in ``(0, 1]``.
+        ValueError
+            If the IPW-weighted values have zero variance (all identical after
+            reweighting), which makes standard error estimation undefined.
         """
         if np.min(sampling_probability) <= 0 or np.max(sampling_probability) > 1:
             raise ValueError(f"Minimum sampling probability should be in (0, 1], got {np.min(sampling_probability)}")
