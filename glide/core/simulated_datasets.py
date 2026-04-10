@@ -627,12 +627,10 @@ def generate_gaussian_dataset(
 
     Y = lin_transform @ rng.standard_normal(size=(2, n + N))
 
-    y_true_all_values = true_mean + Y[0, :]
-    y_proxy_all_values = proxy_mean + Y[1, :]
-
     # Labeled subset: both y_true and y_proxy
     # Unlabeled subset: only y_proxy (y_true is NaN)
-    y_true_all = np.concatenate([y_true_all_values[:n], np.full(N, np.nan)])
-    y_proxy_all = y_proxy_all_values
+    y_true_all = true_mean + Y[0, :].copy()
+    y_true_all[n:] = np.nan
+    y_proxy_all = proxy_mean + Y[1, :]
 
     return y_true_all, y_proxy_all

@@ -52,8 +52,8 @@ def test_generate_binary_dataset_with_oracle_sampling_structure_and_counts():
     assert "y_true" in data.dtype.names
     assert "y_proxy" in data.dtype.names
     assert "uncertainty" in data.dtype.names
-    assert np.all((data["y_true"] == 0) | (data["y_true"] == 1))
-    assert np.all((data["y_proxy"] == 0) | (data["y_proxy"] == 1))
+    assert np.array_equal(np.unique(data["y_true"]), [0, 1])
+    assert np.array_equal(np.unique(data["y_proxy"]), [0, 1])
     assert np.all(data["uncertainty"] > 0)
 
 

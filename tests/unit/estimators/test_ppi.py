@@ -14,8 +14,8 @@ def y_arrays(n_true: int = 2, n_proxy: int = 2, seed: int = 42) -> tuple[NDArray
     y_true = rng.normal(loc=5.0, scale=1.0, size=n_true)
     y_proxy_labeled = y_true + rng.normal(0, 0.5, size=n_true)
     y_proxy_unlabeled = rng.normal(loc=5.0, scale=1.0, size=n_proxy) + rng.normal(0, 0.5, size=n_proxy)
-    y_true_all = np.concatenate([y_true.astype(float), np.full(n_proxy, np.nan)])
-    y_proxy_all = np.concatenate([y_proxy_labeled.astype(float), y_proxy_unlabeled.astype(float)])
+    y_true_all = np.concatenate([y_true, np.full(n_proxy, np.nan)])
+    y_proxy_all = np.concatenate([y_proxy_labeled, y_proxy_unlabeled])
     return y_true_all, y_proxy_all
 
 

@@ -60,11 +60,9 @@ def test_generate_gaussian_dataset_empirical_means_and_correlation():
     y_true_labeled = y_true[labeled_mask]
     y_proxy_labeled = y_proxy[labeled_mask]
 
-    y_proxy_all = y_proxy
-
     eps = 0.03
     assert np.mean(y_true_labeled) == pytest.approx(0.7, abs=eps)
-    assert np.mean(y_proxy_all) == pytest.approx(0.6, abs=eps)
+    assert np.mean(y_proxy) == pytest.approx(0.6, abs=eps)
 
     empirical_corr = np.corrcoef(y_true_labeled, y_proxy_labeled)[0, 1]
     assert empirical_corr == pytest.approx(0.8, abs=eps)
@@ -74,25 +72,26 @@ def test_generate_gaussian_dataset_empirical_means_and_correlation():
 
 
 def test_generate_stratified_binary_dataset_empirical_means_and_correlation_per_stratum():
+    n = [250, 250]
+    N = [2250, 2250]
     true_mean = [0.9, 0.8]
     proxy_mean = [0.8, 0.7]
     correlation = [0.5, 0.75]
 
     y_true, y_proxy = generate_stratified_binary_dataset(
-        n=[250, 250],
-        N=[2250, 2250],
+        n=n,
+        N=N,
         true_mean=true_mean,
         proxy_mean=proxy_mean,
         correlation=correlation,
         random_seed=0,
     )
 
-    # Split by stratum: first 500 (250 + 250) are stratum 0, rest are stratum 1
-    n_stratum_0 = 250 + 2250
-    n_stratum_1 = 250 + 2250
+    # Split by stratum: compute size of each stratum
+    stratum_sizes = [n[i] + N[i] for i in range(len(n))]
 
-    for stratum_id, n_start in enumerate([0, n_stratum_0]):
-        n_end = n_start + n_stratum_0 if stratum_id == 0 else n_start + n_stratum_1
+    for stratum_id, n_start in enumerate([0, stratum_sizes[0]]):
+        n_end = n_start + stratum_sizes[stratum_id]
 
         y_true_stratum = y_true[n_start:n_end]
         y_proxy_stratum = y_proxy[n_start:n_end]

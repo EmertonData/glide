@@ -35,12 +35,12 @@ def test_two_equal_strata_matches_ppi():
     records_b = []
     # Labeled records (first n_labeled rows)
     for i in range(n_labeled):
-        records_a.append({"y_true": float(y_true_base[i]), "y_proxy": float(y_proxy_base[i]), "group": "A"})
-        records_b.append({"y_true": float(y_true_base[i]), "y_proxy": float(y_proxy_base[i]), "group": "B"})
+        records_a.append({"y_true": y_true_base[i], "y_proxy": y_proxy_base[i], "group": "A"})
+        records_b.append({"y_true": y_true_base[i], "y_proxy": y_proxy_base[i], "group": "B"})
     # Unlabeled records (remaining rows)
     for i in range(n_labeled, n_labeled + n_unlabeled):
-        records_a.append({"y_proxy": float(y_proxy_base[i]), "group": "A"})
-        records_b.append({"y_proxy": float(y_proxy_base[i]), "group": "B"})
+        records_a.append({"y_proxy": y_proxy_base[i], "group": "A"})
+        records_b.append({"y_proxy": y_proxy_base[i], "group": "B"})
     stratified_dataset = Dataset(records_a + records_b)
 
     result = StratifiedPPIMeanEstimator().estimate(
@@ -78,14 +78,14 @@ def test_stratified_ppi_narrower_ci_with_heterogeneous_strata():
     records_b = []
     # Stratum A
     for i in range(n_labeled):
-        records_a.append({"y_true": float(y_true_a[i]), "y_proxy": float(y_proxy_a[i]), "group": "A"})
+        records_a.append({"y_true": y_true_a[i], "y_proxy": y_proxy_a[i], "group": "A"})
     for i in range(n_labeled, n_labeled + n_unlabeled):
-        records_a.append({"y_proxy": float(y_proxy_a[i]), "group": "A"})
+        records_a.append({"y_proxy": y_proxy_a[i], "group": "A"})
     # Stratum B
     for i in range(n_labeled):
-        records_b.append({"y_true": float(y_true_b[i]), "y_proxy": float(y_proxy_b[i]), "group": "B"})
+        records_b.append({"y_true": y_true_b[i], "y_proxy": y_proxy_b[i], "group": "B"})
     for i in range(n_labeled, n_labeled + n_unlabeled):
-        records_b.append({"y_proxy": float(y_proxy_b[i]), "group": "B"})
+        records_b.append({"y_proxy": y_proxy_b[i], "group": "B"})
     stratified_dataset = Dataset(records_a + records_b)
 
     # Standard PPI on the pooled dataset (ignores group structure)
