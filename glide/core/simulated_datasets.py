@@ -257,17 +257,15 @@ def generate_stratified_binary_dataset(
         lengths_str = ", ".join(f"{name}={length}" for name, length in param_lengths.items())
         raise ValueError(f"All input lists must have the same length. Got: {lengths_str}")
 
-    # Compute stratum sizes (labeled + unlabeled samples per stratum)
-    stratum_sizes = [n[i] + N[i] for i in range(num_strata)]
-
     # Generate data for each stratum
     all_y_true = []
     all_y_proxy = []
+    all_groups = []
 
     seed_sequence = np.random.SeedSequence(random_seed)
     seeds = seed_sequence.spawn(num_strata)
 
-    for stratum_id, size in enumerate(stratum_sizes):
+    for stratum_id in range(num_strata):
         # Generate data for this stratum
         y_true_k, y_proxy_k = generate_binary_dataset(
             n=n[stratum_id],
@@ -279,12 +277,11 @@ def generate_stratified_binary_dataset(
         )
         all_y_true.append(y_true_k)
         all_y_proxy.append(y_proxy_k)
+        all_groups.append(np.full(n[stratum_id] + N[stratum_id], stratum_id))
 
     y_true_all = np.concatenate(all_y_true)
     y_proxy_all = np.concatenate(all_y_proxy)
-
-    # Build group labels: which stratum each sample belongs to
-    groups = np.concatenate([np.full(stratum_sizes[i], i) for i in range(num_strata)])
+    groups = np.concatenate(all_groups)
 
     return y_true_all, y_proxy_all, groups
 
