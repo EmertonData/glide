@@ -89,8 +89,8 @@ def test_stratified_ppi_narrower_ci_with_heterogeneous_strata():
     stratified_dataset = Dataset(records_a + records_b)
 
     # Standard PPI on the pooled dataset (ignores group structure)
-    y_true_pooled = np.concatenate([y_true_a, y_true_b])
-    y_proxy_pooled = np.concatenate([y_proxy_a, y_proxy_b])
+    y_true_pooled = np.hstack([y_true_a, y_true_b])
+    y_proxy_pooled = np.hstack([y_proxy_a, y_proxy_b])
     ppi_result = PPIMeanEstimator().estimate(y_true_pooled, y_proxy_pooled)
 
     stratified_result = StratifiedPPIMeanEstimator().estimate(

@@ -18,7 +18,7 @@ def test_generate_binary_dataset_empirical_means_and_correlation():
     y_true_labeled = y_true[labeled_mask]
     y_proxy_labeled = y_proxy[labeled_mask]
 
-    true_mean = np.mean(y_true_labeled)
+    true_mean = np.nanmean(y_true)
     proxy_mean = np.mean(y_proxy)
     assert true_mean == pytest.approx(0.7, abs=0.03)
     assert proxy_mean == pytest.approx(0.6, abs=0.03)
@@ -61,13 +61,13 @@ def test_generate_gaussian_dataset_empirical_means_and_correlation():
     y_proxy_labeled = y_proxy[labeled_mask]
 
     eps = 0.03
-    assert np.mean(y_true_labeled) == pytest.approx(0.7, abs=eps)
-    assert np.mean(y_proxy) == pytest.approx(0.6, abs=eps)
+    assert np.nanmean(y_true) == pytest.approx(0.7, abs=eps)
+    assert np.mean(y_proxy_labeled) == pytest.approx(0.6, abs=eps)
 
     empirical_corr = np.corrcoef(y_true_labeled, y_proxy_labeled)[0, 1]
     assert empirical_corr == pytest.approx(0.8, abs=eps)
 
-    assert np.std(y_true_labeled) == pytest.approx(0.2, abs=eps)
+    assert np.nanstd(y_true_labeled) == pytest.approx(0.2, abs=eps)
     assert np.std(y_proxy_labeled) == pytest.approx(0.3, abs=eps)
 
 
@@ -89,10 +89,10 @@ def test_generate_stratified_binary_dataset_empirical_means_and_correlation_per_
 
     # Filter by stratum using the returned groups array
     for stratum_id in range(len(n)):
-        mask = groups == stratum_id
+        stratum_mask = groups == stratum_id
 
-        y_true_stratum = y_true[mask]
-        y_proxy_stratum = y_proxy[mask]
+        y_true_stratum = y_true[stratum_mask]
+        y_proxy_stratum = y_proxy[stratum_mask]
 
         # Extract labeled subset
         labeled_mask = ~np.isnan(y_true_stratum)
@@ -105,7 +105,7 @@ def test_generate_stratified_binary_dataset_empirical_means_and_correlation_per_
         expected_corr = correlation[stratum_id]
 
         # Check means (with tolerance for randomness)
-        empirical_true_mean = np.mean(y_true_labeled)
+        empirical_true_mean = np.nanmean(y_true_stratum)
         empirical_proxy_mean = np.mean(y_proxy_stratum)
         assert empirical_true_mean == pytest.approx(expected_true_mean, abs=0.03)
         assert empirical_proxy_mean == pytest.approx(expected_proxy_mean, abs=0.03)

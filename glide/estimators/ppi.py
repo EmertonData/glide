@@ -117,10 +117,10 @@ class PPIMeanEstimator:
         Parameters
         ----------
         y_true : NDArray
-            Array of labeled observations, shape ``(n+N,)``.
+            Array of labeled observations, shape ``(n_samples,)``.
             Labeled entries are finite; unlabeled entries are ``np.nan``.
         y_proxy : NDArray
-            Array of proxy predictions, shape ``(n+N,)``.
+            Array of proxy predictions, shape ``(n_samples,)``.
             Must be fully populated (no NaN). Must have nonzero variance.
         metric_name : str, optional
             Human-readable label for the metric. Defaults to ``"Metric"``.

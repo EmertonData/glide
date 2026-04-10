@@ -32,7 +32,7 @@ def dataset() -> Dataset:
 def test_preprocess_groups_preserved(sampler, dataset):
     _, groups = sampler._preprocess(dataset, "y_proxy", "group")
     expected_groups = np.array(["A", "A", "A", "A", "B", "B", "B", "B"], dtype=object)
-    assert np.array_equal(groups, expected_groups)
+    np.testing.assert_array_equal(groups, expected_groups)
 
 
 def test_preprocess_raises_on_empty_dataset(sampler):

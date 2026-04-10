@@ -34,8 +34,8 @@ def generate_binary_dataset(
     Returns
     -------
     Tuple[NDArray, NDArray]
-        [0]: array of shape ``(n+N,)``, y_true with labeled values and NaN for unlabeled rows
-        [1]: array of shape ``(n+N,)``, y_proxy with all values present
+        [0]: array of shape ``(n_samples,)``, y_true with labeled values and NaN for unlabeled rows
+        [1]: array of shape ``(n_samples,)``, y_proxy with all values present
 
     Raises
     ------
@@ -163,10 +163,10 @@ def generate_binary_dataset(
     y_proxy_unlabeled = rng.choice(2, p=[1 - p_p, p_p], size=N)
 
     # Combine labeled and unlabeled: NaN for unlabeled y_true, all y_proxy values
-    y_true_all = np.concatenate([y_true_labeled.astype(float), np.full(N, np.nan)])
-    y_proxy_all = np.concatenate([y_proxy_labeled.astype(float), y_proxy_unlabeled.astype(float)])
+    y_true = np.hstack([y_true_labeled.astype(float), np.full(N, np.nan)])
+    y_proxy = np.hstack([y_proxy_labeled.astype(float), y_proxy_unlabeled.astype(float)])
 
-    return y_true_all, y_proxy_all
+    return y_true, y_proxy
 
 
 def generate_stratified_binary_dataset(
@@ -206,9 +206,9 @@ def generate_stratified_binary_dataset(
     Returns
     -------
     Tuple[NDArray, NDArray, NDArray]
-        [0]: array of shape ``(sum(n)+sum(N),)``, y_true with labeled values and NaN for unlabeled rows
-        [1]: array of shape ``(sum(n)+sum(N),)``, y_proxy with all values present
-        [2]: groups: NDArray — shape ``(sum(n)+sum(N),)``, integer stratum identifiers
+        [0]: array of shape ``(n_samples,)``, y_true with labeled values and NaN for unlabeled rows
+        [1]: array of shape ``(n_samples,)``, y_proxy with all values present
+        [2]: groups: NDArray — shape ``(n_samples,)``, integer stratum identifiers
 
     Raises
     ------
@@ -257,9 +257,9 @@ def generate_stratified_binary_dataset(
         raise ValueError(f"All input lists must have the same length. Got: {lengths_str}")
 
     # Generate data for each stratum
-    all_y_true = []
-    all_y_proxy = []
-    all_groups = []
+    y_true_per_stratum = []
+    y_proxy_per_stratum = []
+    groups_per_stratum = []
 
     seed_sequence = np.random.SeedSequence(random_seed)
     seeds = seed_sequence.spawn(num_strata)
@@ -274,15 +274,15 @@ def generate_stratified_binary_dataset(
             correlation=correlation[stratum_id],
             random_seed=seeds[stratum_id],
         )
-        all_y_true.append(y_true_k)
-        all_y_proxy.append(y_proxy_k)
-        all_groups.append(np.full(n[stratum_id] + N[stratum_id], stratum_id))
+        y_true_per_stratum.append(y_true_k)
+        y_proxy_per_stratum.append(y_proxy_k)
+        groups_per_stratum.append(np.full_like(y_true_k, stratum_id))
 
-    y_true_all = np.concatenate(all_y_true)
-    y_proxy_all = np.concatenate(all_y_proxy)
-    groups = np.concatenate(all_groups)
+    y_true = np.hstack(y_true_per_stratum)
+    y_proxy = np.hstack(y_proxy_per_stratum)
+    groups = np.hstack(groups_per_stratum)
 
-    return y_true_all, y_proxy_all, groups
+    return y_true, y_proxy, groups
 
 
 def generate_binary_dataset_with_oracle_sampling(
@@ -544,8 +544,8 @@ def generate_gaussian_dataset(
     Returns
     -------
     Tuple[NDArray, NDArray]
-        A tuple ``(y_true, y_proxy)``. y_true has shape ``(n+N,)`` with labeled values
-        and NaN for unlabeled rows. y_proxy has shape ``(n+N,)`` with all values present.
+        A tuple ``(y_true, y_proxy)``. y_true has shape ``(n_samples,)`` with labeled values
+        and NaN for unlabeled rows. y_proxy has shape ``(n_samples,)`` with all values present.
 
     Notes
     -----
@@ -632,10 +632,8 @@ def generate_gaussian_dataset(
 
     Y = lin_transform @ rng.standard_normal(size=(2, n + N))
 
-    # Labeled subset: both y_true and y_proxy
-    # Unlabeled subset: only y_proxy (y_true is NaN)
-    y_true_all = true_mean + Y[0, :].copy()
-    y_true_all[n:] = np.nan
-    y_proxy_all = proxy_mean + Y[1, :]
+    y_true = true_mean + Y[0, :].copy()
+    y_true[n:] = np.nan
+    y_proxy = proxy_mean + Y[1, :]
 
-    return y_true_all, y_proxy_all
+    return y_true, y_proxy

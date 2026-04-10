@@ -1,6 +1,7 @@
 import numpy as np
 import pytest
 
+from glide.core.dataset import Dataset
 from glide.core.simulated_datasets import (
     generate_binary_dataset,
     generate_binary_dataset_with_oracle_sampling,
@@ -40,12 +41,11 @@ def test_generate_binary_dataset_impossible_correlation_raises():
 def test_generate_binary_dataset_reproducibility():
     y_true1, y_proxy1 = generate_binary_dataset(n=1, N=2, random_seed=7)
     y_true2, y_proxy2 = generate_binary_dataset(n=1, N=2, random_seed=7)
-    assert np.array_equal(y_true1, y_true2, equal_nan=True)
-    assert np.array_equal(y_proxy1, y_proxy2, equal_nan=True)
+    np.testing.assert_allclose(y_true1, y_true2, equal_nan=True)
+    np.testing.assert_allclose(y_proxy1, y_proxy2)
 
 
 def test_generate_binary_dataset_with_oracle_sampling_structure_and_counts():
-    from glide.core.dataset import Dataset
 
     dataset = generate_binary_dataset_with_oracle_sampling(N=10, random_seed=0)
     assert isinstance(dataset, Dataset)
@@ -80,7 +80,7 @@ def test_generate_binary_dataset_with_oracle_sampling_impossible_correlation_rai
 def test_generate_binary_dataset_with_oracle_sampling_reproducibility():
     data1 = generate_binary_dataset_with_oracle_sampling(N=10, random_seed=7)
     data2 = generate_binary_dataset_with_oracle_sampling(N=10, random_seed=7)
-    assert np.array_equal(data1, data2)
+    assert data1 == data2
 
 
 def test_generate_stratified_binary_dataset_structure_and_counts():
@@ -100,7 +100,10 @@ def test_generate_stratified_binary_dataset_structure_and_counts():
     assert len(groups) == 6
     assert np.sum(~np.isnan(y_true)) == 3  # 1 + 2 labeled samples
     assert np.sum(~np.isnan(y_proxy)) == 6  # all proxy samples present
-    assert np.array_equal(groups, [0, 0, 0, 1, 1, 1])
+    np.testing.assert_array_equal(groups, [0, 0, 0, 1, 1, 1])
+    # Verify y_true and y_proxy are binary (0 or 1)
+    assert np.all(np.isin(y_true[~np.isnan(y_true)], [0, 1]))
+    assert np.all(np.isin(y_proxy, [0, 1]))
 
 
 def test_generate_stratified_binary_dataset_empty_strata_raises():
@@ -136,9 +139,9 @@ def test_generate_stratified_binary_dataset_reproducibility():
         correlation=[0.75, 0.75],
         random_seed=42,
     )
-    assert np.array_equal(y_true1, y_true2, equal_nan=True)
-    assert np.array_equal(y_proxy1, y_proxy2, equal_nan=True)
-    assert np.array_equal(groups1, groups2)
+    np.testing.assert_allclose(y_true1, y_true2, equal_nan=True)
+    np.testing.assert_allclose(y_proxy1, y_proxy2, equal_nan=True)
+    np.testing.assert_array_equal(groups1, groups2)
 
 
 def test_generate_gaussian_dataset_structure_and_counts():
@@ -147,9 +150,8 @@ def test_generate_gaussian_dataset_structure_and_counts():
     assert isinstance(y_proxy, np.ndarray)
     assert len(y_true) == 3
     assert len(y_proxy) == 3
-    assert np.sum(~np.isnan(y_true)) == 1
-    assert np.sum(~np.isnan(y_proxy)) == 3
-    assert np.isnan(y_true[1]) and np.isnan(y_true[2])  # unlabeled rows have NaN
+    np.testing.assert_allclose(np.isnan(y_true), np.array([False, True, True]))
+    np.testing.assert_allclose(np.isnan(y_proxy), np.array([False, False, False]))
 
 
 def test_generate_gaussian_dataset_invalid_positive_correlation_raises():
@@ -165,5 +167,5 @@ def test_generate_gaussian_dataset_invalid_negative_correlation_raises():
 def test_generate_gaussian_dataset_reproducibility():
     y_true1, y_proxy1 = generate_gaussian_dataset(n=1, N=2, random_seed=7)
     y_true2, y_proxy2 = generate_gaussian_dataset(n=1, N=2, random_seed=7)
-    assert np.array_equal(y_true1, y_true2, equal_nan=True)
-    assert np.array_equal(y_proxy1, y_proxy2, equal_nan=True)
+    np.testing.assert_allclose(y_true1, y_true2, equal_nan=True)
+    np.testing.assert_allclose(y_proxy1, y_proxy2)
