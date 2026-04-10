@@ -40,7 +40,8 @@ def test_ipw_mean_matches_expected():
 
 
 def test_uniform_sampling_probability_matches_classical():
-    """IPW with all sampling probabilities equal to 1 on fully observed data reduces to classical mean estimator.
+    """IPW with all sampling probabilities equal to 1 on fully observed data
+    reduces to classical mean estimator.
 
     When every unit is sampled with probability 1 and no observations are
     missing, the IPW weights are all 1 and the estimator is equivalent to the

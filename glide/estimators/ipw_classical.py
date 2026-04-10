@@ -34,8 +34,6 @@ class IPWClassicalMeanEstimator:
 
     def _compute_ipw_weighted_values(self, y: NDArray, sampling_probability: NDArray) -> NDArray:
         ipw_weighted_values = np.nan_to_num(y, nan=0) / sampling_probability
-        if len(np.unique(ipw_weighted_values)) == 1:
-            raise ValueError("Input values have zero variance")
         return ipw_weighted_values
 
     def _compute_mean_estimate(self, ipw_weighted_values: NDArray) -> float:
@@ -77,15 +75,14 @@ class IPWClassicalMeanEstimator:
         Raises
         ------
         ValueError
-            If any value in ``sampling_probability`` is not in ``(0, 1]``.
-        ValueError
-            If the IPW-weighted values have zero variance (all identical after
-            reweighting), which makes standard error estimation undefined.
+            If any value in ``sampling_probability`` is not in (0, 1], i.e.
+            less than or equal to 0 or greater than 1.
         """
         if np.min(sampling_probability) <= 0 or np.max(sampling_probability) > 1:
-            raise ValueError(f"Minimum sampling probability should be in (0, 1], got {np.min(sampling_probability)}")
+            raise ValueError("Sampling probabilities should be in (0, 1]")
 
         ipw_weighted_values = self._compute_ipw_weighted_values(y, sampling_probability)
+
         mean = self._compute_mean_estimate(ipw_weighted_values)
         std = self._compute_std_estimate(ipw_weighted_values)
         ci = CLTConfidenceInterval(mean=mean, std=std, confidence_level=confidence_level)
