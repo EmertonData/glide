@@ -177,7 +177,7 @@ def generate_stratified_binary_dataset(
     proxy_mean: List[float],
     correlation: List[float],
     random_seed: Optional[int] = None,
-) -> Tuple[NDArray, NDArray]:
+) -> Tuple[NDArray, NDArray, NDArray]:
     """Generate a synthetic stratified binary-label dataset for evaluation.
 
     Generate multiple strata with potentially different parameters (true_mean, proxy_mean,
@@ -206,9 +206,10 @@ def generate_stratified_binary_dataset(
 
     Returns
     -------
-    Tuple[NDArray, NDArray]
+    Tuple[NDArray, NDArray, NDArray]
         [0]: array of shape ``(sum(n)+sum(N),)``, y_true with labeled values and NaN for unlabeled rows
         [1]: array of shape ``(sum(n)+sum(N),)``, y_proxy with all values present
+        [2]: groups: NDArray — shape ``(sum(n)+sum(N),)``, integer stratum identifiers
 
     Raises
     ------
@@ -223,7 +224,7 @@ def generate_stratified_binary_dataset(
     --------
     >>> import numpy as np
     >>> from glide.core.simulated_datasets import generate_stratified_binary_dataset
-    >>> y_true, y_proxy = generate_stratified_binary_dataset(
+    >>> y_true, y_proxy, groups = generate_stratified_binary_dataset(
     ...     n=[50, 100],
     ...     N=[200, 300],
     ...     true_mean=[0.6, 0.8],
@@ -234,6 +235,8 @@ def generate_stratified_binary_dataset(
     >>> len(y_true)
     650
     >>> len(y_proxy)
+    650
+    >>> len(groups)
     650
     >>> int(np.sum(~np.isnan(y_true)))
     150
@@ -254,6 +257,9 @@ def generate_stratified_binary_dataset(
         lengths_str = ", ".join(f"{name}={length}" for name, length in param_lengths.items())
         raise ValueError(f"All input lists must have the same length. Got: {lengths_str}")
 
+    # Compute stratum sizes (labeled + unlabeled samples per stratum)
+    stratum_sizes = [n[i] + N[i] for i in range(num_strata)]
+
     # Generate data for each stratum
     all_y_true = []
     all_y_proxy = []
@@ -261,7 +267,7 @@ def generate_stratified_binary_dataset(
     seed_sequence = np.random.SeedSequence(random_seed)
     seeds = seed_sequence.spawn(num_strata)
 
-    for stratum_id in range(num_strata):
+    for stratum_id, size in enumerate(stratum_sizes):
         # Generate data for this stratum
         y_true_k, y_proxy_k = generate_binary_dataset(
             n=n[stratum_id],
@@ -277,7 +283,10 @@ def generate_stratified_binary_dataset(
     y_true_all = np.concatenate(all_y_true)
     y_proxy_all = np.concatenate(all_y_proxy)
 
-    return y_true_all, y_proxy_all
+    # Build group labels: which stratum each sample belongs to
+    groups = np.concatenate([np.full(stratum_sizes[i], i) for i in range(num_strata)])
+
+    return y_true_all, y_proxy_all, groups
 
 
 def generate_binary_dataset_with_oracle_sampling(

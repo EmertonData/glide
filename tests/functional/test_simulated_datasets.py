@@ -78,7 +78,7 @@ def test_generate_stratified_binary_dataset_empirical_means_and_correlation_per_
     proxy_mean = [0.8, 0.7]
     correlation = [0.5, 0.75]
 
-    y_true, y_proxy = generate_stratified_binary_dataset(
+    y_true, y_proxy, groups = generate_stratified_binary_dataset(
         n=n,
         N=N,
         true_mean=true_mean,
@@ -87,14 +87,12 @@ def test_generate_stratified_binary_dataset_empirical_means_and_correlation_per_
         random_seed=0,
     )
 
-    # Split by stratum: compute size of each stratum
-    stratum_sizes = [n[i] + N[i] for i in range(len(n))]
+    # Filter by stratum using the returned groups array
+    for stratum_id in range(len(n)):
+        mask = groups == stratum_id
 
-    for stratum_id, n_start in enumerate([0, stratum_sizes[0]]):
-        n_end = n_start + stratum_sizes[stratum_id]
-
-        y_true_stratum = y_true[n_start:n_end]
-        y_proxy_stratum = y_proxy[n_start:n_end]
+        y_true_stratum = y_true[mask]
+        y_proxy_stratum = y_proxy[mask]
 
         # Extract labeled subset
         labeled_mask = ~np.isnan(y_true_stratum)
