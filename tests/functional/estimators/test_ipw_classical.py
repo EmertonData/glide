@@ -14,6 +14,31 @@ from glide.estimators.ipw_classical import IPWClassicalMeanEstimator
 # ── tests ──────────────────────────────────────────────────────────────────────
 
 
+def test_ipw_mean_matches_expected():
+    """IPW estimator recovers the true mean under non-uniform subsampling.
+
+    Observations are dropped with probability (1 - π_i), where π_i is drawn
+    uniformly from [0.5, 1]. The IPW estimator should compensate for the
+    non-uniform missingness and produce a point estimate close to the true
+    population mean, and n must equal the number of non-missing observations.
+    """
+    n = 500
+    true_mean = 3
+    true_std = 0.1
+    rng = np.random.default_rng(seed=1)
+
+    labeled_dataset, _ = generate_gaussian_dataset(n, 0, true_mean=true_mean, true_std=true_std, random_seed=0)
+    y = labeled_dataset["y_true"]
+    sampling_probability = np.clip(rng.random(n), 0.5, 1)
+    y[rng.random(n) > sampling_probability] = np.nan
+
+    result = IPWClassicalMeanEstimator().estimate(y, sampling_probability)
+
+    assert result.mean == pytest.approx(true_mean, abs=0.2)
+    assert result.std == pytest.approx(0.11, abs=0.01)
+    assert result.n == np.sum(~np.isnan(y))
+
+
 def test_uniform_sampling_probability_matches_classical():
     """IPW with all sampling probabilities equal to 1 on fully observed data reduces to classical mean estimator.
 
@@ -25,7 +50,7 @@ def test_uniform_sampling_probability_matches_classical():
     n_labeled = 40
 
     labeled_dataset, _ = generate_gaussian_dataset(n_labeled, 0, random_seed=0)
-    y = np.array(labeled_dataset["y_true"])
+    y = labeled_dataset["y_true"]
     sampling_probability = np.ones(n_labeled)
 
     ipw_result = IPWClassicalMeanEstimator().estimate(y, sampling_probability)
