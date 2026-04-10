@@ -34,14 +34,16 @@ class IPWClassicalMeanEstimator:
 
     def _compute_ipw_weighted_values(self, y: NDArray, sampling_probability: NDArray) -> NDArray:
         ipw_weighted_values = np.nan_to_num(y, nan=0) / sampling_probability
+        if len(np.unique(ipw_weighted_values)) == 1:
+            raise ValueError("Input values have zero variance")
         return ipw_weighted_values
 
     def _compute_mean_estimate(self, ipw_weighted_values: NDArray) -> float:
-        mean = np.nansum(ipw_weighted_values) / len(ipw_weighted_values)
+        mean = np.mean(ipw_weighted_values)
         return mean
 
     def _compute_std_estimate(self, ipw_weighted_values: NDArray) -> float:
-        std = np.nanstd(ipw_weighted_values, ddof=1) / np.sqrt(len(ipw_weighted_values))
+        std = np.std(ipw_weighted_values, ddof=1) / np.sqrt(len(ipw_weighted_values))
         return std
 
     def estimate(
@@ -72,10 +74,8 @@ class IPWClassicalMeanEstimator:
             the estimator name (``"IPWClassicalMeanEstimator"``), and ``n``
             (number of observations).
         """
-        if np.min(sampling_probability) <= 0:
-            raise ValueError(f"Minimum sampling probability should be > 0, got {np.min(sampling_probability)}")
-        if len(np.unique(y[~np.isnan(y)])) == 1:
-            raise ValueError("Input values have zero variance")
+        if np.min(sampling_probability) <= 0 or np.max(sampling_probability) > 1:
+            raise ValueError(f"Minimum sampling probability should be in (0, 1], got {np.min(sampling_probability)}")
 
         ipw_weighted_values = self._compute_ipw_weighted_values(y, sampling_probability)
         mean = self._compute_mean_estimate(ipw_weighted_values)

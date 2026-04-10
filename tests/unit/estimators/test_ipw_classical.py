@@ -24,7 +24,7 @@ def sampling_probability() -> NDArray:
 @pytest.fixture
 def ipw_weighted_values() -> NDArray:
     # y / pi for observed, nan for unsampled: [2/0.5, 4/0.5, nan, nan]
-    return np.array([4.0, 8.0, np.nan, np.nan])
+    return np.array([4.0, 8.0, 0.0, 0.0])
 
 
 # --- _compute_ipw_weighted_values ---
@@ -52,7 +52,7 @@ def test_compute_mean_estimate_known_values(estimator, ipw_weighted_values):
 def test_compute_std_estimate_known_values(estimator, ipw_weighted_values):
     # nanstd([4, 8], ddof=1) = sqrt(8) ≈ 2.828; SE = 2.828 / sqrt(4) = sqrt(2) ≈ 1.414
     result = estimator._compute_std_estimate(ipw_weighted_values)
-    assert result == pytest.approx(1.414, abs=0.001)
+    assert result == pytest.approx(1.914, abs=0.001)
 
 
 # --- estimate ---
@@ -83,15 +83,15 @@ def test_estimate_custom_confidence_level(estimator, y, sampling_probability):
     assert result.confidence_interval.upper_bound == pytest.approx(5.756, abs=0.001)
 
 
-@pytest.mark.parametrize("bad_pi", [0.0, -0.5])
+@pytest.mark.parametrize("bad_pi", [2.0, 0.0, -0.5])
 def test_estimate_raises_on_non_positive_sampling_probability(estimator, y, bad_pi):
     pi = np.array([0.5, 0.5, 0.5, bad_pi])
-    with pytest.raises(ValueError, match="Minimum sampling probability should be > 0"):
+    with pytest.raises(ValueError, match="Minimum sampling probability should be in \\(0, 1]"):
         estimator.estimate(y, pi)
 
 
 def test_estimate_raises_on_zero_variance(estimator):
-    y = np.array([3.0, 3.0, np.nan])
+    y = np.array([3.0, 3.0, 3.0])
     pi = np.array([0.5, 0.5, 0.5])
     with pytest.raises(ValueError, match="Input values have zero variance"):
         estimator.estimate(y, pi)
