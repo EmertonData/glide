@@ -117,7 +117,6 @@ def generate_binary_dataset(
     100
     >>> int(np.sum(~np.isnan(y_proxy)))
     600
-
     """
     if not (0 < true_mean < 1):
         raise ValueError(f"true_mean must be in (0, 1), got {true_mean}")
