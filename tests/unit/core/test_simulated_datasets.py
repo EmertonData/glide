@@ -45,16 +45,18 @@ def test_generate_binary_dataset_reproducibility():
 
 
 def test_generate_binary_dataset_with_oracle_sampling_structure_and_counts():
-    data = generate_binary_dataset_with_oracle_sampling(N=10, random_seed=0)
-    assert isinstance(data, np.ndarray)
-    assert len(data) == 10
-    assert data.dtype.names is not None
-    assert "y_true" in data.dtype.names
-    assert "y_proxy" in data.dtype.names
-    assert "uncertainty" in data.dtype.names
-    assert np.array_equal(np.unique(data["y_true"]), [0, 1])
-    assert np.array_equal(np.unique(data["y_proxy"]), [0, 1])
-    assert np.all(data["uncertainty"] > 0)
+    from glide.core.dataset import Dataset
+
+    dataset = generate_binary_dataset_with_oracle_sampling(N=10, random_seed=0)
+    assert isinstance(dataset, Dataset)
+    assert len(dataset) == 10
+    for record in dataset:
+        assert "y_true" in record
+        assert "y_proxy" in record
+        assert "uncertainty" in record
+        assert record["y_true"] in (0, 1)
+        assert record["y_proxy"] in (0, 1)
+        assert record["uncertainty"] > 0
 
 
 def test_generate_binary_dataset_with_oracle_sampling_invalid_true_mean_raises():

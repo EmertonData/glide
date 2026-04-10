@@ -3,6 +3,8 @@ from typing import List, Optional, Tuple, Union
 import numpy as np
 from numpy.typing import NDArray
 
+from glide.core.dataset import Dataset
+
 
 def generate_binary_dataset(
     n: int,
@@ -284,7 +286,7 @@ def generate_binary_dataset_with_oracle_sampling(
     proxy_mean: float = 0.6,
     correlation: float = 0.8,
     random_seed: Optional[int] = None,
-) -> NDArray:
+) -> Dataset:
     """Generate a synthetic binary dataset with oracle sampling probabilities.
 
     All N records have ground-truth labels (y_true), proxy predictions (y_proxy),
@@ -313,10 +315,10 @@ def generate_binary_dataset_with_oracle_sampling(
 
     Returns
     -------
-    NDArray
-        Structured array with fields ``"y_true"`` (int), ``"y_proxy"`` (int),
+    Dataset
+        Dataset with N records, each containing ``"y_true"`` (int), ``"y_proxy"`` (int),
         and ``"uncertainty"`` (float > 0), where ``"uncertainty"`` is the oracle RMSE.
-        Shape is ``(N,)``. All y_true values are present (no missing values).
+        All y_true values are present (no missing values).
 
     Raises
     ------
@@ -496,13 +498,11 @@ def generate_binary_dataset_with_oracle_sampling(
     # Oracle RMSE: sqrt(P(error | x_i))
     uncertainty = np.sqrt(error_prob_x)
 
-    # Create structured array with y_true, y_proxy, and uncertainty fields
-    data = np.zeros(N, dtype=[("y_true", np.int32), ("y_proxy", np.int32), ("uncertainty", np.float64)])
-    data["y_true"] = y_true_arr.astype(np.int32)
-    data["y_proxy"] = y_proxy_arr.astype(np.int32)
-    data["uncertainty"] = uncertainty
-
-    return data
+    records = [
+        {"y_true": int(yt), "y_proxy": int(yp), "uncertainty": float(p)}
+        for yt, yp, p in zip(y_true_arr, y_proxy_arr, uncertainty)
+    ]
+    return Dataset(records)
 
 
 def generate_gaussian_dataset(
