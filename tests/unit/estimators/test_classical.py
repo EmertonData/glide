@@ -23,14 +23,6 @@ def y() -> NDArray:
     return np.array([2.0, 4.0, 6.0, 8.0])
 
 
-# --- preprocessing ---
-
-
-def test_preprocess(estimator, y_array):
-    y = estimator._preprocess(y_array)
-    assert len(y) == 4
-
-
 # --- _compute_mean_estimate ---
 
 

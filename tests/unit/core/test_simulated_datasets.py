@@ -90,7 +90,7 @@ def test_generate_stratified_binary_dataset_structure_and_counts():
         true_mean=[0.6, 0.8],
         proxy_mean=[0.5, 0.7],
         correlation=[0.75, 0.75],
-        random_seed=None,
+        random_seed=0,
     )
     assert isinstance(y_true, np.ndarray)
     assert isinstance(y_proxy, np.ndarray)
@@ -101,9 +101,8 @@ def test_generate_stratified_binary_dataset_structure_and_counts():
     assert np.sum(~np.isnan(y_true)) == 3  # 1 + 2 labeled samples
     assert np.sum(~np.isnan(y_proxy)) == 6  # all proxy samples present
     np.testing.assert_array_equal(groups, [0, 0, 0, 1, 1, 1])
-    # Verify y_true and y_proxy are binary (0 or 1)
-    assert np.all(np.isin(y_true[~np.isnan(y_true)], [0, 1]))
-    assert np.all(np.isin(y_proxy, [0, 1]))
+    np.testing.assert_allclose(y_true, np.array([1.0, np.nan, np.nan, 1.0, 1.0, np.nan]), equal_nan=True)
+    np.testing.assert_allclose(y_proxy, np.array([1.0, 0.0, 1.0, 1.0, 0.0, 1.0]))
 
 
 def test_generate_stratified_binary_dataset_empty_strata_raises():
@@ -150,8 +149,8 @@ def test_generate_gaussian_dataset_structure_and_counts():
     assert isinstance(y_proxy, np.ndarray)
     assert len(y_true) == 3
     assert len(y_proxy) == 3
-    np.testing.assert_allclose(np.isnan(y_true), np.array([False, True, True]))
-    np.testing.assert_allclose(np.isnan(y_proxy), np.array([False, False, False]))
+    np.testing.assert_allclose(y_true, np.array([0.82573022, np.nan, np.nan]), equal_nan=True)
+    np.testing.assert_allclose(y_proxy, np.array([0.76352425, 0.17291449, 1.32929515]))
 
 
 def test_generate_gaussian_dataset_invalid_positive_correlation_raises():

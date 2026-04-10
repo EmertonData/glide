@@ -27,9 +27,6 @@ class ClassicalMeanEstimator:
     n: 4
     """
 
-    def _preprocess(self, y: NDArray) -> NDArray:
-        return y
-
     def _compute_mean_estimate(self, y: NDArray) -> float:
         mean = np.nanmean(y)
         return mean
@@ -64,7 +61,6 @@ class ClassicalMeanEstimator:
             the estimator name (``"ClassicalMeanEstimator"``), and ``n``
             (number of observations).
         """
-        y = self._preprocess(y)
         mean = self._compute_mean_estimate(y)
         std = self._compute_std_estimate(y)
         ci = CLTConfidenceInterval(
