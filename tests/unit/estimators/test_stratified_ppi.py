@@ -33,7 +33,85 @@ def estimator() -> StratifiedPPIMeanEstimator:
     return StratifiedPPIMeanEstimator()
 
 
-# --- tests ---
+@pytest.fixture
+def y_data():
+    y_true = np.array([5.0, 6.0, 7.0])
+    y_proxy_labeled = np.array([4.5, 5.5, 6.5])
+    y_proxy_unlabeled = np.array([6.0, 7.0, 8.0])
+    return y_true, y_proxy_labeled, y_proxy_unlabeled
+
+
+# --- _preprocess ---
+
+
+def test_preprocess_returns_correct_shapes(estimator, y_true, y_proxy, groups):
+    y_true_result, y_proxy_result, groups_result = estimator._preprocess(y_true, y_proxy, groups)
+    assert len(y_true_result) == 8
+    assert len(y_proxy_result) == 8
+    assert len(groups_result) == 8
+    # Use allclose with equal_nan=True to handle NaN values correctly
+    assert np.allclose(y_true_result, y_true, equal_nan=True)
+    assert np.allclose(y_proxy_result, y_proxy, equal_nan=True)
+    assert np.array_equal(groups_result, groups)
+
+
+def test_preprocess_raises_on_stratum_size_too_small(estimator):
+    # Each stratum has only 1 labeled and 1 unlabeled sample — too few for variance
+    y_true = np.array([1.0, np.nan, 4.0, np.nan])
+    y_proxy = np.array([1.1, 1.8, 3.9, 4.8])
+    grps = np.array(["A", "A", "B", "B"])
+    with pytest.raises(RuntimeError, match="Too few labeled or unlabeled samples in dataset stratum 'A'"):
+        estimator._preprocess(y_true, y_proxy, grps)
+
+
+def test_preprocess_raises_on_zero_variance_proxy_in_stratum(estimator):
+    # Stratum A: 2 labeled + 2 unlabeled, all proxy values are constant
+    y_true = np.array([1.0, 2.0, np.nan, np.nan])
+    y_proxy = np.array([1.0, 1.0, 1.0, 1.0])  # All constant
+    grps = np.array(["A", "A", "A", "A"])
+    with pytest.raises(ValueError, match="Input proxy values have zero variance in stratum 'A'"):
+        estimator._preprocess(y_true, y_proxy, grps)
+
+
+# --- _compute_lambda ---
+
+
+def test_compute_lambda_returns_one_when_power_tuning_false(estimator):
+    y_true = np.array([5.0, 6.0])
+    y_proxy_labeled = np.array([4.9, 6.1])
+    y_proxy_unlabeled = np.array([5.2, 6.1])
+    result = estimator._compute_lambda(y_true, y_proxy_labeled, y_proxy_unlabeled, power_tuning=False)
+    assert result == 1.0
+
+
+def test_compute_lambda_known_values(estimator, y_data):
+    y_true, y_proxy_labeled, y_proxy_unlabeled = y_data
+    expected = 0.34
+    result = estimator._compute_lambda(y_true, y_proxy_labeled, y_proxy_unlabeled, power_tuning=True)
+    assert result == pytest.approx(expected, abs=0.01)
+
+
+# --- _compute_mean_estimate ---
+
+
+def test_compute_mean_estimate_known_values(estimator, y_data):
+    y_true, y_proxy_labeled, y_proxy_unlabeled = y_data
+    expected = 6.75
+    result = estimator._compute_mean_estimate(y_true, y_proxy_labeled, y_proxy_unlabeled, _lambda=0.5)
+    assert result == pytest.approx(expected)
+
+
+# --- _compute_std_estimate ---
+
+
+def test_compute_std_estimate_known_values(estimator, y_data):
+    y_true, y_proxy_labeled, y_proxy_unlabeled = y_data
+    expected = 0.41
+    result = estimator._compute_std_estimate(y_true, y_proxy_labeled, y_proxy_unlabeled, _lambda=0.5)
+    assert result == pytest.approx(expected, abs=1e-2)
+
+
+# --- estimate ---
 
 
 def test_estimate_raises_when_proxy_has_nan(estimator):
