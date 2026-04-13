@@ -12,6 +12,12 @@
     options:
       heading_level: 3
 
+## IPWClassicalMeanEstimator
+
+::: glide.estimators.ipw_classical.IPWClassicalMeanEstimator
+    options:
+      heading_level: 3
+
 ## PPIMeanEstimator
 
 ::: glide.estimators.ppi.PPIMeanEstimator

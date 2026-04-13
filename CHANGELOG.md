@@ -9,6 +9,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 ## [Next release]
 
 ### ✨ Added
+- `IPWClassicalMeanEstimator` for inverse probability weighted classical mean estimation
 - `StratifiedClassicalMeanEstimator` for Stratified classical mean estimation
 - Export JSON step in quickstart
 - Stratified PPI tutorial notebook

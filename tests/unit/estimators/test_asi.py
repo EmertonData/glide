@@ -56,12 +56,12 @@ def test_preprocess(estimator, dataset):
     assert not np.any(np.isnan(y_true))
 
 
-@pytest.mark.parametrize("bad_pi", [0.0, -0.5])
+@pytest.mark.parametrize("bad_pi", [2.0, -0.5])
 def test_preprocess_raises_on_non_positive_pi(estimator, bad_pi):
     labeled = [{"y_true": 1.0, "y_proxy": 1.0, "pi": 0.5}]
     unlabeled = [{"y_proxy": 1.0, "pi": bad_pi}]
     dataset = Dataset(labeled + unlabeled)
-    with pytest.raises(ValueError, match="Minimum annotation probability should be > 0"):
+    with pytest.raises(ValueError, match="Annotation probabilities should be in \\(0, 1]"):
         estimator._preprocess(dataset, "y_true", "y_proxy", "pi")
 
 
