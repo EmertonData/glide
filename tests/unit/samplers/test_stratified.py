@@ -32,9 +32,8 @@ def dataset() -> Dataset:
 def test_preprocess_returns_correct_shapes(sampler, dataset):
     y_proxy, groups = sampler._preprocess(dataset, "y_proxy", "group")
     expected_groups = np.array(["A", "A", "A", "A", "B", "B", "B", "B"], dtype=object)
+    np.testing.assert_array_equal(groups, expected_groups)
     assert len(y_proxy) == len(dataset)
-    assert len(groups) == len(dataset)
-    assert np.array_equal(groups, expected_groups)
 
 
 def test_preprocess_raises_on_nan_proxy(sampler):
