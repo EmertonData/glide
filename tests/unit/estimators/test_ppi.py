@@ -32,7 +32,7 @@ def y_data() -> tuple[NDArray, NDArray, NDArray]:
     return (y_true, y_proxy_labeled, y_proxy_unlabeled)
 
 
-# --- preprocessing ---
+# --- _preprocess ---
 
 
 def test_preprocess(estimator, y_arrays):

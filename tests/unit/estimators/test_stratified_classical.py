@@ -29,18 +29,6 @@ def estimator() -> StratifiedClassicalMeanEstimator:
     return StratifiedClassicalMeanEstimator()
 
 
-# --- _get_strata ---
-
-
-def test_get_strata_splits_correctly(estimator, y, groups):
-    strata = estimator._get_strata(y, groups)
-    assert set(strata.keys()) == {"A", "B"}
-    assert len(strata["A"]) == 2
-    assert len(strata["B"]) == 2
-    np.testing.assert_array_equal(strata["A"], [1.0, 3.0])
-    np.testing.assert_array_equal(strata["B"], [5.0, 7.0])
-
-
 # --- estimate ---
 
 

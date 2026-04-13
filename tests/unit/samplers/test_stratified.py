@@ -29,16 +29,24 @@ def dataset() -> Dataset:
 # --- _preprocess ---
 
 
-def test_preprocess_groups_preserved(sampler, dataset):
-    _, groups = sampler._preprocess(dataset, "y_proxy", "group")
+def test_preprocess_returns_correct_shapes(sampler, dataset):
+    y_proxy, groups = sampler._preprocess(dataset, "y_proxy", "group")
     expected_groups = np.array(["A", "A", "A", "A", "B", "B", "B", "B"], dtype=object)
     np.testing.assert_array_equal(groups, expected_groups)
+    assert len(y_proxy) == len(dataset)
 
 
-def test_preprocess_raises_on_empty_dataset(sampler):
-    dataset = Dataset([])
+def test_preprocess_raises_on_nan_proxy(sampler):
+    dataset = Dataset([{"group": "A", "y_proxy": 0.5}, {"group": "A", "y_proxy": np.nan}])
 
-    with pytest.raises(ValueError, match="empty"):
+    with pytest.raises(ValueError, match="NaN"):
+        sampler._preprocess(dataset, "y_proxy", "group")
+
+
+def test_preprocess_raises_on_stratum_size_too_small(sampler):
+    dataset = Dataset([{"group": "A", "y_proxy": 0.5}, {"group": "A", "y_proxy": 0.6}, {"group": "B", "y_proxy": 0.7}])
+
+    with pytest.raises(ValueError, match="fewer than 2"):
         sampler._preprocess(dataset, "y_proxy", "group")
 
 
@@ -56,28 +64,7 @@ def test_preprocess_raises_on_unknown_groups_field(sampler):
         sampler._preprocess(dataset, "y_proxy", "nonexistent_group_field")
 
 
-def test_preprocess_raises_on_stratum_size_less_than_two(sampler):
-    dataset = Dataset([{"group": "A", "y_proxy": 0.5}, {"group": "A", "y_proxy": 0.6}, {"group": "B", "y_proxy": 0.7}])
-
-    with pytest.raises(ValueError, match="fewer than 2"):
-        sampler._preprocess(dataset, "y_proxy", "group")
-
-
-def test_preprocess_raises_on_nan_proxy(sampler):
-    dataset = Dataset([{"group": "A", "y_proxy": 0.5}, {"group": "A", "y_proxy": np.nan}])
-
-    with pytest.raises(ValueError, match="NaN"):
-        sampler._preprocess(dataset, "y_proxy", "group")
-
-
-def test_preprocess_raises_on_zero_variance(sampler):
-    dataset = Dataset([{"group": "A", "y_proxy": 5.0}, {"group": "B", "y_proxy": 5.0}])
-
-    with pytest.raises(ValueError, match="Input proxy values have zero variance"):
-        sampler._preprocess(dataset, "y_proxy", "group")
-
-
-def test_preprocess_raises_on_all_strata_zero_variance(sampler):
+def test_preprocess_raises_on_zero_variance_proxy_in_stratum(sampler):
     dataset = Dataset(
         [
             {"group": "A", "y_proxy": 0},

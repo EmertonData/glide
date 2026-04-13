@@ -62,8 +62,8 @@ class ASIMeanEstimator:
         y_true_all = data[:, 0]
         y_proxy = data[:, 1]
         pi = data[:, 2]
-        if np.min(pi) <= 0:
-            raise ValueError(f"Minimum annotation probability should be > 0, got {np.min(pi)}")
+        if np.min(pi) <= 0 or np.max(pi) > 1:
+            raise ValueError("Annotation probabilities should be in (0, 1]")
         if np.isnan(y_proxy).any():
             raise ValueError("Input proxy values contain NaN")
         if len(np.unique(y_proxy)) == 1:
@@ -85,7 +85,7 @@ class ASIMeanEstimator:
         b = y_true * xi / pi
         cov_matrix = np.cov(a, b, ddof=1)
         var, cov = cov_matrix[0]
-        _lambda = float(cov / var)
+        _lambda = cov / var
         return _lambda
 
     def _compute_rectified_labels(
@@ -101,7 +101,7 @@ class ASIMeanEstimator:
         self,
         rectified_labels: NDArray,
     ) -> float:
-        mean_estimate = float(np.mean(rectified_labels))
+        mean_estimate = np.mean(rectified_labels)
         return mean_estimate
 
     def _compute_std_estimate(
@@ -109,7 +109,7 @@ class ASIMeanEstimator:
         rectified_labels: NDArray,
     ) -> float:
         n = len(rectified_labels)
-        std_estimate = float(np.std(rectified_labels, ddof=1) / np.sqrt(n))
+        std_estimate = np.std(rectified_labels, ddof=1) / np.sqrt(n)
         return std_estimate
 
     def estimate(
