@@ -1,6 +1,6 @@
 # Estimators
 
-GLIDE provides three estimators that each combine proxy labels and a small human-annotated subset to produce an unbiased mean estimate and a confidence interval. The right choice depends on how the labeled subset was collected — see [Evaluation Workflow](evaluation_workflow.md) for guidance.
+GLIDE provides three estimators that each combine proxy labels and a small human-annotated subset to produce an unbiased mean estimate and a confidence interval. The right choice depends on how the labeled subset was collected (see [Evaluation Workflow](evaluation_workflow.md) for guidance).
 
 ---
 
@@ -10,11 +10,11 @@ A good estimator $\hat{\theta}$ of $\theta^*$ must satisfy two criteria.
 
 ### Properties
 
-**No bias** — the estimate should be correct in expectation:
+**No bias**: the estimate should be correct in expectation:
 
 $$E[\hat{\theta}] = \theta^*$$
 
-**Small and statistically valid uncertainty** — the true value $\theta^*$ should fall within a confidence interval $C_\alpha$ at risk level $\alpha$:
+**Small and statistically valid uncertainty**: the true value $\theta^*$ should fall within a confidence interval $C_\alpha$ at risk level $\alpha$:
 
 $$\Pr(\theta^* \in C_\alpha) \geq 1 - \alpha$$
 
@@ -22,14 +22,14 @@ Moreover, $C_\alpha$ should be as small as possible.
 
 ### Input data
 
-All estimators in GLIDE rely on two complementary sources of labels. Proxy labels $\tilde{Y}_i$ are available for all $N$ items at low cost but are biased ($E[\tilde{Y}] \neq \theta^*$). Human labels $Y_j$ are unbiased ($E[Y] = \theta^*$) but expensive, and only available for a small labeled subset of $n \ll N$ items. The key insight: even though human labels are scarce, they can be used to **correct** the bias in the cheap proxy labels.
+All estimators in GLIDE rely on two complementary sources of labels. Proxy labels $\tilde{Y}_i$ are available for all $N$ samples at low cost but are biased ($E[\tilde{Y}] \neq \theta^*$). Human labels $Y_j$ are unbiased ($E[Y] = \theta^*$) but expensive, and only available for a small labeled subset of $n \ll N$ samples. The key insight: even though human labels are scarce, they can be used to **correct** the bias in the cheap proxy labels.
 
 <p align="center">
   <img src="../assets/schema-PPI.png" alt="Data schema" width="550">
 </p>
 
 <p align="center">
-  <em>All $N$ items are evaluated by a proxy (automated prediction or model). A smaller subset of $n$ items receives human annotations as well, enabling bias measurement and correction.</em>
+  <em>All $N$ samples are evaluated by a proxy (automated prediction or model). A smaller subset of $n$ samples receives human annotations as well, enabling bias measurement and correction.</em>
 </p>
 
 ---
@@ -38,12 +38,12 @@ All estimators in GLIDE rely on two complementary sources of labels. Proxy label
 
 PPI assumes that the labeled subset is drawn **uniformly at random** from the population. Under this assumption, it constructs an unbiased estimator by combining all available proxy labels with a small set of ground-truth annotations, correcting for the bias of the proxy at minimal cost.
 
-In PPI, each item has two associated values:
+In PPI, each sample has two associated values:
 
 | Value | Present for | Description |
 |---|---|---|
-| $\tilde{Y}_i$ | All $n+N$ items | Proxy label |
-| $Y_j$ | Labeled items only ($n < N$) | Ground-truth label |
+| $\tilde{Y}_i$ | All $n+N$ samples | Proxy label |
+| $Y_j$ | Labeled samples only ($n < N$) | Ground-truth label |
 
 ### Mean estimation
 
@@ -90,7 +90,7 @@ where:
 
 - $\widehat{\text{Var}}_{n+N}$ is the sample variance computed on **all $n + N$ proxy values pooled**,
 
-- $n$ and $N$ are the numbers of labeled and unlabeled items respectively.
+- $n$ and $N$ are the numbers of labeled and unlabeled samples respectively.
 
 When the proxy is informative (high covariance with human labels), $\hat{\lambda}$ is close to 1 and the CI is narrower than standard PPI; when the proxy is uninformative, $\hat{\lambda}$ shrinks toward 0, down-weighting it and falling back to the classical human-only mean estimate. PPI++ uses optimal $\hat{\lambda}$ in GLIDE by default. This ensures the resulting estimate always has smaller variance than the classical estimate.
 
@@ -98,19 +98,19 @@ When the proxy is informative (high covariance with human labels), $\hat{\lambda
 
 ## Stratified PPI++
 
-Standard PPI++ assumes that labeled and unlabeled samples are drawn uniformly from a single population. In practice, the dataset is often naturally partitioned into **strata** — for example, by language, domain, or question type — and the proxy model may behave very differently across these strata. **Stratified PPI++** [[5](#ref-5), [6](#ref-6)] exploits this structure: rather than applying one global estimate, it runs PPI++ independently within each stratum and combines the results with population-proportional weights.
+Standard PPI++ assumes that labeled and unlabeled samples are drawn uniformly from a single population. In practice, the dataset is often naturally partitioned into **strata** (for example, by language, domain, or question type), and the proxy model may behave very differently across these strata. **Stratified PPI++** [[5](#ref-5), [6](#ref-6)] exploits this structure: rather than applying one global estimate, it runs PPI++ independently within each stratum and combines the results with population-proportional weights.
 
-Let $K$ denote the number of strata. Stratum $k$ contains $n_k+N_k$ total items (labeled + unlabeled), of which $n_k$ are labeled. We let $n = \sum_k n_k$ and $N = \sum_k N_k$ be the total numbers of labeled and unlabeled samples respectively. We assume that $n_k/n \approx N_k/N$ for all $k$ and compute the **population weight** of stratum $k$ as:
+Let $K$ denote the number of strata. Stratum $k$ contains $n_k+N_k$ total samples (labeled + unlabeled), of which $n_k$ are labeled. We let $n = \sum_k n_k$ and $N = \sum_k N_k$ be the total numbers of labeled and unlabeled samples respectively. We assume that $n_k/n \approx N_k/N$ for all $k$ and compute the **population weight** of stratum $k$ as:
 
 $$w_k = \frac{n_k+N_k}{n+N}$$
 
-In Stratified PPI++, each item has the same values as in PPI++ — a proxy label $\tilde{Y}_i$ and optionally a ground-truth label $Y_j$ — plus a **stratum identifier** indicating which stratum the item belongs to.
+In Stratified PPI++, each sample has the same values as in PPI++ (a proxy label $\tilde{Y}_i$ and optionally a ground-truth label $Y_j$), plus a **stratum identifier** indicating which stratum the sample belongs to.
 
 | Value | Present for | Description |
 |---|---|---|
-| $\tilde{Y}_i$ | All $n+N$ items | Proxy label |
-| $Y_j$ | Labeled items only ($n < N$) | Ground-truth label |
-| $g_j$ | All $n+N$ items | Stratum identifier |
+| $\tilde{Y}_i$ | All $n+N$ samples | Proxy label |
+| $Y_j$ | Labeled samples only ($n < N$) | Ground-truth label |
+| $g_j$ | All $n+N$ samples | Stratum identifier |
 
 
 ### Mean estimation
@@ -131,7 +131,7 @@ $$\sigma^2_{\text{strat}} = \sum_{k=1}^{K} w_k^2 \cdot \sigma^2_k(\lambda_k)$$
 
 where $\sigma^2_k(\lambda_k)$ is the PPI++ variance for stratum $k$. The reported standard deviation $\sigma_{\text{strat}}$ serves to construct a confidence interval at level $1 - \alpha$ via the CLT exactly as in PPI++.
 
-The key benefit over global PPI++ becomes apparent when strata differ substantially in proxy quality. Strata where the proxy is accurate contribute a small $\sigma^2_k(\lambda_k)$, while strata where it is poor contribute a larger one — but each contribution is isolated to its own stratum instead of polluting the global estimate.
+The key benefit over global PPI++ becomes apparent when strata differ substantially in proxy quality. Strata where the proxy is accurate contribute a small $\sigma^2_k(\lambda_k)$, while strata where it is poor contribute a larger one, but each contribution is isolated to its own stratum instead of polluting the global estimate.
 
 ### Power-tuning
 
@@ -139,7 +139,7 @@ Each stratum $k$ receives its **own optimal weight** $\hat{\lambda}_k$, computed
 
 $$\hat{\lambda}_k = \frac{\widehat{\text{Cov}}_{n_k}(Y_k,\, \tilde{Y}_k)}{\left(1 + \tfrac{n_k}{N_k}\right)\widehat{\text{Var}}_{n_k + N_k}(\tilde{Y}_k)}$$
 
-This is the same formula as PPI++ power-tuning, applied stratum by stratum. In strata where the proxy is informative, $\hat{\lambda}_k$ is close to 1 and the stratum estimate benefits from the proxy signal. In strata where the proxy is weak or unreliable, $\hat{\lambda}_k$ shrinks toward 0, falling back to the classical human-only mean for that stratum — without affecting any other stratum.
+This is the same formula as PPI++ power-tuning, applied stratum by stratum. In strata where the proxy is informative, $\hat{\lambda}_k$ is close to 1 and the stratum estimate benefits from the proxy signal. In strata where the proxy is weak or unreliable, $\hat{\lambda}_k$ shrinks toward 0, falling back to the classical human-only mean for that stratum, without affecting any other stratum.
 
 Setting `power_tuning=False` forces $\lambda_k = 1.0$ for all strata, recovering stratified PPI without the variance-minimising tuning.
 
@@ -147,18 +147,18 @@ Setting `power_tuning=False` forces $\lambda_k = 1.0$ for all strata, recovering
 
 ## Active Statistical Inference (ASI)
 
-Standard approaches to combining proxy and human labels assume that the labeled subset is drawn **uniformly at random** from the population. In practice, annotation resources are often allocated strategically — for instance, prioritizing uncertain or difficult examples. **Active Statistical Inference (ASI)** [[3](#ref-3), [4](#ref-4)] handles this general case: each sample $X_i$ may have a distinct, pre-determined probability $\pi_i \in (0, 1]$ of being selected for human annotation. Inverse-Probability Weighting (IPW) corrects for this non-uniform selection, yielding valid confidence intervals under any fixed sampling rule.
+Standard approaches to combining proxy and human labels assume that the labeled subset is drawn **uniformly at random** from the population. In practice, annotation resources are often allocated strategically, for instance, prioritizing uncertain or difficult examples. **Active Statistical Inference (ASI)** [[3](#ref-3), [4](#ref-4)] handles this general case: each sample $X_i$ may have a distinct, pre-determined probability $\pi_i \in (0, 1]$ of being selected for human annotation. Inverse-Probability Weighting (IPW) corrects for this non-uniform selection, yielding valid confidence intervals under any fixed sampling rule.
 
-In ASI, each item has three associated values:
+In ASI, each sample has three associated values:
 
 | Value | Present for | Description |
 |---|---|---|
-| $\tilde{Y}_i$ | All $n$ items | Proxy label |
-| $\pi_i$ | All $n$ items | Known, pre-determined sampling probability |
-| $\xi_i$ | All $n$ items | Sampling indicator such that $\Pr(\xi_i = 1) = \pi_i = 1 - \Pr(\xi_i = 0)$ |
-| $Y_i$ | Labeled items only ($\xi_i = 1$) | Ground-truth label |
+| $\tilde{Y}_i$ | All $n$ samples | Proxy label |
+| $\pi_i$ | All $n$ samples | Known, pre-determined sampling probability |
+| $\xi_i$ | All $n$ samples | Sampling indicator such that $\Pr(\xi_i = 1) = \pi_i = 1 - \Pr(\xi_i = 0)$ |
+| $Y_i$ | Labeled samples only ($\xi_i = 1$) | Ground-truth label |
 
-We define $\xi_i \in \{0, 1\}$ as the **sampling indicator**: $\xi_i = 1$ if a ground-truth label is present for item $i$, and $\xi_i = 0$ otherwise. Crucially, $\pi_i$ must be known for every item. It is a property of the sampling design, not derived from the data.
+We define $\xi_i \in \{0, 1\}$ as the **sampling indicator**: $\xi_i = 1$ if a ground-truth label is present for sample $i$, and $\xi_i = 0$ otherwise. Crucially, $\pi_i$ must be known for every sample. It is a property of the sampling design, not derived from the data.
 
 ### Mean estimation
 
@@ -178,7 +178,7 @@ The ASI mean estimator is simply the average of the IPW-corrected labels:
 
 $$\hat{\theta}_{\lambda} = \frac{1}{n}\sum_{i=1}^{n} z_i(\lambda)$$
 
-This estimator is **unbiased** for the population mean under any fixed sampling design, provided $\pi_i > 0$ for all items.
+This estimator is **unbiased** for the population mean under any fixed sampling design, provided $\pi_i > 0$ for all samples.
 
 At $\lambda = 0$, this reduces to the classical Horvitz–Thompson estimator, which uses only the labeled samples (each weighted by $1/\pi_i$). As $\lambda$ increases, the proxy labels contribute progressively more to the estimate.
 
@@ -204,8 +204,8 @@ Define two per-record quantities:
 
 $$a_i = \tilde{Y}_i\!\left(\frac{\xi_i}{\pi_i} - 1\right), \qquad b_i = Y_i \cdot \frac{\xi_i}{\pi_i}$$
 
-- $a_i$ is computable for every item (requires only $\tilde{Y}_i$, $\xi_i$, and $\pi_i$).
-- $b_i$ equals $Y_i / \pi_i$ for labeled items and $0$ for unlabeled items.
+- $a_i$ is computable for every sample (requires only $\tilde{Y}_i$, $\xi_i$, and $\pi_i$).
+- $b_i$ equals $Y_i / \pi_i$ for labeled samples and $0$ for unlabeled samples.
 
 The variance-minimising $\lambda$ is:
 
