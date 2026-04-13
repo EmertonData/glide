@@ -27,16 +27,15 @@ def test_ipw_mean_matches_expected():
     true_std = 0.1
     rng = np.random.default_rng(seed=1)
 
-    labeled_dataset, _ = generate_gaussian_dataset(n, 0, true_mean=true_mean, true_std=true_std, random_seed=0)
-    y = labeled_dataset["y_true"]
+    y_true, _ = generate_gaussian_dataset(n, 0, true_mean=true_mean, true_std=true_std, random_seed=0)
     sampling_probability = np.clip(rng.random(n), 0.5, 1)
-    y[rng.random(n) > sampling_probability] = np.nan
+    y_true[rng.random(n) > sampling_probability] = np.nan
 
-    result = IPWClassicalMeanEstimator().estimate(y, sampling_probability)
+    result = IPWClassicalMeanEstimator().estimate(y_true, sampling_probability)
 
     assert result.mean == pytest.approx(true_mean, abs=0.2)
     assert result.std == pytest.approx(0.11, abs=0.01)
-    assert result.n == np.sum(~np.isnan(y))
+    assert result.n == np.sum(~np.isnan(y_true))
 
 
 def test_uniform_sampling_probability_matches_classical():
@@ -50,12 +49,11 @@ def test_uniform_sampling_probability_matches_classical():
     """
     n_labeled = 40
 
-    labeled_dataset, _ = generate_gaussian_dataset(n_labeled, 0, random_seed=0)
-    y = labeled_dataset["y_true"]
+    y_true, _ = generate_gaussian_dataset(n_labeled, 0, random_seed=0)
     sampling_probability = np.ones(n_labeled)
 
-    ipw_result = IPWClassicalMeanEstimator().estimate(y, sampling_probability)
-    classical_result = ClassicalMeanEstimator().estimate(labeled_dataset, y_field="y_true")
+    ipw_result = IPWClassicalMeanEstimator().estimate(y_true, sampling_probability)
+    classical_result = ClassicalMeanEstimator().estimate(y_true)
 
     assert ipw_result.mean == pytest.approx(classical_result.mean, abs=1e-10)
     assert ipw_result.std == pytest.approx(classical_result.std, abs=1e-10)

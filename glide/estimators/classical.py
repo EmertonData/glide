@@ -2,7 +2,6 @@ import numpy as np
 from numpy.typing import NDArray
 
 from glide.core.clt_confidence_interval import CLTConfidenceInterval
-from glide.core.dataset import Dataset
 from glide.core.mean_inference_result import ClassicalMeanInferenceResult
 
 
@@ -15,11 +14,11 @@ class ClassicalMeanEstimator:
 
     Examples
     --------
-    >>> from glide.core.dataset import Dataset
+    >>> import numpy as np
     >>> from glide.estimators.classical import ClassicalMeanEstimator
-    >>> dataset = Dataset([{"y": 5.0}, {"y": 6.0}, {"y": 4.0}, {"y": 7.0}])
+    >>> y = np.array([5.0, 6.0, 4.0, 7.0])
     >>> estimator = ClassicalMeanEstimator()
-    >>> result = estimator.estimate(dataset, y_field="y")
+    >>> result = estimator.estimate(y)
     >>> print(result)
     Metric: Metric
     Point Estimate: 5.500
@@ -27,10 +26,6 @@ class ClassicalMeanEstimator:
     Estimator : ClassicalMeanEstimator
     n: 4
     """
-
-    def _preprocess(self, dataset: Dataset, y_field: str) -> NDArray:
-        y = dataset.to_numpy(fields=[y_field])[:, 0]
-        return y
 
     def _compute_mean_estimate(self, y: NDArray) -> float:
         mean = np.nanmean(y)
@@ -43,8 +38,7 @@ class ClassicalMeanEstimator:
 
     def estimate(
         self,
-        dataset: Dataset,
-        y_field: str,
+        y: NDArray,
         metric_name: str = "Metric",
         confidence_level: float = 0.95,
     ) -> ClassicalMeanInferenceResult:
@@ -52,11 +46,8 @@ class ClassicalMeanEstimator:
 
         Parameters
         ----------
-        dataset : Dataset
-            Dataset containing records with a ``y_field`` column.
-        y_field : str
-            Name of the column holding the observations. Pass ``"y_true"`` for
-            the true-labels baseline, ``"y_proxy"`` for the proxy-only baseline.
+        y : NDArray
+            Array of observations, shape ``(n,)``.
         metric_name : str, optional
             Human-readable label for the metric. Defaults to ``"Metric"``.
         confidence_level : float, optional
@@ -70,7 +61,6 @@ class ClassicalMeanEstimator:
             the estimator name (``"ClassicalMeanEstimator"``), and ``n``
             (number of observations).
         """
-        y = self._preprocess(dataset, y_field)
         mean = self._compute_mean_estimate(y)
         std = self._compute_std_estimate(y)
         ci = CLTConfidenceInterval(
