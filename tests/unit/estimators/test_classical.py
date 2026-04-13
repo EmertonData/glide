@@ -41,6 +41,21 @@ def test_compute_mean_estimate_known_values(estimator, y):
     assert result == pytest.approx(expected)
 
 
+# --- nan handling ---
+
+
+def test_compute_mean_estimate_ignores_nan(estimator):
+    y = np.array([2.0, 4.0, np.nan, 6.0, 8.0])
+    result = estimator._compute_mean_estimate(y)
+    assert result == pytest.approx(5.0)
+
+
+def test_compute_std_estimate_ignores_nan(estimator):
+    y = np.array([2.0, 4.0, np.nan, 6.0, 8.0])
+    result = estimator._compute_std_estimate(y)
+    assert result == pytest.approx(1.29, abs=0.01)
+
+
 # --- _compute_std_estimate ---
 
 
