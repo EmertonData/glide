@@ -4,7 +4,6 @@ import numpy as np
 from numpy.typing import NDArray
 
 from glide.core.clt_confidence_interval import CLTConfidenceInterval
-from glide.core.dataset import Dataset
 from glide.core.mean_inference_result import SemiSupervisedMeanInferenceResult
 from glide.core.utils import compute_effective_sample_size
 
@@ -29,13 +28,12 @@ class PPIMeanEstimator:
 
     Examples
     --------
-    >>> from glide.core.dataset import Dataset
+    >>> import numpy as np
     >>> from glide.estimators.ppi import PPIMeanEstimator
-    >>> labeled = [{"y_true": 5.0, "y_proxy": 4.9}, {"y_true": 6.0, "y_proxy": 6.1}]
-    >>> unlabeled = [{"y_proxy": 5.2}, {"y_proxy": 6.1}]
-    >>> dataset = Dataset(labeled + unlabeled)
+    >>> y_true = np.array([5.0, 6.0, np.nan, np.nan])
+    >>> y_proxy = np.array([4.9, 6.1, 5.2, 6.1])
     >>> estimator = PPIMeanEstimator()
-    >>> result = estimator.estimate(dataset, y_true_field="y_true", y_proxy_field="y_proxy")
+    >>> result = estimator.estimate(y_true, y_proxy)
     >>> print(result)
     Metric: Metric
     Point Estimate: 5.618
@@ -46,18 +44,20 @@ class PPIMeanEstimator:
     Effective Sample Size: 3
     """
 
-    def _preprocess(self, dataset: Dataset, y_true_field: str, y_proxy_field: str) -> Tuple[NDArray, NDArray, NDArray]:
-        data = dataset.to_numpy(fields=[y_true_field, y_proxy_field])
-        y_true_all = data[:, 0]
-        y_proxy_all = data[:, 1]
+    def _preprocess(self, y_true_all: NDArray, y_proxy_all: NDArray) -> Tuple[NDArray, NDArray, NDArray]:
+        if len(y_true_all) != len(y_proxy_all):
+            raise ValueError(
+                f"y_true and y_proxy must have the same length, got {len(y_true_all)} and {len(y_proxy_all)}"
+            )
         if np.isnan(y_proxy_all).any():
             raise ValueError("Input proxy values contain NaN")
         if len(np.unique(y_proxy_all)) == 1:
             raise ValueError("Input proxy values have zero variance")
         labeled_mask = ~np.isnan(y_true_all)
         n_labeled = sum(labeled_mask)
+        n_unlabeled = len(y_true_all) - n_labeled
         # at least 2 labeled and unlabeled samples are needed to compute a variance downstream
-        if min(n_labeled, len(dataset) - n_labeled) <= 1:
+        if min(n_labeled, n_unlabeled) <= 1:
             raise RuntimeError("Too few labeled or unlabeled samples in dataset")
         y_true = y_true_all[labeled_mask]
         y_proxy_labeled = y_proxy_all[labeled_mask]
@@ -95,9 +95,8 @@ class PPIMeanEstimator:
 
     def estimate(
         self,
-        dataset: Dataset,
-        y_true_field: str,
-        y_proxy_field: str,
+        y_true: NDArray,
+        y_proxy: NDArray,
         metric_name: str = "Metric",
         confidence_level: float = 0.95,
         power_tuning: bool = True,
@@ -117,14 +116,12 @@ class PPIMeanEstimator:
 
         Parameters
         ----------
-        dataset : Dataset
-            Dataset containing both labeled rows (where ``y_true_field`` is
-            present) and unlabeled rows (where ``y_true_field`` is absent /
-            NaN). ``y_proxy_field`` must be present for every row.
-        y_true_field : str
-            Name of the column holding ground-truth labels.
-        y_proxy_field : str
-            Name of the column holding proxy predictions.
+        y_true : NDArray
+            Array of labeled observations, shape ``(n_samples,)``.
+            Labeled entries are finite; unlabeled entries are ``np.nan``.
+        y_proxy : NDArray
+            Array of proxy predictions, shape ``(n_samples,)``.
+            Must be fully populated (no NaN). Must have nonzero variance.
         metric_name : str, optional
             Human-readable label for the metric. Defaults to ``"Metric"``.
         confidence_level : float, optional
@@ -136,20 +133,20 @@ class PPIMeanEstimator:
 
         Returns
         -------
-        InferenceResult
+        SemiSupervisedMeanInferenceResult
             Contains the CLT-based confidence interval, the metric name,
             the estimator name (``"PPIMeanEstimator"``), and the counts
-            ``n_true`` (labeled rows) and ``n_proxy`` (all rows with a proxy
-            prediction).
+            ``n_true`` (labeled observations) and ``n_proxy`` (all observations
+            with a proxy prediction).
         """
-        y_data = self._preprocess(dataset, y_true_field, y_proxy_field)
-        y_true, _, y_proxy_unlabeled = y_data
-        n = len(y_true)
+        y_data = self._preprocess(y_true, y_proxy)
+        y_true_labeled, _, y_proxy_unlabeled = y_data
+        n = len(y_true_labeled)
         N = len(y_proxy_unlabeled)
         _lambda = self._compute_lambda(y_data, power_tuning)
         mean = self._compute_mean_estimate(y_data, _lambda)
         std = self._compute_std_estimate(y_data, _lambda)
-        effective_sample_size = compute_effective_sample_size(y_true, std)
+        effective_sample_size = compute_effective_sample_size(y_true_labeled, std)
         confidence_interval = CLTConfidenceInterval(
             mean=mean,
             std=std,
