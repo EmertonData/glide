@@ -1,3 +1,5 @@
+from typing import Tuple
+
 import numpy as np
 import pytest
 from numpy.typing import NDArray
@@ -9,7 +11,7 @@ from glide.estimators.asi import ASIMeanEstimator
 
 
 @pytest.fixture
-def arrays(n_labeled: int = 2, n_unlabeled: int = 2, seed: int = 0) -> tuple[NDArray, NDArray, NDArray]:
+def arrays(n_labeled: int = 2, n_unlabeled: int = 2, seed: int = 0) -> Tuple[NDArray, NDArray, NDArray]:
     rng = np.random.default_rng(seed)
     pi = n_labeled / (n_labeled + n_unlabeled)
     y_true_vals = rng.normal(4.0, 1.0, size=n_labeled)
@@ -27,7 +29,7 @@ def estimator() -> ASIMeanEstimator:
 
 
 @pytest.fixture
-def y_data() -> tuple[NDArray, NDArray, NDArray, NDArray]:
+def y_data() -> Tuple[NDArray, NDArray, NDArray, NDArray]:
     y_true = np.array([3.0, 5.0, 0.0, 0.0])
     y_proxy = np.array([2.0, 4.0, 5.0, 7.0])
     xi = np.array([1.0, 1.0, 0.0, 0.0])
@@ -65,12 +67,12 @@ def test_preprocess_raises_on_length_mismatch(estimator):
         estimator._preprocess(y_true, y_proxy, sampling_probabilities)
 
 
-@pytest.mark.parametrize("bad_pi", [0.0, -0.5])
+@pytest.mark.parametrize("bad_pi", [0.0, -0.5, 2.0])
 def test_preprocess_raises_on_non_positive_pi(estimator, bad_pi):
     y_true = np.array([1.0, np.nan])
     y_proxy = np.array([1.0, 2.0])
     sampling_probabilities = np.array([0.5, bad_pi])
-    with pytest.raises(ValueError, match="Minimum annotation probability should be > 0"):
+    with pytest.raises(ValueError, match="Sampling probabilities should be in \\(0, 1]"):
         estimator._preprocess(y_true, y_proxy, sampling_probabilities)
 
 

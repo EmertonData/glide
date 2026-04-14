@@ -53,8 +53,8 @@ class ASIMeanEstimator:
     ) -> Tuple[NDArray, NDArray, NDArray, NDArray]:
         if not (len(y_true_all) == len(y_proxy) == len(sampling_probabilities)):
             raise ValueError("y_true, y_proxy, and sampling_probabilities must all have the same length")
-        if np.min(sampling_probabilities) <= 0:
-            raise ValueError(f"Minimum annotation probability should be > 0, got {np.min(sampling_probabilities)}")
+        if np.min(sampling_probabilities) <= 0 or np.max(sampling_probabilities) > 1:
+            raise ValueError("Sampling probabilities should be in (0, 1]")
         if np.isnan(y_proxy).any():
             raise ValueError("Input proxy values contain NaN")
         if len(np.unique(y_proxy)) == 1:
@@ -143,6 +143,12 @@ class ASIMeanEstimator:
             Contains the CLT-based confidence interval, the metric name, the estimator
             name (``"ASIMeanEstimator"``), and the counts ``n_true`` (labeled rows) and
             ``n_proxy`` (total rows).
+
+        Raises
+        ------
+        ValueError
+            If any value in ``sampling_probabilities`` is not in (0, 1], i.e.
+            less than or equal to 0 or greater than 1.
         """
         y_data = self._preprocess(y_true, y_proxy, sampling_probabilities)
         _lambda = self._compute_lambda(y_data, power_tuning)
