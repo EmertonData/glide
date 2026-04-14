@@ -44,26 +44,19 @@ You start with a fully proxy-labelled dataset. The sampler's job is to assign a 
 
 ### Guided sampling
 
-Samplers can exploit the structure of the data or auxiliary information to allocate the annotation budget more efficiently. For example, a sampler may use predefined strata to ensure balanced coverage across subgroups, or it may rely on per-instance auxiliary signals (such as model uncertainty) to focus annotation on the most informative records.
+Samplers can exploit the structure of the data or auxiliary information to allocate the annotation budget more efficiently. For example, a sampler may use predefined strata to ensure balanced coverage across subgroups, or it may rely on per-instance auxiliary signals (such as proxy label uncertainty) to focus annotation on the most informative records.
 
 ### Choosing a sampler
 
 GLIDE provides multiple samplers. The choice depends on the structure of your data, for example, whether it can be split into naturally defined groups (language, domain, topic, ...) or whether per-sample uncertainty scores are available. See [Samplers](samplers.md) for a full description of each option.
 
-Samplers compute two values per sample that the downstream estimator uses directly:
-
-| Value | Description |
-|---|---|
-| $\pi_i$ | Drawing probability used to select sample $i$ |
-| $\xi_i$ | Indicator: $1$ if selected for annotation, $0$ otherwise |
-
-Samples with $\xi_i = 1$ are the ones to send for human annotation.
+Samplers compute drawing probabilities for each sample. These are used to select samples for human annotation by setting an indicator value for each element. The probabilities and indicator values are directly used by downstream estimators.
 
 ---
 
 ## Stage 2: Human annotation
 
-The selected samples ($\xi_i = 1$) must be labelled by humans before estimation can proceed. This is typically handled through an annotation platform, where annotators are presented with each item and record their judgements according to a predefined rubric.
+The selected samples ($\xi_i = 1$) must be labelled by humans before estimation can proceed. This is typically handled through an annotation process, where annotators are presented with each item and record their judgements according to a predefined rubric.
 
 For many evaluation tasks, such as assessing factual accuracy, safety, or subtle reasoning, the annotation requires genuine expertise: annotators must be qualified to make reliable judgements on the items at hand. Expert annotation is accurate, but calling upon it comes at a cost, which is why allocating the annotation budget efficiently matters.
 
@@ -94,7 +87,7 @@ Here is a concrete end-to-end sequence for a scenario where the data has natural
 
 1. **Proxy-label all $N$ samples** with your automated judge.
 2. **Run `StratifiedSampler`** with Neyman allocation and $b = 200$. This sets $\pi_i$ and $\xi_i$ for every sample with $\xi_i = 1$ for 200 samples at most.
-3. **Collect human annotations** $Y_i$ for each sample where $\xi_i = 1$ via your annotation platform.
+3. **Collect human annotations** $Y_i$ for each sample where $\xi_i = 1$ through your annotation process.
 4. **Run `StratifiedPPI`** on the full dataset where each sample has a proxy $\tilde{Y}_i$, and the ground truths $Y_i$ are present for labeled samples. 
 5. **Read** the point estimate $\hat{\theta}$ and the confidence interval $[\hat{\theta} - \delta, \hat{\theta} + \delta]$ for a desired confidence level.
 
