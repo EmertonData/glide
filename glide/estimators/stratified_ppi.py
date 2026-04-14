@@ -59,24 +59,7 @@ class StratifiedPPIMeanEstimator:
         y_proxy: NDArray,
         groups: NDArray,
     ) -> Tuple[NDArray, NDArray, NDArray]:
-        """Validate input arrays and stratum structure.
 
-        Parameters
-        ----------
-        y_true : NDArray
-            Array of ground-truth labels with NaN for unlabeled records.
-        y_proxy : NDArray
-            Array of proxy predictions (must be fully observed).
-        groups : NDArray
-            Array of stratum identifiers.
-
-        Raises
-        ------
-        ValueError
-            If proxy contains NaN or if any stratum has zero variance in proxy.
-        RuntimeError
-            If any stratum has fewer than 2 labeled or 2 unlabeled records.
-        """
         if np.isnan(y_proxy).any():
             raise ValueError("Input proxy values contain NaN")
 
