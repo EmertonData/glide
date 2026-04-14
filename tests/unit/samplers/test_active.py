@@ -53,8 +53,7 @@ def test_sample_returns_valid_arrays(sampler, uncertainties):
 
 def test_sample_pi_clipped_and_higher_uncertainty_gets_higher_pi(sampler):
     pi, _ = sampler.sample(np.array([0.001, 10.0]), budget=2, random_seed=0)
-    assert pi[0] == pytest.approx(0.0, abs=0.001)
-    assert pi[1] == pytest.approx(1.0, abs=0.001)
+    np.testing.assert_allclose(pi, np.array([0.0, 1.0]), atol=0.001)
 
 
 def test_sample_invalid_budget_zero(sampler, uncertainties):

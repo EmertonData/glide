@@ -30,14 +30,12 @@ class ActiveSampler:
     def _preprocess(self, uncertainties: NDArray) -> NDArray:
         if np.any(np.isnan(uncertainties)):
             raise ValueError(
-                "All uncertainty values must be finite; "
-                "got a NaN value. "
+                "All uncertainty values must be finite; got a NaN value. "
                 "A NaN uncertainty score cannot be used to compute sampling probabilities."
             )
         if np.any(uncertainties <= 0.0):
             raise ValueError(
-                "All uncertainty values must be strictly positive; "
-                "got a non-positive value. "
+                "All uncertainty values must be strictly positive; got a non-positive value. "
                 "An observation with zero or negative uncertainty would never be selected."
             )
         return uncertainties

@@ -49,9 +49,9 @@ def test_generate_binary_dataset_with_oracle_sampling_structure_and_counts():
     assert len(y_true) == 10
     assert len(y_proxy) == 10
     assert len(uncertainty) == 10
-    assert all(v in (0.0, 1.0) for v in y_true)
-    assert all(v in (0.0, 1.0) for v in y_proxy)
-    assert all(v > 0 for v in uncertainty)
+    assert set(y_true.tolist()).issubset({0.0, 1.0})
+    assert set(y_proxy.tolist()).issubset({0.0, 1.0})
+    assert np.all(uncertainty > 0)
 
 
 def test_generate_binary_dataset_with_oracle_sampling_invalid_true_mean_raises():
