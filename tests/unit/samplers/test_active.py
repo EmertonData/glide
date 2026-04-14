@@ -48,7 +48,7 @@ def test_sample_returns_valid_arrays(sampler, uncertainties):
     assert len(xi) == len(uncertainties)
     assert np.all(pi > 0)
     assert np.all(pi <= 1)
-    assert set(xi.tolist()).issubset({0.0, 1.0})
+    assert np.isin(xi, [0.0, 1.0]).all()
 
 
 def test_sample_pi_clipped_and_higher_uncertainty_gets_higher_pi(sampler):

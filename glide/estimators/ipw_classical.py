@@ -41,7 +41,6 @@ class IPWClassicalMeanEstimator:
         return mean
 
     def _compute_std_estimate(self, ipw_weighted_values: NDArray) -> float:
-        # std = np.std(ipw_weighted_values, ddof=1) / np.sqrt(len(ipw_weighted_values))
         std = np.std(ipw_weighted_values, ddof=1) / np.sqrt(len(ipw_weighted_values))
         return std
 

@@ -108,7 +108,7 @@ def test_sample_returns_dataset_with_valid_properties(sampler, dataset):
     assert np.all(pi_values > 0)
     assert np.all(pi_values <= 1)
     xi_values = result["xi"]
-    assert set(xi_values).issubset({0.0, 1.0})
+    assert np.isin(xi_values, [0.0, 1.0]).all()
 
 
 def test_sample_invalid_budget_zero(sampler, dataset):

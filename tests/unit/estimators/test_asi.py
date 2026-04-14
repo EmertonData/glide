@@ -17,8 +17,8 @@ def arrays(n_labeled: int = 2, n_unlabeled: int = 2, seed: int = 0) -> Tuple[NDA
     y_true_vals = rng.normal(4.0, 1.0, size=n_labeled)
     y_proxy_labeled = y_true_vals + rng.normal(0, 0.2, size=n_labeled)
     y_proxy_unlabeled = rng.normal(4.0, 1.0, size=n_unlabeled)
-    y_true = np.concatenate([y_true_vals, np.full(n_unlabeled, np.nan)])
-    y_proxy = np.concatenate([y_proxy_labeled, y_proxy_unlabeled])
+    y_true = np.hstack([y_true_vals, np.full(n_unlabeled, np.nan)])
+    y_proxy = np.hstack([y_proxy_labeled, y_proxy_unlabeled])
     sampling_probabilities = np.full(n_labeled + n_unlabeled, pi)
     return y_true, y_proxy, sampling_probabilities
 
@@ -55,7 +55,7 @@ def test_preprocess(estimator, arrays):
     assert int(xi.sum()) == 2
     assert len(pi) == 4
     assert np.all((pi > 0)) and np.all((pi <= 1))
-    assert set(xi.tolist()).issubset({0.0, 1.0})
+    assert np.isin(xi, [0.0, 1.0]).all()
     assert not np.any(np.isnan(y_true))
 
 
