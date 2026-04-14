@@ -25,6 +25,7 @@ plugins:
       execute: true
 
 markdown_extensions:
+  - attr_list
   - pymdownx.snippets
   - pymdownx.arithmatex:
       generic: true
