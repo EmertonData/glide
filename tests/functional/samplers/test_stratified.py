@@ -1,7 +1,6 @@
 import numpy as np
 import pytest
 
-from glide.core.dataset import Dataset
 from glide.samplers.stratified import StratifiedSampler
 
 
@@ -15,48 +14,25 @@ def test_proportional_matches_uniform_equal_strata(sampler):
     n_strata = 3
     budget = 9
 
-    records = []
-    for stratum_idx in range(n_strata):
-        for i in range(n_per_stratum):
-            records.append(
-                {
-                    "group": f"stratum_{stratum_idx}",
-                    "y_proxy": stratum_idx + i * 0.1,
-                }
-            )
+    groups = np.repeat(np.arange(n_strata), n_per_stratum)
+    record_indices = np.tile(np.arange(n_per_stratum), n_strata)
+    y_proxy = groups + record_indices * 0.1
 
-    dataset = Dataset(records)
-    result = sampler.sample(dataset, "y_proxy", "group", budget, strategy="proportional", random_seed=0)
+    pi, _ = sampler.sample(y_proxy, groups, budget, strategy="proportional", random_seed=0)
 
     # With equal-sized strata, proportional allocation gives uniform pi across all records
-    total_size = len(records)
+    total_size = len(y_proxy)
     expected_pi = budget / total_size
 
-    for record in result:
-        assert np.isclose(record["pi"], expected_pi)
+    np.testing.assert_allclose(pi, expected_pi)
 
 
 def test_sample_rounding_sums_to_budget(sampler):
-    dataset = Dataset(
-        [
-            {"group": "s0", "y_proxy": 0.0},
-            {"group": "s0", "y_proxy": 0.1},
-            {"group": "s1", "y_proxy": 1.0},
-            {"group": "s1", "y_proxy": 1.1},
-            {"group": "s2", "y_proxy": 2.0},
-            {"group": "s2", "y_proxy": 2.1},
-            {"group": "s3", "y_proxy": 3.0},
-            {"group": "s3", "y_proxy": 3.1},
-            {"group": "s4", "y_proxy": 4.0},
-            {"group": "s4", "y_proxy": 4.1},
-        ]
-    )
+    y_proxy = np.array([0.0, 0.1, 1.0, 1.1, 2.0, 2.1, 3.0, 3.1, 4.0, 4.1])
+    groups = np.array(["s0", "s0", "s1", "s1", "s2", "s2", "s3", "s3", "s4", "s4"], dtype=object)
 
     for strategy in ["proportional", "neyman"]:
-        result = sampler.sample(dataset, "y_proxy", "group", 7, strategy=strategy)
-
-        groups = np.array([record["group"] for record in result])
-        pi = np.array([record["pi"] for record in result])
+        pi, _ = sampler.sample(y_proxy, groups, 7, strategy=strategy)
 
         unique_groups, group_sizes = np.unique(groups, return_counts=True)
 
