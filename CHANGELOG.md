@@ -21,6 +21,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - Doctest for `glide.io.to_json`
   
 ### 🔄 Changed
+- Restructured "User guide" into three pages "Evaluation Workflow", "Samplers" and "Estimators"
 - Logo
 - Decoupled Stratified PPI from PPI
 - `CONTRIBUTING.md` now explains how to setup pre-commits
