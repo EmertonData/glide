@@ -25,7 +25,7 @@ Moreover, $C_\alpha$ should be as small as possible.
 All estimators in GLIDE rely on two complementary sources of labels. Proxy labels $\tilde{Y}_i$ are available for all $N$ samples at low cost but are biased ($E[\tilde{Y}] \neq \theta^*$). Human labels $Y_j$ are unbiased ($E[Y] = \theta^*$) but expensive, and only available for a small labeled subset of $n \ll N$ samples. The key insight: even though human labels are scarce, they can be used to **correct** the bias in the cheap proxy labels.
 
 <p align="center">
-  <img src="../assets/schema-PPI.png" alt="Data schema" width="550">
+  <img src="../../assets/schema-PPI.png" alt="Data schema" width="550">
 </p>
 
 <p align="center">
