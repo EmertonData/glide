@@ -1,6 +1,6 @@
 import pytest
 
-from glide.core.clt_confidence_interval import CLTConfidenceInterval
+from glide.confidence_intervals import CLTConfidenceInterval
 from glide.core.mean_inference_result import MeanInferenceResult
 
 # --- MeanInferenceResult (common attributes and properties) ---

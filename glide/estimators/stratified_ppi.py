@@ -3,7 +3,7 @@ from typing import Any, Dict, Tuple
 import numpy as np
 from numpy.typing import NDArray
 
-from glide.core.clt_confidence_interval import CLTConfidenceInterval
+from glide.confidence_intervals import CLTConfidenceInterval
 from glide.core.mean_inference_result import SemiSupervisedMeanInferenceResult
 from glide.core.utils import compute_effective_sample_size
 
@@ -206,7 +206,7 @@ class StratifiedPPIMeanEstimator:
 
         std = np.sqrt(weighted_var)
         n_true = np.sum(~np.isnan(y_true))
-        effective_sample_size = compute_effective_sample_size(y_true, std)
+        effective_sample_size = compute_effective_sample_size(y_true, std**2)
 
         confidence_interval = CLTConfidenceInterval(
             mean=weighted_mean,

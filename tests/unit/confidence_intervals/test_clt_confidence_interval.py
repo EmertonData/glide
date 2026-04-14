@@ -1,6 +1,6 @@
 import pytest
 
-from glide.core.clt_confidence_interval import CLTConfidenceInterval
+from glide.confidence_intervals import CLTConfidenceInterval
 
 
 def test_default_confidence_level():
@@ -18,6 +18,12 @@ def test_upper_bound():
     ci = CLTConfidenceInterval(mean=0.0, std=1.0, confidence_level=0.95)
     expected = 1.96
     assert ci.upper_bound == pytest.approx(expected, abs=0.0001)
+
+
+def test_var_computed_from_std():
+    ci = CLTConfidenceInterval(mean=0.0, std=2.0, confidence_level=0.95)
+    expected_var = 4.0
+    assert ci.var == pytest.approx(expected_var)
 
 
 # --- test_null_hypothesis ---
