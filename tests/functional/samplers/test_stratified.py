@@ -14,10 +14,9 @@ def test_proportional_matches_uniform_equal_strata(sampler):
     n_strata = 3
     budget = 9
 
-    stratum_indices = np.repeat(np.arange(n_strata), n_per_stratum)
+    groups = np.repeat(np.arange(n_strata), n_per_stratum)
     record_indices = np.tile(np.arange(n_per_stratum), n_strata)
-    y_proxy = stratum_indices + record_indices * 0.1
-    groups = np.array([f"stratum_{i}" for i in stratum_indices], dtype=object)
+    y_proxy = groups + record_indices * 0.1
 
     pi, _ = sampler.sample(y_proxy, groups, budget, strategy="proportional", random_seed=0)
 
@@ -25,7 +24,7 @@ def test_proportional_matches_uniform_equal_strata(sampler):
     total_size = len(y_proxy)
     expected_pi = budget / total_size
 
-    assert np.allclose(pi, expected_pi)
+    np.testing.assert_allclose(pi, expected_pi)
 
 
 def test_sample_rounding_sums_to_budget(sampler):

@@ -19,31 +19,31 @@ def groups() -> np.ndarray:
     return np.array(["A", "A", "A", "A", "B", "B", "B", "B"], dtype=object)
 
 
-# --- _preprocess ---
+# --- _validate ---
 
 
-def test_preprocess_validates_nan_proxy(sampler):
+def test_validate_validates_nan_proxy(sampler):
     y_proxy = np.array([0.5, np.nan])
     groups = np.array(["A", "A"], dtype=object)
 
     with pytest.raises(ValueError, match="NaN"):
-        sampler._preprocess(y_proxy, groups)
+        sampler._validate(y_proxy, groups)
 
 
-def test_preprocess_raises_on_stratum_size_too_small(sampler):
+def test_validate_raises_on_stratum_size_too_small(sampler):
     y_proxy = np.array([0.5, 0.6, 0.7])
     groups = np.array(["A", "A", "B"], dtype=object)
 
     with pytest.raises(ValueError, match="fewer than 2"):
-        sampler._preprocess(y_proxy, groups)
+        sampler._validate(y_proxy, groups)
 
 
-def test_preprocess_raises_on_zero_variance_proxy_in_stratum(sampler):
+def test_validate_raises_on_zero_variance_proxy_in_stratum(sampler):
     y_proxy = np.array([0.0, 0.0, 1.0, 1.0])
     groups = np.array(["A", "A", "B", "B"], dtype=object)
 
     with pytest.raises(ValueError, match="has zero variance in proxy"):
-        sampler._preprocess(y_proxy, groups)
+        sampler._validate(y_proxy, groups)
 
 
 # --- _proportional_allocation ---

@@ -24,20 +24,16 @@ def test_two_equal_strata_matches_ppi():
     n_labeled, n_unlabeled = 3, 4
 
     # Generate base numpy arrays
-    y_true_base, y_proxy_base = generate_gaussian_dataset(n_labeled, n_unlabeled, random_seed=0)
+    y_true, y_proxy = generate_gaussian_dataset(n_labeled, n_unlabeled, random_seed=0)
 
     # Per-stratum PPI reference (single copy)
-    ppi_single = PPIMeanEstimator().estimate(y_true_base, y_proxy_base)
+    ppi_single = PPIMeanEstimator().estimate(y_true, y_proxy)
 
     # Build stratified arrays: stratum A and B are identical copies
-    y_true_a = y_true_base.copy()
-    y_proxy_a = y_proxy_base.copy()
-    y_true_b = y_true_base.copy()
-    y_proxy_b = y_proxy_base.copy()
 
-    y_true_stratified = np.hstack([y_true_a, y_true_b])
-    y_proxy_stratified = np.hstack([y_proxy_a, y_proxy_b])
-    groups_stratified = np.hstack([np.full(len(y_true_a), "A"), np.full(len(y_true_b), "B")])
+    y_true_stratified = np.hstack([y_true, y_true])
+    y_proxy_stratified = np.hstack([y_proxy, y_proxy])
+    groups_stratified = np.hstack([np.full(len(y_true), "A"), np.full(len(y_true), "B")])
 
     result = StratifiedPPIMeanEstimator().estimate(y_true_stratified, y_proxy_stratified, groups_stratified)
 

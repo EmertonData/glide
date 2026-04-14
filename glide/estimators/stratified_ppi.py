@@ -1,4 +1,4 @@
-from typing import Any, Dict, Tuple
+from typing import List, Tuple
 
 import numpy as np
 from numpy.typing import NDArray
@@ -58,11 +58,11 @@ class StratifiedPPIMeanEstimator:
         y_true: NDArray,
         y_proxy: NDArray,
         groups: NDArray,
-    ) -> Dict[Any, Tuple[NDArray, NDArray, NDArray]]:
+    ) -> List[Tuple[NDArray, NDArray, NDArray]]:
         if np.isnan(y_proxy).any():
             raise ValueError("Input proxy values contain NaN")
 
-        strata = {}
+        strata = []
         for stratum_id in np.unique(groups):
             stratum_mask = groups == stratum_id
             stratum_y_true = y_true[stratum_mask]
@@ -78,7 +78,7 @@ class StratifiedPPIMeanEstimator:
             y_true_labeled = stratum_y_true[labeled_mask]
             y_proxy_labeled = stratum_y_proxy[labeled_mask]
             y_proxy_unlabeled = stratum_y_proxy[~labeled_mask]
-            strata[stratum_id] = (y_true_labeled, y_proxy_labeled, y_proxy_unlabeled)
+            strata.append((y_true_labeled, y_proxy_labeled, y_proxy_unlabeled))
 
         return strata
 
@@ -155,13 +155,13 @@ class StratifiedPPIMeanEstimator:
         Parameters
         ----------
         y_true : NDArray
-            Array of ground-truth labels (shape ``(n + N,)``). Unlabeled entries
-            must be ``NaN``; labeled entries must be finite.
+            Array of observations, shape ``(n_samples,)``.
+            Labeled entries are finite; unlabeled entries are ``np.nan``.
         y_proxy : NDArray
-            Array of proxy predictions (shape ``(n + N,)``). Must be fully
-            observed (no ``NaN``).
+            Array of proxy predictions, shape ``(n_samples,)``.
+            Must be fully populated (no NaN). Must have nonzero variance.
         groups : NDArray
-            Array of integer stratum identifiers (shape ``(n + N,)``). Unique
+            Array of integer stratum identifiers, shape ``(n_samples,)``. Unique
             values define the strata.
         metric_name : str, optional
             Human-readable label for the metric. Defaults to ``"Metric"``.
@@ -193,7 +193,7 @@ class StratifiedPPIMeanEstimator:
         weighted_var = 0.0
         total_size = len(y_true)
 
-        for _, (y_true_labeled, y_proxy_labeled, y_proxy_unlabeled) in strata.items():
+        for y_true_labeled, y_proxy_labeled, y_proxy_unlabeled in strata:
             stratum_size = len(y_true_labeled) + len(y_proxy_unlabeled)
             w_k = stratum_size / total_size
 

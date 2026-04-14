@@ -7,9 +7,9 @@ from numpy.typing import NDArray
 class StratifiedSampler:
     """Sampler for per-stratum annotation budget allocation.
 
-    This class implements stratified sampling strategies that determine how many records
-    to annotate from each stratum, given a fixed annotation budget and proxy labels for
-    all records. It supports two allocation strategies:
+    This class implements stratified sampling strategies that determine how many samples
+    to annotate in each stratum, given a fixed annotation budget and proxy labels for
+    all samples (provided as numpy arrays). It supports two allocation strategies:
 
     - **Proportional allocation** (baseline): Allocates budget proportionally to stratum
       sizes, resulting in uniform sampling probabilities across the dataset.
@@ -44,7 +44,7 @@ class StratifiedSampler:
     array([0, 1, 0, 1, 0, 0])
     """
 
-    def _preprocess(
+    def _validate(
         self,
         y_proxy: NDArray,
         groups: NDArray,
@@ -155,21 +155,21 @@ class StratifiedSampler:
         """Allocate annotation budget across strata and perform stratified sampling.
 
         Computes per-stratum sample sizes using the specified allocation strategy and performs
-        Bernoulli sampling for each record based on its stratum's allocation. Neyman allocation
+        Bernoulli sampling for each sample based on its stratum's allocation. Neyman allocation
         (default) assigns more budget to strata with higher proxy variance, minimising asymptotic
         variance of downstream estimators. Proportional allocation allocates budget proportionally
         to stratum sizes and serves as a baseline.
 
-        Each record receives a drawing probability π_i = n_h / stratum_size (capped at 1), and
+        Each sample receives a drawing probability π_i = n_h / stratum_size (capped at 1), and
         is independently selected via a Bernoulli trial. The actual number of selected items is
         a random variable with expectation ≤ budget.
 
         Parameters
         ----------
         y_proxy : NDArray
-            Proxy labels for all records. Must be 1-dimensional.
+            Proxy labels for all samples. Must be 1-dimensional.
         groups : NDArray
-            Stratum identifiers for all records. Must be 1-dimensional with same length as y_proxy.
+            Stratum identifiers for all samples. Must be 1-dimensional with same length as y_proxy.
         budget : int
             Target annotation budget. Must be positive. Mandatory.
         strategy : str, optional
@@ -181,26 +181,26 @@ class StratifiedSampler:
 
         Returns
         -------
-        pi : NDArray
-            Drawing probabilities π_i ∈ (0, 1] for each record.
-        xi : NDArray
-            Selection indicators: 1 if selected for annotation, 0 otherwise.
+        Tuple[NDArray, NDArray]
+            A tuple ``(pi, xi)`` where ``pi`` is an array of drawing probabilities
+            in ``(0, 1]`` and ``xi`` is an array of Bernoulli selection indicators
+            (1 if selected for annotation, 0 otherwise), both of shape ``(N,)``.
 
         Raises
         ------
         ValueError
             If strategy is unknown, if budget is not a strictly positive integer, or if budget exceeds
-            the number of records in the dataset.
+            the number of samples in the input.
         """
         if (not isinstance(budget, (int, np.integer))) or isinstance(budget, bool) or budget <= 0:
             raise ValueError(f"'budget' must be a strictly positive integer; got {budget!r}.")
         if budget > len(y_proxy):
             raise ValueError(
-                f"'budget' must not exceed the number of records in the dataset; "
-                f"got budget={budget} but dataset has {len(y_proxy)} records."
+                f"'budget' must not exceed the number of samples; "
+                f"got budget={budget} but input has {len(y_proxy)} samples."
             )
 
-        y_proxy, groups = self._preprocess(y_proxy, groups)
+        y_proxy, groups = self._validate(y_proxy, groups)
 
         if strategy == "proportional":
             allocation = self._proportional_allocation(groups, budget)
@@ -222,11 +222,12 @@ class StratifiedSampler:
         pi = np.zeros(len(y_proxy))
         xi = np.zeros(len(y_proxy), dtype=int)
 
-        for i in range(len(y_proxy)):
-            stratum_id = groups[i]
-            stratum_size = (groups == stratum_id).sum()
+        for stratum_id in np.unique(groups):
+            stratum_mask = groups == stratum_id
             n_h = allocation[stratum_id]
-            pi[i] = min(n_h / stratum_size, 1.0)
-            xi[i] = rng.binomial(n=1, p=pi[i])
+            stratum_size = stratum_mask.sum()
+            pi_value = np.minimum(n_h / stratum_size, 1.0)
+            pi[stratum_mask] = pi_value
+            xi[stratum_mask] = rng.binomial(n=1, p=np.full(stratum_size, pi_value)).astype(float)
 
         return pi, xi
