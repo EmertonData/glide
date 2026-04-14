@@ -5,6 +5,18 @@ from numpy.random.bit_generator import SeedSequence
 from numpy.typing import NDArray
 
 
+def complete(initial, budget):
+    remaining_budget = budget - np.sum(initial)
+    vector = initial.copy()
+    while remaining_budget > 0:
+        saturated = vector >= 1
+        min_margin = np.min(1 - vector[~saturated])
+        amount_to_add = min(min_margin, remaining_budget / (len(vector) - sum(saturated)))
+        vector[~saturated] += amount_to_add
+        remaining_budget = budget - np.sum(vector)
+    return vector
+
+
 class ActiveSampler:
     """Sampler that draws elements with probabilities based on uncertainty scores.
 
@@ -97,7 +109,15 @@ class ActiveSampler:
         drawing_probabilities = budget * validated_uncertainties / validated_uncertainties.sum()
         # Cap at 1: a Bernoulli probability cannot exceed 1.
         clipped_probabilities = np.minimum(drawing_probabilities, 1.0)
-
+        # completed_probabilities = complete(clipped_probabilities, budget)
         indicators = rng.binomial(n=1, p=clipped_probabilities).astype(float)
+
+        # excess = int(np.sum(indicators) - budget)
+        # if excess > 0:
+        #     selected_indices = np.nonzero(indicators)[0]
+        #     selected_indices_probabilities = completed_probabilities[selected_indices]
+        #     least_likely_selected = np.argsort(selected_indices_probabilities)
+        #     for i in range(excess):
+        #         indicators[selected_indices[least_likely_selected[i]]] = 0
 
         return clipped_probabilities, indicators
