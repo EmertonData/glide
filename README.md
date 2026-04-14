@@ -13,7 +13,7 @@
 </p>
 
 <p align="center">
-  <img src="https://raw.githubusercontent.com/EmertonData/glide/refs/heads/main/assets/logo-glide.png" alt="GLIDE Logo" width="80%">
+  <img src="https://raw.githubusercontent.com/EmertonData/glide/refs/heads/main/docs/assets/logo-glide.png" alt="GLIDE Logo" width="80%">
 </p>
 
 # GLIDE 
@@ -92,4 +92,4 @@ If you use Glide in your research, please cite:
 
 Developed at [Emerton Data](https://www.emerton-data.com/).
 
-<img src="https://raw.githubusercontent.com/EmertonData/glide/refs/heads/main/assets/logo-ed.jpg" alt="Emerton Data" width="250">
+<img src="https://raw.githubusercontent.com/EmertonData/glide/refs/heads/main/docs/assets/logo-ed.jpg" alt="Emerton Data" width="250">
