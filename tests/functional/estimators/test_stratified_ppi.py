@@ -7,7 +7,6 @@ details, and therefore require larger datasets to hold reliably.
 import numpy as np
 import pytest
 
-from glide.core.dataset import Dataset
 from glide.core.simulated_datasets import generate_gaussian_dataset
 from glide.estimators.ppi import PPIMeanEstimator
 from glide.estimators.stratified_ppi import StratifiedPPIMeanEstimator
@@ -25,27 +24,18 @@ def test_two_equal_strata_matches_ppi():
     n_labeled, n_unlabeled = 3, 4
 
     # Generate base numpy arrays
-    y_true_base, y_proxy_base = generate_gaussian_dataset(n_labeled, n_unlabeled, random_seed=0)
+    y_true, y_proxy = generate_gaussian_dataset(n_labeled, n_unlabeled, random_seed=0)
 
     # Per-stratum PPI reference (single copy)
-    ppi_single = PPIMeanEstimator().estimate(y_true_base, y_proxy_base)
+    ppi_single = PPIMeanEstimator().estimate(y_true, y_proxy)
 
-    # Build Dataset for StratifiedPPIMeanEstimator: stratum A and B are identical copies
-    records_a = []
-    records_b = []
-    # Labeled records (first n_labeled rows)
-    for i in range(n_labeled):
-        records_a.append({"y_true": y_true_base[i], "y_proxy": y_proxy_base[i], "group": "A"})
-        records_b.append({"y_true": y_true_base[i], "y_proxy": y_proxy_base[i], "group": "B"})
-    # Unlabeled records (remaining rows)
-    for i in range(n_labeled, n_labeled + n_unlabeled):
-        records_a.append({"y_proxy": y_proxy_base[i], "group": "A"})
-        records_b.append({"y_proxy": y_proxy_base[i], "group": "B"})
-    stratified_dataset = Dataset(records_a + records_b)
+    # Build stratified arrays: stratum A and B are identical copies
 
-    result = StratifiedPPIMeanEstimator().estimate(
-        stratified_dataset, y_true_field="y_true", y_proxy_field="y_proxy", groups_field="group"
-    )
+    y_true_stratified = np.hstack([y_true, y_true])
+    y_proxy_stratified = np.hstack([y_proxy, y_proxy])
+    groups_stratified = np.hstack([np.full(len(y_true), "A"), np.full(len(y_true), "B")])
+
+    result = StratifiedPPIMeanEstimator().estimate(y_true_stratified, y_proxy_stratified, groups_stratified)
 
     # Mean must match the single-stratum PPI mean (both strata are identical)
     assert result.mean == pytest.approx(ppi_single.mean, abs=1e-10)
@@ -68,34 +58,22 @@ def test_stratified_ppi_narrower_ci_with_heterogeneous_strata():
     y_true_a, y_proxy_a = generate_gaussian_dataset(
         n_labeled, n_unlabeled, true_mean=0.6, true_std=0.1, random_seed=random_seed
     )
-    # Stratum B: high proxy noise
+    # Stratum B: high proxy noise → lower lambda is optimal
     y_true_b, y_proxy_b = generate_gaussian_dataset(
         n_labeled, n_unlabeled, true_mean=0.4, true_std=1.5, random_seed=random_seed
     )
 
-    # Build Dataset for StratifiedPPIMeanEstimator
-    records_a = []
-    records_b = []
-    # Stratum A
-    for i in range(n_labeled):
-        records_a.append({"y_true": y_true_a[i], "y_proxy": y_proxy_a[i], "group": "A"})
-    for i in range(n_labeled, n_labeled + n_unlabeled):
-        records_a.append({"y_proxy": y_proxy_a[i], "group": "A"})
-    # Stratum B
-    for i in range(n_labeled):
-        records_b.append({"y_true": y_true_b[i], "y_proxy": y_proxy_b[i], "group": "B"})
-    for i in range(n_labeled, n_labeled + n_unlabeled):
-        records_b.append({"y_proxy": y_proxy_b[i], "group": "B"})
-    stratified_dataset = Dataset(records_a + records_b)
+    # Build stratified arrays
+    y_true_stratified = np.hstack([y_true_a, y_true_b])
+    y_proxy_stratified = np.hstack([y_proxy_a, y_proxy_b])
+    groups_stratified = np.hstack([np.full(len(y_true_a), 0), np.full(len(y_true_b), 1)])
 
     # Standard PPI on the pooled dataset (ignores group structure)
     y_true_pooled = np.hstack([y_true_a, y_true_b])
     y_proxy_pooled = np.hstack([y_proxy_a, y_proxy_b])
     ppi_result = PPIMeanEstimator().estimate(y_true_pooled, y_proxy_pooled)
 
-    stratified_result = StratifiedPPIMeanEstimator().estimate(
-        stratified_dataset, y_true_field="y_true", y_proxy_field="y_proxy", groups_field="group"
-    )
+    stratified_result = StratifiedPPIMeanEstimator().estimate(y_true_stratified, y_proxy_stratified, groups_stratified)
 
     # Stratified CI must be strictly narrower
     eps = 1e-1
