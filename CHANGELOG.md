@@ -22,6 +22,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
   
 ### 🔄 Changed
 - Restructured "User guide" into three pages "Evaluation Workflow", "Samplers" and "Estimators"
+- Logo
 - Decoupled Stratified PPI from PPI
 - `CONTRIBUTING.md` now explains how to setup pre-commits
 - Image in the user guide explaining the control sample

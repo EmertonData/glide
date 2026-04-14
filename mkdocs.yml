@@ -1,8 +1,39 @@
 site_name: Glide
+site_url: https://glide-py.readthedocs.io/en/latest/
+site_description: "Helping humans ride the GenAI evaluation wave"
+site_author: Glide Team
+repo_url: https://github.com/EmertonData/glide
+repo_name: EmertonData/glide
 theme:
   name: material
+  logo: assets/logo-glide.png
+  favicon: assets/favicon-glide.png
+  icon:
+    repo: fontawesome/brands/github
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: blue
+      accent: light-blue
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: blue
+      accent: light-blue
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
   custom_dir: docs/overrides
   features:
+    - navigation.instant
+    - navigation.tracking
+    - navigation.tabs
+    - navigation.tabs.sticky
+    - navigation.top
+    - search.suggest
+    - search.highlight
     - content.code.copy
 
 extra_css:
