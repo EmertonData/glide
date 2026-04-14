@@ -6,22 +6,22 @@ repo_url: https://github.com/EmertonData/glide
 repo_name: EmertonData/glide
 theme:
   name: material
-  logo: assets/logo_glide.png
-  favicon: assets/favicon_glide.png
+  logo: assets/logo-glide.png
+  favicon: assets/favicon-glide.png
   icon:
     repo: fontawesome/brands/github
   palette:
     - media: "(prefers-color-scheme: light)"
       scheme: default
-      primary: indigo
-      accent: cyan
+      primary: blue
+      accent: light-blue
       toggle:
         icon: material/brightness-7
         name: Switch to dark mode
     - media: "(prefers-color-scheme: dark)"
       scheme: slate
-      primary: indigo
-      accent: cyan
+      primary: blue
+      accent: light-blue
       toggle:
         icon: material/brightness-4
         name: Switch to light mode
