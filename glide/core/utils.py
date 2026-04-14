@@ -1,9 +1,7 @@
 import numpy as np
 
 
-def compute_effective_sample_size(y_true: np.ndarray, effective_std: float) -> int:
-    n = np.sum(~np.isnan(y_true))
+def compute_effective_sample_size(y_true: np.ndarray, effective_var: float) -> int:
     var_y_true = np.nanvar(y_true, ddof=1)
-    std_of_mean = np.sqrt(var_y_true / n)
-    effective_sample_size = int(n * (std_of_mean / effective_std) ** 2)
+    effective_sample_size = int(var_y_true / effective_var)
     return effective_sample_size

@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Tuple
 
 from scipy.stats import norm
@@ -6,9 +6,37 @@ from scipy.stats import norm
 
 @dataclass
 class CLTConfidenceInterval:
+    """Confidence interval based on the Central Limit Theorem.
+
+    Constructs a symmetric interval around the point estimate using the standard
+    normal distribution: [mean - z * std, mean + z * std], where z is the critical
+    value from the standard normal distribution corresponding to the target
+    confidence level.
+
+    Parameters
+    ----------
+    mean : float
+        The point estimate of the population mean.
+    std : float
+        The standard error (standard deviation of the estimate).
+    confidence_level : float, optional
+        Target coverage probability, e.g. 0.95 for a 95% CI. Default is 0.95.
+
+    Examples
+    --------
+    >>> from glide.confidence_intervals import CLTConfidenceInterval
+    >>> ci = CLTConfidenceInterval(mean=5.0, std=0.2, confidence_level=0.95)
+    >>> print(f"[{ci.lower_bound:.3f}, {ci.upper_bound:.3f}]")
+    [4.608, 5.392]
+    """
+
     mean: float
     std: float
     confidence_level: float = 0.95
+    var: float = field(init=False, repr=False)
+
+    def __post_init__(self) -> None:
+        self.var = self.std**2
 
     def _z_score(self) -> float:
         z_score = norm.ppf((1 + self.confidence_level) / 2)

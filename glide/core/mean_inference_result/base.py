@@ -1,13 +1,13 @@
 from dataclasses import dataclass
 
-from glide.core.clt_confidence_interval import CLTConfidenceInterval
+from glide.confidence_intervals import ConfidenceInterval
 
 
 @dataclass(repr=False)
 class MeanInferenceResult:
     """Base class for mean inference results."""
 
-    confidence_interval: CLTConfidenceInterval
+    confidence_interval: ConfidenceInterval
     metric_name: str
     estimator_name: str
 

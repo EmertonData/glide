@@ -3,7 +3,7 @@ from typing import Tuple
 import numpy as np
 from numpy.typing import NDArray
 
-from glide.core.clt_confidence_interval import CLTConfidenceInterval
+from glide.confidence_intervals import CLTConfidenceInterval
 from glide.core.mean_inference_result import SemiSupervisedMeanInferenceResult
 from glide.core.utils import compute_effective_sample_size
 
@@ -146,12 +146,12 @@ class PPIMeanEstimator:
         _lambda = self._compute_lambda(y_data, power_tuning)
         mean = self._compute_mean_estimate(y_data, _lambda)
         std = self._compute_std_estimate(y_data, _lambda)
-        effective_sample_size = compute_effective_sample_size(y_true_labeled, std)
         confidence_interval = CLTConfidenceInterval(
             mean=mean,
             std=std,
             confidence_level=confidence_level,
         )
+        effective_sample_size = compute_effective_sample_size(y_true_labeled, confidence_interval.var)
         result = SemiSupervisedMeanInferenceResult(
             confidence_interval=confidence_interval,
             metric_name=metric_name,
