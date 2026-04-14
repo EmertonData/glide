@@ -82,13 +82,11 @@ class BootstrapConfidenceInterval:
             centered = np.abs(self.bootstrap_estimates - self.mean)
             observed_deviation = abs(self.mean - h0_value)
             is_at_least_as_extreme = centered >= observed_deviation
-            p_value = float(np.mean(is_at_least_as_extreme))
         elif alternative == "larger":
             is_at_least_as_extreme = self.bootstrap_estimates <= h0_value
-            p_value = float(np.mean(is_at_least_as_extreme))
         elif alternative == "smaller":
             is_at_least_as_extreme = self.bootstrap_estimates >= h0_value
-            p_value = float(np.mean(is_at_least_as_extreme))
         else:
             raise ValueError(f"alternative must be 'two-sided', 'larger', or 'smaller', got '{alternative}'")
+        p_value = float(np.mean(is_at_least_as_extreme))
         return self.mean, p_value, float("inf")
