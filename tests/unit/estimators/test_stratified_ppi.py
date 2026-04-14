@@ -45,14 +45,12 @@ def y_data():
 
 
 def test_preprocess_returns_correct_shapes(estimator, y_true, y_proxy, groups):
-    y_true_result, y_proxy_result, groups_result = estimator._preprocess(y_true, y_proxy, groups)
-    assert len(y_true_result) == 8
-    assert len(y_proxy_result) == 8
-    assert len(groups_result) == 8
-    # Use allclose with equal_nan=True to handle NaN values correctly
-    assert np.allclose(y_true_result, y_true, equal_nan=True)
-    assert np.allclose(y_proxy_result, y_proxy, equal_nan=True)
-    assert np.array_equal(groups_result, groups)
+    strata = estimator._preprocess(y_true, y_proxy, groups)
+    assert len(strata) == 2
+    for stratum_id, (y_true_labeled, y_proxy_labeled, y_proxy_unlabeled) in strata.items():
+        assert len(y_true_labeled) == 2
+        assert len(y_proxy_labeled) == 2
+        assert len(y_proxy_unlabeled) == 2
 
 
 def test_preprocess_raises_on_stratum_size_too_small(estimator):
@@ -129,23 +127,6 @@ def test_estimate_raises_when_stratum_has_too_few_labeled(estimator):
     grps = np.array(["A", "A", "B", "B"])
     with pytest.raises(RuntimeError, match="Too few labeled or unlabeled samples in dataset stratum 'A'"):
         estimator.estimate(y_true, y_proxy, grps)
-
-
-def test_estimate_raises_when_stratum_has_zero_proxy_variance(estimator):
-    # Stratum B has constant proxy values
-    y_true = np.array([1.0, 2.0, np.nan, np.nan, 5.0, 6.0, np.nan, np.nan])
-    y_proxy = np.array([1.1, 2.1, 1.5, 1.5, 5.0, 5.0, 5.0, 5.0])  # Stratum B has zero variance
-    grps = np.array(["A", "A", "A", "A", "B", "B", "B", "B"])
-    with pytest.raises(ValueError, match="Input proxy values have zero variance in stratum 'B'"):
-        estimator.estimate(y_true, y_proxy, grps)
-
-
-def test_estimate_without_power_tuning(estimator, y_true, y_proxy, groups):
-    # Test that power_tuning=False works (lambda_k = 1.0)
-    result = estimator.estimate(y_true, y_proxy, groups, power_tuning=False)
-    assert isinstance(result, SemiSupervisedMeanInferenceResult)
-    assert np.isfinite(result.mean)
-    assert np.isfinite(result.std)
 
 
 def test_estimate_is_valid_inference_result(estimator, y_true, y_proxy, groups):

@@ -1,4 +1,4 @@
-from typing import Tuple
+from typing import Any, Dict, Tuple
 
 import numpy as np
 from numpy.typing import NDArray
@@ -58,11 +58,11 @@ class StratifiedPPIMeanEstimator:
         y_true: NDArray,
         y_proxy: NDArray,
         groups: NDArray,
-    ) -> Tuple[NDArray, NDArray, NDArray]:
-
+    ) -> Dict[Any, Tuple[NDArray, NDArray, NDArray]]:
         if np.isnan(y_proxy).any():
             raise ValueError("Input proxy values contain NaN")
 
+        strata = {}
         for stratum_id in np.unique(groups):
             stratum_mask = groups == stratum_id
             stratum_y_true = y_true[stratum_mask]
@@ -75,7 +75,12 @@ class StratifiedPPIMeanEstimator:
             if len(np.unique(stratum_y_proxy)) == 1:
                 raise ValueError(f"Input proxy values have zero variance in stratum '{stratum_id}'")
 
-        return y_true, y_proxy, groups
+            y_true_labeled = stratum_y_true[labeled_mask]
+            y_proxy_labeled = stratum_y_proxy[labeled_mask]
+            y_proxy_unlabeled = stratum_y_proxy[~labeled_mask]
+            strata[stratum_id] = (y_true_labeled, y_proxy_labeled, y_proxy_unlabeled)
+
+        return strata
 
     def _compute_lambda(
         self,
@@ -182,24 +187,15 @@ class StratifiedPPIMeanEstimator:
         RuntimeError
             If any stratum has fewer than 2 labeled or fewer than 2 unlabeled records.
         """
-        y_true, y_proxy, groups = self._preprocess(y_true, y_proxy, groups)
+        strata = self._preprocess(y_true, y_proxy, groups)
 
         weighted_mean = 0.0
         weighted_var = 0.0
         total_size = len(y_true)
 
-        unique_strata = np.unique(groups)
-        for stratum_id in unique_strata:
-            stratum_mask = groups == stratum_id
-            w_k = stratum_mask.sum() / total_size
-
-            stratum_y_true = y_true[stratum_mask]
-            stratum_y_proxy = y_proxy[stratum_mask]
-            labeled_mask = ~np.isnan(stratum_y_true)
-
-            y_true_labeled = stratum_y_true[labeled_mask]
-            y_proxy_labeled = stratum_y_proxy[labeled_mask]
-            y_proxy_unlabeled = stratum_y_proxy[~labeled_mask]
+        for _, (y_true_labeled, y_proxy_labeled, y_proxy_unlabeled) in strata.items():
+            stratum_size = len(y_true_labeled) + len(y_proxy_unlabeled)
+            w_k = stratum_size / total_size
 
             lambda_k = self._compute_lambda(y_true_labeled, y_proxy_labeled, y_proxy_unlabeled, power_tuning)
             mean_k = self._compute_mean_estimate(y_true_labeled, y_proxy_labeled, y_proxy_unlabeled, lambda_k)
