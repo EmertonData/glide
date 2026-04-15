@@ -4,7 +4,6 @@ import numpy as np
 from numpy.typing import NDArray
 
 from glide.core.clt_confidence_interval import CLTConfidenceInterval
-from glide.core.dataset import Dataset
 from glide.core.mean_inference_result import SemiSupervisedMeanInferenceResult
 from glide.core.utils import compute_effective_sample_size
 
@@ -29,18 +28,13 @@ class ASIMeanEstimator:
 
     Examples
     --------
-    >>> from glide.core.dataset import Dataset
+    >>> import numpy as np
     >>> from glide.estimators.asi import ASIMeanEstimator
-    >>> labeled = [{"y_true": 5.0, "y_proxy": 4.9, "pi": 0.5}, {"y_true": 6.0, "y_proxy": 6.1, "pi": 0.7}]
-    >>> unlabeled = [{"y_proxy": 5.2, "pi": 0.6}, {"y_proxy": 6.1, "pi": 0.2}]
-    >>> dataset = Dataset(labeled + unlabeled)
+    >>> y_true = np.array([5.0, 6.0, np.nan, np.nan])
+    >>> y_proxy = np.array([4.9, 6.1, 5.2, 6.1])
+    >>> sampling_probabilities = np.array([0.5, 0.7, 0.6, 0.2])
     >>> estimator = ASIMeanEstimator()
-    >>> result = estimator.estimate(
-    ...      dataset,
-    ...      y_true_field="y_true",
-    ...      y_proxy_field="y_proxy",
-    ...      sampling_probability_field="pi"
-    ... )
+    >>> result = estimator.estimate(y_true, y_proxy, sampling_probabilities)
     >>> print(result)
     Metric: Metric
     Point Estimate: 5.563
@@ -53,25 +47,21 @@ class ASIMeanEstimator:
 
     def _preprocess(
         self,
-        dataset: Dataset,
-        y_true_field: str,
-        y_proxy_field: str,
-        sampling_probability_field: str,
+        y_true_all: NDArray,
+        y_proxy: NDArray,
+        sampling_probabilities: NDArray,
     ) -> Tuple[NDArray, NDArray, NDArray, NDArray]:
-        data = dataset.to_numpy(fields=[y_true_field, y_proxy_field, sampling_probability_field])
-        y_true_all = data[:, 0]
-        y_proxy = data[:, 1]
-        pi = data[:, 2]
-        if np.min(pi) <= 0 or np.max(pi) > 1:
-            raise ValueError("Annotation probabilities should be in (0, 1]")
+        if not (len(y_true_all) == len(y_proxy) == len(sampling_probabilities)):
+            raise ValueError("y_true, y_proxy, and sampling_probabilities must all have the same length")
+        if np.min(sampling_probabilities) <= 0 or np.max(sampling_probabilities) > 1:
+            raise ValueError("Sampling probabilities should be in (0, 1]")
         if np.isnan(y_proxy).any():
             raise ValueError("Input proxy values contain NaN")
         if len(np.unique(y_proxy)) == 1:
             raise ValueError("Input proxy values have zero variance")
         xi = (~np.isnan(y_true_all)).astype(float)
-        # replace NaN values in y_true_all by zero
-        y_true = np.nan_to_num(y_true_all, nan=-1.0)
-        return y_true, y_proxy, xi, pi
+        y_true = np.where(np.isnan(y_true_all), -1.0, y_true_all)
+        return y_true, y_proxy, xi, sampling_probabilities
 
     def _compute_lambda(
         self,
@@ -114,10 +104,9 @@ class ASIMeanEstimator:
 
     def estimate(
         self,
-        dataset: Dataset,
-        y_true_field: str,
-        y_proxy_field: str,
-        sampling_probability_field: str,
+        y_true: NDArray,
+        y_proxy: NDArray,
+        sampling_probabilities: NDArray,
         metric_name: str = "Metric",
         confidence_level: float = 0.95,
         power_tuning: bool = True,
@@ -131,17 +120,15 @@ class ASIMeanEstimator:
 
         Parameters
         ----------
-        dataset : Dataset
-            Dataset where every record carries a proxy prediction and a sampling
-            probability. Records that also have ``y_true_field`` are treated as
-            labeled (ξ_i = 1); all others are unlabeled (ξ_i = 0).
-        y_true_field : str
-            Name of the column holding ground-truth labels (present only for labeled rows).
-        y_proxy_field : str
-            Name of the column holding proxy predictions (required for every row).
-        sampling_probability_field : str
-            Name of the column holding the pre-determined sampling probability π_i ∈ (0, 1]
-            for each record. Mandatory — every record must carry this field.
+        y_true : NDArray
+            Array of shape ``(n_samples,)`` with ground-truth labels. Use ``np.nan`` for
+            unlabeled samples (ξ_i = 0); non-NaN entries are treated as labeled (ξ_i = 1).
+        y_proxy : NDArray
+            Array of shape ``(n_samples,)`` with proxy predictions. Must be present for every
+            sample and must not contain NaN.
+        sampling_probabilities : NDArray
+            Array of shape ``(n_samples,)`` with the pre-determined sampling probability
+            π_i ∈ (0, 1] for each sample.
         metric_name : str, optional
             Human-readable label for the metric. Defaults to ``"Metric"``.
         confidence_level : float, optional
@@ -152,25 +139,31 @@ class ASIMeanEstimator:
 
         Returns
         -------
-        InferenceResult
+        SemiSupervisedMeanInferenceResult
             Contains the CLT-based confidence interval, the metric name, the estimator
-            name (``"ASIMeanEstimator"``), and the counts ``n_true`` (labeled rows) and
-            ``n_proxy`` (total rows).
+            name (``"ASIMeanEstimator"``), and the counts ``n_true`` (labeled samples) and
+            ``n_proxy`` (total samples).
+
+        Raises
+        ------
+        ValueError
+            If any value in ``sampling_probabilities`` is not in (0, 1], i.e.
+            less than or equal to 0 or greater than 1.
         """
-        y_data = self._preprocess(dataset, y_true_field, y_proxy_field, sampling_probability_field)
+        y_data = self._preprocess(y_true, y_proxy, sampling_probabilities)
         _lambda = self._compute_lambda(y_data, power_tuning)
         rectified_labels = self._compute_rectified_labels(y_data, _lambda)
         mean_estimate = self._compute_mean_estimate(rectified_labels)
         std_estimate = self._compute_std_estimate(rectified_labels)
 
-        y_true, y_proxy, xi, _ = y_data
+        y_true_processed, _, xi, _ = y_data
         n_true = int(xi.sum())
         n_proxy = len(y_proxy)
 
         confidence_interval = CLTConfidenceInterval(
             mean=mean_estimate, std=std_estimate, confidence_level=confidence_level
         )
-        effective_sample_size = compute_effective_sample_size(y_true[xi == 1], std_estimate)
+        effective_sample_size = compute_effective_sample_size(y_true_processed[xi == 1], std_estimate)
 
         return SemiSupervisedMeanInferenceResult(
             confidence_interval=confidence_interval,
