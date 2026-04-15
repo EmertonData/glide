@@ -121,14 +121,14 @@ class ASIMeanEstimator:
         Parameters
         ----------
         y_true : NDArray
-            Array of shape ``(N,)`` with ground-truth labels. Use ``np.nan`` for
-            unlabeled rows (ξ_i = 0); non-NaN rows are treated as labeled (ξ_i = 1).
+            Array of shape ``(n_samples,)`` with ground-truth labels. Use ``np.nan`` for
+            unlabeled samples (ξ_i = 0); non-NaN entries are treated as labeled (ξ_i = 1).
         y_proxy : NDArray
-            Array of shape ``(N,)`` with proxy predictions. Must be present for every
-            row and must not contain NaN.
+            Array of shape ``(n_samples,)`` with proxy predictions. Must be present for every
+            sample and must not contain NaN.
         sampling_probabilities : NDArray
-            Array of shape ``(N,)`` with the pre-determined sampling probability
-            π_i ∈ (0, 1] for each record.
+            Array of shape ``(n_samples,)`` with the pre-determined sampling probability
+            π_i ∈ (0, 1] for each sample.
         metric_name : str, optional
             Human-readable label for the metric. Defaults to ``"Metric"``.
         confidence_level : float, optional
@@ -141,8 +141,8 @@ class ASIMeanEstimator:
         -------
         SemiSupervisedMeanInferenceResult
             Contains the CLT-based confidence interval, the metric name, the estimator
-            name (``"ASIMeanEstimator"``), and the counts ``n_true`` (labeled rows) and
-            ``n_proxy`` (total rows).
+            name (``"ASIMeanEstimator"``), and the counts ``n_true`` (labeled samples) and
+            ``n_proxy`` (total samples).
 
         Raises
         ------

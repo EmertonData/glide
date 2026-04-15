@@ -15,28 +15,22 @@ def sampler() -> ActiveSampler:
     return ActiveSampler()
 
 
-# --- _preprocess ---
+# --- _validate ---
 
 
-def test_preprocess_extracts_uncertainties(sampler, uncertainties):
-    result = sampler._preprocess(uncertainties)
-    expected = np.array([0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9])
-    np.testing.assert_array_almost_equal(result, expected)
-
-
-def test_preprocess_raises_on_zero_uncertainty(sampler):
+def test_validate_raises_on_zero_uncertainty(sampler):
     with pytest.raises(ValueError, match="non-positive"):
-        sampler._preprocess(np.array([0.0, 0.5]))
+        sampler._validate(np.array([0.0, 0.5]))
 
 
-def test_preprocess_raises_on_negative_uncertainty(sampler):
+def test_validate_raises_on_negative_uncertainty(sampler):
     with pytest.raises(ValueError, match="non-positive"):
-        sampler._preprocess(np.array([-0.1, 0.5]))
+        sampler._validate(np.array([-0.1, 0.5]))
 
 
-def test_preprocess_raises_on_nan_uncertainty(sampler):
+def test_validate_raises_on_nan_uncertainty(sampler):
     with pytest.raises(ValueError, match="NaN"):
-        sampler._preprocess(np.array([float("nan"), 0.5]))
+        sampler._validate(np.array([float("nan"), 0.5]))
 
 
 # --- sample ---

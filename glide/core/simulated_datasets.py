@@ -17,9 +17,9 @@ def generate_binary_dataset(
     Parameters
     ----------
     n : int
-        Number of records with both true and proxy labels (the labeled subset).
+        Number of samples with both true and proxy labels (the labeled subset).
     N : int
-        Number of records with proxy labels only (the unlabeled subset).
+        Number of samples with proxy labels only (the unlabeled subset).
     true_mean : float
         Expected mean value of the true labels.
     proxy_mean : float
@@ -32,8 +32,8 @@ def generate_binary_dataset(
     Returns
     -------
     Tuple[NDArray, NDArray]
-        [0]: array of shape ``(n_samples,)``, y_true with labeled values and NaN for unlabeled rows
-        [1]: array of shape ``(n_samples,)``, y_proxy with all values present
+        [0]: array of shape ``(n+N,)``, y_true with labeled values and NaN for unlabeled rows
+        [1]: array of shape ``(n+N,)``, y_proxy with all values present
 
     Raises
     ------
@@ -94,7 +94,7 @@ def generate_binary_dataset(
 
     **Step 4 — Unlabeled proxy sampling**
 
-    The ``N`` unlabeled records contain only the ``"y_proxy"`` field, sampled
+    The ``N`` unlabeled samples have only ``y_proxy`` values, sampled
     independently from ``Bernoulli(p_p)`` (marginal proxy distribution), with
     no dependence on ``y_true``.
 
@@ -184,10 +184,10 @@ def generate_stratified_binary_dataset(
     Parameters
     ----------
     n : List[int]
-        Number of records with both true and proxy labels per stratum.
+        Number of samples with both true and proxy labels per stratum.
         Length must equal number of strata.
     N : List[int]
-        Number of records with proxy labels only per stratum.
+        Number of samples with proxy labels only per stratum.
         Length must equal number of strata.
     true_mean : List[float]
         Expected mean value of the true labels per stratum.
@@ -204,9 +204,9 @@ def generate_stratified_binary_dataset(
     Returns
     -------
     Tuple[NDArray, NDArray, NDArray]
-        [0]: array of shape ``(n_samples,)``, y_true with labeled values and NaN for unlabeled rows
-        [1]: array of shape ``(n_samples,)``, y_proxy with all values present
-        [2]: groups: NDArray — shape ``(n_samples,)``, integer stratum identifiers
+        [0]: array of shape ``(n+N,)``, y_true with labeled values and NaN for unlabeled rows
+        [1]: array of shape ``(n+N,)``, y_proxy with all values present
+        [2]: groups: NDArray — shape ``(n+N,)``, integer stratum identifiers
 
     Raises
     ------
@@ -292,37 +292,37 @@ def generate_binary_dataset_with_oracle_sampling(
 ) -> Tuple[NDArray, NDArray, NDArray]:
     """Generate a synthetic binary dataset with oracle sampling probabilities.
 
-    All N records have ground-truth labels (y_true), proxy predictions (y_proxy),
+    All N samples have ground-truth labels (y_true), proxy predictions (y_proxy),
     and an oracle root mean square error (RMSE) derived from the analytical
-    proxy error. The RMSE values are non-uniform: records where the proxy is less
+    proxy error. The RMSE values are non-uniform: samples where the proxy is less
     reliable receive higher RMSE following the optimal sampling rule.
 
     The sampling is based on a latent variable which determines the correlation
-    between y_true and y_proxy in each record. This variable is sampled uniformly
+    between y_true and y_proxy in each sample. This variable is sampled uniformly
     around the given correlation value with limited spread within the interval of
     possible correlation levels given true_mean and proxy_mean. This way, the
     correlation between y_true and y_proxy matches the target value on average.
 
     Parameters
     ----------
-    N : int
-        Total number of records.
+    n_samples : int
+        Total number of samples.
     true_mean : float
         Expected mean of y_true. Must be in (0, 1).
     proxy_mean : float
         Expected mean of y_proxy. Must be in (0, 1).
     correlation : float
-        Pearson correlation between y_true and y_proxy (marginal, across all records).
+        Pearson correlation between y_true and y_proxy (marginal, across all samples).
     random_seed : int, optional
         Seed for reproducibility.
 
     Returns
     -------
     Tuple[NDArray, NDArray, NDArray]
-        A tuple ``(y_true, y_proxy, uncertainty)``, each of shape ``(N,)``.
-        ``y_true`` contains the full ground-truth labels for all N records (no NaN);
-        the caller is responsible for masking unlabeled rows. ``y_proxy`` contains
-        the proxy predictions. ``uncertainty`` is the oracle RMSE per record.
+        [0]: array of shape ``(n_samples,)``, y_true with the full ground-truth labels for all N
+        samples (no NaN); the caller is responsible for masking unlabeled rows
+        [1]: array of shape ``(n_samples,)``, y_proxy with proxy predictions
+        [2]: array of shape ``(n_samples,)``, uncertainty with oracle RMSE per sample
 
     Raises
     ------
@@ -370,7 +370,7 @@ def generate_binary_dataset_with_oracle_sampling(
 
     **Step 2 — Latent variable x and per-sample correlation**
 
-    Each record receives a latent value ``x_i ~ Uniform(-1, 1)`` representing
+    Each sample receives a latent value ``x_i ~ Uniform(-1, 1)`` representing
     "annotation difficulty".  The per-sample Pearson correlation is defined as:
 
     ```
@@ -379,8 +379,8 @@ def generate_binary_dataset_with_oracle_sampling(
 
     Because ``E[x] = 0`` for ``x ~ Uniform(-1, 1)``, the marginal
     correlation ``E[corr(X)] = correlation`` exactly, preserving the target
-    value on average.  Records with low ``x`` have lower conditional
-    correlation (proxy less reliable → higher oracle RMSE); records with high
+    value on average.  Samples with low ``x`` have lower conditional
+    correlation (proxy less reliable → higher oracle RMSE); samples with high
     ``x`` have higher conditional correlation (proxy more reliable → lower RMSE).
 
     ``correlation_spread`` is chosen as 90 % of the largest value that keeps
@@ -406,7 +406,7 @@ def generate_binary_dataset_with_oracle_sampling(
 
     **Step 4 — Vectorized CDF inversion**
 
-    Since each record has its own probability vector, ``numpy.random.choice``
+    Since each sample has its own probability vector, ``numpy.random.choice``
     (which takes a single fixed probability vector) cannot be used.  Instead,
     the four outcomes ``(0,0), (0,1), (1,0), (1,1)`` are encoded as integers
     0–3 and sampled via cumulative-threshold comparison on a single
@@ -501,7 +501,7 @@ def generate_binary_dataset_with_oracle_sampling(
     p11_x = correlation_x * D + p_t * p_p
     error_prob_x = p_t + p_p - 2.0 * p11_x
 
-    # Vectorized CDF inversion to sample (y_true, y_proxy) per record
+    # Vectorized CDF inversion to sample (y_true, y_proxy) per sample
     p00_x = 1.0 - p_t - p_p + p11_x
     u = rng.uniform(0.0, 1.0, size=N)
     samples = np.where(
@@ -537,9 +537,9 @@ def generate_gaussian_dataset(
     Parameters
     ----------
     n : int
-        Number of records with both true and proxy labels (the labeled subset).
+        Number of samples with both true and proxy labels (the labeled subset).
     N : int
-        Number of records with proxy labels only (the unlabeled subset).
+        Number of samples with proxy labels only (the unlabeled subset).
     true_mean : float
         Mean of the true label distribution.
     true_std : float
@@ -556,8 +556,8 @@ def generate_gaussian_dataset(
     Returns
     -------
     Tuple[NDArray, NDArray]
-        A tuple ``(y_true, y_proxy)``. y_true has shape ``(n_samples,)`` with labeled values
-        and NaN for unlabeled rows. y_proxy has shape ``(n_samples,)`` with all values present.
+        [0]: array of shape ``(n+N,)``, y_true with labeled values and NaN for unlabeled rows
+        [1]: array of shape ``(n+N,)``, y_proxy with all values present
 
     Notes
     -----

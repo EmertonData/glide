@@ -10,11 +10,11 @@ def sampler() -> ActiveSampler:
 
 
 def test_expected_sum_xi_equals_budget(sampler):
-    n_records = 50
+    n_samples = 50
     budget = 10
     n_trials = 500
 
-    uncertainties = np.ones(n_records)
+    uncertainties = np.ones(n_samples)
 
     n_array = np.array(
         [

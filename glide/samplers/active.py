@@ -27,7 +27,7 @@ class ActiveSampler:
     array([0., 1.])
     """
 
-    def _preprocess(self, uncertainties: NDArray) -> NDArray:
+    def _validate(self, uncertainties: NDArray) -> None:
         if np.any(np.isnan(uncertainties)):
             raise ValueError(
                 "All uncertainty values must be finite; got a NaN value. "
@@ -38,7 +38,6 @@ class ActiveSampler:
                 "All uncertainty values must be strictly positive; got a non-positive value. "
                 "An observation with zero or negative uncertainty would never be selected."
             )
-        return uncertainties
 
     def sample(
         self,
@@ -58,7 +57,7 @@ class ActiveSampler:
         Parameters
         ----------
         uncertainties : NDArray
-            Array of shape ``(N,)`` with strictly positive uncertainty scores.
+            Array of shape ``(n_samples,)`` with strictly positive uncertainty scores.
         budget : int
             Expected total number of annotations to collect. Must be a strictly
             positive integer and must not exceed ``len(uncertainties)``.
@@ -70,9 +69,9 @@ class ActiveSampler:
         Returns
         -------
         Tuple[NDArray, NDArray]
-            A tuple ``(pi, xi)`` where ``pi`` is an array of drawing probabilities
-            in ``(0, 1]`` and ``xi`` is an array of Bernoulli selection indicators
-            (1 if selected for annotation, 0 otherwise), both of shape ``(N,)``.
+            [0]: array of shape ``(n_samples,)``, pi with drawing probabilities in ``(0, 1]``
+            [1]: array of shape ``(n_samples,)``, xi with Bernoulli selection indicators
+            (1 if selected for annotation, 0 otherwise)
 
         Raises
         ------
@@ -85,14 +84,14 @@ class ActiveSampler:
             raise ValueError(f"'budget' must be a strictly positive integer; got {budget!r}.")
         if budget > len(uncertainties):
             raise ValueError(
-                f"'budget' must not exceed the number of records; "
+                f"'budget' must not exceed the number of samples; "
                 f"got budget={budget} but uncertainties has {len(uncertainties)} elements."
             )
 
-        validated_uncertainties = self._preprocess(uncertainties)
+        self._validate(uncertainties)
         rng = np.random.default_rng(random_seed)
 
-        drawing_probabilities = budget * validated_uncertainties / validated_uncertainties.sum()
+        drawing_probabilities = budget * uncertainties / uncertainties.sum()
         # Cap at 1: a Bernoulli probability cannot exceed 1.
         clipped_probabilities = np.minimum(drawing_probabilities, 1.0)
         indicators = rng.binomial(n=1, p=clipped_probabilities).astype(float)
