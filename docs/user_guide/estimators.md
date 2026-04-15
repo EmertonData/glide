@@ -217,24 +217,22 @@ When the proxy is informative, $\hat{\lambda}$ is large and the IPW-corrected la
 
 ## Predict-Then-Debias (PTD)
 
-PPI++ and Stratified PPI++ both assume that the labeled subset is drawn uniformly at random from the population. When this condition is not met and the sampling probabilities are unknown, neither estimator produces valid confidence intervals. **Predict-Then-Debias (PTD)** [[7](#ref-7)] lifts this restriction: it remains valid under any fixed sampling rule, known or unknown. In addition, PTD replaces the CLT-based normal approximation with a **bootstrap percentile confidence interval**, making it more reliable when $n$ is small or residuals are non-Gaussian.
+**Predict-Then-Debias (PTD)** [[7](#ref-7)] is designed for settings where the labeled subset is collected under an arbitrary, possibly non-uniform sampling rule whose probabilities need not be known. It constructs a confidence interval from the **empirical distribution of bootstrap estimates** rather than a normal approximation, making it reliable when $n$ is small or residuals are non-Gaussian.
 
-In PTD, each sample has the same two values as in PPI++:
+In PTD, each sample has two associated values:
 
 | Value | Present for | Description |
 |---|---|---|
 | $\tilde{Y}_i$ | All $n+N$ samples | Proxy label |
 | $Y_j$ | Labeled samples only ($n \ll N$) | Ground-truth label |
 
-The key differences from PPI++ lie in how $\lambda$ is estimated and how the confidence interval is constructed.
-
 ### Mean estimation
 
-The PTD point estimate has the same algebraic form as PPI++:
+The PTD point estimate combines all $N$ proxy labels with a labeled-set rectifier:
 
 $$\hat{\theta}_{\text{PTD}} = \lambda \cdot \frac{1}{N}\sum_{i=1}^{N}\tilde{Y}_i + \left(\frac{1}{n}\sum_{j=1}^{n}Y_j - \lambda \cdot \frac{1}{n}\sum_{j=1}^{n}\tilde{Y}_j\right)$$
 
-The first term anchors the estimate using all $N$ unlabeled proxy labels at low cost. The second term is a **rectifier** that corrects the proxy bias using the labeled samples, scaled by $\lambda$ to reflect how much proxy signal enters the estimate. The formula is identical to PPI++ at $\lambda = 1$; the entire difference lies in how $\lambda$ is estimated (see [Power-tuning](#power-tuning-3) below).
+The first term anchors the estimate using all $N$ proxy labels at low cost. The second term is a **rectifier** that corrects the proxy bias using the labeled samples, scaled by $\lambda$ to control how much proxy signal enters the estimate.
 
 ### Confidence intervals
 
@@ -256,13 +254,13 @@ The confidence interval at level $1 - \alpha$ is the interval between the $\alph
 
 ### Power-tuning
 
-PTD estimates $\lambda$ from the **bootstrap covariances** rather than analytically. After running the bootstrap loop, the optimal tuning scalar is:
+The optimal $\lambda$ is estimated from the **bootstrap covariances**. After running the bootstrap loop, it is computed as:
 
 $$\hat{\lambda} = \frac{\widehat{\text{Cov}}_B\!\left(\hat{\mu}^{(b)}_{\text{true}},\; \hat{\mu}^{(b)}_{\text{proxy}}\right)}{\widehat{\text{Var}}_B\!\left(\hat{\mu}^{(b)}_{\text{proxy}}\right) + \hat{S}_{\gamma^\circ}}$$
 
 where $\widehat{\text{Cov}}_B$ and $\widehat{\text{Var}}_B$ are computed across the $B$ bootstrap replicates of the labeled means, and $\hat{S}_{\gamma^\circ}$ is the estimated sampling variance of the unlabeled proxy mean. The denominator adds $\hat{S}_{\gamma^\circ}$ to account for the extra variability introduced by the Gaussian approximation of the unlabeled mean.
 
-The intuition mirrors PPI++: when the proxy is informative (high bootstrap covariance with ground-truth means), $\hat{\lambda}$ is large and the estimate borrows heavily from the proxy signal, narrowing the interval. When the proxy is uninformative, $\hat{\lambda}$ shrinks toward 0, down-weighting it. Power tuning is enabled by default. Setting `power_tuning=False` fixes $\lambda = 1$, recovering the unweighted PTD estimator.
+When the proxy is informative (high bootstrap covariance with ground-truth means), $\hat{\lambda}$ is large and the estimate borrows heavily from the proxy signal, narrowing the interval. When the proxy is uninformative, $\hat{\lambda}$ shrinks toward 0, down-weighting it. Power tuning is enabled by default. Setting `power_tuning=False` fixes $\lambda = 1$, recovering the unweighted PTD estimator.
 
 ---
 
