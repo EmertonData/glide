@@ -1,7 +1,6 @@
 import numpy as np
 import pytest
 
-from glide.core.dataset import Dataset
 from glide.core.simulated_datasets import (
     generate_binary_dataset,
     generate_binary_dataset_with_oracle_sampling,
@@ -46,17 +45,13 @@ def test_generate_binary_dataset_reproducibility():
 
 
 def test_generate_binary_dataset_with_oracle_sampling_structure_and_counts():
-
-    dataset = generate_binary_dataset_with_oracle_sampling(N=10, random_seed=0)
-    assert isinstance(dataset, Dataset)
-    assert len(dataset) == 10
-    for record in dataset:
-        assert "y_true" in record
-        assert "y_proxy" in record
-        assert "uncertainty" in record
-        assert record["y_true"] in (0, 1)
-        assert record["y_proxy"] in (0, 1)
-        assert record["uncertainty"] > 0
+    y_true, y_proxy, uncertainty = generate_binary_dataset_with_oracle_sampling(N=10, random_seed=0)
+    assert len(y_true) == 10
+    assert len(y_proxy) == 10
+    assert len(uncertainty) == 10
+    assert np.isin(y_true, [0.0, 1.0]).all()
+    assert np.isin(y_proxy, [0.0, 1.0]).all()
+    assert np.all(uncertainty > 0)
 
 
 def test_generate_binary_dataset_with_oracle_sampling_invalid_true_mean_raises():
@@ -78,9 +73,11 @@ def test_generate_binary_dataset_with_oracle_sampling_impossible_correlation_rai
 
 
 def test_generate_binary_dataset_with_oracle_sampling_reproducibility():
-    data1 = generate_binary_dataset_with_oracle_sampling(N=10, random_seed=7)
-    data2 = generate_binary_dataset_with_oracle_sampling(N=10, random_seed=7)
-    assert data1 == data2
+    y_true1, y_proxy1, uncertainty1 = generate_binary_dataset_with_oracle_sampling(N=10, random_seed=7)
+    y_true2, y_proxy2, uncertainty2 = generate_binary_dataset_with_oracle_sampling(N=10, random_seed=7)
+    np.testing.assert_array_equal(y_true1, y_true2)
+    np.testing.assert_array_equal(y_proxy1, y_proxy2)
+    np.testing.assert_array_equal(uncertainty1, uncertainty2)
 
 
 def test_generate_stratified_binary_dataset_structure_and_counts():

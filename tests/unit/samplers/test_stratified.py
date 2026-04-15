@@ -68,7 +68,6 @@ def test_proportional_allocation_proportional_to_N_h(sampler):
 
 def test_sample_returns_valid_arrays(sampler, y_proxy, groups):
     pi, xi = sampler.sample(y_proxy, groups, 4, random_seed=0)
-
     assert isinstance(pi, np.ndarray)
     assert isinstance(xi, np.ndarray)
     assert len(pi) == len(y_proxy)
