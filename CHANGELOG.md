@@ -22,6 +22,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - Doctest for `glide.io.to_json`
   
 ### 🔄 Changed
+- Renamed `compute_lambda` to `compute_tuning_parameter`
+- Refactored ASI user to journey to use numpy arrays only
 - Refactored stratified PPI to accept numpy arrays as input
 - Restructured "User guide" into three pages "Evaluation Workflow", "Samplers" and "Estimators"
 - Logo

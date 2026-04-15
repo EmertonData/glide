@@ -28,26 +28,22 @@ def test_generate_binary_dataset_empirical_means_and_correlation():
 
 
 def test_generate_binary_dataset_with_oracle_sampling_empirical_means_and_correlation():
-    data = generate_binary_dataset_with_oracle_sampling(
+    y_true, y_proxy, uncertainty = generate_binary_dataset_with_oracle_sampling(
         N=5000, true_mean=0.7, proxy_mean=0.6, correlation=0.5, random_seed=42
     )
-    y_true = data["y_true"]
-    y_proxy = data["y_proxy"]
     assert np.mean(y_true) == pytest.approx(0.7, abs=0.03)
     assert np.mean(y_proxy) == pytest.approx(0.6, abs=0.03)
     empirical_corr = np.corrcoef(y_true, y_proxy)[0, 1]
     assert empirical_corr == pytest.approx(0.5, abs=0.05)
-    uncertainty_array = data["uncertainty"]
-    assert np.std(uncertainty_array) == pytest.approx(0.07, abs=0.01)
+    assert np.std(uncertainty) == pytest.approx(0.07, abs=0.01)
 
 
 def test_generate_binary_dataset_with_oracle_rms_error_non_uniform():
     # With lower correlation, uncertainty variation is more visible
-    data = generate_binary_dataset_with_oracle_sampling(
+    _, _, uncertainty = generate_binary_dataset_with_oracle_sampling(
         N=1000, true_mean=0.5, proxy_mean=0.5, correlation=0.3, random_seed=42
     )
-    uncertainty_values = data["uncertainty"]
-    assert np.std(uncertainty_values) > 1e-2
+    assert np.std(uncertainty) > 1e-2
 
 
 def test_generate_gaussian_dataset_empirical_means_and_correlation():

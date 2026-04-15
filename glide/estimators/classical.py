@@ -8,7 +8,7 @@ from glide.core.mean_inference_result import ClassicalMeanInferenceResult
 class ClassicalMeanEstimator:
     """Estimator for population mean using the classical sample mean.
 
-    Uses only a single labeled field ``y`` to compute the sample mean and its
+    Uses only a single array ``y`` to compute the sample mean and its
     standard error via the Central Limit Theorem. This serves as a baseline
     that does not require proxy predictions.
 
@@ -47,7 +47,7 @@ class ClassicalMeanEstimator:
         Parameters
         ----------
         y : NDArray
-            Array of observations, shape ``(n,)``.
+            Array of observations, shape ``(n_samples,)``.
         metric_name : str, optional
             Human-readable label for the metric. Defaults to ``"Metric"``.
         confidence_level : float, optional

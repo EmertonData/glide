@@ -64,7 +64,7 @@ class PPIMeanEstimator:
         y_proxy_unlabeled = y_proxy_all[~labeled_mask]
         return y_true, y_proxy_labeled, y_proxy_unlabeled
 
-    def _compute_lambda(self, y_data: Tuple[NDArray, NDArray, NDArray], power_tuning: bool) -> float:
+    def _compute_tuning_parameter(self, y_data: Tuple[NDArray, NDArray, NDArray], power_tuning: bool) -> float:
         if not power_tuning:
             return 1.0
         y_true, y_proxy_labeled, y_proxy_unlabeled = y_data
@@ -143,7 +143,7 @@ class PPIMeanEstimator:
         y_true_labeled, _, y_proxy_unlabeled = y_data
         n = len(y_true_labeled)
         N = len(y_proxy_unlabeled)
-        _lambda = self._compute_lambda(y_data, power_tuning)
+        _lambda = self._compute_tuning_parameter(y_data, power_tuning)
         mean = self._compute_mean_estimate(y_data, _lambda)
         std = self._compute_std_estimate(y_data, _lambda)
         confidence_interval = CLTConfidenceInterval(
