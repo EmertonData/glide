@@ -1,8 +1,39 @@
 site_name: Glide
+site_url: https://glide-py.readthedocs.io/en/latest/
+site_description: "Helping humans ride the GenAI evaluation wave"
+site_author: Glide Team
+repo_url: https://github.com/EmertonData/glide
+repo_name: EmertonData/glide
 theme:
   name: material
+  logo: assets/logo-glide.png
+  favicon: assets/favicon-glide.png
+  icon:
+    repo: fontawesome/brands/github
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: blue
+      accent: light-blue
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: blue
+      accent: light-blue
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
   custom_dir: docs/overrides
   features:
+    - navigation.instant
+    - navigation.tracking
+    - navigation.tabs
+    - navigation.tabs.sticky
+    - navigation.top
+    - search.suggest
+    - search.highlight
     - content.code.copy
 
 extra_css:
@@ -25,6 +56,7 @@ plugins:
       execute: true
 
 markdown_extensions:
+  - attr_list
   - pymdownx.snippets
   - pymdownx.arithmatex:
       generic: true
@@ -38,7 +70,10 @@ nav:
   - Getting Started:
     - Installation: getting-started/installation.md
     - Quickstart: getting-started/quickstart.ipynb
-  - User Guide: user_guide.md
+  - User Guide: 
+    - Evaluation Workflow: user_guide/evaluation_workflow.md
+    - Samplers: user_guide/samplers.md
+    - Estimators: user_guide/estimators.md
   - Tutorials:
     - PPI: tutorials/ppi.ipynb
     - Stratified PPI: tutorials/stratified_ppi.ipynb

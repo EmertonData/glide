@@ -3,15 +3,13 @@ from typing import Dict, Hashable, Literal, Optional, Tuple
 import numpy as np
 from numpy.typing import NDArray
 
-from glide.core.dataset import Dataset
-
 
 class StratifiedSampler:
     """Sampler for per-stratum annotation budget allocation.
 
-    This class implements stratified sampling strategies that determine how many records
-    to annotate from each stratum, given a fixed annotation budget and proxy labels for
-    all records. It supports two allocation strategies:
+    This class implements stratified sampling strategies that determine how many samples
+    to annotate in each stratum, given a fixed annotation budget and proxy labels for
+    all samples (provided as numpy arrays). It supports two allocation strategies:
 
     - **Proportional allocation** (baseline): Allocates budget proportionally to stratum
       sizes, resulting in uniform sampling probabilities across the dataset.
@@ -34,44 +32,25 @@ class StratifiedSampler:
 
     Examples
     --------
-    >>> from glide.core.dataset import Dataset
+    >>> import numpy as np
     >>> from glide.samplers.stratified import StratifiedSampler
-    >>> dataset = Dataset([
-    ...     {"group": "A", "y_proxy": 0.8},
-    ...     {"group": "A", "y_proxy": 0.9},
-    ...     {"group": "A", "y_proxy": 0.85},
-    ...     {"group": "A", "y_proxy": 0.88},
-    ...     {"group": "B", "y_proxy": 0.2},
-    ...     {"group": "B", "y_proxy": 0.3},
-    ... ])
+    >>> y_proxy = np.array([0.8, 0.9, 0.85, 0.88, 0.2, 0.3])
+    >>> groups = np.array(["A", "A", "A", "A", "B", "B"], dtype=object)
     >>> sampler = StratifiedSampler()
-    >>> result = sampler.sample(
-    ...     dataset,
-    ...     y_proxy_field="y_proxy",
-    ...     groups_field="group",
-    ...     budget=2,
-    ...     random_seed=1
-    ... )
-    >>> result  # doctest: +NORMALIZE_WHITESPACE
-    [{'group': 'A', 'y_proxy': 0.8, 'pi': np.float64(0.25), 'xi': 0},
-     {'group': 'A', 'y_proxy': 0.9, 'pi': np.float64(0.25), 'xi': 1},
-     {'group': 'A', 'y_proxy': 0.85, 'pi': np.float64(0.25), 'xi': 0},
-     {'group': 'A', 'y_proxy': 0.88, 'pi': np.float64(0.25), 'xi': 1},
-     {'group': 'B', 'y_proxy': 0.2, 'pi': np.float64(0.5), 'xi': 0},
-     {'group': 'B', 'y_proxy': 0.3, 'pi': np.float64(0.5), 'xi': 0}]
+    >>> pi, xi = sampler.sample(y_proxy, groups, budget=2, random_seed=1)
+    >>> pi
+    array([0.25, 0.25, 0.25, 0.25, 0.5 , 0.5 ])
+    >>> xi
+    array([0, 1, 0, 1, 0, 0])
     """
 
-    def _preprocess(
+    def _validate(
         self,
-        dataset: Dataset,
-        y_proxy_field: str,
-        groups_field: str,
+        y_proxy: NDArray,
+        groups: NDArray,
     ) -> Tuple[NDArray, NDArray]:
-        data = dataset.to_numpy(fields=[y_proxy_field])
-        y_proxy = data[:, 0]
         if np.isnan(y_proxy).any():
             raise ValueError("Input proxy values contain NaN")
-        groups = np.array([record[groups_field] for record in dataset])
 
         unique_strata = np.unique(groups)
         for stratum_id in unique_strata:
@@ -167,35 +146,30 @@ class StratifiedSampler:
 
     def sample(
         self,
-        dataset: Dataset,
-        y_proxy_field: str,
-        groups_field: str,
+        y_proxy: NDArray,
+        groups: NDArray,
         budget: int,
         strategy: Literal["proportional", "neyman"] = "neyman",
         random_seed: Optional[int] = None,
-        pi_field: str = "pi",
-        xi_field: str = "xi",
-    ) -> Dataset:
+    ) -> Tuple[NDArray, NDArray]:
         """Allocate annotation budget across strata and perform stratified sampling.
 
         Computes per-stratum sample sizes using the specified allocation strategy and performs
-        Bernoulli sampling for each record based on its stratum's allocation. Neyman allocation
+        Bernoulli sampling for each sample based on its stratum's allocation. Neyman allocation
         (default) assigns more budget to strata with higher proxy variance, minimising asymptotic
         variance of downstream estimators. Proportional allocation allocates budget proportionally
         to stratum sizes and serves as a baseline.
 
-        Each record receives a drawing probability π_i = n_h / stratum_size (capped at 1), and
+        Each sample receives a drawing probability π_i = n_h / stratum_size (capped at 1), and
         is independently selected via a Bernoulli trial. The actual number of selected items is
         a random variable with expectation ≤ budget.
 
         Parameters
         ----------
-        dataset : Dataset
-            Dataset with all records and proxy labels.
-        y_proxy_field : str
-            Field name holding proxy labels. Mandatory.
-        groups_field : str
-            Field name holding stratum identifiers. Mandatory.
+        y_proxy : NDArray
+            Proxy labels for all samples. Must be 1-dimensional.
+        groups : NDArray
+            Stratum identifiers for all samples. Must be 1-dimensional with same length as y_proxy.
         budget : int
             Target annotation budget. Must be positive. Mandatory.
         strategy : str, optional
@@ -204,36 +178,29 @@ class StratifiedSampler:
             "proportional": allocates proportionally to stratum sizes.
         random_seed : int or None, optional
             Random seed for reproducible sampling. Defaults to None (non-deterministic).
-        pi_field : str, optional
-            Name of the output column for drawing probabilities. Defaults to "pi".
-        xi_field : str, optional
-            Name of the output column for selection indicators. Defaults to "xi".
 
         Returns
         -------
-        result : Dataset
-            Input dataset augmented with two columns:
-            - `pi_field`: drawing probability π_i ∈ (0, 1] for each record.
-            - `xi_field`: 1 if selected for annotation, 0 otherwise.
+        Tuple[NDArray, NDArray]
+            A tuple ``(pi, xi)`` where ``pi`` is an array of drawing probabilities
+            in ``(0, 1]`` and ``xi`` is an array of Bernoulli selection indicators
+            (1 if selected for annotation, 0 otherwise), both of shape ``(N,)``.
 
         Raises
         ------
-        KeyError
-            If groups_field is missing from a record.
         ValueError
-            If y_proxy_field is not present in any record, if strategy is unknown,
-            if budget is not a strictly positive integer, or if budget exceeds
-            the number of records in the dataset.
+            If strategy is unknown, if budget is not a strictly positive integer, or if budget exceeds
+            the number of samples in the input.
         """
         if (not isinstance(budget, (int, np.integer))) or isinstance(budget, bool) or budget <= 0:
             raise ValueError(f"'budget' must be a strictly positive integer; got {budget!r}.")
-        if budget > len(dataset):
+        if budget > len(y_proxy):
             raise ValueError(
-                f"'budget' must not exceed the number of records in the dataset; "
-                f"got budget={budget} but dataset has {len(dataset)} records."
+                f"'budget' must not exceed the number of samples; "
+                f"got budget={budget} but input has {len(y_proxy)} samples."
             )
 
-        y_proxy, groups = self._preprocess(dataset, y_proxy_field, groups_field)
+        y_proxy, groups = self._validate(y_proxy, groups)
 
         if strategy == "proportional":
             allocation = self._proportional_allocation(groups, budget)
@@ -252,17 +219,15 @@ class StratifiedSampler:
 
         rng = np.random.default_rng(random_seed)
 
-        result_records = []
-        for record in dataset:
-            stratum_id = record[groups_field]
-            stratum_size = (groups == stratum_id).sum()
+        pi = np.zeros(len(y_proxy))
+        xi = np.zeros(len(y_proxy), dtype=int)
+
+        for stratum_id in np.unique(groups):
+            stratum_mask = groups == stratum_id
             n_h = allocation[stratum_id]
-            pi = min(n_h / stratum_size, 1.0)
-            xi = rng.binomial(n=1, p=pi)
+            stratum_size = stratum_mask.sum()
+            pi_value = np.minimum(n_h / stratum_size, 1.0)
+            pi[stratum_mask] = pi_value
+            xi[stratum_mask] = rng.binomial(n=1, p=np.full(stratum_size, pi_value)).astype(float)
 
-            new_record = dict(record)
-            new_record[pi_field] = pi
-            new_record[xi_field] = xi
-            result_records.append(new_record)
-
-        return Dataset(result_records)
+        return pi, xi
