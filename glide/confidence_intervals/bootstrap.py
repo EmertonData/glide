@@ -1,5 +1,5 @@
 from dataclasses import dataclass, field
-from typing import Tuple
+from typing import Literal, Tuple
 
 import numpy as np
 from numpy.typing import NDArray
@@ -56,7 +56,7 @@ class BootstrapConfidenceInterval:
     def test_null_hypothesis(
         self,
         h0_value: float,
-        alternative: str = "two-sided",
+        alternative: Literal["larger", "smaller", "two-sided"] = "two-sided",
     ) -> Tuple[float, float, float]:
         """Bootstrap hypothesis test against a null value.
 
@@ -79,7 +79,7 @@ class BootstrapConfidenceInterval:
         """
         if alternative == "two-sided":
             centered = np.abs(self.bootstrap_estimates - self.mean)
-            observed_deviation = abs(self.mean - h0_value)
+            observed_deviation = abs(h0_value - self.mean)
             is_at_least_as_extreme = centered >= observed_deviation
         elif alternative == "larger":
             is_at_least_as_extreme = self.bootstrap_estimates <= h0_value
@@ -89,4 +89,4 @@ class BootstrapConfidenceInterval:
             raise ValueError(f"alternative must be 'two-sided', 'larger', or 'smaller', got '{alternative}'")
         p_value = float(np.mean(is_at_least_as_extreme))
 
-        return p_value, p_value, float("inf")
+        return self.mean, p_value, float("inf")

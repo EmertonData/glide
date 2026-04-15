@@ -1,5 +1,5 @@
 from dataclasses import dataclass, field
-from typing import Tuple
+from typing import Literal, Tuple
 
 from scipy.stats import norm
 
@@ -52,7 +52,9 @@ class CLTConfidenceInterval:
         result = self.mean + self.std * self._z_score()
         return result
 
-    def test_null_hypothesis(self, h0_value: float, alternative: str = "two-sided") -> Tuple[float, float, float]:
+    def test_null_hypothesis(
+        self, h0_value: float, alternative: Literal["larger", "smaller", "two-sided"] = "two-sided"
+    ) -> Tuple[float, float, float]:
         """Perform a one-sample z-test against a null hypothesis value.
 
         Parameters
@@ -68,10 +70,9 @@ class CLTConfidenceInterval:
         Returns
         -------
         Tuple[float, float, float]
-            A tuple of (z_stat, p_value, df) where:
-            - ``z_stat``: the test statistic (mean - h0_value) / std
-            - ``p_value``: the p-value under the standard normal distribution
-            - ``df``: degrees of freedom, always ``float('inf')`` for a z-test
+            ``(z_stat, p_value, df)`` where ``z_stat`` is the test statistic
+            (mean - h0_value) / std, ``p_value`` is the p-value under the standard
+            normal distribution, and ``df`` is ``float('inf')``.
 
         Raises
         ------

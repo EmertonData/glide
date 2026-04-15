@@ -78,4 +78,4 @@ def test_null_hypothesis_smaller(estimates):
 def test_null_hypothesis_invalid_alternative(estimates):
     ci = BootstrapConfidenceInterval(bootstrap_estimates=estimates)
     with pytest.raises(ValueError, match="alternative must be 'two-sided', 'larger', or 'smaller'"):
-        ci.test_null_hypothesis(h0_value=0.0, alternative="invalid")
+        ci.test_null_hypothesis(h0_value=0.0, alternative="invalid")  # ty: ignore
