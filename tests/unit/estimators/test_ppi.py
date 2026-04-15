@@ -72,17 +72,17 @@ def test_preprocess_raises_on_length_mismatch(estimator):
         estimator._preprocess(y_true, y_proxy)
 
 
-# --- _compute_lambda ---
+# --- _compute_tuning_parameter ---
 
 
-def test_compute_lambda_returns_one_when_power_tuning_false(estimator, y_data):
-    result = estimator._compute_lambda(y_data, power_tuning=False)
+def test_compute_tuning_parameter_returns_one_when_power_tuning_false(estimator, y_data):
+    result = estimator._compute_tuning_parameter(y_data, power_tuning=False)
     assert result == 1.0
 
 
-def test_compute_lambda_known_values(estimator, y_data):
+def test_compute_tuning_parameter_known_values(estimator, y_data):
     expected = 0.34
-    result = estimator._compute_lambda(y_data, power_tuning=True)
+    result = estimator._compute_tuning_parameter(y_data, power_tuning=True)
     assert result == pytest.approx(expected, abs=0.01)
 
 

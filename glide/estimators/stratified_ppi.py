@@ -82,7 +82,7 @@ class StratifiedPPIMeanEstimator:
 
         return strata
 
-    def _compute_lambda(
+    def _compute_tuning_parameter(
         self,
         y_true: NDArray,
         y_proxy_labeled: NDArray,
@@ -197,7 +197,7 @@ class StratifiedPPIMeanEstimator:
             stratum_size = len(y_true_labeled) + len(y_proxy_unlabeled)
             w_k = stratum_size / total_size
 
-            lambda_k = self._compute_lambda(y_true_labeled, y_proxy_labeled, y_proxy_unlabeled, power_tuning)
+            lambda_k = self._compute_tuning_parameter(y_true_labeled, y_proxy_labeled, y_proxy_unlabeled, power_tuning)
             mean_k = self._compute_mean_estimate(y_true_labeled, y_proxy_labeled, y_proxy_unlabeled, lambda_k)
             std_k = self._compute_std_estimate(y_true_labeled, y_proxy_labeled, y_proxy_unlabeled, lambda_k)
 

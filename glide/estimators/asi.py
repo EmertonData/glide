@@ -63,7 +63,7 @@ class ASIMeanEstimator:
         y_true = np.where(np.isnan(y_true_all), -1.0, y_true_all)
         return y_true, y_proxy, xi, sampling_probabilities
 
-    def _compute_lambda(
+    def _compute_tuning_parameter(
         self,
         y_data: Tuple[NDArray, NDArray, NDArray, NDArray],
         power_tuning: bool,
@@ -151,7 +151,7 @@ class ASIMeanEstimator:
             less than or equal to 0 or greater than 1.
         """
         y_data = self._preprocess(y_true, y_proxy, sampling_probabilities)
-        _lambda = self._compute_lambda(y_data, power_tuning)
+        _lambda = self._compute_tuning_parameter(y_data, power_tuning)
         rectified_labels = self._compute_rectified_labels(y_data, _lambda)
         mean_estimate = self._compute_mean_estimate(rectified_labels)
         std_estimate = self._compute_std_estimate(rectified_labels)

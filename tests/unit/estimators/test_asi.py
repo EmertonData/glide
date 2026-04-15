@@ -92,17 +92,17 @@ def test_preprocess_raises_on_nan_proxy(estimator):
         estimator._preprocess(y_true, y_proxy, sampling_probabilities)
 
 
-# --- _compute_lambda ---
+# --- _compute_tuning_parameter ---
 
 
-def test_compute_lambda_returns_one_when_power_tuning_false(estimator, y_data):
+def test_compute_tuning_parameter_returns_one_when_power_tuning_false(estimator, y_data):
     # Hand-crafted arrays for deterministic unit tests.
-    lam = estimator._compute_lambda(y_data, power_tuning=False)
+    lam = estimator._compute_tuning_parameter(y_data, power_tuning=False)
     assert lam == 1.0
 
 
-def test_compute_lambda_known_values(estimator, y_data):
-    lam = estimator._compute_lambda(y_data, power_tuning=True)
+def test_compute_tuning_parameter_known_values(estimator, y_data):
+    lam = estimator._compute_tuning_parameter(y_data, power_tuning=True)
     expected = 0.89
     assert lam == pytest.approx(expected, abs=0.01)
 
