@@ -66,9 +66,12 @@ class BootstrapConfidenceInterval:
         Parameters
         ----------
         h0_value : float
-            Hypothesised population mean under H0.
+            The hypothesized population mean under the null hypothesis (H0: μ = h0_value).
         alternative : str, optional
-            One of ``'two-sided'``, ``'larger'``, or ``'smaller'``.
+            The alternative hypothesis. One of:
+            - ``'two-sided'`` (default): H1: μ ≠ h0_value
+            - ``'larger'``: H1: μ > h0_value
+            - ``'smaller'``: H1: μ < h0_value
 
         Returns
         -------
