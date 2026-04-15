@@ -89,4 +89,4 @@ class BootstrapConfidenceInterval:
             raise ValueError(f"alternative must be 'two-sided', 'larger', or 'smaller', got '{alternative}'")
         p_value = float(np.mean(is_at_least_as_extreme))
 
-        return self.mean, p_value, float("inf")
+        return p_value, p_value, float("inf")
