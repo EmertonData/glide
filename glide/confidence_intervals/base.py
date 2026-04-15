@@ -11,7 +11,6 @@ class ConfidenceInterval(Protocol):
     confidence_level: float
     mean: float
     std: float
-    var: float
 
     @property
     def lower_bound(self) -> float:
