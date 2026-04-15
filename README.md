@@ -13,7 +13,7 @@
 </p>
 
 <p align="center">
-  <img src="https://raw.githubusercontent.com/EmertonData/glide/refs/heads/main/docs/assets/logo-glide.png" alt="GLIDE Logo" width="80%">
+  <img src="https://raw.githubusercontent.com/EmertonData/glide/refs/heads/main/docs/assets/logo-glide-white-bg.png" alt="GLIDE Logo" width="80%">
 </p>
 
 # GLIDE 

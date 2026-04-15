@@ -6,7 +6,7 @@ repo_url: https://github.com/EmertonData/glide
 repo_name: EmertonData/glide
 theme:
   name: material
-  logo: assets/logo-glide.png
+  logo: assets/logo-glide-no-bg.png
   favicon: assets/favicon-glide.png
   icon:
     repo: fontawesome/brands/github
@@ -74,6 +74,7 @@ nav:
     - Evaluation Workflow: user_guide/evaluation_workflow.md
     - Samplers: user_guide/samplers.md
     - Estimators: user_guide/estimators.md
+    - Which estimator to use: user_guide/which_estimator_to_use.md
   - Tutorials:
     - PPI: tutorials/ppi.ipynb
     - Stratified PPI: tutorials/stratified_ppi.ipynb
