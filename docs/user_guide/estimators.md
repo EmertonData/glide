@@ -215,6 +215,57 @@ When the proxy is informative, $\hat{\lambda}$ is large and the IPW-corrected la
 
 ---
 
+## Predict-Then-Debias (PTD)
+
+PPI++ and Stratified PPI++ both assume that the labeled subset is drawn uniformly at random from the population. When this condition is not met and the sampling probabilities are unknown, neither estimator produces valid confidence intervals. **Predict-Then-Debias (PTD)** [[7](#ref-7)] lifts this restriction: it remains valid under any fixed sampling rule, known or unknown. In addition, PTD replaces the CLT-based normal approximation with a **bootstrap percentile confidence interval**, making it more reliable when $n$ is small or residuals are non-Gaussian.
+
+In PTD, each sample has the same two values as in PPI++:
+
+| Value | Present for | Description |
+|---|---|---|
+| $\tilde{Y}_i$ | All $n+N$ samples | Proxy label |
+| $Y_j$ | Labeled samples only ($n \ll N$) | Ground-truth label |
+
+The key differences from PPI++ lie in how $\lambda$ is estimated and how the confidence interval is constructed.
+
+### Mean estimation
+
+The PTD point estimate has the same algebraic form as PPI++:
+
+$$\hat{\theta}_{\text{PTD}} = \lambda \cdot \frac{1}{N}\sum_{i=1}^{N}\tilde{Y}_i + \left(\frac{1}{n}\sum_{j=1}^{n}Y_j - \lambda \cdot \frac{1}{n}\sum_{j=1}^{n}\tilde{Y}_j\right)$$
+
+The first term anchors the estimate using all $N$ unlabeled proxy labels at low cost. The second term is a **rectifier** that corrects the proxy bias using the labeled samples, scaled by $\lambda$ to reflect how much proxy signal enters the estimate. The formula is identical to PPI++ at $\lambda = 1$; the entire difference lies in how $\lambda$ is estimated (see [Power-tuning](#power-tuning-3) below).
+
+### Confidence intervals
+
+PTD constructs its confidence interval from the **empirical distribution of bootstrap estimates** rather than from a normal approximation. This bootstrap percentile approach is valid under any fixed sampling design and adapts to the actual shape of the residual distribution, making it reliable even when $n$ is small.
+
+The bootstrap approximates the sampling distribution of $\hat{\theta}_{\text{PTD}}$ by resampling the labeled set $B$ times. At iteration $b$, the algorithm draws $n$ indices with replacement from the labeled set and computes:
+
+$$\hat{\theta}^{(b)}_{\text{PTD}} = \lambda \cdot \tilde{\gamma}^{(b)} + \left(\hat{\mu}^{(b)}_{\text{true}} - \lambda \cdot \hat{\mu}^{(b)}_{\text{proxy}}\right)$$
+
+where $\hat{\mu}^{(b)}_{\text{true}}$ and $\hat{\mu}^{(b)}_{\text{proxy}}$ are the bootstrap means of the labeled ground-truth and proxy labels respectively, and $\tilde{\gamma}^{(b)}$ is a perturbed draw of the unlabeled proxy mean (see below).
+
+**CLT-based speedup (Algorithm 3).** Naively, each bootstrap iteration would require resampling all $N$ unlabeled proxy labels, making the total cost $O(B \cdot (n+N))$. Since $N \gg n$, this is dominated by the unlabeled set. Kluger et al. (2025) avoid this cost: by the CLT, the mean of $N$ i.i.d. proxy scores is approximately Gaussian with mean $\hat{\gamma}^\circ = \frac{1}{N}\sum_{i=1}^{N}\tilde{Y}_i$ and variance $\hat{S}_{\gamma^\circ} = \widehat{\text{Var}}(\tilde{Y}_{\text{unlabeled}}) / N$. Each bootstrap iteration therefore replaces a full resample of the unlabeled set with a single Gaussian draw:
+
+$$\tilde{\gamma}^{(b)} = \hat{\gamma}^\circ + \sqrt{\hat{S}_{\gamma^\circ}} \cdot Z^{(b)}, \qquad Z^{(b)} \sim \mathcal{N}(0,\, 1)$$
+
+The quantities $\hat{\gamma}^\circ$ and $\hat{S}_{\gamma^\circ}$ are computed once before the loop, reducing the per-iteration cost to $O(n)$. This approximation is reliable when $N \gtrsim 30$, the typical production setting where $N \gg n$.
+
+The confidence interval at level $1 - \alpha$ is the interval between the $\alpha/2$ and $1 - \alpha/2$ empirical quantiles of $\bigl\{\hat{\theta}^{(1)}_{\text{PTD}},\, \ldots,\, \hat{\theta}^{(B)}_{\text{PTD}}\bigr\}$.
+
+### Power-tuning
+
+PTD estimates $\lambda$ from the **bootstrap covariances** rather than analytically. After running the bootstrap loop, the optimal tuning scalar is:
+
+$$\hat{\lambda} = \frac{\widehat{\text{Cov}}_B\!\left(\hat{\mu}^{(b)}_{\text{true}},\; \hat{\mu}^{(b)}_{\text{proxy}}\right)}{\widehat{\text{Var}}_B\!\left(\hat{\mu}^{(b)}_{\text{proxy}}\right) + \hat{S}_{\gamma^\circ}}$$
+
+where $\widehat{\text{Cov}}_B$ and $\widehat{\text{Var}}_B$ are computed across the $B$ bootstrap replicates of the labeled means, and $\hat{S}_{\gamma^\circ}$ is the estimated sampling variance of the unlabeled proxy mean. The denominator adds $\hat{S}_{\gamma^\circ}$ to account for the extra variability introduced by the Gaussian approximation of the unlabeled mean.
+
+The intuition mirrors PPI++: when the proxy is informative (high bootstrap covariance with ground-truth means), $\hat{\lambda}$ is large and the estimate borrows heavily from the proxy signal, narrowing the interval. When the proxy is uninformative, $\hat{\lambda}$ shrinks toward 0, down-weighting it. Power tuning is enabled by default. Setting `power_tuning=False` fixes $\lambda = 1$, recovering the unweighted PTD estimator.
+
+---
+
 ## References
 
 <a id="ref-1"></a>[1] <a id="ref-1-link" href="https://www.science.org/doi/10.1126/science.adi6000">Angelopoulos, Anastasios N., Stephen Bates, Clara Fannjiang, Michael I. Jordan, and Tijana Zrnic. "Prediction-powered inference." *Science* 382, no. 6671 (2023): 669–674</a>.
@@ -228,3 +279,5 @@ When the proxy is informative, $\hat{\lambda}$ is large and the IPW-corrected la
 <a id="ref-5"></a>[5] <a id="ref-5-link" href="https://arxiv.org/abs/2406.04291">Fisch, Adam, Joshua Maynez, R. Hofer, Bhuwan Dhingra, Amir Globerson, and William W. Cohen. "Stratified prediction-powered inference for effective hybrid evaluation of language models." *Advances in Neural Information Processing Systems* 37 (2024): 111489–111514.</a>.
 
 <a id="ref-6"></a>[6] <a id="ref-6-link" href="https://www.ecva.net/papers/eccv_2024/papers_ECCV/papers/12117.pdf">Fogliato, Riccardo, Pratik Patil, Mathew Monfort, and Pietro Perona. "A framework for efficient model evaluation through stratification, sampling, and estimation." *European Conference on Computer Vision*, pp. 140–158. Springer Nature Switzerland, 2024.</a>.
+
+<a id="ref-7"></a>[7] <a id="ref-7-link" href="https://arxiv.org/abs/2501.18577">Kluger, Dan M., Kerri Lu, Tijana Zrnic, Sherrie Wang, and Stephen Bates. "Prediction-powered inference with imputed covariates and nonuniform sampling." *arXiv preprint arXiv:2501.18577* (2025).</a>.
