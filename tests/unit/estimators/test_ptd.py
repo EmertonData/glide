@@ -1,3 +1,5 @@
+from typing import Tuple
+
 import numpy as np
 import pytest
 from numpy.typing import NDArray
@@ -15,14 +17,14 @@ def estimator() -> PTDMeanEstimator:
 
 
 @pytest.fixture
-def y_arrays() -> tuple[NDArray, NDArray]:
+def y_arrays() -> Tuple[NDArray, NDArray]:
     y_true = np.array([5.0, 6.0, 7.0, np.nan, np.nan, np.nan])
     y_proxy = np.array([4.5, 5.5, 6.5, 6.0, 7.0, 8.0])
     return y_true, y_proxy
 
 
 @pytest.fixture
-def y_data() -> tuple[NDArray, NDArray, NDArray]:
+def y_data() -> Tuple[NDArray, NDArray, NDArray]:
     y_true = np.array([5.0, 6.0, 7.0])
     y_proxy_labeled = np.array([4.5, 5.5, 6.5])
     y_proxy_unlabeled = np.array([6.0, 7.0, 8.0])

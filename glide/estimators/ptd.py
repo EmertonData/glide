@@ -19,7 +19,9 @@ class PTDMeanEstimator:
     The bootstrap uses the CLT-based Algorithm 3 from Kluger et al. (2025):
     the unlabeled proxy mean is computed once on the full unlabeled set and
     its sampling variability is simulated with a Gaussian draw at each
-    iteration, making the per-iteration cost O(n) rather than O(n + N).
+    iteration, making the per-iteration cost O(n_labeled) rather than
+    O(n_labeled + n_unlabeled), where n_labeled and n_unlabeled are the
+    number of labeled and unlabeled samples respectively.
 
     References
     ----------
@@ -33,13 +35,15 @@ class PTDMeanEstimator:
     >>> y_true = np.array([5.0, 6.0, np.nan, np.nan])
     >>> y_proxy = np.array([4.9, 6.1, 5.2, 6.1])
     >>> estimator = PTDMeanEstimator()
-    >>> result = estimator.estimate(y_true, y_proxy, random_seed=0)
-    >>> result.estimator_name
-    'PTDMeanEstimator'
-    >>> result.n_true
-    2
-    >>> result.n_proxy
-    4
+    >>> result = estimator.estimate(y_true, y_proxy, n_bootstrap=5, random_seed=0)
+    >>> print(result)
+    Metric: Metric
+    Point Estimate: 5.552
+    Confidence Interval (95%): [5.211, 5.865]
+    Estimator : PTDMeanEstimator
+    n_true: 2
+    n_proxy: 4
+    Effective Sample Size: 5
     """
 
     def _preprocess(self, y_true_all: NDArray, y_proxy_all: NDArray) -> Tuple[NDArray, NDArray, NDArray]:
@@ -52,7 +56,7 @@ class PTDMeanEstimator:
         if len(np.unique(y_proxy_all)) == 1:
             raise ValueError("Input proxy values have zero variance")
         labeled_mask = ~np.isnan(y_true_all)
-        n_labeled = sum(labeled_mask)
+        n_labeled = labeled_mask.sum()
         n_unlabeled = len(y_true_all) - n_labeled
         if min(n_labeled, n_unlabeled) <= 1:
             raise RuntimeError("Too few labeled or unlabeled samples in dataset")
@@ -62,12 +66,12 @@ class PTDMeanEstimator:
         return y_true, y_proxy_labeled, y_proxy_unlabeled
 
     def _compute_unlabeled_proxy_mean(self, y_proxy_unlabeled: NDArray) -> float:
-        mean_proxy_unlabeled = float(np.mean(y_proxy_unlabeled))
+        mean_proxy_unlabeled = np.mean(y_proxy_unlabeled)
         return mean_proxy_unlabeled
 
     def _compute_unlabeled_proxy_var(self, y_proxy_unlabeled: NDArray) -> float:
-        N = len(y_proxy_unlabeled)
-        var_proxy_unlabeled = float(np.var(y_proxy_unlabeled, ddof=1) / N)
+        n_unlabeled = len(y_proxy_unlabeled)
+        var_proxy_unlabeled = np.var(y_proxy_unlabeled, ddof=1) / n_unlabeled
         return var_proxy_unlabeled
 
     def _compute_bootstrap_labeled_estimates(
@@ -77,8 +81,8 @@ class PTDMeanEstimator:
         n_bootstrap: int,
         rng: np.random.Generator,
     ) -> Tuple[NDArray, NDArray]:
-        n = len(y_true)
-        idx = rng.choice(n, size=(n_bootstrap, n), replace=True)
+        n_labeled = len(y_true)
+        idx = rng.choice(n_labeled, size=(n_bootstrap, n_labeled), replace=True)
         y_true_means = np.mean(y_true[idx], axis=1)
         y_proxy_labeled_means = np.mean(y_proxy_labeled[idx], axis=1)
         return y_true_means, y_proxy_labeled_means
@@ -96,7 +100,7 @@ class PTDMeanEstimator:
         cov = cov_matrix[0, 1]
         var_proxy_labeled = cov_matrix[1, 1]
         denom = var_proxy_labeled + var_proxy_unlabeled
-        _lambda = float(cov / denom)
+        _lambda = cov / denom
         return _lambda
 
     def _compute_bootstrap_mean_estimates(
@@ -134,7 +138,8 @@ class PTDMeanEstimator:
         The tuning scalar λ and the confidence interval are both derived from a
         bootstrap over the labeled set only (Algorithm 3 from Kluger et al., 2025).
         The sampling variability of the unlabeled proxy mean is approximated by a
-        single Gaussian draw per iteration, keeping the per-iteration cost O(n).
+        single Gaussian draw per iteration, keeping the per-iteration cost O(n_labeled),
+        where n_labeled is the number of labeled samples.
 
         Parameters
         ----------
@@ -164,7 +169,7 @@ class PTDMeanEstimator:
             name (``"PTDMeanEstimator"``), and counts ``n_true`` / ``n_proxy``.
         """
         y_true_labeled, y_proxy_labeled, y_proxy_unlabeled = self._preprocess(y_true, y_proxy)
-        n, N = len(y_true_labeled), len(y_proxy_unlabeled)
+        n_labeled, n_unlabeled = len(y_true_labeled), len(y_proxy_unlabeled)
         rng = np.random.default_rng(random_seed)
 
         mean_proxy_unlabeled = self._compute_unlabeled_proxy_mean(y_proxy_unlabeled)
@@ -184,8 +189,8 @@ class PTDMeanEstimator:
             confidence_interval=confidence_interval,
             metric_name=metric_name,
             estimator_name=self.__class__.__name__,
-            n_true=n,
-            n_proxy=n + N,
+            n_true=n_labeled,
+            n_proxy=n_labeled + n_unlabeled,
             effective_sample_size=effective_sample_size,
         )
         return result
