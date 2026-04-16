@@ -35,11 +35,13 @@ class BootstrapConfidenceInterval:
     mean: float = field(init=False, repr=False)
     var: float = field(init=False, repr=False)
     std: float = field(init=False, repr=False)
+    _sorted_estimates: NDArray = field(init=False, repr=False)
 
     def __post_init__(self) -> None:
         self.mean = float(np.mean(self.bootstrap_estimates))
         self.var = float(np.var(self.bootstrap_estimates, ddof=1))
         self.std = float(np.sqrt(self.var))
+        self._sorted_estimates = np.sort(self.bootstrap_estimates)
 
     @property
     def lower_bound(self) -> float:
@@ -80,16 +82,25 @@ class BootstrapConfidenceInterval:
             point estimate (mean of bootstrap distribution), ``p_value`` is the
             bootstrap p-value, and ``df`` is ``float('inf')``.
         """
+        n = len(self._sorted_estimates)
+
         if alternative == "two-sided":
-            centered = np.abs(self.bootstrap_estimates - self.mean)
             observed_deviation = abs(h0_value - self.mean)
-            is_at_least_as_extreme = centered >= observed_deviation
+            # Count estimates <= (mean - deviation) or >= (mean + deviation)
+            lower_threshold = self.mean - observed_deviation
+            upper_threshold = self.mean + observed_deviation
+            count_below = np.searchsorted(self._sorted_estimates, lower_threshold, side="right")
+            count_above = n - np.searchsorted(self._sorted_estimates, upper_threshold, side="left")
+            count_extreme = count_below + count_above
         elif alternative == "larger":
-            is_at_least_as_extreme = self.bootstrap_estimates <= h0_value
+            # Count estimates <= h0_value (evidence against "larger" alternative)
+            count_extreme = np.searchsorted(self._sorted_estimates, h0_value, side="right")
         elif alternative == "smaller":
-            is_at_least_as_extreme = self.bootstrap_estimates >= h0_value
+            # Count estimates >= h0_value (evidence against "smaller" alternative)
+            count_extreme = n - np.searchsorted(self._sorted_estimates, h0_value, side="left")
         else:
             raise ValueError(f"alternative must be 'two-sided', 'larger', or 'smaller', got '{alternative}'")
-        p_value = float(np.mean(is_at_least_as_extreme))
+
+        p_value = float(count_extreme) / n
 
         return self.mean, p_value, float("inf")
