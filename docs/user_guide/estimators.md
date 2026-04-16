@@ -226,11 +226,19 @@ In PTD, each sample has two associated values:
 | $\tilde{Y}_i$ | All $n+N$ samples | Proxy label |
 | $Y_j$ | Labeled samples only ($n \ll N$) | Ground-truth label |
 
+Denote $(\tilde{Y}^\circ_i)_{i=1}^N$ the unlabeled proxies and $(\tilde{Y}^\bullet_i)_{i=1}^n$ the labeled ones
+
+### Bootstrap procedure
+
+For $b = 1, \dots, B,$ where $B$ is a large integer, We sample a set of indices $\mathcal{I}^{(b)}$ of size $n$ uniformly with replacement from $\{1, \dots, n\}$ and compute $\hat{\mu}^{(b)}_{\text{true}} = \frac{1}{n}\sum_{i\in \mathcal{I}^{(b)}} Y_i$ and $\hat{\mu}^{(b)}_{\text{proxy}} = \frac{1}{n}\sum_{i\in \mathcal{I}^{(b)}} \tilde{Y}^\bullet_i$ which are the bootstrap mean labels and bootstrap mean unlabeled proxies respectively.
+
+As for the bootstrap mean labeled proxies
+
 ### Mean estimation
 
-The PTD point estimate combines all $N$ proxy labels with a labeled-set rectifier:
+The PTD mean point estimate is computed as
 
-$$\hat{\theta}_{\text{PTD}} = \lambda \cdot \frac{1}{N}\sum_{i=1}^{N}\tilde{Y}_i + \left(\frac{1}{n}\sum_{j=1}^{n}Y_j - \lambda \cdot \frac{1}{n}\sum_{j=1}^{n}\tilde{Y}_j\right)$$
+$$\hat{\theta}_{\text{PTD}} = \frac{1}{B}\sum_{b=1}^{B}\hat{\theta}^{(b)}_{\text{PTD}}$$
 
 The first term anchors the estimate using all $N$ proxy labels at low cost. The second term is a **rectifier** that corrects the proxy bias using the labeled samples, scaled by $\lambda$ to control how much proxy signal enters the estimate.
 
@@ -244,7 +252,7 @@ $$\hat{\theta}^{(b)}_{\text{PTD}} = \lambda \cdot \tilde{\gamma}^{(b)} + \left(\
 
 where $\hat{\mu}^{(b)}_{\text{true}}$ and $\hat{\mu}^{(b)}_{\text{proxy}}$ are the bootstrap means of the labeled ground-truth and proxy labels respectively, and $\tilde{\gamma}^{(b)}$ is a perturbed draw of the unlabeled proxy mean (see below).
 
-**CLT-based speedup.** Naively, each bootstrap iteration would require resampling all $N$ proxy labels on unlabeled samples, making the total cost $O(B \cdot (n+N))$. Since $N \gg n$, this is dominated by the unlabeled set. Algorithm 3 avoids this cost: by the CLT, the mean of $N$ i.i.d. proxy scores is approximately Gaussian with mean $\hat{\gamma}^\circ = \frac{1}{N}\sum_{i=1}^{N}\tilde{Y}_i$ and variance $\hat{S}_{\gamma^\circ} = \widehat{\text{Var}}(\tilde{Y}_{\text{unlabeled}}) / N$. Each bootstrap iteration therefore replaces a full resample of the unlabeled set with a single Gaussian draw:
+**CLT-based speedup.** Naively, each bootstrap iteration would require resampling all $N$ proxy labels on unlabeled samples, making the total cost $O(B \cdot (n+N))$. Since $N \gg n$, this is dominated by the unlabeled set. Algorithm 3 avoids this cost: by the CLT, the mean of $N$ i.i.d. proxy scores is approximately Gaussian with mean $\hat{\gamma}^\circ = \frac{1}{N}\sum_{i=1}^{N}\tilde{Y}^\circ_i$ and variance $\hat{S}_{\gamma^\circ} = \widehat{\text{Var}}(\tilde{Y}^\circ) / N$. Each bootstrap iteration therefore replaces a full resample of the unlabeled set with a single Gaussian draw:
 
 $$\tilde{\gamma}^{(b)} = \hat{\gamma}^\circ + \sqrt{\hat{S}_{\gamma^\circ}} \cdot Z^{(b)}, \qquad Z^{(b)} \sim \mathcal{N}(0,\, 1)$$
 
@@ -254,9 +262,9 @@ The confidence interval at level $1 - \alpha$ is the interval between the $\alph
 
 ### Power-tuning
 
-The optimal $\lambda$ is estimated from the **bootstrap covariances**. After running the bootstrap loop, it is computed as:
+The optimal $\lambda$ is estimated from the **bootstrap covariances**. Let $\hat{\mu}_{\text{true}}$ and $\hat{\mu}_{\text{proxy}}$ be the vectors of values $\hat{\mu}^{(b)}_{\text{true}}$ and $\hat{\mu}^{(b)}_{\text{proxy}}$ for $b=1,\dots,B$ respectively . After running the bootstrap loop, it is computed as:
 
-$$\hat{\lambda} = \frac{\widehat{\text{Cov}}_B\!\left(\hat{\mu}^{(b)}_{\text{true}},\; \hat{\mu}^{(b)}_{\text{proxy}}\right)}{\widehat{\text{Var}}_B\!\left(\hat{\mu}^{(b)}_{\text{proxy}}\right) + \hat{S}_{\gamma^\circ}}$$
+$$\hat{\lambda} = \frac{\widehat{\text{Cov}}_B\!\left(\hat{\mu}_{\text{true}},\; \hat{\mu}_{\text{proxy}}\right)}{\widehat{\text{Var}}_B\!\left(\hat{\mu}_{\text{proxy}}\right) + \hat{S}_{\gamma^\circ}}$$
 
 where $\widehat{\text{Cov}}_B$ and $\widehat{\text{Var}}_B$ are computed across the $B$ bootstrap replicates of the labeled means, and $\hat{S}_{\gamma^\circ}$ is the estimated sampling variance of the unlabeled proxy mean. The denominator adds $\hat{S}_{\gamma^\circ}$ to account for the extra variability introduced by the Gaussian approximation of the unlabeled mean.
 

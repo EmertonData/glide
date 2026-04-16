@@ -42,7 +42,7 @@ doc: _sync-doc
 
 branch:
 	@test -n "$(name)" || (echo "Usage: make branch name=<branch-name>"; exit 1)
-	git pull && git checkout -b $(name)
+	git checkout main && git pull && git checkout -b $(name)
 
 clean:
 	rm -rf .ruff_cache
