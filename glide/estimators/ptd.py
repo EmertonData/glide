@@ -16,12 +16,12 @@ class PTDMeanEstimator:
     intervals are constructed via a bootstrap percentile method, requiring
     no distributional assumptions on the proxy quality.
 
-    The bootstrap uses the CLT-based Algorithm 3 from Kluger et al. (2025):
-    the unlabeled proxy mean is computed once on the full unlabeled set and
-    its sampling variability is simulated with a Gaussian draw at each
-    iteration, making the per-iteration cost O(n_labeled) rather than
-    O(n_labeled + n_unlabeled), where n_labeled and n_unlabeled are the
-    number of labeled and unlabeled samples respectively.
+    The bootstrap uses a CLT-based algorithm: the unlabeled proxy mean is
+    computed once on the full unlabeled set and its sampling variability is
+    simulated with a Gaussian draw at each iteration, making the per-iteration
+    cost O(n_labeled) rather than O(n_labeled + n_unlabeled), where n_labeled
+    and n_unlabeled are the number of labeled and unlabeled samples
+    respectively.
 
     References
     ----------
@@ -65,15 +65,6 @@ class PTDMeanEstimator:
         y_proxy_unlabeled = y_proxy_all[~labeled_mask]
         return y_true, y_proxy_labeled, y_proxy_unlabeled
 
-    def _compute_unlabeled_proxy_mean(self, y_proxy_unlabeled: NDArray) -> float:
-        mean_proxy_unlabeled = np.mean(y_proxy_unlabeled)
-        return mean_proxy_unlabeled
-
-    def _compute_unlabeled_proxy_var(self, y_proxy_unlabeled: NDArray) -> float:
-        n_unlabeled = len(y_proxy_unlabeled)
-        var_proxy_unlabeled = np.var(y_proxy_unlabeled, ddof=1) / n_unlabeled
-        return var_proxy_unlabeled
-
     def _compute_bootstrap_labeled_estimates(
         self,
         y_true: NDArray,
@@ -89,14 +80,14 @@ class PTDMeanEstimator:
 
     def _compute_tuning_parameter(
         self,
-        bootstraps: Tuple[NDArray, NDArray],
+        bootstrap_y_true_means: NDArray,
+        bootstrap_y_proxy_labeled_means: NDArray,
         var_proxy_unlabeled: float,
         power_tuning: bool,
     ) -> float:
         if not power_tuning:
             return 1.0
-        y_true_means, y_proxy_labeled_means = bootstraps
-        cov_matrix = np.cov(y_true_means, y_proxy_labeled_means, ddof=1)
+        cov_matrix = np.cov(bootstrap_y_true_means, bootstrap_y_proxy_labeled_means, ddof=1)
         cov = cov_matrix[0, 1]
         var_proxy_labeled = cov_matrix[1, 1]
         denom = var_proxy_labeled + var_proxy_unlabeled
@@ -105,16 +96,16 @@ class PTDMeanEstimator:
 
     def _compute_bootstrap_mean_estimates(
         self,
-        bootstraps: Tuple[NDArray, NDArray],
+        bootstrap_y_true_means: NDArray,
+        bootstrap_y_proxy_labeled_means: NDArray,
         mean_proxy_unlabeled: float,
         var_proxy_unlabeled: float,
         _lambda: float,
         rng: np.random.Generator,
     ) -> NDArray:
-        y_true_means, y_proxy_labeled_means = bootstraps
-        z = rng.standard_normal(len(y_true_means))
-        unlabeled_means = mean_proxy_unlabeled + np.sqrt(var_proxy_unlabeled) * z
-        rectifier_means = y_true_means - _lambda * y_proxy_labeled_means
+        z = rng.standard_normal(len(bootstrap_y_true_means))
+        unlabeled_means = mean_proxy_unlabeled + z * np.sqrt(var_proxy_unlabeled)
+        rectifier_means = bootstrap_y_true_means - _lambda * bootstrap_y_proxy_labeled_means
         bootstrap_mean_estimates = _lambda * unlabeled_means + rectifier_means
         return bootstrap_mean_estimates
 
@@ -136,10 +127,10 @@ class PTDMeanEstimator:
         yielding a consistent estimate even when the proxy is imperfect.
 
         The tuning scalar λ and the confidence interval are both derived from a
-        bootstrap over the labeled set only (Algorithm 3 from Kluger et al., 2025).
-        The sampling variability of the unlabeled proxy mean is approximated by a
-        single Gaussian draw per iteration, keeping the per-iteration cost O(n_labeled),
-        where n_labeled is the number of labeled samples.
+        bootstrap over the labeled set only. The sampling variability of the
+        unlabeled proxy mean is approximated by a single Gaussian draw per
+        iteration, keeping the per-iteration cost O(n_labeled), where n_labeled
+        is the number of labeled samples.
 
         Parameters
         ----------
@@ -172,12 +163,21 @@ class PTDMeanEstimator:
         n_labeled, n_unlabeled = len(y_true_labeled), len(y_proxy_unlabeled)
         rng = np.random.default_rng(random_seed)
 
-        mean_proxy_unlabeled = self._compute_unlabeled_proxy_mean(y_proxy_unlabeled)
-        var_proxy_unlabeled = self._compute_unlabeled_proxy_var(y_proxy_unlabeled)
-        bootstraps = self._compute_bootstrap_labeled_estimates(y_true_labeled, y_proxy_labeled, n_bootstrap, rng)
-        _lambda = self._compute_tuning_parameter(bootstraps, var_proxy_unlabeled, power_tuning)
+        mean_proxy_unlabeled = np.mean(y_proxy_unlabeled)
+        var_proxy_unlabeled = np.var(y_proxy_unlabeled, ddof=1) / len(y_proxy_unlabeled)
+        bootstrap_y_true_means, bootstrap_y_proxy_labeled_means = self._compute_bootstrap_labeled_estimates(
+            y_true_labeled, y_proxy_labeled, n_bootstrap, rng
+        )
+        _lambda = self._compute_tuning_parameter(
+            bootstrap_y_true_means, bootstrap_y_proxy_labeled_means, var_proxy_unlabeled, power_tuning
+        )
         bootstrap_mean_estimates = self._compute_bootstrap_mean_estimates(
-            bootstraps, mean_proxy_unlabeled, var_proxy_unlabeled, _lambda, rng
+            bootstrap_y_true_means,
+            bootstrap_y_proxy_labeled_means,
+            mean_proxy_unlabeled,
+            var_proxy_unlabeled,
+            _lambda,
+            rng,
         )
 
         confidence_interval = BootstrapConfidenceInterval(

@@ -23,14 +23,6 @@ def y_arrays() -> Tuple[NDArray, NDArray]:
     return y_true, y_proxy
 
 
-@pytest.fixture
-def y_data() -> Tuple[NDArray, NDArray, NDArray]:
-    y_true = np.array([5.0, 6.0, 7.0])
-    y_proxy_labeled = np.array([4.5, 5.5, 6.5])
-    y_proxy_unlabeled = np.array([6.0, 7.0, 8.0])
-    return y_true, y_proxy_labeled, y_proxy_unlabeled
-
-
 # ── _preprocess ───────────────────────────────────────────────────────────────
 
 
@@ -71,46 +63,26 @@ def test_preprocess_raises_on_length_mismatch(estimator):
         estimator._preprocess(y_true, y_proxy)
 
 
-# ── _compute_unlabeled_proxy_mean ─────────────────────────────────────────────
-
-
-def test_compute_unlabeled_proxy_mean_known_value(estimator, y_data):
-    _, _, y_proxy_unlabeled = y_data
-    result = estimator._compute_unlabeled_proxy_mean(y_proxy_unlabeled)
-    expected = 7.0
-    assert result == pytest.approx(expected, abs=0.01)
-
-
-# ── _compute_unlabeled_proxy_var ─────────────────────────────────────────
-
-
-def test_compute_unlabeled_proxy_var_known_value(estimator, y_data):
-    _, _, y_proxy_unlabeled = y_data
-    result = estimator._compute_unlabeled_proxy_var(y_proxy_unlabeled)
-    expected = 1.0 / 3.0
-    assert result == pytest.approx(expected, abs=0.01)
-
-
 # ── _compute_tuning_parameter ────────────────────────────────────────────────────
 
 
-def test_compute_tuning_parameter_returns_one_when_power_tuning_false(estimator, y_data):
-    y_true, y_proxy_labeled, y_proxy_unlabeled = y_data
-    rng = np.random.default_rng(0)
-    bootstraps = estimator._compute_bootstrap_labeled_estimates(y_true, y_proxy_labeled, 5, rng)
-    var_proxy_unlabeled = estimator._compute_unlabeled_proxy_var(y_proxy_unlabeled)
-    result = estimator._compute_tuning_parameter(bootstraps, var_proxy_unlabeled, power_tuning=False)
+def test_compute_tuning_parameter_returns_one_when_power_tuning_false(estimator):
+    bootstrap_y_true_means = np.array([1.0, 2.0])
+    bootstrap_y_proxy_labeled_means = np.array([1.0, 2.0])
+    result = estimator._compute_tuning_parameter(
+        bootstrap_y_true_means, bootstrap_y_proxy_labeled_means, var_proxy_unlabeled=1.0, power_tuning=False
+    )
     assert result == 1.0
 
 
-def test_compute_tuning_parameter_known_value(estimator, y_data):
-    y_true, y_proxy_labeled, y_proxy_unlabeled = y_data
-    rng = np.random.default_rng(42)
-    bootstraps = estimator._compute_bootstrap_labeled_estimates(y_true, y_proxy_labeled, 5, rng)
-    var_proxy_unlabeled = estimator._compute_unlabeled_proxy_var(y_proxy_unlabeled)
-    result = estimator._compute_tuning_parameter(bootstraps, var_proxy_unlabeled, power_tuning=True)
-    expected = 0.433
-    assert result == pytest.approx(expected, abs=0.01)
+def test_compute_tuning_parameter_known_value(estimator):
+    bootstrap_y_true_means = np.array([1.0, 2.0, 3.0])
+    bootstrap_y_proxy_labeled_means = np.array([2.0, 4.0, 6.0])
+    result = estimator._compute_tuning_parameter(
+        bootstrap_y_true_means, bootstrap_y_proxy_labeled_means, var_proxy_unlabeled=0.5, power_tuning=True
+    )
+    expected = 2.0 / 4.5
+    assert result == pytest.approx(expected)
 
 
 # ── estimate ──────────────────────────────────────────────────────────────────
@@ -155,7 +127,7 @@ def test_estimate_custom_confidence_level(estimator, y_arrays):
     assert result.confidence_interval.upper_bound == pytest.approx(expected_upper, abs=0.01)
 
 
-def test_estimate_determinism(estimator, y_arrays):
+def test_estimate_reproducibility(estimator, y_arrays):
     y_true, y_proxy = y_arrays
     result_a = estimator.estimate(y_true, y_proxy, n_bootstrap=5, random_seed=7)
     result_b = estimator.estimate(y_true, y_proxy, n_bootstrap=5, random_seed=7)
