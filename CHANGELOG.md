@@ -9,6 +9,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 ## [Next release]
 
 ### ✨ Added
+- PTD scientific validation notebook
 - `PTDMeanEstimator` for mean estimation with Predict-Then-Debias (bootstrap)
 - Section on which estimator to use in the user guide
 - `BootStrapConfidenceInterval` and `ConfidenceInterval` Protocol
