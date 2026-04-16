@@ -64,31 +64,45 @@ class PPIMeanEstimator:
         y_proxy_unlabeled = y_proxy_all[~labeled_mask]
         return y_true, y_proxy_labeled, y_proxy_unlabeled
 
-    def _compute_tuning_parameter(self, y_data: Tuple[NDArray, NDArray, NDArray], power_tuning: bool) -> float:
+    def _compute_tuning_parameter(
+        self,
+        y_true: NDArray,
+        y_proxy_labeled: NDArray,
+        y_proxy_unlabeled: NDArray,
+        power_tuning: bool,
+    ) -> float:
         if not power_tuning:
             return 1.0
-        y_true, y_proxy_labeled, y_proxy_unlabeled = y_data
-        n = len(y_true)
-        N = len(y_proxy_unlabeled)
+        n_labeled = len(y_true)
+        n_unlabeled = len(y_proxy_unlabeled)
         y_proxy_all = np.hstack([y_proxy_labeled, y_proxy_unlabeled])
         cov = np.cov(y_true, y_proxy_labeled, ddof=1)[0, 1]
         var = np.var(y_proxy_all, ddof=1)
-        _lambda = cov / ((1 + n / N) * var)
+        _lambda = cov / ((1 + n_labeled / n_unlabeled) * var)
         return _lambda
 
-    def _compute_mean_estimate(self, y_data: Tuple[NDArray, NDArray, NDArray], _lambda: float) -> float:
-        y_true, y_proxy_labeled, y_proxy_unlabeled = y_data
+    def _compute_mean_estimate(
+        self,
+        y_true: NDArray,
+        y_proxy_labeled: NDArray,
+        y_proxy_unlabeled: NDArray,
+        _lambda: float,
+    ) -> float:
         rectifier = np.mean(y_true) - _lambda * np.mean(y_proxy_labeled)
         proxy_mean = _lambda * np.mean(y_proxy_unlabeled)
         mean_estimate = proxy_mean + rectifier
         return mean_estimate
 
-    def _compute_std_estimate(self, y_data: Tuple[NDArray, NDArray, NDArray], _lambda: float) -> float:
-        y_true, y_proxy_labeled, y_proxy_unlabeled = y_data
-        n = len(y_true)
-        N = len(y_proxy_unlabeled)
-        rectifier_var = np.var(y_true - _lambda * y_proxy_labeled, ddof=1) / n
-        proxy_var = _lambda**2 * np.var(y_proxy_unlabeled, ddof=1) / N
+    def _compute_std_estimate(
+        self,
+        y_true: NDArray,
+        y_proxy_labeled: NDArray,
+        y_proxy_unlabeled: NDArray,
+        _lambda: float,
+    ) -> float:
+        n_labeled, n_unlabeled = len(y_true), len(y_proxy_unlabeled)
+        rectifier_var = np.var(y_true - _lambda * y_proxy_labeled, ddof=1) / n_labeled
+        proxy_var = _lambda**2 * np.var(y_proxy_unlabeled, ddof=1) / n_unlabeled
         var_estimate = proxy_var + rectifier_var
         std_estimate = np.sqrt(var_estimate)
         return std_estimate
@@ -139,13 +153,11 @@ class PPIMeanEstimator:
             ``n_true`` (labeled observations) and ``n_proxy`` (all observations
             with a proxy prediction).
         """
-        y_data = self._preprocess(y_true, y_proxy)
-        y_true_labeled, _, y_proxy_unlabeled = y_data
-        n = len(y_true_labeled)
-        N = len(y_proxy_unlabeled)
-        _lambda = self._compute_tuning_parameter(y_data, power_tuning)
-        mean = self._compute_mean_estimate(y_data, _lambda)
-        std = self._compute_std_estimate(y_data, _lambda)
+        y_true_labeled, y_proxy_labeled, y_proxy_unlabeled = self._preprocess(y_true, y_proxy)
+        n_labeled, n_unlabeled = len(y_true_labeled), len(y_proxy_unlabeled)
+        _lambda = self._compute_tuning_parameter(y_true_labeled, y_proxy_labeled, y_proxy_unlabeled, power_tuning)
+        mean = self._compute_mean_estimate(y_true_labeled, y_proxy_labeled, y_proxy_unlabeled, _lambda)
+        std = self._compute_std_estimate(y_true_labeled, y_proxy_labeled, y_proxy_unlabeled, _lambda)
         confidence_interval = CLTConfidenceInterval(
             mean=mean,
             std=std,
@@ -156,8 +168,8 @@ class PPIMeanEstimator:
             confidence_interval=confidence_interval,
             metric_name=metric_name,
             estimator_name=self.__class__.__name__,
-            n_true=n,
-            n_proxy=n + N,
+            n_true=n_labeled,
+            n_proxy=n_labeled + n_unlabeled,
             effective_sample_size=effective_sample_size,
         )
         return result

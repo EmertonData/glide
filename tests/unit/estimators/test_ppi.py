@@ -2,6 +2,7 @@ import numpy as np
 import pytest
 from numpy.typing import NDArray
 
+from glide.confidence_intervals import CLTConfidenceInterval
 from glide.core.mean_inference_result import SemiSupervisedMeanInferenceResult
 from glide.estimators.ppi import PPIMeanEstimator
 
@@ -25,11 +26,18 @@ def estimator() -> PPIMeanEstimator:
 
 
 @pytest.fixture
-def y_data() -> tuple[NDArray, NDArray, NDArray]:
-    y_true = np.array([5.0, 6.0, 7.0])
-    y_proxy_labeled = np.array([4.5, 5.5, 6.5])
-    y_proxy_unlabeled = np.array([6.0, 7.0, 8.0])
-    return (y_true, y_proxy_labeled, y_proxy_unlabeled)
+def y_true_labeled() -> NDArray:
+    return np.array([5.0, 6.0, 7.0])
+
+
+@pytest.fixture
+def y_proxy_labeled() -> NDArray:
+    return np.array([4.5, 5.5, 6.5])
+
+
+@pytest.fixture
+def y_proxy_unlabeled() -> NDArray:
+    return np.array([6.0, 7.0, 8.0])
 
 
 # --- _preprocess ---
@@ -75,32 +83,34 @@ def test_preprocess_raises_on_length_mismatch(estimator):
 # --- _compute_tuning_parameter ---
 
 
-def test_compute_tuning_parameter_returns_one_when_power_tuning_false(estimator, y_data):
-    result = estimator._compute_tuning_parameter(y_data, power_tuning=False)
+def test_compute_tuning_parameter_returns_one_when_power_tuning_false(
+    estimator, y_true_labeled, y_proxy_labeled, y_proxy_unlabeled
+):
+    result = estimator._compute_tuning_parameter(y_true_labeled, y_proxy_labeled, y_proxy_unlabeled, power_tuning=False)
     assert result == 1.0
 
 
-def test_compute_tuning_parameter_known_values(estimator, y_data):
+def test_compute_tuning_parameter_known_value(estimator, y_true_labeled, y_proxy_labeled, y_proxy_unlabeled):
     expected = 0.34
-    result = estimator._compute_tuning_parameter(y_data, power_tuning=True)
+    result = estimator._compute_tuning_parameter(y_true_labeled, y_proxy_labeled, y_proxy_unlabeled, power_tuning=True)
     assert result == pytest.approx(expected, abs=0.01)
 
 
 # --- _compute_mean_estimate ---
 
 
-def test_compute_mean_estimate_known_values(estimator, y_data):
+def test_compute_mean_estimate_known_values(estimator, y_true_labeled, y_proxy_labeled, y_proxy_unlabeled):
     expected = 6.75
-    result = estimator._compute_mean_estimate(y_data, _lambda=0.5)
+    result = estimator._compute_mean_estimate(y_true_labeled, y_proxy_labeled, y_proxy_unlabeled, _lambda=0.5)
     assert result == pytest.approx(expected)
 
 
 # --- _compute_std_estimate ---
 
 
-def test_compute_std_estimate_known_values(estimator, y_data):
+def test_compute_std_estimate_known_values(estimator, y_true_labeled, y_proxy_labeled, y_proxy_unlabeled):
     expected = 0.41
-    result = estimator._compute_std_estimate(y_data, _lambda=0.5)
+    result = estimator._compute_std_estimate(y_true_labeled, y_proxy_labeled, y_proxy_unlabeled, _lambda=0.5)
     assert result == pytest.approx(expected, abs=1e-2)
 
 
@@ -111,6 +121,7 @@ def test_estimate_is_valid_inference_result(estimator, y_arrays):
     y_true, y_proxy = y_arrays
     result = estimator.estimate(y_true, y_proxy)
     assert isinstance(result, SemiSupervisedMeanInferenceResult)
+    assert isinstance(result.confidence_interval, CLTConfidenceInterval)
     assert np.isfinite(result.confidence_interval.lower_bound)
     assert np.isfinite(result.confidence_interval.upper_bound)
     assert result.confidence_interval.lower_bound < result.confidence_interval.upper_bound
