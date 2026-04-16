@@ -735,6 +735,7 @@ dependencies = [
 
 [package.dev-dependencies]
 dev = [
+    { name = "papermill" },
     { name = "prek" },
     { name = "pytest" },
     { name = "pytest-coverage" },
@@ -747,7 +748,6 @@ doc = [
     { name = "mkdocs-jupyter" },
     { name = "mkdocs-material" },
     { name = "mkdocstrings", extra = ["python"] },
-    { name = "papermill" },
 ]
 
 [package.metadata]
@@ -755,6 +755,7 @@ requires-dist = [{ name = "scipy", specifier = ">=1.17.1" }]
 
 [package.metadata.requires-dev]
 dev = [
+    { name = "papermill" },
     { name = "prek", specifier = ">=0.3.4" },
     { name = "pytest", specifier = ">=9.0.2" },
     { name = "pytest-coverage", specifier = ">=0.0" },
@@ -767,7 +768,6 @@ doc = [
     { name = "mkdocs-jupyter", specifier = ">=0.25.1" },
     { name = "mkdocs-material", specifier = ">=9.7.4" },
     { name = "mkdocstrings", extras = ["python"], specifier = ">=1.0.3" },
-    { name = "papermill" },
 ]
 
 [[package]]
