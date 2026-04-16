@@ -31,6 +31,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - Decoupled Stratified PPI from PPI
 - `CONTRIBUTING.md` now explains how to setup pre-commits
 - Image in the user guide explaining the control sample
+- Improved efficiency of `BootstrapConfidenceInterval.test_null_hypothesis()` from O(n) to O(log n) using binary search on sorted bootstrap samples
 
 ### 💛 Contributors
 Thank you to everyone who contributed to this release: @gmartinon-ed, @imerad, @mraki-ed
