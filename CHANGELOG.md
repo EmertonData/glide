@@ -33,7 +33,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - `CONTRIBUTING.md` now explains how to setup pre-commits
 - Image in the user guide explaining the control sample
 
-
 ### 💛 Contributors
 Thank you to everyone who contributed to this release: @gmartinon-ed, @imerad, @mraki-ed
 
