@@ -254,11 +254,15 @@ $$\tilde{\gamma}^{(b)} = \hat{\gamma}^\circ + \sqrt{\hat{S}_{\gamma^\circ}} \cdo
 
 The quantities $\hat{\gamma}^\circ$ and $\hat{S}_{\gamma^\circ}$ are computed once before the loop, reducing the per-iteration cost to $O(n)$. This approximation is reliable when $N \gtrsim 30$, the typical production setting where $N \gg n$.
 
-### Confidence intervals
+### Variance and confidence intervals
 
-PTD constructs its confidence interval from the **empirical distribution of bootstrap estimates** rather than from a normal approximation. This bootstrap percentile approach adapts to the actual shape of the residual distribution, making it reliable even when $n$ is small.
+The variance of the PTD estimator is the sample variance of the bootstrap estimates:
 
-The confidence interval at level $1 - \alpha$ is the interval between the $\alpha/2$ and $1 - \alpha/2$ empirical quantiles of $\bigl\{\hat{\theta}^{(1)}_{\text{PTD}},\, \ldots,\, \hat{\theta}^{(B)}_{\text{PTD}}\bigr\}$.
+$$\hat{\sigma}^2_{\text{PTD}} = \widehat{\text{Var}}_B\!\left(\hat{\theta}^{(1)}_{\text{PTD}},\, \ldots,\, \hat{\theta}^{(B)}_{\text{PTD}}\right)$$
+
+where $\widehat{\text{Var}}_B$ is the sample variance computed across the $B$ bootstrap replicates.
+
+The confidence interval at level $1 - \alpha$ is the interval between the $\alpha/2$ and $1 - \alpha/2$ empirical quantiles of $\bigl\{\hat{\theta}^{(1)}_{\text{PTD}},\, \ldots,\, \hat{\theta}^{(B)}_{\text{PTD}}\bigr\}$. This bootstrap percentile approach adapts to the actual shape of the residual distribution, making it reliable even when $n$ is small.
 
 ### Power-tuning
 
