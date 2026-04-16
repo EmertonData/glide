@@ -22,7 +22,7 @@ Moreover, $C_\alpha$ should be as small as possible.
 
 ### Input data
 
-All estimators in GLIDE rely on two complementary sources of labels. Proxy labels $\tilde{Y}_i$ are available for all $N$ samples at low cost but are biased ($E[\tilde{Y}] \neq \theta^*$). Human labels $Y_j$ are unbiased ($E[Y] = \theta^*$) but expensive, and only available for a small labeled subset of $n \ll N$ samples. The key insight: even though human labels are scarce, they can be used to **correct** the bias in the cheap proxy labels.
+All estimators in GLIDE rely on two complementary sources of labels. Proxy labels $\tilde{Y}_i$ are available for $N$ samples at low cost but are biased ($E[\tilde{Y}] \neq \theta^*$). Human labels $Y_j$ are unbiased ($E[Y] = \theta^*$) but expensive, and only available for a small labeled set of $n \ll N$ samples. The key insight: even though human labels are scarce, they can be used to **correct** the bias in the cheap proxy labels.
 
 <p align="center">
   <img src="../../assets/schema-PPI.png" alt="Data schema" width="550">
@@ -149,7 +149,7 @@ Setting `power_tuning=False` forces $\lambda_k = 1.0$ for all strata, recovering
 
 Standard approaches to combining proxy and human labels assume that the labeled subset is drawn **uniformly at random** from the population. In practice, annotation resources are often allocated strategically, for instance, prioritizing uncertain or difficult examples. **Active Statistical Inference (ASI)** [[3](#ref-3), [4](#ref-4)] handles this general case: each sample $X_i$ may have a distinct, pre-determined probability $\pi_i \in (0, 1]$ of being selected for human annotation. Inverse-Probability Weighting (IPW) corrects for this non-uniform selection, yielding valid confidence intervals under any fixed sampling rule.
 
-In ASI, each sample has three associated values:
+In this section, we assume we have a total of $n$ samples, labeled and unlabeled. In ASI, each sample has three associated values:
 
 | Value | Present for | Description |
 |---|---|---|
@@ -217,7 +217,7 @@ When the proxy is informative, $\hat{\lambda}$ is large and the IPW-corrected la
 
 ## Predict-Then-Debias (PTD)
 
-**Predict-Then-Debias (PTD)** [[7](#ref-7)] is designed for settings where the labeled subset is collected under an arbitrary, possibly non-uniform sampling rule whose probabilities need not be known. It constructs a confidence interval from the **empirical distribution of bootstrap estimates** rather than a normal approximation, making it reliable when $n$ is small or residuals are non-Gaussian.
+**Predict-Then-Debias (PTD)** [[7](#ref-7)] constructs a confidence interval from the **empirical distribution of bootstrap estimates** rather than a normal approximation, making it reliable when $n$ is small or residuals are non-Gaussian. GLIDE implements Algorithm 3 from [[7](#ref-7)], which works on a uniformly drawn labeled sample and includes a speedup that avoids resampling the unlabeled data during the bootstrap.
 
 In PTD, each sample has two associated values:
 
@@ -236,7 +236,7 @@ The first term anchors the estimate using all $N$ proxy labels at low cost. The 
 
 ### Confidence intervals
 
-PTD constructs its confidence interval from the **empirical distribution of bootstrap estimates** rather than from a normal approximation. This bootstrap percentile approach is valid under any fixed sampling design and adapts to the actual shape of the residual distribution, making it reliable even when $n$ is small.
+PTD constructs its confidence interval from the **empirical distribution of bootstrap estimates** rather than from a normal approximation. This bootstrap percentile approach adapts to the actual shape of the residual distribution, making it reliable even when $n$ is small.
 
 The bootstrap approximates the sampling distribution of $\hat{\theta}_{\text{PTD}}$ by resampling the labeled set $B$ times. At iteration $b$, the algorithm draws $n$ indices with replacement from the labeled set and computes:
 
@@ -244,7 +244,7 @@ $$\hat{\theta}^{(b)}_{\text{PTD}} = \lambda \cdot \tilde{\gamma}^{(b)} + \left(\
 
 where $\hat{\mu}^{(b)}_{\text{true}}$ and $\hat{\mu}^{(b)}_{\text{proxy}}$ are the bootstrap means of the labeled ground-truth and proxy labels respectively, and $\tilde{\gamma}^{(b)}$ is a perturbed draw of the unlabeled proxy mean (see below).
 
-**CLT-based speedup (Algorithm 3).** Naively, each bootstrap iteration would require resampling all $N$ unlabeled proxy labels, making the total cost $O(B \cdot (n+N))$. Since $N \gg n$, this is dominated by the unlabeled set. Kluger et al. (2025) avoid this cost: by the CLT, the mean of $N$ i.i.d. proxy scores is approximately Gaussian with mean $\hat{\gamma}^\circ = \frac{1}{N}\sum_{i=1}^{N}\tilde{Y}_i$ and variance $\hat{S}_{\gamma^\circ} = \widehat{\text{Var}}(\tilde{Y}_{\text{unlabeled}}) / N$. Each bootstrap iteration therefore replaces a full resample of the unlabeled set with a single Gaussian draw:
+**CLT-based speedup.** Naively, each bootstrap iteration would require resampling all $N$ proxy labels on unlabeled samples, making the total cost $O(B \cdot (n+N))$. Since $N \gg n$, this is dominated by the unlabeled set. Algorithm 3 avoids this cost: by the CLT, the mean of $N$ i.i.d. proxy scores is approximately Gaussian with mean $\hat{\gamma}^\circ = \frac{1}{N}\sum_{i=1}^{N}\tilde{Y}_i$ and variance $\hat{S}_{\gamma^\circ} = \widehat{\text{Var}}(\tilde{Y}_{\text{unlabeled}}) / N$. Each bootstrap iteration therefore replaces a full resample of the unlabeled set with a single Gaussian draw:
 
 $$\tilde{\gamma}^{(b)} = \hat{\gamma}^\circ + \sqrt{\hat{S}_{\gamma^\circ}} \cdot Z^{(b)}, \qquad Z^{(b)} \sim \mathcal{N}(0,\, 1)$$
 

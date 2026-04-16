@@ -40,6 +40,10 @@ doc: _sync-doc
 		uv run mkdocs serve; \
 	fi
 
+branch:
+	@test -n "$(name)" || (echo "Usage: make branch name=<branch-name>"; exit 1)
+	git pull && git checkout -b $(name)
+
 clean:
 	rm -rf .ruff_cache
 	rm -rf .pytest_cache
