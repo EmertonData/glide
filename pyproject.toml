@@ -62,6 +62,7 @@ doc = [
     "mkdocs-material>=9.7.4",
     "mkdocstrings[python]>=1.0.3",
     "matplotlib>=3.10.8",
+    "papermill",
 ]
 
 [tool.uv]

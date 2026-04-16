@@ -8,6 +8,7 @@ venv-doc:
 
 pre-commit:
 	uv run prek run --all-files
+	make test-notebooks
 
 lint:
 	uv run ruff check --fix
@@ -39,6 +40,15 @@ doc: _sync-doc
 	else \
 		uv run mkdocs serve; \
 	fi
+
+test-notebooks:
+	find docs -name "*.ipynb" | while read notebook; do \
+		echo "Testing $$notebook..."; \
+		if ! uv run papermill "$$notebook" /dev/null > /tmp/nb_$$.log 2>&1; then \
+			cat /tmp/nb_$$.log | grep -v -E "(UserWarning|Executing:|Output Notebook|warnings.warn)"; \
+			exit 1; \
+		fi; \
+	done && printf "test-notebooks%-50s\033[32mPassed\033[0m\n" | tr ' ' '.'
 
 clean:
 	rm -rf .ruff_cache
