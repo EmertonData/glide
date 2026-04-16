@@ -9,6 +9,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 ## [Next release]
 
 ### ✨ Added
+- `PTDMeanEstimator` implementing Predict-Then-Debias (bootstrap)
 - `BootStrapConfidenceInterval` and `ConfidenceInterval` Protocol
 - Section on which estimator to use in the user guide
 - `IPWClassicalMeanEstimator` for inverse probability weighted classical mean estimation
