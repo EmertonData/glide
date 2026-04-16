@@ -73,11 +73,11 @@ glide/
 │   ├── utils.py                  # General-purpose helpers
 │   ├── simulated_datasets.py     # Synthetic dataset generators for tests
 │   └── mean_inference_result/    # Result types returned by estimators
-│       ├── base.py               # MeanInferenceResult base class
+│       ├── base.py
 │       ├── ...
 │
 └── io/                     # Serialisation helpers (e.g., to_json)
-    └── export.py                 # JSON export for inference result objects
+    └── export.py
 ```
 
 **How the pieces fit together.** Estimators accept raw NumPy arrays and return a `MeanInferenceResult` subclass: semi-supervised estimators return a `SemiSupervisedMeanInferenceResult`, classical ones a `ClassicalMeanInferenceResult`. Every result embeds a `ConfidenceInterval` (e.g. `CLTConfidenceInterval`). Samplers produce the labeled arrays that estimators consume. The `io` module serialises result objects.
