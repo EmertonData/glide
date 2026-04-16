@@ -226,43 +226,43 @@ In PTD, each sample has two associated values:
 | $\tilde{Y}_i$ | All $n+N$ samples | Proxy label |
 | $Y_j$ | Labeled samples only ($n \ll N$) | Ground-truth label |
 
-Denote $(\tilde{Y}^\circ_i)_{i=1}^N$ the unlabeled proxies and $(\tilde{Y}^\bullet_i)_{i=1}^n$ the labeled ones
-
-### Bootstrap procedure
-
-For $b = 1, \dots, B,$ where $B$ is a large integer, We sample a set of indices $\mathcal{I}^{(b)}$ of size $n$ uniformly with replacement from $\{1, \dots, n\}$ and compute $\hat{\mu}^{(b)}_{\text{true}} = \frac{1}{n}\sum_{i\in \mathcal{I}^{(b)}} Y_i$ and $\hat{\mu}^{(b)}_{\text{proxy}} = \frac{1}{n}\sum_{i\in \mathcal{I}^{(b)}} \tilde{Y}^\bullet_i$ which are the bootstrap mean labels and bootstrap mean unlabeled proxies respectively.
-
-As for the bootstrap mean labeled proxies
+Denote $(\tilde{Y}^\circ_i)_{i=1}^N$ the unlabeled proxies and $(\tilde{Y}^\bullet_i)_{i=1}^n$ the labeled ones.
 
 ### Mean estimation
 
-The PTD mean point estimate is computed as
+The PTD mean estimate is the average of $B$ bootstrap estimates:
 
 $$\hat{\theta}_{\text{PTD}} = \frac{1}{B}\sum_{b=1}^{B}\hat{\theta}^{(b)}_{\text{PTD}}$$
 
-The first term anchors the estimate using all $N$ proxy labels at low cost. The second term is a **rectifier** that corrects the proxy bias using the labeled samples, scaled by $\lambda$ to control how much proxy signal enters the estimate.
+where each $\hat{\theta}^{(b)}_{\text{PTD}}$ is computed during the bootstrap procedure described below.
 
-### Confidence intervals
+### Bootstrap procedure
 
-PTD constructs its confidence interval from the **empirical distribution of bootstrap estimates** rather than from a normal approximation. This bootstrap percentile approach adapts to the actual shape of the residual distribution, making it reliable even when $n$ is small.
+For $b = 1, \dots, B$, sample a set of indices $\mathcal{I}^{(b)}$ of size $n$ uniformly with replacement from $\{1, \dots, n\}$ and compute the bootstrap means of the labeled ground-truth and proxy labels:
 
-The bootstrap approximates the sampling distribution of $\hat{\theta}_{\text{PTD}}$ by resampling the labeled set $B$ times. At iteration $b$, the algorithm draws $n$ indices with replacement from the labeled set and computes:
+$$\hat{\mu}^{(b)}_{\text{true}} = \frac{1}{n}\sum_{i\in \mathcal{I}^{(b)}} Y_i, \qquad \hat{\mu}^{(b)}_{\text{proxy}} = \frac{1}{n}\sum_{i\in \mathcal{I}^{(b)}} \tilde{Y}^\bullet_i$$
+
+Each bootstrap estimate is then:
 
 $$\hat{\theta}^{(b)}_{\text{PTD}} = \lambda \cdot \tilde{\gamma}^{(b)} + \left(\hat{\mu}^{(b)}_{\text{true}} - \lambda \cdot \hat{\mu}^{(b)}_{\text{proxy}}\right)$$
 
-where $\hat{\mu}^{(b)}_{\text{true}}$ and $\hat{\mu}^{(b)}_{\text{proxy}}$ are the bootstrap means of the labeled ground-truth and proxy labels respectively, and $\tilde{\gamma}^{(b)}$ is a perturbed draw of the unlabeled proxy mean (see below).
+where $\tilde{\gamma}^{(b)}$ is a perturbed draw of the unlabeled proxy mean.
 
-**CLT-based speedup.** Naively, each bootstrap iteration would require resampling all $N$ proxy labels on unlabeled samples, making the total cost $O(B \cdot (n+N))$. Since $N \gg n$, this is dominated by the unlabeled set. Algorithm 3 avoids this cost: by the CLT, the mean of $N$ i.i.d. proxy scores is approximately Gaussian with mean $\hat{\gamma}^\circ = \frac{1}{N}\sum_{i=1}^{N}\tilde{Y}^\circ_i$ and variance $\hat{S}_{\gamma^\circ} = \widehat{\text{Var}}(\tilde{Y}^\circ) / N$. Each bootstrap iteration therefore replaces a full resample of the unlabeled set with a single Gaussian draw:
+**CLT-based speedup.** Naively, each bootstrap iteration would require resampling all $N$ proxy labels on unlabeled samples, making the total cost $O(B \cdot (n+N))$. Since $N \gg n$, this is dominated by the unlabeled set. Algorithm 3 in [[7](#ref-7)] avoids this cost: by the CLT, the mean of $N$ i.i.d. proxy scores is approximately Gaussian with mean $\hat{\gamma}^\circ = \frac{1}{N}\sum_{i=1}^{N}\tilde{Y}^\circ_i$ and variance $\hat{S}_{\gamma^\circ} = \widehat{\text{Var}}(\tilde{Y}^\circ) / N$. Each bootstrap iteration therefore replaces a full resample of the unlabeled set with a single Gaussian draw:
 
 $$\tilde{\gamma}^{(b)} = \hat{\gamma}^\circ + \sqrt{\hat{S}_{\gamma^\circ}} \cdot Z^{(b)}, \qquad Z^{(b)} \sim \mathcal{N}(0,\, 1)$$
 
 The quantities $\hat{\gamma}^\circ$ and $\hat{S}_{\gamma^\circ}$ are computed once before the loop, reducing the per-iteration cost to $O(n)$. This approximation is reliable when $N \gtrsim 30$, the typical production setting where $N \gg n$.
 
+### Confidence intervals
+
+PTD constructs its confidence interval from the **empirical distribution of bootstrap estimates** rather than from a normal approximation. This bootstrap percentile approach adapts to the actual shape of the residual distribution, making it reliable even when $n$ is small.
+
 The confidence interval at level $1 - \alpha$ is the interval between the $\alpha/2$ and $1 - \alpha/2$ empirical quantiles of $\bigl\{\hat{\theta}^{(1)}_{\text{PTD}},\, \ldots,\, \hat{\theta}^{(B)}_{\text{PTD}}\bigr\}$.
 
 ### Power-tuning
 
-The optimal $\lambda$ is estimated from the **bootstrap covariances**. Let $\hat{\mu}_{\text{true}}$ and $\hat{\mu}_{\text{proxy}}$ be the vectors of values $\hat{\mu}^{(b)}_{\text{true}}$ and $\hat{\mu}^{(b)}_{\text{proxy}}$ for $b=1,\dots,B$ respectively . After running the bootstrap loop, it is computed as:
+The optimal $\lambda$ is estimated from the **bootstrap covariances**. Let $\hat{\mu}_{\text{true}}$ and $\hat{\mu}_{\text{proxy}}$ be the vectors of values $\hat{\mu}^{(b)}_{\text{true}}$ and $\hat{\mu}^{(b)}_{\text{proxy}}$ for $b=1,\dots,B$ respectively. After running the bootstrap loop, it is computed as:
 
 $$\hat{\lambda} = \frac{\widehat{\text{Cov}}_B\!\left(\hat{\mu}_{\text{true}},\; \hat{\mu}_{\text{proxy}}\right)}{\widehat{\text{Var}}_B\!\left(\hat{\mu}_{\text{proxy}}\right) + \hat{S}_{\gamma^\circ}}$$
 
