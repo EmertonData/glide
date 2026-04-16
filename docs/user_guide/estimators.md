@@ -76,7 +76,7 @@ This gives a confidence interval at level $1 - \alpha$:
 
 $$\Pr\!\left(\theta^* \in \left[\hat{\theta}_{\lambda} - z_{1-\alpha/2}\, \sigma_{\hat{\theta}}(\lambda),\; \hat{\theta}_{\lambda} + z_{1-\alpha/2}\, \sigma_{\hat{\theta}}(\lambda)\right]\right) \geq 1 - \alpha$$
 
-where $z_{1-\alpha/2}$ is the standard normal quantile (e.g. $z_{0.975} = 1.96$ for a 95% two-sided confidence interval).
+where $z_{1-\alpha/2}$ is the standard normal quantile (e.g. $z_{0.975} = 1.96$ for a $95\%$ two-sided confidence interval).
 
 ### Power-tuning
 
@@ -193,7 +193,7 @@ where $\widehat{\text{Var}}$ denotes the sample variance with $\text{ddof} = 1$.
 
 $$\Pr\!\left(\theta^* \in \left[\hat{\theta}_{\lambda} - z_{1-\alpha/2}\,\hat{\sigma}_{\text{SE}},\; \hat{\theta}_{\lambda} + z_{1-\alpha/2}\,\hat{\sigma}_{\text{SE}}\right]\right) \geq 1 - \alpha$$
 
-where $z_{1-\alpha/2}$ is the standard normal quantile (e.g. $z_{0.975} = 1.96$ for a 95% two-sided confidence interval).
+where $z_{1-\alpha/2}$ is the standard normal quantile (e.g. $z_{0.975} = 1.96$ for a $95\%$ two-sided confidence interval).
 
 
 ### Power-tuning
@@ -252,7 +252,7 @@ where $\tilde{\gamma}^{(b)}$ is a perturbed draw of the unlabeled proxy mean.
 
 $$\tilde{\gamma}^{(b)} = \hat{\gamma}^\circ + \sqrt{\hat{S}_{\gamma^\circ}} \cdot Z^{(b)}, \qquad Z^{(b)} \sim \mathcal{N}(0,\, 1)$$
 
-The quantities $\hat{\gamma}^\circ$ and $\hat{S}_{\gamma^\circ}$ are computed once before the loop, reducing the per-iteration cost to $O(n)$. This approximation is reliable when $N \gtrsim 30$, the typical production setting where $N \gg n$.
+The quantities $\hat{\gamma}^\circ$ and $\hat{S}_{\gamma^\circ}$ are computed once before the loop, reducing the per-iteration cost to $O(n)$. This approximation is reliable for large $N$ which is typically the case in production where $N \gg n$.
 
 ### Variance and confidence intervals
 
