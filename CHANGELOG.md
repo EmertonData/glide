@@ -10,8 +10,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### ✨ Added
 - `PTDMeanEstimator` for mean estimation with Predict-Then-Debias (bootstrap)
-- `BootStrapConfidenceInterval` and `ConfidenceInterval` Protocol
 - Section on which estimator to use in the user guide
+- `BootStrapConfidenceInterval` and `ConfidenceInterval` Protocol
 - `IPWClassicalMeanEstimator` for inverse probability weighted classical mean estimation
 - `StratifiedClassicalMeanEstimator` for Stratified classical mean estimation
 - Export JSON step in quickstart
