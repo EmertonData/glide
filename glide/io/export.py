@@ -21,7 +21,7 @@ def to_json(result: MeanInferenceResult) -> str:
     --------
     >>> from glide.io import to_json
     >>> from glide.core.mean_inference_result import MeanInferenceResult
-    >>> from glide.core.clt_confidence_interval import CLTConfidenceInterval
+    >>> from glide.confidence_intervals import CLTConfidenceInterval
     >>> confidence_interval = CLTConfidenceInterval(mean=0, std=1)
     >>> inference_result = MeanInferenceResult(confidence_interval=confidence_interval, \
     metric_name="metric", estimator_name="none")
@@ -31,6 +31,7 @@ def to_json(result: MeanInferenceResult) -> str:
         "mean": 0,
         "std": 1,
         "confidence_level": 0.95,
+        "var": 1,
         "lower_bound": -1.959963984540054,
         "upper_bound": 1.959963984540054
       },

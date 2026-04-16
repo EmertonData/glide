@@ -1,0 +1,95 @@
+from dataclasses import dataclass, field
+from typing import Literal, Tuple
+
+import numpy as np
+from numpy.typing import NDArray
+
+
+@dataclass
+class BootstrapConfidenceInterval:
+    """Quantile bootstrap confidence interval.
+
+    Stores the full distribution of bootstrap point estimates and derives
+    bounds as quantiles of that distribution.
+
+    Parameters
+    ----------
+    bootstrap_estimates : NDArray
+        Array of shape (B,) containing the B bootstrap point estimates.
+    confidence_level : float, optional
+        Target coverage, e.g. 0.95 for a 95 % CI. Default is 0.95.
+
+    Examples
+    --------
+    >>> import numpy as np
+    >>> from glide.confidence_intervals import BootstrapConfidenceInterval
+    >>> rng = np.random.default_rng(0)
+    >>> estimates = rng.normal(loc=5.0, scale=0.3, size=20)
+    >>> ci = BootstrapConfidenceInterval(bootstrap_estimates=estimates, confidence_level=0.95)
+    >>> print(f"[{ci.lower_bound:.3f}, {ci.upper_bound:.3f}]")
+    [4.453, 5.354]
+    """
+
+    bootstrap_estimates: NDArray
+    confidence_level: float = 0.95
+    mean: float = field(init=False, repr=False)
+    var: float = field(init=False, repr=False)
+    std: float = field(init=False, repr=False)
+
+    def __post_init__(self) -> None:
+        self.mean = float(np.mean(self.bootstrap_estimates))
+        self.var = float(np.var(self.bootstrap_estimates, ddof=1))
+        self.std = float(np.sqrt(self.var))
+
+    @property
+    def lower_bound(self) -> float:
+        tail = (1 - self.confidence_level) / 2
+        bound = float(np.quantile(self.bootstrap_estimates, tail))
+        return bound
+
+    @property
+    def upper_bound(self) -> float:
+        tail = (1 - self.confidence_level) / 2
+        bound = float(np.quantile(self.bootstrap_estimates, 1 - tail))
+        return bound
+
+    def test_null_hypothesis(
+        self,
+        h0_value: float,
+        alternative: Literal["larger", "smaller", "two-sided"] = "two-sided",
+    ) -> Tuple[float, float, float]:
+        """Bootstrap hypothesis test against a null value.
+
+        Computes a p-value as the proportion of bootstrap estimates that are
+        at least as extreme as `h0_value` under the specified alternative.
+
+        Parameters
+        ----------
+        h0_value : float
+            The hypothesized population mean under the null hypothesis (H0: μ = h0_value).
+        alternative : str, optional
+            The alternative hypothesis. One of:
+            - ``'two-sided'`` (default): H1: μ ≠ h0_value
+            - ``'larger'``: H1: μ > h0_value
+            - ``'smaller'``: H1: μ < h0_value
+
+        Returns
+        -------
+        Tuple[float, float, float]
+            ``(test_statistic, p_value, df)`` where ``test_statistic`` is the
+            point estimate (mean of bootstrap distribution), ``p_value`` is the
+            bootstrap p-value, and ``df`` is ``float('inf')``.
+        """
+        if alternative == "two-sided":
+            centered = np.abs(self.bootstrap_estimates - self.mean)
+            observed_deviation = abs(h0_value - self.mean)
+            is_at_least_as_extreme = centered >= observed_deviation
+        elif alternative == "larger":
+            is_at_least_as_extreme = self.bootstrap_estimates <= h0_value
+        elif alternative == "smaller":
+            is_at_least_as_extreme = self.bootstrap_estimates >= h0_value
+        else:
+            raise ValueError(f"alternative must be 'two-sided', 'larger', or 'smaller', got '{alternative}'")
+        p_value = float(np.mean(is_at_least_as_extreme))
+
+        return self.mean, p_value, float("inf")

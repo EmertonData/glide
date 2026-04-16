@@ -3,7 +3,7 @@ from typing import Tuple
 import numpy as np
 from numpy.typing import NDArray
 
-from glide.core.clt_confidence_interval import CLTConfidenceInterval
+from glide.confidence_intervals import CLTConfidenceInterval
 from glide.core.mean_inference_result import SemiSupervisedMeanInferenceResult
 from glide.core.utils import compute_effective_sample_size
 
@@ -163,7 +163,7 @@ class ASIMeanEstimator:
         confidence_interval = CLTConfidenceInterval(
             mean=mean_estimate, std=std_estimate, confidence_level=confidence_level
         )
-        effective_sample_size = compute_effective_sample_size(y_true_processed[xi == 1], std_estimate)
+        effective_sample_size = compute_effective_sample_size(y_true_processed[xi == 1], confidence_interval.var)
 
         return SemiSupervisedMeanInferenceResult(
             confidence_interval=confidence_interval,
