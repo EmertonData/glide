@@ -56,19 +56,27 @@ The package is organised around three concerns: **estimators**, **core building 
 
 ```
 glide/
-├── estimators/          # Public API — statistical estimators
-│   └── ...                     # files implementing estimators grouped by family (PPI, ASI, ...)
+├── estimators/             # Public API — statistical estimators
+│   └── ...                       # files implementing estimators grouped by family (PPI, ASI, ...)
 │
-├── core/                # Shared building blocks (not part of the public API)
-│   ├── dataset.py              # Dataset container
-│   ├── utils.py                # General-purpose helpers
-│   └── ...                     # Inference result types returned by estimators
+├── confidence_intervals/   # Confidence interval protocols and implementations
+│   ├── base.py                   # ConfidenceInterval protocol
+│   ├── clt.py                    # CLTConfidenceInterval class
+│   └── bootstrap.py              # BootstrapConfidenceInterval class
 │
-└── io/                  # Serialisation helpers (e.g., to_json)
+├── core/                   # Shared building blocks (not part of the public API)
+│   ├── dataset.py                # Dataset container
+│   ├── utils.py                  # General-purpose helpers
+│   └── mean_inference_result/    # Result types returned by estimators
+│       ├── base.py               # MeanInferenceResult base class
+│       ├── semi_supervised.py    # SemiSupervisedMeanInferenceResult
+│       └── classical.py          # ClassicalMeanInferenceResult
+│
+└── io/                     # Serialisation helpers (e.g., to_json)
     └── ...
 ```
 
-**How the pieces fit together.** Each estimator accepts a `dataset` (a `core.dataset.Dataset`) and produces an inference result object (e.g. a `MeanInferenceResult` subclass). For example, semi-supervised mean estimators (`PPIMeanEstimator`, `ASIMeanEstimator`) return a `SemiSupervisedMeanInferenceResult` that carries both the corrected point estimate and metadata about the used dataset and algorithm; the classical estimator returns a `ClassicalMeanInferenceResult`. Confidence intervals are always computed through `core.clt_confidence_interval`. The `io` module handles serialisation of these result objects.
+**How the pieces fit together.** Each estimator accepts a `dataset` (a `core.dataset.Dataset`) and produces an inference result object (e.g. a `MeanInferenceResult` subclass). For example, semi-supervised mean estimators (`PPIMeanEstimator`, `ASIMeanEstimator`) return a `SemiSupervisedMeanInferenceResult` that carries both the corrected point estimate and metadata about the used dataset and algorithm; the classical estimator returns a `ClassicalMeanInferenceResult`. Every inference result holds a confidence interval conforming to the `ConfidenceInterval` protocol, which can be a `CLTConfidenceInterval` (normal approximation) or other implementations like `BootstrapConfidenceInterval`. The `io` module handles serialisation of these result objects.
 
 ---
 

@@ -1,7 +1,7 @@
 import numpy as np
 from numpy.typing import NDArray
 
-from glide.core.clt_confidence_interval import CLTConfidenceInterval
+from glide.confidence_intervals import CLTConfidenceInterval
 from glide.core.mean_inference_result import ClassicalMeanInferenceResult
 
 
