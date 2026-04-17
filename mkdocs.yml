@@ -94,7 +94,6 @@ nav:
     - ASI: tutorials/asi.ipynb
   - Examples:
     - generated_examples/index.md
-    - PPI++: generated_examples/plot_ppi.md
   - Deep Dive:
     - PPI Validation: deep_dive/ppi_validation.ipynb
     - Stratified PPI Validation: deep_dive/stratified_ppi_validation.ipynb
