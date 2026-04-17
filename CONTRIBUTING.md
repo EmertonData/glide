@@ -47,6 +47,16 @@ Install the hooks once after cloning:
 ```bash
 uv run prek install
 ```
+t
+**5. Testing notebooks locally (optional):**
+
+The project includes example notebooks in `docs/examples/`. To test all notebooks locally:
+
+```bash
+make test-notebooks
+```
+
+Note: Notebook testing also runs in CI for all pull requests, so local testing is optional. The CI workflow ensures notebooks are executed and validated before merge.
 
 ---
 

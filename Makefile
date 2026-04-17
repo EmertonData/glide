@@ -8,7 +8,6 @@ venv-doc:
 
 pre-commit:
 	uv run prek run --all-files
-	make test-notebooks
 
 lint:
 	uv run ruff check --fix

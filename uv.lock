@@ -755,7 +755,7 @@ requires-dist = [{ name = "scipy", specifier = ">=1.17.1" }]
 
 [package.metadata.requires-dev]
 dev = [
-    { name = "papermill" },
+    { name = "papermill", specifier = ">=2.7.0" },
     { name = "prek", specifier = ">=0.3.4" },
     { name = "pytest", specifier = ">=9.0.2" },
     { name = "pytest-coverage", specifier = ">=0.0" },
