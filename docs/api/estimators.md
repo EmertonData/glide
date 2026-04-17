@@ -35,3 +35,9 @@
 ::: glide.estimators.asi.ASIMeanEstimator
     options:
       heading_level: 3
+
+## PTDMeanEstimator
+
+::: glide.estimators.ptd.PTDMeanEstimator
+    options:
+      heading_level: 3

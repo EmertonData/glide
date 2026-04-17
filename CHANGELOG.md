@@ -9,7 +9,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 ## [Next release]
 
 ### ✨ Added
+<<<<<<< doc/ptd-user-guide
 - Section about the PTD in the user guide.
+=======
+- Entry for `PTDMeanEstimator` in the ReadMe papers
+- CI workflow to verify notebook execution 
+- `PTDMeanEstimator` for mean estimation with Predict-Then-Debias (bootstrap)
+>>>>>>> main
 - Section on which estimator to use in the user guide
 - `BootStrapConfidenceInterval` and `ConfidenceInterval` Protocol
 - `IPWClassicalMeanEstimator` for inverse probability weighted classical mean estimation
@@ -24,6 +30,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - Doctest for `glide.io.to_json`
   
 ### 🔄 Changed
+- Improved efficiency of `BootstrapConfidenceInterval.test_null_hypothesis()` from O(n) to O(log n) using binary search on sorted bootstrap samples
 - Renamed `compute_lambda` to `compute_tuning_parameter`
 - Refactored ASI user to journey to use numpy arrays only
 - Refactored stratified PPI to accept numpy arrays as input
