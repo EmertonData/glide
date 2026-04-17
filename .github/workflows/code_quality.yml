@@ -33,3 +33,6 @@ jobs:
         uses: codecov/codecov-action@v5.5.2
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
+
+      - name: Test notebooks
+        run: make test-notebooks
