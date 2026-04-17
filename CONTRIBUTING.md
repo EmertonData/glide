@@ -50,7 +50,7 @@ uv run prek install
 t
 **5. Testing notebooks locally (optional):**
 
-The project includes example notebooks in `docs/examples/`. To test all notebooks locally:
+The project includes example notebooks in `docs/`. To test all notebooks locally:
 
 ```bash
 make test-notebooks
