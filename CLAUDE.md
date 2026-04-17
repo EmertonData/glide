@@ -25,17 +25,17 @@ Run a single test file: `uv run pytest tests/unit/test_foo.py -vsx`
 
 ## Architecture
 
-The package has three layers:
+The package has multiple layers:
 
-**`glide/estimators/`** — Public API.
+**`glide/estimators/`** — Public API. Statistical estimators (classical, semi-supervised, stratified variants).
 
-**`glide/core/`** — Internal building blocks:
-- `dataset.py` — `Dataset` extends `list` with column/record access
-- `clt_confidence_interval.py` — CLT-based confidence intervals
-- `mean_inference_result/` — Result dataclasses
-- `simulated_datasets.py` — Test data generators
+**`glide/confidence_intervals/`** — Confidence interval implementations depending on statistical methods.
 
-**`glide/io/`** — Serialisation helpers (JSON export).
+**`glide/samplers/`** — Sampler object implementations for various strategies.
+
+**`glide/core/`** — Internal building blocks: data structures, result dataclasses, test data generators, and shared utilities.
+
+**`glide/io/`** — Serialisation helpers.
 
 ## Git Workflow
 
@@ -112,6 +112,7 @@ Do not use needless type conversions like `float()` or `int()` unless required b
 
 - MkDocs with mkdocstrings; docs must build without warnings
 - Update `CHANGELOG.md` for any user-facing changes (Keep a Changelog format, SemVer)
+- Add elements to the "Added" or "Changed " sections of `CHANGELOG.md` at the top of the existing list
 - Avoid using and escaping underscores in math mode in jupyter notebooks.
 - Avoid making excessive use of dashes like this — when writing documentation and notebooks. Prefer commas, colons and parentheses where possible.
 
