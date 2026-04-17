@@ -15,4 +15,5 @@ hooks = [
 repo = "local"
 hooks = [
   { id = "ty", name = "ty", entry = "uv run ty check", language = "system", types_or = ["python", "jupyter"], pass_filenames = false },
+  { id = "mkdocs-execute", name = "mkdocs-execute must be true", entry = "bash -c '! grep -E \"^[[:space:]]*execute:[[:space:]]*false\" mkdocs.yml'", language = "system", files = "mkdocs\\.yml", pass_filenames = false },
 ]
