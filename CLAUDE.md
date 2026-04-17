@@ -18,6 +18,7 @@ make type-check    # Type checking with ty
 make tests         # Run tests: uv run pytest . -vsx
 make coverage      # Full coverage report (100% required)
 make pre-commit    # Run pre-commit hooks (ruff + nbstripout + ty)
+make test-notebooks # Test all Jupyter notebooks
 ```
 
 Run a single test file: `uv run pytest tests/unit/test_foo.py -vsx`

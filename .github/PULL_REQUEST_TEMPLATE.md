@@ -24,6 +24,7 @@ Quality gates that must be satisfied before requesting a review:
 - [ ] `make type-check` passes
 - [ ] `make tests` passes
 - [ ] `make coverage` reports 100% coverage
+- [ ] `make test-notebooks` passes
 - [ ] New public API has numpy-style docstrings
 - [ ] New public API is inserted in the API reference section of the documentation
 - [ ] Docs build without warnings (`make doc`)
