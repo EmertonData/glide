@@ -1,43 +1,47 @@
 # Estimators
 
-## ClassicalMeanEstimator
+## Classical Methods
+
+### ClassicalMeanEstimator
 
 ::: glide.estimators.classical.ClassicalMeanEstimator
     options:
-      heading_level: 3
+      heading_level: 4
 
-## StratifiedClassicalMeanEstimator
+### StratifiedClassicalMeanEstimator
 
 ::: glide.estimators.stratified_classical.StratifiedClassicalMeanEstimator
     options:
-      heading_level: 3
+      heading_level: 4
 
-## IPWClassicalMeanEstimator
+### IPWClassicalMeanEstimator
 
 ::: glide.estimators.ipw_classical.IPWClassicalMeanEstimator
     options:
-      heading_level: 3
+      heading_level: 4
 
-## PPIMeanEstimator
+## Semi-Supervised Methods
+
+### PPIMeanEstimator
 
 ::: glide.estimators.ppi.PPIMeanEstimator
     options:
-      heading_level: 3
+      heading_level: 4
 
-## StratifiedPPIMeanEstimator
+### StratifiedPPIMeanEstimator
 
 ::: glide.estimators.stratified_ppi.StratifiedPPIMeanEstimator
     options:
-      heading_level: 3
+      heading_level: 4
 
-## ASIMeanEstimator
+### ASIMeanEstimator
 
 ::: glide.estimators.asi.ASIMeanEstimator
     options:
-      heading_level: 3
+      heading_level: 4
 
-## PTDMeanEstimator
+### PTDMeanEstimator
 
 ::: glide.estimators.ptd.PTDMeanEstimator
     options:
-      heading_level: 3
+      heading_level: 4

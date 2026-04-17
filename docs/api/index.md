@@ -1,0 +1,56 @@
+# API Reference
+
+## Estimators
+
+### Classical Methods
+
+| Class | Description |
+|-------|-------------|
+| [`ClassicalMeanEstimator`](estimators.md#classicalmeanestimator) | Classical sample mean without proxy labels |
+| [`StratifiedClassicalMeanEstimator`](estimators.md#stratifiedclassicalmeanestimator) | Classical mean with population-proportional stratification |
+| [`IPWClassicalMeanEstimator`](estimators.md#ipwclassicalmeanestimator) | Classical mean with inverse probability weighting |
+
+### Semi-Supervised Methods
+
+| Class | Description |
+|-------|-------------|
+| [`PPIMeanEstimator`](estimators.md#ppimeanestimator) | Combines labeled data with proxy predictions |
+| [`StratifiedPPIMeanEstimator`](estimators.md#stratifiedppimeanestimator) | PPI with per-stratum optimal weighting |
+| [`ASIMeanEstimator`](estimators.md#asimeanestimator) | Active statistical inference with non-uniform sampling |
+| [`PTDMeanEstimator`](estimators.md#ptdmeanestimator) | Predict-then-debias with bootstrap CIs |
+
+## Confidence Intervals
+
+| Class | Description |
+|-------|-------------|
+| [`CLTConfidenceInterval`](confidence_intervals.md#cltconfidenceinterval) | Normal-approximation confidence intervals |
+| [`BootstrapConfidenceInterval`](confidence_intervals.md#bootstrapconfidenceinterval) | Quantile-based bootstrap confidence intervals |
+
+## Sampling
+
+| Class | Description |
+|-------|-------------|
+| [`ActiveSampler`](samplers.md#activesampler) | Uncertainty-based active sampling |
+| [`StratifiedSampler`](samplers.md#stratifiedsampler) | Stratified budget allocation with Neyman/proportional strategies |
+
+## Data & Results
+
+### Data Utilities
+
+| Class/Module | Description |
+|--------------|-------------|
+| [`glide.core.dataset.Dataset`](core/datasets.md#dataset) | Column/record access to array-like data |
+| [`glide.core.simulated_datasets`](core/datasets.md#simulated-data-generation) | Synthetic dataset generators for validation |
+
+### Inference Results
+
+| Class | Description |
+|-------|-------------|
+| [`ClassicalMeanInferenceResult`](core/mean_inference_results.md#classical-results) | Result object from classical estimators |
+| [`SemiSupervisedMeanInferenceResult`](core/mean_inference_results.md#semi-supervised-results) | Result object from semi-supervised estimators |
+
+## I/O Utilities
+
+| Module | Description |
+|--------|-------------|
+| [`glide.io`](io.md) | JSON serialization and export helpers |

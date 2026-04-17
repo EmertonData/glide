@@ -53,7 +53,7 @@ plugins:
             show_root_toc_entry: false
   - mkdocs-jupyter:
       include_source: true
-      execute: true
+      execute: false #true
 
 markdown_extensions:
   - attr_list
@@ -85,10 +85,10 @@ nav:
     - ASI Validation: deep_dive/asi_validation.ipynb
   - Contributing: contributing.md
   - API Reference:
-    - Core:
-      - Datasets: api/core/datasets.md
-      - Mean Inference Results: api/core/mean_inference_results.md
-    - Samplers: api/samplers.md
+    - Overview: api/index.md
     - Estimators: api/estimators.md
     - Confidence Intervals: api/confidence_intervals.md
+    - Samplers: api/samplers.md
+    - Datasets: api/core/datasets.md
+    - Inference Results: api/core/mean_inference_results.md
     - I/O: api/io.md
