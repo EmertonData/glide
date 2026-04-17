@@ -54,7 +54,7 @@ class StratifiedClassicalMeanEstimator:
             theta = sum_k  w_k * theta_k
             sigma2 = sum_k  w_k^2 * sigma2_k
 
-        where ``w_k = n_k / n`` is the fraction of records in stratum *k*.
+        where ``w_k = n_k / n`` is the fraction of samples in stratum *k*.
 
         It is assumed that ``w_k`` reflects the true weight of stratum *k* for
         all *k*.
@@ -77,7 +77,7 @@ class StratifiedClassicalMeanEstimator:
         ClassicalMeanInferenceResult
             Contains the CLT-based confidence interval, the metric name,
             the estimator name (``"StratifiedClassicalMeanEstimator"``), and
-            ``n`` (total number of records).
+            ``n`` (total number of samples).
         """
         n_total = len(y)
         weighted_mean = 0.0
