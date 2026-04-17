@@ -40,6 +40,10 @@ doc: _sync-doc
 		uv run mkdocs serve; \
 	fi
 
+branch:
+	@test -n "$(name)" || (echo "Usage: make branch name=<branch-name>"; exit 1)
+	git checkout main && git pull && git checkout -b $(name)
+  
 test-notebooks:
 	@find docs -name "*.ipynb" | while read notebook; do \
 		echo "Testing $$notebook..."; \

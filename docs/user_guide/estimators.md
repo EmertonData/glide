@@ -22,7 +22,7 @@ Moreover, $C_\alpha$ should be as small as possible.
 
 ### Input data
 
-All estimators in GLIDE rely on two complementary sources of labels. Proxy labels $\tilde{Y}_i$ are available for all $N$ samples at low cost but are biased ($E[\tilde{Y}] \neq \theta^*$). Human labels $Y_j$ are unbiased ($E[Y] = \theta^*$) but expensive, and only available for a small labeled subset of $n \ll N$ samples. The key insight: even though human labels are scarce, they can be used to **correct** the bias in the cheap proxy labels.
+All estimators in GLIDE rely on two complementary sources of labels. Proxy labels $\tilde{Y}_i$ are available for $N$ samples at low cost but are biased ($E[\tilde{Y}] \neq \theta^*$). Human labels $Y_j$ are unbiased ($E[Y] = \theta^*$) but expensive, and only available for a small labeled set of $n \ll N$ samples. The key insight: even though human labels are scarce, they can be used to **correct** the bias in the cheap proxy labels.
 
 <p align="center">
   <img src="../../assets/schema-PPI.png" alt="Data schema" width="550">
@@ -76,7 +76,7 @@ This gives a confidence interval at level $1 - \alpha$:
 
 $$\Pr\!\left(\theta^* \in \left[\hat{\theta}_{\lambda} - z_{1-\alpha/2}\, \sigma_{\hat{\theta}}(\lambda),\; \hat{\theta}_{\lambda} + z_{1-\alpha/2}\, \sigma_{\hat{\theta}}(\lambda)\right]\right) \geq 1 - \alpha$$
 
-where $z_{1-\alpha/2}$ is the standard normal quantile (e.g. $z_{0.975} = 1.96$ for a 95% two-sided confidence interval).
+where $z_{1-\alpha/2}$ is the standard normal quantile (e.g. $z_{0.975} = 1.96$ for a $95\%$ two-sided confidence interval).
 
 ### Power-tuning
 
@@ -92,7 +92,7 @@ where:
 
 - $n$ and $N$ are the numbers of labeled and unlabeled samples respectively.
 
-When the proxy is informative (high covariance with human labels), $\hat{\lambda}$ is close to 1 and the CI is narrower than standard PPI; when the proxy is uninformative, $\hat{\lambda}$ shrinks toward 0, down-weighting it and falling back to the classical human-only mean estimate. PPI++ uses optimal $\hat{\lambda}$ in GLIDE by default. This ensures the resulting estimate always has smaller variance than the classical estimate.
+When the proxy is informative (high covariance with human labels), $\hat{\lambda}$ is close to 1 and the CI is narrower than standard PPI; when the proxy is uninformative, $\hat{\lambda}$ shrinks toward 0, down-weighting it and falling back to the classical human-only mean estimate. It is standard to use optimal $\hat{\lambda}$. This ensures the resulting estimate always has smaller variance than the classical estimate.
 
 ---
 
@@ -149,7 +149,7 @@ Setting `power_tuning=False` forces $\lambda_k = 1.0$ for all strata, recovering
 
 Standard approaches to combining proxy and human labels assume that the labeled subset is drawn **uniformly at random** from the population. In practice, annotation resources are often allocated strategically, for instance, prioritizing uncertain or difficult examples. **Active Statistical Inference (ASI)** [[3](#ref-3), [4](#ref-4)] handles this general case: each sample $X_i$ may have a distinct, pre-determined probability $\pi_i \in (0, 1]$ of being selected for human annotation. Inverse-Probability Weighting (IPW) corrects for this non-uniform selection, yielding valid confidence intervals under any fixed sampling rule.
 
-In ASI, each sample has three associated values:
+In this section, we assume we have a total of $n$ samples, labeled and unlabeled. In ASI, each sample has three associated values:
 
 | Value | Present for | Description |
 |---|---|---|
@@ -193,7 +193,7 @@ where $\widehat{\text{Var}}$ denotes the sample variance with $\text{ddof} = 1$.
 
 $$\Pr\!\left(\theta^* \in \left[\hat{\theta}_{\lambda} - z_{1-\alpha/2}\,\hat{\sigma}_{\text{SE}},\; \hat{\theta}_{\lambda} + z_{1-\alpha/2}\,\hat{\sigma}_{\text{SE}}\right]\right) \geq 1 - \alpha$$
 
-where $z_{1-\alpha/2}$ is the standard normal quantile (e.g. $z_{0.975} = 1.96$ for a 95% two-sided confidence interval).
+where $z_{1-\alpha/2}$ is the standard normal quantile (e.g. $z_{0.975} = 1.96$ for a $95\%$ two-sided confidence interval).
 
 
 ### Power-tuning
@@ -211,7 +211,68 @@ The variance-minimising $\lambda$ is:
 
 $$\hat{\lambda} = \frac{\widehat{\text{Cov}}(a,\, b)}{\widehat{\text{Var}}(a)}$$
 
-When the proxy is informative, $\hat{\lambda}$ is large and the IPW-corrected labels benefit from the proxy signal, narrowing the confidence interval. When the proxy is uninformative, $\hat{\lambda}$ shrinks toward 0, down-weighting it. Power tuning is enabled by default in GLIDE (`power_tuning=True`). Setting `power_tuning=False` fixes $\lambda = 1$, recovering the plain IPW estimator.
+When the proxy is informative, $\hat{\lambda}$ is large and the IPW-corrected labels benefit from the proxy signal, narrowing the confidence interval. When the proxy is uninformative, $\hat{\lambda}$ shrinks toward 0, down-weighting it. Fixing $\lambda = 1$, recover the plain IPW estimator. It is standard to use optimal power tuning with the $\hat{\lambda}$ value above.
+
+---
+
+## Predict-Then-Debias (PTD)
+
+**Predict-Then-Debias (PTD)** [[7](#ref-7)] constructs a confidence interval from the **empirical distribution of bootstrap estimates** rather than a normal approximation, making it reliable when $n$ is small or residuals are non-Gaussian. GLIDE implements Algorithm 3 from [[7](#ref-7)], which works on a uniformly drawn labeled sample and includes a speedup that avoids resampling the unlabeled data during the bootstrap.
+
+In PTD, each sample has two associated values:
+
+| Value | Present for | Description |
+|---|---|---|
+| $\tilde{Y}_i$ | All $n+N$ samples | Proxy label |
+| $Y_j$ | Labeled samples only ($n \ll N$) | Ground-truth label |
+
+Denote $(\tilde{Y}^\circ_i)_{i=1}^N$ the unlabeled proxies and $(\tilde{Y}^\bullet_i)_{i=1}^n$ the labeled ones.
+
+### Mean estimation
+
+The PTD mean estimate is the average of $B$ bootstrap estimates:
+
+$$\hat{\theta}_{\text{PTD}} = \frac{1}{B}\sum_{b=1}^{B}\hat{\theta}^{(b)}_{\text{PTD}}$$
+
+where each $\hat{\theta}^{(b)}_{\text{PTD}}$ is computed during the bootstrap procedure described below.
+
+### Bootstrap procedure
+
+For $b = 1, \dots, B$, sample a set of indices $\mathcal{I}^{(b)}$ of size $n$ uniformly with replacement from $\{1, \dots, n\}$ and compute the bootstrap means of the labeled ground-truth and proxy labels:
+
+$$\hat{\mu}^{(b)}_{\text{true}} = \frac{1}{n}\sum_{i\in \mathcal{I}^{(b)}} Y_i, \qquad \hat{\mu}^{(b)}_{\text{proxy}} = \frac{1}{n}\sum_{i\in \mathcal{I}^{(b)}} \tilde{Y}^\bullet_i$$
+
+The third ingredient needed is a perturbed draw of the unlabeled proxy mean, $\tilde{\gamma}^{(b)}$. Naively, this would require resampling all $N$ proxy labels on the unlabeled samples at each iteration. Algorithm 3 in [[7](#ref-7)] avoids this cost: by the CLT, the mean of $N$ i.i.d. proxy scores is approximately Gaussian with mean $\hat{\gamma}^\circ = \frac{1}{N}\sum_{i=1}^{N}\tilde{Y}^\circ_i$ and variance $\hat{S}_{\gamma}^\circ = \widehat{\text{Var}}(\tilde{Y}^\circ) / N$, so instead of resampling all $N$ unlabeled proxy scores at each iteration, we replace that expensive resample with a single standard gaussian draw, mimicking bootstrap randomness at a far lower computational cost:
+
+$$\tilde{\gamma}^{(b)} = \hat{\gamma}^\circ + Z^{(b)} \cdot \sqrt{\hat{S}_{\gamma}^\circ}, \qquad Z^{(b)} \sim \mathcal{N}(0,\, 1)$$
+
+The quantities $\hat{\gamma}^\circ$ and $\hat{S}_{\gamma}^\circ$ are computed once before the loop, reducing the per-iteration cost to $O(n)$ instead of $O(n+N)$. This approximation is reliable for large $N$ which is typically the case in practical scenarios where proxy labels are far cheaper than expensive human annotations.
+
+Combining the labeled bootstrap means with this unlabeled draw gives:
+
+$$\hat{\theta}^{(b)}_{\text{PTD}} = \lambda \cdot \tilde{\gamma}^{(b)} + \left(\hat{\mu}^{(b)}_{\text{true}} - \lambda \cdot \hat{\mu}^{(b)}_{\text{proxy}}\right)$$
+
+where $\lambda$ is a power-tuning factor that controls the proxy labels' influence similarly to previous sections. The term $\hat{\mu}^{(b)}_{\text{true}} - \lambda \cdot \hat{\mu}^{(b)}_{\text{proxy}}$ captures the proxy bias measured on the labeled set, while $\lambda \cdot \tilde{\gamma}^{(b)}$ contributes the proxy signal on the full unlabeled population. Together they form a bias-corrected estimate of $\theta^*$ for each bootstrap replicate.
+
+### Variance and confidence intervals
+
+The variance of the PTD estimator is the sample variance of the bootstrap estimates:
+
+$$\hat{\sigma}^2_{\text{PTD}} = \widehat{\text{Var}}_B\!\left(\hat{\theta}^{(1)}_{\text{PTD}},\, \ldots,\, \hat{\theta}^{(B)}_{\text{PTD}}\right)$$
+
+where $\widehat{\text{Var}}_B$ is the sample variance computed across the $B$ bootstrap replicates.
+
+The confidence interval at level $1 - \alpha$ is the interval between the $\alpha/2$ and $1 - \alpha/2$ empirical quantiles of $\bigl\{\hat{\theta}^{(1)}_{\text{PTD}},\, \ldots,\, \hat{\theta}^{(B)}_{\text{PTD}}\bigr\}$. This bootstrap percentile approach adapts to the actual shape of the residual distribution, making it reliable even when $n$ is small.
+
+### Power-tuning
+
+The optimal $\lambda$ is estimated from the **bootstrap covariances**. Let $\hat{\mu}_{\text{true}}$ and $\hat{\mu}_{\text{proxy}}$ be the vectors of values $\hat{\mu}^{(b)}_{\text{true}}$ and $\hat{\mu}^{(b)}_{\text{proxy}}$ for $b=1,\dots,B$ respectively. After running the bootstrap loop, it is computed as:
+
+$$\hat{\lambda} = \frac{\widehat{\text{Cov}}_B\!\left(\hat{\mu}_{\text{true}},\; \hat{\mu}_{\text{proxy}}\right)}{\widehat{\text{Var}}_B\!\left(\hat{\mu}_{\text{proxy}}\right) + \hat{S}_{\gamma}^\circ}$$
+
+where $\widehat{\text{Cov}}_B$ and $\widehat{\text{Var}}_B$ are computed across the $B$ bootstrap replicates of the labeled means, and $\hat{S}_{\gamma}^\circ$ is the estimated sampling variance of the unlabeled proxy mean. The denominator adds $\hat{S}_{\gamma}^\circ$ to account for the variance of the unlabeled proxies. This value can be readily used since a Gaussian approximation is made for the unlabeled mean.
+
+When the proxy is informative (high bootstrap covariance with ground-truth means), $\hat{\lambda}$ is large and the estimate borrows heavily from the proxy signal, narrowing the interval. When the proxy is uninformative, $\hat{\lambda}$ shrinks toward 0, down-weighting it. Fixing $\lambda = 1$, recovers the unweighted PTD estimator. It is standard to use the optimal value $\hat{\lambda}$ in practice.
 
 ---
 
@@ -228,3 +289,5 @@ When the proxy is informative, $\hat{\lambda}$ is large and the IPW-corrected la
 <a id="ref-5"></a>[5] <a id="ref-5-link" href="https://arxiv.org/abs/2406.04291">Fisch, Adam, Joshua Maynez, R. Hofer, Bhuwan Dhingra, Amir Globerson, and William W. Cohen. "Stratified prediction-powered inference for effective hybrid evaluation of language models." *Advances in Neural Information Processing Systems* 37 (2024): 111489–111514.</a>.
 
 <a id="ref-6"></a>[6] <a id="ref-6-link" href="https://www.ecva.net/papers/eccv_2024/papers_ECCV/papers/12117.pdf">Fogliato, Riccardo, Pratik Patil, Mathew Monfort, and Pietro Perona. "A framework for efficient model evaluation through stratification, sampling, and estimation." *European Conference on Computer Vision*, pp. 140–158. Springer Nature Switzerland, 2024.</a>.
+
+<a id="ref-7"></a>[7] <a id="ref-7-link" href="https://arxiv.org/abs/2501.18577">Kluger, Dan M., Kerri Lu, Tijana Zrnic, Sherrie Wang, and Stephen Bates. "Prediction-powered inference with imputed covariates and nonuniform sampling." *arXiv preprint arXiv:2501.18577* (2025).</a>.
