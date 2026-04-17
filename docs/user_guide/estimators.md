@@ -92,7 +92,7 @@ where:
 
 - $n$ and $N$ are the numbers of labeled and unlabeled samples respectively.
 
-When the proxy is informative (high covariance with human labels), $\hat{\lambda}$ is close to 1 and the CI is narrower than standard PPI; when the proxy is uninformative, $\hat{\lambda}$ shrinks toward 0, down-weighting it and falling back to the classical human-only mean estimate. PPI++ uses optimal $\hat{\lambda}$ in GLIDE by default. This ensures the resulting estimate always has smaller variance than the classical estimate.
+When the proxy is informative (high covariance with human labels), $\hat{\lambda}$ is close to 1 and the CI is narrower than standard PPI; when the proxy is uninformative, $\hat{\lambda}$ shrinks toward 0, down-weighting it and falling back to the classical human-only mean estimate. It is standard to use optimal $\hat{\lambda}$. This ensures the resulting estimate always has smaller variance than the classical estimate.
 
 ---
 
@@ -211,7 +211,7 @@ The variance-minimising $\lambda$ is:
 
 $$\hat{\lambda} = \frac{\widehat{\text{Cov}}(a,\, b)}{\widehat{\text{Var}}(a)}$$
 
-When the proxy is informative, $\hat{\lambda}$ is large and the IPW-corrected labels benefit from the proxy signal, narrowing the confidence interval. When the proxy is uninformative, $\hat{\lambda}$ shrinks toward 0, down-weighting it. Power tuning is enabled by default in GLIDE (`power_tuning=True`). Setting `power_tuning=False` fixes $\lambda = 1$, recovering the plain IPW estimator.
+When the proxy is informative, $\hat{\lambda}$ is large and the IPW-corrected labels benefit from the proxy signal, narrowing the confidence interval. When the proxy is uninformative, $\hat{\lambda}$ shrinks toward 0, down-weighting it. Fixing $\lambda = 1$, recover the plain IPW estimator. It is standard to use optimal power tuning with the $\hat{\lambda}$ value above.
 
 ---
 
@@ -244,15 +244,15 @@ $$\hat{\mu}^{(b)}_{\text{true}} = \frac{1}{n}\sum_{i\in \mathcal{I}^{(b)}} Y_i, 
 
 The third ingredient needed is a perturbed draw of the unlabeled proxy mean, $\tilde{\gamma}^{(b)}$. Naively, this would require resampling all $N$ proxy labels on the unlabeled samples at each iteration. Algorithm 3 in [[7](#ref-7)] avoids this cost: by the CLT, the mean of $N$ i.i.d. proxy scores is approximately Gaussian with mean $\hat{\gamma}^\circ = \frac{1}{N}\sum_{i=1}^{N}\tilde{Y}^\circ_i$ and variance $\hat{S}_{\gamma^\circ} = \widehat{\text{Var}}(\tilde{Y}^\circ) / N$, so instead of resampling all $N$ unlabeled proxy scores at each iteration, we replace that expensive resample with a single standard gaussian draw, mimicking bootstrap randomness at a far lesser computational cost:
 
-$$\tilde{\gamma}^{(b)} = \hat{\gamma}^\circ + \sqrt{\hat{S}_{\gamma^\circ}} \cdot Z^{(b)}, \qquad Z^{(b)} \sim \mathcal{N}(0,\, 1)$$
+$$\tilde{\gamma}^{(b)} = \hat{\gamma}^\circ + Z^{(b)} \cdot \sqrt{\hat{S}_{\gamma^\circ}}, \qquad Z^{(b)} \sim \mathcal{N}(0,\, 1)$$
 
-The quantities $\hat{\gamma}^\circ$ and $\hat{S}_{\gamma^\circ}$ are computed once before the loop, reducing the per-iteration cost to $O(n)$. This approximation is reliable for large $N$, which is typically the case in production where $N \gg n$.
+The quantities $\hat{\gamma}^\circ$ and $\hat{S}_{\gamma^\circ}$ are computed once before the loop, reducing the per-iteration cost to $O(n)$ instead of $O(n+N)$. This approximation is reliable for large $N$ which is typically the case in practical scenarios where proxy labels are far cheaper than expensive human annotations.
 
 Combining the labeled bootstrap means with this unlabeled draw gives:
 
 $$\hat{\theta}^{(b)}_{\text{PTD}} = \lambda \cdot \tilde{\gamma}^{(b)} + \left(\hat{\mu}^{(b)}_{\text{true}} - \lambda \cdot \hat{\mu}^{(b)}_{\text{proxy}}\right)$$
 
-The term $\hat{\mu}^{(b)}_{\text{true}} - \lambda \cdot \hat{\mu}^{(b)}_{\text{proxy}}$ captures the proxy bias measured on the labeled set, while $\lambda \cdot \tilde{\gamma}^{(b)}$ contributes the proxy signal on the full unlabeled population. Together they form a bias-corrected estimate of $\theta^*$ for each bootstrap replicate.
+where $\lambda \in [0, 1]$ is a power-tuning factor that controls the proxy labels' influence similarly to previous sections. The term $\hat{\mu}^{(b)}_{\text{true}} - \lambda \cdot \hat{\mu}^{(b)}_{\text{proxy}}$ captures the proxy bias measured on the labeled set, while $\lambda \cdot \tilde{\gamma}^{(b)}$ contributes the proxy signal on the full unlabeled population. Together they form a bias-corrected estimate of $\theta^*$ for each bootstrap replicate.
 
 ### Variance and confidence intervals
 
@@ -270,9 +270,9 @@ The optimal $\lambda$ is estimated from the **bootstrap covariances**. Let $\hat
 
 $$\hat{\lambda} = \frac{\widehat{\text{Cov}}_B\!\left(\hat{\mu}_{\text{true}},\; \hat{\mu}_{\text{proxy}}\right)}{\widehat{\text{Var}}_B\!\left(\hat{\mu}_{\text{proxy}}\right) + \hat{S}_{\gamma^\circ}}$$
 
-where $\widehat{\text{Cov}}_B$ and $\widehat{\text{Var}}_B$ are computed across the $B$ bootstrap replicates of the labeled means, and $\hat{S}_{\gamma^\circ}$ is the estimated sampling variance of the unlabeled proxy mean. The denominator adds $\hat{S}_{\gamma^\circ}$ to account for the extra variability introduced by the Gaussian approximation of the unlabeled mean.
+where $\widehat{\text{Cov}}_B$ and $\widehat{\text{Var}}_B$ are computed across the $B$ bootstrap replicates of the labeled means, and $\hat{S}_{\gamma^\circ}$ is the estimated sampling variance of the unlabeled proxy mean. The denominator adds $\hat{S}_{\gamma^\circ}$ to account for the variance of the unlabeled proxies since a Gaussian approximation is used for the unlabeled mean.
 
-When the proxy is informative (high bootstrap covariance with ground-truth means), $\hat{\lambda}$ is large and the estimate borrows heavily from the proxy signal, narrowing the interval. When the proxy is uninformative, $\hat{\lambda}$ shrinks toward 0, down-weighting it. Power tuning is enabled by default. Setting `power_tuning=False` fixes $\lambda = 1$, recovering the unweighted PTD estimator.
+When the proxy is informative (high bootstrap covariance with ground-truth means), $\hat{\lambda}$ is large and the estimate borrows heavily from the proxy signal, narrowing the interval. When the proxy is uninformative, $\hat{\lambda}$ shrinks toward 0, down-weighting it. Fixing $\lambda = 1$, recovers the unweighted PTD estimator. It is standard to use the optimal value $\hat{\lambda}$ in practice.
 
 ---
 
