@@ -242,17 +242,17 @@ For $b = 1, \dots, B$, sample a set of indices $\mathcal{I}^{(b)}$ of size $n$ u
 
 $$\hat{\mu}^{(b)}_{\text{true}} = \frac{1}{n}\sum_{i\in \mathcal{I}^{(b)}} Y_i, \qquad \hat{\mu}^{(b)}_{\text{proxy}} = \frac{1}{n}\sum_{i\in \mathcal{I}^{(b)}} \tilde{Y}^\bullet_i$$
 
-Each bootstrap estimate is then:
-
-$$\hat{\theta}^{(b)}_{\text{PTD}} = \lambda \cdot \tilde{\gamma}^{(b)} + \left(\hat{\mu}^{(b)}_{\text{true}} - \lambda \cdot \hat{\mu}^{(b)}_{\text{proxy}}\right)$$
-
-where $\tilde{\gamma}^{(b)}$ is a perturbed draw of the unlabeled proxy mean.
-
-**CLT-based speedup.** Naively, each bootstrap iteration would require resampling all $N$ proxy labels on unlabeled samples, making the total cost $O(B \cdot (n+N))$. Since $N \gg n$, this is dominated by the unlabeled set. Algorithm 3 in [[7](#ref-7)] avoids this cost: by the CLT, the mean of $N$ i.i.d. proxy scores is approximately Gaussian with mean $\hat{\gamma}^\circ = \frac{1}{N}\sum_{i=1}^{N}\tilde{Y}^\circ_i$ and variance $\hat{S}_{\gamma^\circ} = \widehat{\text{Var}}(\tilde{Y}^\circ) / N$. Each bootstrap iteration therefore replaces a full resample of the unlabeled set with a single Gaussian draw:
+The third ingredient needed is a perturbed draw of the unlabeled proxy mean, $\tilde{\gamma}^{(b)}$. Naively, this would require resampling all $N$ proxy labels on the unlabeled samples at each iteration. Algorithm 3 in [[7](#ref-7)] avoids this cost: by the CLT, the mean of $N$ i.i.d. proxy scores is approximately Gaussian with mean $\hat{\gamma}^\circ = \frac{1}{N}\sum_{i=1}^{N}\tilde{Y}^\circ_i$ and variance $\hat{S}_{\gamma^\circ} = \widehat{\text{Var}}(\tilde{Y}^\circ) / N$, so instead of resampling all $N$ unlabeled proxy scores at each iteration, we replace that expensive resample with a single standard gaussian draw, mimicking bootstrap randomness at a far lesser computational cost:
 
 $$\tilde{\gamma}^{(b)} = \hat{\gamma}^\circ + \sqrt{\hat{S}_{\gamma^\circ}} \cdot Z^{(b)}, \qquad Z^{(b)} \sim \mathcal{N}(0,\, 1)$$
 
-The quantities $\hat{\gamma}^\circ$ and $\hat{S}_{\gamma^\circ}$ are computed once before the loop, reducing the per-iteration cost to $O(n)$. This approximation is reliable for large $N$ which is typically the case in production where $N \gg n$.
+The quantities $\hat{\gamma}^\circ$ and $\hat{S}_{\gamma^\circ}$ are computed once before the loop, reducing the per-iteration cost to $O(n)$. This approximation is reliable for large $N$, which is typically the case in production where $N \gg n$.
+
+Combining the labeled bootstrap means with this unlabeled draw gives:
+
+$$\hat{\theta}^{(b)}_{\text{PTD}} = \lambda \cdot \tilde{\gamma}^{(b)} + \left(\hat{\mu}^{(b)}_{\text{true}} - \lambda \cdot \hat{\mu}^{(b)}_{\text{proxy}}\right)$$
+
+The term $\hat{\mu}^{(b)}_{\text{true}} - \lambda \cdot \hat{\mu}^{(b)}_{\text{proxy}}$ captures the proxy bias measured on the labeled set, while $\lambda \cdot \tilde{\gamma}^{(b)}$ contributes the proxy signal on the full unlabeled population. Together they form a bias-corrected estimate of $\theta^*$ for each bootstrap replicate.
 
 ### Variance and confidence intervals
 
