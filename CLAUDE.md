@@ -112,7 +112,7 @@ Do not use needless type conversions like `float()` or `int()` unless required b
 
 - MkDocs with mkdocstrings; docs must build without warnings
 - Update `CHANGELOG.md` for any user-facing changes (Keep a Changelog format, SemVer)
-- Add elements to the "Added" or "Changed " sections of `CHANGELOG.md` at the top of the existing list
+- Always add elements to the "Added" or "Changed" sections of `CHANGELOG.md` at the top of the existing list
 - Avoid using and escaping underscores in math mode in jupyter notebooks.
 - Avoid making excessive use of dashes like this — when writing documentation and notebooks. Prefer commas, colons and parentheses where possible.
 
