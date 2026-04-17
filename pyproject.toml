@@ -59,6 +59,7 @@ dev = [
 doc = [
     "mkdocs>=1.6.1",
     "mkdocs-jupyter>=0.25.1",
+    "mkdocs-gallery>=0.10",
     "mkdocs-material>=9.7.4",
     "mkdocstrings[python]>=1.0.3",
     "matplotlib>=3.10.8",
