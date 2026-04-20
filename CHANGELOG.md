@@ -12,6 +12,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### 🔄 Changed
 
+- Rewrote CLT and Bootstrap confidence intervals to cache lower/upper bounds for a given confidence level
+
 ### 💛 Contributors
 
 ---
