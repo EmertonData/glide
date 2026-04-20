@@ -17,7 +17,7 @@ from glide.estimators.stratified_ppi import StratifiedPPIMeanEstimator
 def test_two_equal_strata_matches_ppi():
     """Stratified PPI on two identical strata matches PPI on the full doubled dataset.
 
-    When both strata contain identical records, the stratified estimator reduces to
+    When both strata contain identical samples, the stratified estimator reduces to
     PPI++ applied to the combined dataset. Mean and std must match within floating-point
     tolerance since both estimators see the same data distribution at the same scale.
     """

@@ -144,13 +144,13 @@ class StratifiedPPIMeanEstimator:
             theta = sum_k  w_k * theta_k(lambda_k)
             sigma2 = sum_k  w_k^2 * sigma2_k(lambda_k)
 
-        where ``w_k = (n_k + N_k) / (n + N)`` is the fraction of records in stratum *k*.
+        where ``w_k = (n_k + N_k) / (n + N)`` is the fraction of samples in stratum *k*.
 
         Note that this assumes n_k / n and N_k / N are approximately the same for all k
         which is important for statistical validity.
 
-        Labeled and unlabeled records are distinguished by ``NaN`` in ``y_true``:
-        a record is labeled if its ``y_true`` entry is not ``NaN``.
+        Labeled and unlabeled samples are distinguished by ``NaN`` in ``y_true``:
+        a sample is labeled if its ``y_true`` entry is not ``NaN``.
 
         Parameters
         ----------
@@ -185,7 +185,7 @@ class StratifiedPPIMeanEstimator:
             If any proxy value is NaN, or if all proxy values within a stratum are identical
             (zero variance), which would cause a division by zero when computing lambda.
         RuntimeError
-            If any stratum has fewer than 2 labeled or fewer than 2 unlabeled records.
+            If any stratum has fewer than 2 labeled or fewer than 2 unlabeled samples.
         """
         strata = self._preprocess(y_true, y_proxy, groups)
 

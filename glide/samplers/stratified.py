@@ -57,7 +57,7 @@ class StratifiedSampler:
             stratum_mask = groups == stratum_id
             stratum_size = stratum_mask.sum()
             if stratum_size < 2:
-                raise ValueError(f"Stratum '{stratum_id}' has fewer than 2 records; std(ddof=1) requires ≥2.")
+                raise ValueError(f"Stratum '{stratum_id}' has fewer than 2 samples; std(ddof=1) requires ≥2.")
             stratum_y_proxy = y_proxy[stratum_mask]
             if len(np.unique(stratum_y_proxy)) < 2:
                 raise ValueError(f"Stratum '{stratum_id}' has zero variance in proxy values")

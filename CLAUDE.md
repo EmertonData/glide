@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-**GLIDE** (Generated Label Inference & Debiasing Engine) is a Python scientific library for rigorous evaluation of GenAI systems using hybrid human/proxy annotations. It implements semi-supervised statistical inference methods (PPI, ASI, Classical) that combine small labeled datasets with large proxy-labeled datasets to produce valid, debiased statistical estimates.
+**GLIDE** (Generated Label Inference & Debiasing Engine) is a Python scientific library for rigorous evaluation of GenAI systems using hybrid human/proxy annotations. It implements semi-supervised statistical inference methods (PPI, ASI, Classical) that combine a small set of labeled data with a large set of proxy-labeled data to produce valid, debiased statistical estimates.
 
 - Package name on PyPI: `glide-py`
 - Python 3.12+, managed with `uv`
@@ -61,15 +61,14 @@ Every PR must satisfy all of the following before merge:
 - 100% coverage is enforced
 - Test names: `test_<name_of_tested_function>` with optional descriptive suffixes (e.g., `test_generate_binary_dataset_invalid_correlation`)
 - One test per distinct function call — do not write redundant tests
-- Use the smallest dataset possible (typically 2 records, rarely more than 10); tests must be lightning fast
-- Use fixtures to factorize pervasive test elements (shared datasets, estimator instances, etc.)
+- Use the smallest arrays possibles (typically 2 elements, rarely more than 10); tests must be lightning fast
+- Use fixtures to factorize pervasive test elements (shared arrays, estimator instances, etc.)
 - Existing test files are the canonical reference for structure and patterns — follow `test_ppi.py`, `test_simulated_datasets.py`, etc. when writing new test files
 - Always use `pytest.approx` when comparing floating point values in tests.
 
 ## Code Conventions
 
 - Line length: 120 (configured in ruff)
-- Method parameters for Dataset field names use `*_field` suffix (e.g., `label_field`, `score_field`)
 
 ### Naming
 

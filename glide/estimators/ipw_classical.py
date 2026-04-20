@@ -10,7 +10,7 @@ class IPWClassicalMeanEstimator:
 
     Extends the classical sample mean to handle non-uniform sampling.
     Each observation y_i is reweighted by 1/π_i, where π_i is the
-    pre-determined probability that record i was selected for labeling.
+    pre-determined probability that sample i was selected for labeling.
     Some values of y_i may be NaN corresponding to unsampled instances.
 
     For the computation to be statistically valid, the sum of π_i should be

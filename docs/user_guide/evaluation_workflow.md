@@ -44,7 +44,7 @@ You start with a fully proxy-labelled dataset. The sampler's job is to assign a 
 
 ### Guided sampling
 
-Samplers can exploit the structure of the data or auxiliary information to allocate the annotation budget more efficiently. For example, a sampler may use predefined strata to ensure balanced coverage across subgroups, or it may rely on per-instance auxiliary signals (such as proxy label uncertainty) to focus annotation on the most informative records.
+Samplers can exploit the structure of the data or auxiliary information to allocate the annotation budget more efficiently. For example, a sampler may use predefined strata to ensure balanced coverage across subgroups, or it may rely on per-instance auxiliary signals (such as proxy label uncertainty) to focus annotation on the most informative samples.
 
 ### Choosing a sampler
 
@@ -60,7 +60,7 @@ The selected samples ($\xi_i = 1$) must be labelled by humans before estimation 
 
 For many evaluation tasks, such as assessing factual accuracy, safety, or subtle reasoning, the annotation requires genuine expertise: annotators must be qualified to make reliable judgements on the items at hand. Expert annotation is accurate, but calling upon it comes at a cost, which is why allocating the annotation budget efficiently matters.
 
-Once all selected records have been labelled, you have everything needed to run the estimator.
+Once all selected samples have been labelled, you have everything needed to run the estimator.
 
 ---
 

@@ -15,12 +15,12 @@ def test_proportional_matches_uniform_equal_strata(sampler):
     budget = 9
 
     groups = np.repeat(np.arange(n_strata), n_per_stratum)
-    record_indices = np.tile(np.arange(n_per_stratum), n_strata)
-    y_proxy = groups + record_indices * 0.1
+    sample_indices = np.tile(np.arange(n_per_stratum), n_strata)
+    y_proxy = groups + sample_indices * 0.1
 
     pi, _ = sampler.sample(y_proxy, groups, budget, strategy="proportional", random_seed=0)
 
-    # With equal-sized strata, proportional allocation gives uniform pi across all records
+    # With equal-sized strata, proportional allocation gives uniform pi across all samples
     total_size = len(y_proxy)
     expected_pi = budget / total_size
 
