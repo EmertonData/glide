@@ -89,7 +89,7 @@ glide/
     └── export.py
 ```
 
-**How the pieces fit together.** Estimators accept raw NumPy arrays and return a `MeanInferenceResult` subclass: semi-supervised estimators return a `SemiSupervisedMeanInferenceResult`, classical ones a `ClassicalMeanInferenceResult`. Every result embeds a `ConfidenceInterval` (e.g. `CLTConfidenceInterval`). Samplers produce the labeled arrays that estimators consume. The `io` module serialises result objects.
+**How the pieces fit together.** Estimators accept raw NumPy arrays and return a `MeanInferenceResult` subclass: prediction-powered estimators return a `PredictionPoweredMeanInferenceResult`, classical ones a `ClassicalMeanInferenceResult`. Every result embeds a `ConfidenceInterval` (e.g. `CLTConfidenceInterval`). Samplers produce the labeled arrays that estimators consume. The `io` module serialises result objects.
 
 ---
 

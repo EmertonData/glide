@@ -4,7 +4,7 @@ import numpy as np
 from numpy.typing import NDArray
 
 from glide.confidence_intervals import BootstrapConfidenceInterval
-from glide.core.mean_inference_result import SemiSupervisedMeanInferenceResult
+from glide.core.mean_inference_result import PredictionPoweredMeanInferenceResult
 from glide.core.utils import compute_effective_sample_size
 
 
@@ -118,7 +118,7 @@ class PTDMeanEstimator:
         n_bootstrap: int = 2000,
         power_tuning: bool = True,
         random_seed: Optional[int] = None,
-    ) -> SemiSupervisedMeanInferenceResult:
+    ) -> PredictionPoweredMeanInferenceResult:
         """Estimate the population mean using Predict-Then-Debias (PTD).
 
         Combines a small set of labeled samples with a large set of unlabeled
@@ -155,7 +155,7 @@ class PTDMeanEstimator:
 
         Returns
         -------
-        SemiSupervisedMeanInferenceResult
+        PredictionPoweredMeanInferenceResult
             Contains a ``BootstrapConfidenceInterval``, metric name, estimator
             name (``"PTDMeanEstimator"``), and counts ``n_true`` / ``n_proxy``.
         """
@@ -185,7 +185,7 @@ class PTDMeanEstimator:
             confidence_level=confidence_level,
         )
         effective_sample_size = compute_effective_sample_size(y_true_labeled, confidence_interval.var)
-        result = SemiSupervisedMeanInferenceResult(
+        result = PredictionPoweredMeanInferenceResult(
             confidence_interval=confidence_interval,
             metric_name=metric_name,
             estimator_name=self.__class__.__name__,

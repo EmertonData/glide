@@ -4,7 +4,7 @@ import numpy as np
 import pytest
 from numpy.typing import NDArray
 
-from glide.core.mean_inference_result import SemiSupervisedMeanInferenceResult
+from glide.core.mean_inference_result import PredictionPoweredMeanInferenceResult
 from glide.estimators.asi import ASIMeanEstimator
 
 # --- helpers ---
@@ -131,7 +131,7 @@ def test_compute_std_estimate_known_values(estimator, rectified_labels):
 def test_estimate_is_valid_inference_result(estimator, arrays):
     y_true, y_proxy, sampling_probabilities = arrays
     result = estimator.estimate(y_true, y_proxy, sampling_probabilities)
-    assert isinstance(result, SemiSupervisedMeanInferenceResult)
+    assert isinstance(result, PredictionPoweredMeanInferenceResult)
     assert np.isfinite(result.confidence_interval.lower_bound)
     assert np.isfinite(result.confidence_interval.upper_bound)
     assert result.confidence_interval.lower_bound < result.confidence_interval.upper_bound

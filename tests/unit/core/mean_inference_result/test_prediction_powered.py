@@ -1,9 +1,9 @@
 from glide.confidence_intervals import CLTConfidenceInterval
-from glide.core.mean_inference_result import SemiSupervisedMeanInferenceResult
+from glide.core.mean_inference_result import PredictionPoweredMeanInferenceResult
 
-# --- SemiSupervisedMeanInferenceResult ---
+# --- PredictionPoweredMeanInferenceResult ---
 
-_SEMI_SUPERVISED = SemiSupervisedMeanInferenceResult(
+_PREDICTION_POWERED = PredictionPoweredMeanInferenceResult(
     confidence_interval=CLTConfidenceInterval(mean=0.7, std=0.05, confidence_level=0.95),
     metric_name="accuracy",
     estimator_name="PPI",
@@ -13,7 +13,7 @@ _SEMI_SUPERVISED = SemiSupervisedMeanInferenceResult(
 )
 
 
-def test_semi_supervised_str():
+def test_prediction_powered_str():
     expected = (
         "Metric: accuracy\n"
         "Point Estimate: 0.700\n"
@@ -23,4 +23,4 @@ def test_semi_supervised_str():
         "n_proxy: 90\n"
         "Effective Sample Size: 200"
     )
-    assert str(_SEMI_SUPERVISED) == expected
+    assert str(_PREDICTION_POWERED) == expected
