@@ -13,7 +13,8 @@ class MeanInferenceResult:
 
     @property
     def width(self) -> float:
-        return self.confidence_interval.upper_bound - self.confidence_interval.lower_bound
+        result = self.confidence_interval.width
+        return result
 
     @property
     def mean(self) -> float:

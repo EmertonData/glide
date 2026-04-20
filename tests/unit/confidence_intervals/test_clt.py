@@ -76,3 +76,49 @@ def test_null_hypothesis_invalid_alternative():
     ci = CLTConfidenceInterval(mean=0.0, std=1.0)
     with pytest.raises(ValueError, match="alternative must be 'two-sided', 'larger', or 'smaller'"):
         ci.test_null_hypothesis(h0_value=0.0, alternative="invalid")  # ty: ignore
+
+
+# --- test caching ---
+
+
+def test_bounds_cached_after_initialization():
+    ci = CLTConfidenceInterval(mean=5.0, std=1.0, confidence_level=0.95)
+    lower_first = ci.lower_bound
+    upper_first = ci.upper_bound
+    # Access multiple times should return the same cached values
+    assert ci.lower_bound == pytest.approx(lower_first)
+    assert ci.upper_bound == pytest.approx(upper_first)
+
+
+def test_cache_invalidated_on_confidence_level_change():
+    ci = CLTConfidenceInterval(mean=0.0, std=1.0, confidence_level=0.95)
+    lower_95 = ci.lower_bound
+    upper_95 = ci.upper_bound
+    width_95 = ci.width
+
+    # Change confidence level
+    ci.confidence_level = 0.99
+    lower_99 = ci.lower_bound
+    upper_99 = ci.upper_bound
+    width_99 = ci.width
+
+    # Bounds should be wider at 99% confidence
+    assert lower_99 < lower_95
+    assert upper_99 > upper_95
+    assert width_99 > width_95
+
+
+def test_width_cached():
+    ci = CLTConfidenceInterval(mean=0.0, std=1.0, confidence_level=0.95)
+    # Width should equal upper_bound - lower_bound
+    expected_width = ci.upper_bound - ci.lower_bound
+    assert ci.width == pytest.approx(expected_width)
+
+
+def test_confidence_level_validation():
+    with pytest.raises(ValueError, match="confidence_level must be in \\(0, 1\\)"):
+        CLTConfidenceInterval(mean=0.0, std=1.0, confidence_level=0.0)
+    with pytest.raises(ValueError, match="confidence_level must be in \\(0, 1\\)"):
+        CLTConfidenceInterval(mean=0.0, std=1.0, confidence_level=1.0)
+    with pytest.raises(ValueError, match="confidence_level must be in \\(0, 1\\)"):
+        CLTConfidenceInterval(mean=0.0, std=1.0, confidence_level=1.5)

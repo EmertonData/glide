@@ -33,7 +33,8 @@ def to_json(result: MeanInferenceResult) -> str:
         "confidence_level": 0.95,
         "var": 1,
         "lower_bound": -1.959963984540054,
-        "upper_bound": 1.959963984540054
+        "upper_bound": 1.959963984540054,
+        "width": ...
       },
       "metric_name": "metric",
       "estimator_name": "none",
@@ -44,7 +45,16 @@ def to_json(result: MeanInferenceResult) -> str:
     data = asdict(result)
     data["mean"] = result.mean
     data["std"] = result.std
-    data["confidence_interval"]["lower_bound"] = result.confidence_interval.lower_bound
-    data["confidence_interval"]["upper_bound"] = result.confidence_interval.upper_bound
+    # Reconstruct confidence_interval dict in desired field order
+    ci_dict = {
+        "mean": result.confidence_interval.mean,
+        "std": result.confidence_interval.std,
+        "confidence_level": result.confidence_interval.confidence_level,
+        "var": result.confidence_interval.std**2,
+        "lower_bound": result.confidence_interval.lower_bound,
+        "upper_bound": result.confidence_interval.upper_bound,
+        "width": result.confidence_interval.width,
+    }
+    data["confidence_interval"] = ci_dict
     json_str = json.dumps(data, indent=2)
     return json_str

@@ -22,6 +22,11 @@ class ConfidenceInterval(Protocol):
         """Upper bound of the confidence interval."""
         ...
 
+    @property
+    def width(self) -> float:
+        """Width of the confidence interval."""
+        ...
+
     def test_null_hypothesis(
         self,
         h0_value: float,

@@ -37,6 +37,7 @@ def test_to_json_semisupervised_mean_inference_result():
             "var": pytest.approx(0.0025, abs=1e-4),
             "lower_bound": pytest.approx(0.6020018007729973, abs=1e-2),
             "upper_bound": pytest.approx(0.7979981992270027, abs=1e-2),
+            "width": pytest.approx(0.1959981992270027, abs=1e-2),
         },
     }
     assert parsed == expected
@@ -63,6 +64,7 @@ def test_to_json_classical():
             "var": pytest.approx(0.0025, abs=1e-4),
             "lower_bound": pytest.approx(0.6020018007729973, abs=1e-2),
             "upper_bound": pytest.approx(0.7979981992270027, abs=1e-2),
+            "width": pytest.approx(0.1959981992270027, abs=1e-2),
         },
     }
     assert parsed == expected
