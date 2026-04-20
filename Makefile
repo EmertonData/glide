@@ -59,6 +59,7 @@ clean:
 	rm -f .coverage
 	rm -rf htmlcov
 	rm -rf site
+	rm -rf docs/generated_examples
 	find . -type d -name "__pycache__" -exec rm -rf {} +
 
 build:
