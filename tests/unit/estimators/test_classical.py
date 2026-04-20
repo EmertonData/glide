@@ -27,6 +27,11 @@ def test_preprocess_removes_nan(estimator):
     np.testing.assert_array_equal(result, np.array([2.0, 4.0]))
 
 
+def test_preprocess_raises_when_fewer_than_two_non_nan_values(estimator):
+    with pytest.raises(ValueError):
+        estimator._preprocess(np.array([np.nan, 1.0]))
+
+
 # --- estimate ---
 
 

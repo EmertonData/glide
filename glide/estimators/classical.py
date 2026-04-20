@@ -28,7 +28,10 @@ class ClassicalMeanEstimator:
     """
 
     def _preprocess(self, y: NDArray) -> NDArray:
-        return y[~np.isnan(y)]
+        filtered = y[~np.isnan(y)]
+        if len(filtered) < 2:
+            raise ValueError(f"At least 2 non-NaN values are required, got {len(filtered)}.")
+        return filtered
 
     def estimate(
         self,
