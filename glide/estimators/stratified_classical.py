@@ -29,15 +29,6 @@ class StratifiedClassicalMeanEstimator:
     n: 4
     """
 
-    def _compute_mean_estimate(self, y: NDArray) -> float:
-        mean = np.nanmean(y)
-        return mean
-
-    def _compute_std_estimate(self, y: NDArray) -> float:
-        n_not_nan = np.sum(~np.isnan(y))
-        std = np.nanstd(y, ddof=1) / np.sqrt(n_not_nan)
-        return std
-
     def estimate(
         self,
         y: NDArray,
@@ -87,9 +78,10 @@ class StratifiedClassicalMeanEstimator:
         for stratum_id in unique_strata:
             stratum_mask = groups == stratum_id
             y_stratum = y[stratum_mask]
+            y_stratum = y_stratum[~np.isnan(y_stratum)]
             w_k = len(y_stratum) / n_total
-            mean_k = self._compute_mean_estimate(y_stratum)
-            std_k = self._compute_std_estimate(y_stratum)
+            mean_k = np.mean(y_stratum)
+            std_k = np.std(y_stratum, ddof=1) / np.sqrt(len(y_stratum))
             weighted_mean += w_k * mean_k
             weighted_var += w_k**2 * std_k**2
 

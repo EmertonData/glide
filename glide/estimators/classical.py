@@ -27,14 +27,8 @@ class ClassicalMeanEstimator:
     n: 4
     """
 
-    def _compute_mean_estimate(self, y: NDArray) -> float:
-        mean = np.nanmean(y)
-        return mean
-
-    def _compute_std_estimate(self, y: NDArray) -> float:
-        n_not_nan = np.sum(~np.isnan(y))
-        std = np.nanstd(y, ddof=1) / np.sqrt(n_not_nan)
-        return std
+    def _preprocess(self, y: NDArray) -> NDArray:
+        return y[~np.isnan(y)]
 
     def estimate(
         self,
@@ -61,8 +55,9 @@ class ClassicalMeanEstimator:
             the estimator name (``"ClassicalMeanEstimator"``), and ``n``
             (number of observations).
         """
-        mean = self._compute_mean_estimate(y)
-        std = self._compute_std_estimate(y)
+        y_clean = self._preprocess(y)
+        mean = np.mean(y_clean)
+        std = np.std(y_clean, ddof=1) / np.sqrt(len(y_clean))
         ci = CLTConfidenceInterval(
             mean=mean,
             std=std,
@@ -72,6 +67,6 @@ class ClassicalMeanEstimator:
             confidence_interval=ci,
             metric_name=metric_name,
             estimator_name=self.__class__.__name__,
-            n=len(y),
+            n=len(y_clean),
         )
         return result
