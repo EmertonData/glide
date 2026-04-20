@@ -5,7 +5,7 @@ from numpy.typing import NDArray
 from glide.estimators.ppi_core import (
     _compute_ppi_mean_estimate,
     _compute_ppi_std_estimate,
-    _compute_ppi_tuning_scalar,
+    _compute_ppi_tuning_parameter,
 )
 
 
@@ -24,17 +24,17 @@ def y_proxy_unlabeled() -> NDArray:
     return np.array([6.0, 7.0, 8.0])
 
 
-# --- _compute_ppi_tuning_scalar ---
+# --- _compute_ppi_tuning_parameter ---
 
 
-def test_compute_ppi_tuning_scalar_returns_one_when_power_tuning_false(y_true, y_proxy_labeled, y_proxy_unlabeled):
-    result = _compute_ppi_tuning_scalar(y_true, y_proxy_labeled, y_proxy_unlabeled, power_tuning=False)
+def test_compute_ppi_tuning_parameter_returns_one_when_power_tuning_false(y_true, y_proxy_labeled, y_proxy_unlabeled):
+    result = _compute_ppi_tuning_parameter(y_true, y_proxy_labeled, y_proxy_unlabeled, power_tuning=False)
     assert result == 1.0
 
 
-def test_compute_ppi_tuning_scalar_known_value(y_true, y_proxy_labeled, y_proxy_unlabeled):
+def test_compute_ppi_tuning_parameter_known_value(y_true, y_proxy_labeled, y_proxy_unlabeled):
     expected = 0.34
-    result = _compute_ppi_tuning_scalar(y_true, y_proxy_labeled, y_proxy_unlabeled, power_tuning=True)
+    result = _compute_ppi_tuning_parameter(y_true, y_proxy_labeled, y_proxy_unlabeled, power_tuning=True)
     assert result == pytest.approx(expected, abs=0.01)
 
 

@@ -2,7 +2,7 @@ import numpy as np
 from numpy.typing import NDArray
 
 
-def _compute_ppi_tuning_scalar(
+def _compute_ppi_tuning_parameter(
     y_true: NDArray,
     y_proxy_labeled: NDArray,
     y_proxy_unlabeled: NDArray,

@@ -9,7 +9,7 @@ from glide.core.utils import compute_effective_sample_size
 from glide.estimators.ppi_core import (
     _compute_ppi_mean_estimate,
     _compute_ppi_std_estimate,
-    _compute_ppi_tuning_scalar,
+    _compute_ppi_tuning_parameter,
 )
 
 
@@ -117,7 +117,7 @@ class PPIMeanEstimator:
         """
         y_true_labeled, y_proxy_labeled, y_proxy_unlabeled = self._preprocess(y_true, y_proxy)
         n_labeled, n_unlabeled = len(y_true_labeled), len(y_proxy_unlabeled)
-        lambda_ = _compute_ppi_tuning_scalar(y_true_labeled, y_proxy_labeled, y_proxy_unlabeled, power_tuning)
+        lambda_ = _compute_ppi_tuning_parameter(y_true_labeled, y_proxy_labeled, y_proxy_unlabeled, power_tuning)
         mean = _compute_ppi_mean_estimate(y_true_labeled, y_proxy_labeled, y_proxy_unlabeled, lambda_)
         std = _compute_ppi_std_estimate(y_true_labeled, y_proxy_labeled, y_proxy_unlabeled, lambda_)
         confidence_interval = CLTConfidenceInterval(

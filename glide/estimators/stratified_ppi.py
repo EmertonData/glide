@@ -9,7 +9,7 @@ from glide.core.utils import compute_effective_sample_size
 from glide.estimators.ppi_core import (
     _compute_ppi_mean_estimate,
     _compute_ppi_std_estimate,
-    _compute_ppi_tuning_scalar,
+    _compute_ppi_tuning_parameter,
 )
 
 
@@ -158,7 +158,7 @@ class StratifiedPPIMeanEstimator:
             stratum_size = len(y_true_labeled) + len(y_proxy_unlabeled)
             w_k = stratum_size / total_size
 
-            lambda_k = _compute_ppi_tuning_scalar(y_true_labeled, y_proxy_labeled, y_proxy_unlabeled, power_tuning)
+            lambda_k = _compute_ppi_tuning_parameter(y_true_labeled, y_proxy_labeled, y_proxy_unlabeled, power_tuning)
             mean_k = _compute_ppi_mean_estimate(y_true_labeled, y_proxy_labeled, y_proxy_unlabeled, lambda_k)
             std_k = _compute_ppi_std_estimate(y_true_labeled, y_proxy_labeled, y_proxy_unlabeled, lambda_k)
 

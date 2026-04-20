@@ -9,9 +9,7 @@ from glide.core.utils import compute_effective_sample_size
 from glide.estimators.ptd_core import (
     _compute_bootstrap_labeled_means,
     _compute_ptd_bootstrap_estimates,
-    _compute_ptd_tuning_scalar,
-    _compute_unlabeled_proxy_mean,
-    _compute_unlabeled_proxy_var,
+    _compute_ptd_tuning_parameter,
 )
 
 
@@ -126,12 +124,17 @@ class PTDMeanEstimator:
         n_labeled, n_unlabeled = len(y_true_labeled), len(y_proxy_unlabeled)
         rng = np.random.default_rng(random_seed)
 
-        mean_proxy_unlabeled = _compute_unlabeled_proxy_mean(y_proxy_unlabeled)
-        var_proxy_unlabeled = _compute_unlabeled_proxy_var(y_proxy_unlabeled)
-        bootstraps = _compute_bootstrap_labeled_means(y_true_labeled, y_proxy_labeled, n_bootstrap, rng)
-        lambda_ = _compute_ptd_tuning_scalar(bootstraps, var_proxy_unlabeled, power_tuning)
+        mean_proxy_unlabeled = np.mean(y_proxy_unlabeled)
+        var_proxy_unlabeled = np.var(y_proxy_unlabeled, ddof=1) / len(y_proxy_unlabeled)
+        bootstrap_y_true_means, bootstrap_y_proxy_labeled_means = _compute_bootstrap_labeled_means(
+            y_true_labeled, y_proxy_labeled, n_bootstrap, rng
+        )
+        lambda_ = _compute_ptd_tuning_parameter(
+            bootstrap_y_true_means, bootstrap_y_proxy_labeled_means, var_proxy_unlabeled, power_tuning
+        )
         bootstrap_mean_estimates = _compute_ptd_bootstrap_estimates(
-            bootstraps,
+            bootstrap_y_true_means,
+            bootstrap_y_proxy_labeled_means,
             mean_proxy_unlabeled,
             var_proxy_unlabeled,
             lambda_,
