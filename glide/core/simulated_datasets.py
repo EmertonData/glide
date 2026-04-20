@@ -451,9 +451,9 @@ def generate_binary_dataset_with_oracle_sampling(
     4
     >>> len(uncertainty)
     4
-    >>> bool(np.isin(y_true, [0.0, 1.0]).all())
+    >>> bool(np.all(np.isin(y_true, [0.0, 1.0])))
     True
-    >>> bool(np.isin(y_proxy, [0.0, 1.0]).all())
+    >>> bool(np.all(np.isin(y_proxy, [0.0, 1.0])))
     True
     >>> bool(np.all((uncertainty >= 0) & (uncertainty <= 1)))
     True
