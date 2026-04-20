@@ -58,8 +58,8 @@ class BootstrapConfidenceInterval:
             raise ValueError(f"confidence_level must be in (0, 1), got {value}")
         self._confidence_level = value
         alpha_over_two = (1 - value) / 2
-        self.lower_bound = float(np.quantile(self.bootstrap_estimates, alpha_over_two))
-        self.upper_bound = float(np.quantile(self.bootstrap_estimates, 1 - alpha_over_two))
+        self.lower_bound = float(np.quantile(self._sorted_estimates, alpha_over_two))
+        self.upper_bound = float(np.quantile(self._sorted_estimates, 1 - alpha_over_two))
         self.width = self.upper_bound - self.lower_bound
 
     def test_null_hypothesis(
