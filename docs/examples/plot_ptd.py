@@ -55,7 +55,7 @@ ptd_result = PTDMeanEstimator().estimate(y_true, y_proxy, metric_name="Hallucina
 ##############################################################################
 # Plot the PTD estimate with its confidence interval.
 
-label = f"PTD (GLIDE)\n(n={ptd_result.n_true}  +  N={ptd_result.n_proxy})"
+label = f"PTD (GLIDE)\n({ptd_result.n_true}  +  {ptd_result.n_proxy})"
 mean = ptd_result.mean
 lo = ptd_result.confidence_interval.lower_bound
 hi = ptd_result.confidence_interval.upper_bound
