@@ -9,7 +9,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 ## [Next release]
 
 ### ✨ Added
-- Section about the PTD in the user guide.
+- PTD scientific validation notebook
+- Section about PTD in the user guide.
 - Entry for `PTDMeanEstimator` in the ReadMe papers
 - CI workflow to verify notebook execution 
 - `PTDMeanEstimator` for mean estimation with Predict-Then-Debias (bootstrap)
