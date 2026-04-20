@@ -7,7 +7,7 @@ from glide.samplers.active import ActiveSampler
 
 @pytest.fixture
 def uncertainties() -> NDArray:
-    return np.array([i * 0.1 for i in range(1, 10)])
+    return np.arange(1, 10) * 0.1
 
 
 @pytest.fixture
