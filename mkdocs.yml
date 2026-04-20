@@ -95,9 +95,9 @@ nav:
   - Contributing: contributing.md
   - API Reference:
     - Overview: api/index.md
+    - Data Utilities: api/simulated_datasets.md
     - Samplers: api/samplers.md
     - Estimators: api/estimators.md
     - Confidence Intervals: api/confidence_intervals.md
-    - Simulated Data: api/simulated_datasets.md
     - Inference Results: api/core/mean_inference_results.md
     - I/O: api/io.md
