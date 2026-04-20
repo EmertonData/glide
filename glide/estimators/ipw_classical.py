@@ -36,14 +36,6 @@ class IPWClassicalMeanEstimator:
         ipw_weighted_values = np.nan_to_num(y, nan=0) / sampling_probability
         return ipw_weighted_values
 
-    def _compute_mean_estimate(self, ipw_weighted_values: NDArray) -> float:
-        mean = np.mean(ipw_weighted_values)
-        return mean
-
-    def _compute_std_estimate(self, ipw_weighted_values: NDArray) -> float:
-        std = np.std(ipw_weighted_values, ddof=1) / np.sqrt(len(ipw_weighted_values))
-        return std
-
     def estimate(
         self,
         y: NDArray,
@@ -83,8 +75,8 @@ class IPWClassicalMeanEstimator:
 
         ipw_weighted_values = self._compute_ipw_weighted_values(y, sampling_probability)
 
-        mean = self._compute_mean_estimate(ipw_weighted_values)
-        std = self._compute_std_estimate(ipw_weighted_values)
+        mean = np.mean(ipw_weighted_values)
+        std = np.std(ipw_weighted_values, ddof=1) / np.sqrt(len(ipw_weighted_values))
         ci = CLTConfidenceInterval(mean=mean, std=std, confidence_level=confidence_level)
         result = ClassicalMeanInferenceResult(
             confidence_interval=ci,
