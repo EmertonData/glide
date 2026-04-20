@@ -35,6 +35,12 @@
 
 ## Data & Results
 
+### Dataset Utilities
+
+| Module | Description |
+|--------|-------------|
+| [`glide.core.simulated_datasets`](core/datasets.md) | Synthetic dataset generators for validation |
+
 ### Inference Results
 
 | Class | Description |

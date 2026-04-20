@@ -98,5 +98,6 @@ nav:
     - Samplers: api/samplers.md
     - Estimators: api/estimators.md
     - Confidence Intervals: api/confidence_intervals.md
+    - Dataset Utilities: api/core/datasets.md
     - Inference Results: api/core/mean_inference_results.md
     - I/O: api/io.md
