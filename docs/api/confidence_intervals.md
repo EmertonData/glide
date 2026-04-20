@@ -1,6 +1,6 @@
 # Confidence Intervals
 
-## Normal-Approximation
+## Normal Approximation
 
 ### <span class="doc-class-prefix">class</span> glide.confidence_intervals.clt.CLTConfidenceInterval {: #cltconfidenceinterval }
 

@@ -95,9 +95,8 @@ nav:
   - Contributing: contributing.md
   - API Reference:
     - Overview: api/index.md
+    - Samplers: api/samplers.md
     - Estimators: api/estimators.md
     - Confidence Intervals: api/confidence_intervals.md
-    - Samplers: api/samplers.md
-    - Datasets: api/core/datasets.md
     - Inference Results: api/core/mean_inference_results.md
     - I/O: api/io.md
