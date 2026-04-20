@@ -1,4 +1,4 @@
-# Dataset Utilities
+# Simulated Data
 
 ## <span class="doc-module-prefix">module</span> glide.core.simulated_datasets
 

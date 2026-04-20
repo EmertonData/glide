@@ -35,11 +35,11 @@
 
 ## Data & Results
 
-### Dataset Utilities
+### Data Utilities
 
 | Module | Description |
 |--------|-------------|
-| [`glide.core.simulated_datasets`](core/datasets.md) | Synthetic dataset generators for validation |
+| [`glide.core.simulated_datasets`](simulated_datasets.md) | Synthetic dataset generators for validation |
 
 ### Inference Results
 
