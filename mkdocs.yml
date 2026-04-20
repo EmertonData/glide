@@ -42,15 +42,23 @@ extra_css:
 plugins:
   - search
   - mkdocstrings:
+      default_handler: python
       handlers:
         python:
+          paths: [.]
           options:
             docstring_style: numpy
             show_submodules: false
             show_root_heading: false
-            group_by_category: false
-            show_category_heading: false
+            group_by_category: true
+            show_category_heading: true
             show_root_toc_entry: false
+            show_symbol_type_heading: true
+            show_symbol_type_toc: true
+            members_order: alphabetical
+            separate_signature: true
+            show_bases: true
+            show_source: true
   - mkdocs-jupyter:
       include_source: true
       execute: true
