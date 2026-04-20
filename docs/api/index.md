@@ -35,13 +35,6 @@
 
 ## Data & Results
 
-### Data Utilities
-
-| Class/Module | Description |
-|--------------|-------------|
-| [`glide.core.dataset.Dataset`](core/datasets.md#dataset) | Column/record access to array-like data |
-| [`glide.core.simulated_datasets`](core/datasets.md#simulated-data-generation) | Synthetic dataset generators for validation |
-
 ### Inference Results
 
 | Class | Description |
