@@ -10,7 +10,7 @@ from glide.estimators.stratified_classical import StratifiedClassicalMeanEstimat
 
 @pytest.fixture
 def y() -> NDArray:
-    """Observations for two strata (A and B) with two records each.
+    """Observations for two strata (A and B) with two samples each.
 
     Stratum A: y=[1.0, 3.0]  → mean=2.0, std_mean=1.0
     Stratum B: y=[5.0, 7.0]  → mean=6.0, std_mean=1.0
