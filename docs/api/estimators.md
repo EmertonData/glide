@@ -23,7 +23,7 @@
       heading_level: 4
       show_root_heading: false
 
-## Semi-Supervised Methods
+## Prediction-Powered Methods
 
 ### <span class="doc-class-prefix">class</span> glide.estimators.ppi.PPIMeanEstimator {: #ppimeanestimator }
 

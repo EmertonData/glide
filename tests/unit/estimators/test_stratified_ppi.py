@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 
-from glide.core.mean_inference_result import SemiSupervisedMeanInferenceResult
+from glide.core.mean_inference_result import PredictionPoweredMeanInferenceResult
 from glide.estimators.stratified_ppi import StratifiedPPIMeanEstimator
 
 # ── helpers ────────────────────────────────────────────────────────────────────
@@ -131,7 +131,7 @@ def test_estimate_raises_when_stratum_has_too_few_labeled(estimator):
 
 def test_estimate_is_valid_inference_result(estimator, y_true, y_proxy, groups):
     result = estimator.estimate(y_true, y_proxy, groups)
-    assert isinstance(result, SemiSupervisedMeanInferenceResult)
+    assert isinstance(result, PredictionPoweredMeanInferenceResult)
     assert np.isfinite(result.confidence_interval.lower_bound)
     assert np.isfinite(result.confidence_interval.upper_bound)
     assert result.confidence_interval.lower_bound < result.confidence_interval.upper_bound
