@@ -46,7 +46,7 @@
 | Class | Description |
 |-------|-------------|
 | [`ClassicalMeanInferenceResult`](core/mean_inference_results.md#classical-results) | Result object from classical estimators |
-| [`SemiSupervisedMeanInferenceResult`](core/mean_inference_results.md#prediction-powered-results) | Result object from prediction-powered estimators |
+| [`PredictionPoweredMeanInferenceResult`](core/mean_inference_results.md#prediction-powered-results) | Result object from prediction-powered estimators |
 
 ## I/O
 

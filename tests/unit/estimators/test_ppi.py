@@ -3,7 +3,7 @@ import pytest
 from numpy.typing import NDArray
 
 from glide.confidence_intervals import CLTConfidenceInterval
-from glide.core.mean_inference_result import SemiSupervisedMeanInferenceResult
+from glide.core.mean_inference_result import PredictionPoweredMeanInferenceResult
 from glide.estimators.ppi import PPIMeanEstimator
 
 # ── helpers ────────────────────────────────────────────────────────────────────
@@ -120,7 +120,7 @@ def test_compute_std_estimate_known_values(estimator, y_true_labeled, y_proxy_la
 def test_estimate_is_valid_inference_result(estimator, y_arrays):
     y_true, y_proxy = y_arrays
     result = estimator.estimate(y_true, y_proxy)
-    assert isinstance(result, SemiSupervisedMeanInferenceResult)
+    assert isinstance(result, PredictionPoweredMeanInferenceResult)
     assert isinstance(result.confidence_interval, CLTConfidenceInterval)
     assert np.isfinite(result.confidence_interval.lower_bound)
     assert np.isfinite(result.confidence_interval.upper_bound)

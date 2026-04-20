@@ -5,12 +5,12 @@ import pytest
 from glide.confidence_intervals import CLTConfidenceInterval
 from glide.core.mean_inference_result import (
     ClassicalMeanInferenceResult,
-    SemiSupervisedMeanInferenceResult,
+    PredictionPoweredMeanInferenceResult,
 )
 from glide.io import to_json
 
 CI = CLTConfidenceInterval(mean=0.7, std=0.05, confidence_level=0.95)
-RESULT = SemiSupervisedMeanInferenceResult(
+RESULT = PredictionPoweredMeanInferenceResult(
     confidence_interval=CI,
     metric_name="accuracy",
     estimator_name="Test",
@@ -20,7 +20,7 @@ RESULT = SemiSupervisedMeanInferenceResult(
 )
 
 
-def test_to_json_semisupervised_mean_inference_result():
+def test_to_json_prediction_powered_mean_inference_result():
     parsed = json.loads(to_json(RESULT))
     expected = {
         "metric_name": "accuracy",

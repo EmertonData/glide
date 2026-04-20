@@ -5,7 +5,7 @@ class ConfidenceInterval(Protocol):
     """Structural protocol for confidence intervals.
 
     Any class implementing this protocol can be used as a confidence_interval
-    in result objects like SemiSupervisedMeanInferenceResult.
+    in result objects like PredictionPoweredMeanInferenceResult.
     """
 
     confidence_level: float

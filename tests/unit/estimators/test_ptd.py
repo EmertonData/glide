@@ -5,7 +5,7 @@ import pytest
 from numpy.typing import NDArray
 
 from glide.confidence_intervals import BootstrapConfidenceInterval
-from glide.core.mean_inference_result import SemiSupervisedMeanInferenceResult
+from glide.core.mean_inference_result import PredictionPoweredMeanInferenceResult
 from glide.estimators.ptd import PTDMeanEstimator
 
 # ── fixtures ───────────────────────────────────────────────────────────────────
@@ -91,7 +91,7 @@ def test_compute_tuning_parameter_known_value(estimator):
 def test_estimate_returns_valid_inference_result(estimator, y_arrays):
     y_true, y_proxy = y_arrays
     result = estimator.estimate(y_true, y_proxy, n_bootstrap=5, random_seed=0)
-    assert isinstance(result, SemiSupervisedMeanInferenceResult)
+    assert isinstance(result, PredictionPoweredMeanInferenceResult)
     assert isinstance(result.confidence_interval, BootstrapConfidenceInterval)
     assert np.isfinite(result.confidence_interval.lower_bound)
     assert np.isfinite(result.confidence_interval.upper_bound)

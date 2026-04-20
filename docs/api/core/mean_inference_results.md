@@ -8,7 +8,7 @@
 
 ## Prediction-Powered Results
 
-::: glide.core.mean_inference_result.semi_supervised
+::: glide.core.mean_inference_result.prediction_powered
     options:
       show_root_heading: false
 

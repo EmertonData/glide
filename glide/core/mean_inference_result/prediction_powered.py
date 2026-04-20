@@ -5,7 +5,7 @@ from glide.core.mean_inference_result.base import MeanInferenceResult
 
 
 @dataclass(repr=False)
-class SemiSupervisedMeanInferenceResult(MeanInferenceResult):
+class PredictionPoweredMeanInferenceResult(MeanInferenceResult):
     """Mean inference result for prediction-powered methods."""
 
     confidence_interval: ConfidenceInterval
