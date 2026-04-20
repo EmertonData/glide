@@ -36,8 +36,8 @@ plt.rcParams.update(
 )
 
 y_true, y_proxy = generate_binary_dataset(
-    n=200,
-    N=2000,
+    n=200,  # human labeled samples
+    N=2000,  # samples labeled only by the LLM-judge
     true_mean=0.10,
     proxy_mean=0.05,
     correlation=0.65,
