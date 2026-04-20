@@ -62,6 +62,14 @@ plugins:
   - mkdocs-jupyter:
       include_source: true
       execute: true
+  - gallery:
+      examples_dirs:
+        - docs/examples
+      gallery_dirs:
+        - docs/generated_examples
+      within_subsection_order: FileNameSortKey
+      plot_gallery: true
+      run_stale_examples: true
 
 markdown_extensions:
   - attr_list
@@ -87,6 +95,8 @@ nav:
     - PPI: tutorials/ppi.ipynb
     - Stratified PPI: tutorials/stratified_ppi.ipynb
     - ASI: tutorials/asi.ipynb
+  - Examples:
+    - generated_examples/index.md
   - Deep Dive:
     - PPI Validation: deep_dive/ppi_validation.ipynb
     - Stratified PPI Validation: deep_dive/stratified_ppi_validation.ipynb
@@ -101,3 +111,4 @@ nav:
     - Confidence Intervals: api/confidence_intervals.md
     - Inference Results: api/core/mean_inference_results.md
     - I/O: api/io.md
+
