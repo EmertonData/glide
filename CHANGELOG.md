@@ -9,6 +9,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 ## [Next release]
 
 ### ✨ Added
+
+### 🔄 Changed
+
+### 💛 Contributors
+
+---
+
+## [0.4.0] – 2026-04-20
+
+### ✨ Added
 - Example section in the documentation with a page for PTD
 - PTD scientific validation notebook
 - Section about PTD in the user guide
@@ -41,8 +51,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - Image in the user guide explaining the control sample
 
 ### 💛 Contributors
-Thank you to everyone who contributed to this release: @gmartinon-ed, @imerad, @mraki-ed
-
+Thank you to everyone who contributed to this release: @gmartinon-ed, @imerad, @mraki-ed and @vwoelffel-ed
 
 ---
 

@@ -1,6 +1,6 @@
 [project]
 name = "glide-py"
-version = "0.3.0"
+version = "0.4.0"
 authors = [
   {name = "Grégoire Martinon", email = "gregoire.martinon@emerton-data.com"},
   {name = "Ibrahim Merad", email = "ibrahim.merad@kaukana-ventures.com"},
