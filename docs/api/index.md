@@ -17,13 +17,13 @@
 | [`PPIMeanEstimator`](estimators.md#ppimeanestimator) | Combines labeled data with proxy predictions |
 | [`StratifiedPPIMeanEstimator`](estimators.md#stratifiedppimeanestimator) | PPI with per-stratum optimal weighting |
 | [`ASIMeanEstimator`](estimators.md#asimeanestimator) | Active statistical inference with non-uniform sampling |
-| [`PTDMeanEstimator`](estimators.md#ptdmeanestimator) | Predict-then-debias with bootstrap Confidence Intervals |
+| [`PTDMeanEstimator`](estimators.md#ptdmeanestimator) | Predict-then-debias with bootstrap confidence intervals |
 
 ## Confidence Intervals
 
 | Class | Description |
 |-------|-------------|
-| [`CLTConfidenceInterval`](confidence_intervals.md#cltconfidenceinterval) | CLT-based Normal-approximation confidence intervals |
+| [`CLTConfidenceInterval`](confidence_intervals.md#cltconfidenceinterval) | CLT-based normal approximation confidence intervals |
 | [`BootstrapConfidenceInterval`](confidence_intervals.md#bootstrapconfidenceinterval) | Quantile-based bootstrap confidence intervals |
 
 ## Samplers
