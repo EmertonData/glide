@@ -305,7 +305,7 @@ def generate_binary_dataset_with_oracle_sampling(
 
     Parameters
     ----------
-    n_samples : int
+    N : int
         Total number of samples.
     true_mean : float
         Expected mean of y_true. Must be in (0, 1).

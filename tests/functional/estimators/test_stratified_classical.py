@@ -17,7 +17,7 @@ from glide.estimators.stratified_classical import StratifiedClassicalMeanEstimat
 def test_two_equal_strata_matches_classical():
     """Stratified classical on two identical strata produces equivalent mean to classical on a single stratum.
 
-    When both strata contain identical records, the stratified estimator's mean matches
+    When both strata contain identical samples, the stratified estimator's mean matches
     the classical estimator applied to a single stratum. The stratified std is the single-stratum std
     divided by sqrt(2), due to the effective sample size doubling when combining two identical strata.
     """
