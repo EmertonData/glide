@@ -64,11 +64,15 @@ Every PR must satisfy all of the following before merge:
 - Use the smallest arrays possibles (typically 2 elements, rarely more than 10); tests must be lightning fast
 - Use fixtures to factorize pervasive test elements (shared arrays, estimator instances, etc.)
 - Existing test files are the canonical reference for structure and patterns — follow `test_ppi.py`, `test_simulated_datasets.py`, etc. when writing new test files
-- Always use `pytest.approx` when comparing floating point values in tests.
+- Use `pytest.approx(value, abs=0.01)` when comparing scalar floats in tests
+- Use `np.testing.assert_allclose` when comparing arrays of floats in tests
+- Use `np.testing.assert_array_equal` when comparing arrays of strings or categories in tests
 
 ## Code Conventions
 
 - Line length: 120 (configured in ruff)
+- Use `np.hstack` or `np.vstack` instead of `np.concatenate` whenever possible
+- Use NumPy vectorization instead of Python for loops whenever possible
 
 ### Naming
 
