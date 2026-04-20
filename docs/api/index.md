@@ -26,7 +26,7 @@
 | [`CLTConfidenceInterval`](confidence_intervals.md#cltconfidenceinterval) | CLT-based Normal-approximation confidence intervals |
 | [`BootstrapConfidenceInterval`](confidence_intervals.md#bootstrapconfidenceinterval) | Quantile-based bootstrap confidence intervals |
 
-## Sampling
+## Samplers
 
 | Class | Description |
 |-------|-------------|
@@ -49,7 +49,7 @@
 | [`ClassicalMeanInferenceResult`](core/mean_inference_results.md#classical-results) | Result object from classical estimators |
 | [`SemiSupervisedMeanInferenceResult`](core/mean_inference_results.md#semi-supervised-results) | Result object from semi-supervised estimators |
 
-## I/O Utilities
+## I/O
 
 | Module | Description |
 |--------|-------------|
