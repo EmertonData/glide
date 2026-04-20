@@ -32,25 +32,32 @@ class CLTConfidenceInterval:
 
     mean: float
     std: float
-    confidence_level: float = 0.95
     var: float = field(init=False, repr=False)
+    _confidence_level: float = field(init=False, repr=False)
+    lower_bound: float = field(init=False, repr=False)
+    upper_bound: float = field(init=False, repr=False)
+    width: float = field(init=False, repr=False)
 
-    def __post_init__(self) -> None:
-        self.var = self.std**2
-
-    def _z_score(self) -> float:
-        z_score = norm.ppf((1 + self.confidence_level) / 2)
-        return z_score
-
-    @property
-    def lower_bound(self) -> float:
-        result = self.mean - self.std * self._z_score()
-        return result
+    def __init__(self, mean: float, std: float, confidence_level: float = 0.95) -> None:
+        self.mean = mean
+        self.std = std
+        self.var = std**2
+        self.confidence_level = confidence_level
 
     @property
-    def upper_bound(self) -> float:
-        result = self.mean + self.std * self._z_score()
-        return result
+    def confidence_level(self) -> float:
+        return self._confidence_level
+
+    @confidence_level.setter
+    def confidence_level(self, value: float) -> None:
+        if not 0 < value < 1:
+            raise ValueError(f"confidence_level must be in (0, 1), got {value}")
+        self._confidence_level = value
+        alpha_over_two = (1 - value) / 2
+        z_score = norm.ppf(1 - alpha_over_two)
+        self.lower_bound = self.mean - self.std * z_score
+        self.upper_bound = self.mean + self.std * z_score
+        self.width = 2 * self.std * z_score
 
     def test_null_hypothesis(
         self, h0_value: float, alternative: Literal["larger", "smaller", "two-sided"] = "two-sided"

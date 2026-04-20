@@ -8,6 +8,12 @@ def test_default_confidence_level():
     assert ci.confidence_level == 0.95
 
 
+@pytest.mark.parametrize("confidence_level", [0.0, 1.5])
+def test_confidence_level_validation(confidence_level):
+    with pytest.raises(ValueError, match="confidence_level must be in \\(0, 1\\)"):
+        CLTConfidenceInterval(mean=0.0, std=1.0, confidence_level=confidence_level)
+
+
 def test_var_computed_from_std():
     ci = CLTConfidenceInterval(mean=0.0, std=2.0)
     assert ci.var == pytest.approx(4.0)
@@ -23,6 +29,24 @@ def test_upper_bound():
     ci = CLTConfidenceInterval(mean=0.0, std=1.0, confidence_level=0.95)
     expected = 1.96
     assert ci.upper_bound == pytest.approx(expected, abs=0.0001)
+
+
+def test_counds_change_with_confidence_level():
+    ci = CLTConfidenceInterval(mean=0.0, std=1.0, confidence_level=0.95)
+    lower_95 = ci.lower_bound
+    upper_95 = ci.upper_bound
+    width_95 = ci.width
+
+    # Change confidence level
+    ci.confidence_level = 0.99
+    lower_99 = ci.lower_bound
+    upper_99 = ci.upper_bound
+    width_99 = ci.width
+
+    # Bounds should be wider at 99% confidence
+    assert lower_99 < lower_95
+    assert upper_99 > upper_95
+    assert width_99 > width_95
 
 
 # --- test_null_hypothesis ---

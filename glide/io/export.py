@@ -28,12 +28,10 @@ def to_json(result: MeanInferenceResult) -> str:
     >>> print(to_json(inference_result))  # doctest: +ELLIPSIS
     {
       "confidence_interval": {
-        "mean": 0,
-        "std": 1,
         "confidence_level": 0.95,
-        "var": 1,
-        "lower_bound": -1.959963984540054,
-        "upper_bound": 1.959963984540054
+        "lower_bound": -1.95...,
+        "upper_bound": 1.95...,
+        "width": 3.91...
       },
       "metric_name": "metric",
       "estimator_name": "none",
@@ -44,7 +42,13 @@ def to_json(result: MeanInferenceResult) -> str:
     data = asdict(result)
     data["mean"] = result.mean
     data["std"] = result.std
-    data["confidence_interval"]["lower_bound"] = result.confidence_interval.lower_bound
-    data["confidence_interval"]["upper_bound"] = result.confidence_interval.upper_bound
+    # Reconstruct confidence_interval dict in desired field order
+    ci_dict = {
+        "confidence_level": result.confidence_interval.confidence_level,
+        "lower_bound": result.confidence_interval.lower_bound,
+        "upper_bound": result.confidence_interval.upper_bound,
+        "width": result.confidence_interval.width,
+    }
+    data["confidence_interval"] = ci_dict
     json_str = json.dumps(data, indent=2)
     return json_str
