@@ -10,7 +10,7 @@
 | [`StratifiedClassicalMeanEstimator`](estimators.md#stratifiedclassicalmeanestimator) | Classical mean with population-proportional stratification |
 | [`IPWClassicalMeanEstimator`](estimators.md#ipwclassicalmeanestimator) | Classical mean with inverse probability weighting |
 
-### Semi-Supervised Methods
+### Prediction-Powered Methods
 
 | Class | Description |
 |-------|-------------|
@@ -46,7 +46,7 @@
 | Class | Description |
 |-------|-------------|
 | [`ClassicalMeanInferenceResult`](core/mean_inference_results.md#classical-results) | Result object from classical estimators |
-| [`SemiSupervisedMeanInferenceResult`](core/mean_inference_results.md#semi-supervised-results) | Result object from semi-supervised estimators |
+| [`SemiSupervisedMeanInferenceResult`](core/mean_inference_results.md#prediction-powered-results) | Result object from prediction-powered estimators |
 
 ## I/O
 

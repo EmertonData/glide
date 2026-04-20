@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-**GLIDE** (Generated Label Inference & Debiasing Engine) is a Python scientific library for rigorous evaluation of GenAI systems using hybrid human/proxy annotations. It implements semi-supervised statistical inference methods (PPI, ASI, Classical) that combine a small set of labeled data with a large set of proxy-labeled data to produce valid, debiased statistical estimates.
+**GLIDE** (Generated Label Inference & Debiasing Engine) is a Python scientific library for rigorous evaluation of GenAI systems using hybrid human/proxy annotations. It implements prediction-powered statistical inference methods (PPI, ASI, Classical) that combine a small set of labeled data with a large set of proxy-labeled data to produce valid, debiased statistical estimates.
 
 - Package name on PyPI: `glide-py`
 - Python 3.12+, managed with `uv`
@@ -27,7 +27,7 @@ Run a single test file: `uv run pytest tests/unit/test_foo.py -vsx`
 
 The package has multiple layers:
 
-**`glide/estimators/`** — Public API. Statistical estimators (classical, semi-supervised, stratified variants).
+**`glide/estimators/`** — Public API. Statistical estimators (classical, prediction-powered, stratified variants).
 
 **`glide/confidence_intervals/`** — Confidence interval implementations depending on statistical methods.
 
