@@ -53,37 +53,56 @@ fig = go.Figure()
 
 fig.add_trace(
     go.Bar(
-        x=[ptd_label, "True Rate"],
-        y=[mean, TRUE_RATE],
-        marker_color=[C_GLIDE, C_TRUTH],
-        width=0.4,
+        x=[ptd_label],
+        y=[mean],
+        marker_color=[C_GLIDE],
+        width=0.2,
         error_y=dict(
             type="data",
             symmetric=False,
-            array=[hi - mean, 0],
-            arrayminus=[mean - lo, 0],
+            array=[hi - mean],
+            arrayminus=[mean - lo],
             color="black",
             thickness=2,
             width=8,
         ),
-        text=[f"{mean:.1%}<br>[{lo:.1%}, {hi:.1%}]", ""],
-        textposition="outside",
-        textfont=dict(size=13, color=C_GLIDE),
         showlegend=False,
     )
+)
+
+fig.add_annotation(
+    x=ptd_label,
+    y=hi,
+    text=f"{mean:.1%}<br>[{lo:.1%}, {hi:.1%}]",
+    showarrow=False,
+    xanchor="left",
+    xshift=20,
+    font=dict(size=13, color=C_GLIDE),
 )
 
 fig.add_shape(
     type="line",
     x0=-0.5,
-    x1=1.5,
+    x1=0.5,
     y0=TRUE_RATE,
     y1=TRUE_RATE,
     line=dict(color=C_TRUTH, width=2, dash="dash"),
 )
 
+fig.add_annotation(
+    x=0.5,
+    y=TRUE_RATE,
+    xref="x",
+    yref="y",
+    text="True rate",
+    showarrow=False,
+    xanchor="left",
+    xshift=8,
+    font=dict(size=12, color=C_TRUTH),
+)
+
 fig.update_layout(
-    title=dict(text="PTD Delivers an Unbiased, Precise Estimate", font=dict(size=14)),
+    title=dict(text="PTD delivers an unbiased, precise estimate", font=dict(size=14)),
     yaxis=dict(
         title="Hallucination Rate",
         tickformat=".0%",
