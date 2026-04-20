@@ -11,3 +11,95 @@
     </div>
 {% endif %}
 {% endblock content %}
+
+{% block scripts %}
+{{ super() }}
+<script>
+function addHeadingLinks() {
+  // Add anchor link functionality to all headings in main article content
+  const headings = document.querySelectorAll('article h2, article h3, article h4, article h5, article h6');
+
+  headings.forEach(heading => {
+    // Skip if already has a link button
+    if (heading.querySelector('.heading-link')) return;
+
+    // Generate ID if heading doesn't have one
+    if (!heading.id) {
+      heading.id = heading.textContent
+        .toLowerCase()
+        .trim()
+        .replace(/\s+/g, '-')
+        .replace(/[^\w-]/g, '');
+    }
+
+    // Create the link button
+    const linkBtn = document.createElement('a');
+    linkBtn.href = '#' + heading.id;
+    linkBtn.className = 'heading-link';
+    linkBtn.innerHTML = '🔗';
+    linkBtn.title = 'Click to copy link to this section';
+    linkBtn.setAttribute('data-heading-id', heading.id);
+
+    // Apply inline styles
+    Object.assign(linkBtn.style, {
+      marginLeft: '0.5rem',
+      opacity: '0',
+      transition: 'opacity 0.2s ease-in-out',
+      color: '#FF9800',
+      textDecoration: 'none',
+      cursor: 'pointer',
+      display: 'inline-block',
+      fontSize: '1.1em',
+      verticalAlign: 'middle'
+    });
+
+    heading.appendChild(linkBtn);
+
+    // Show on hover
+    heading.addEventListener('mouseenter', function() {
+      const btn = this.querySelector('.heading-link');
+      if (btn) btn.style.opacity = '0.7';
+    });
+
+    heading.addEventListener('mouseleave', function() {
+      const btn = this.querySelector('.heading-link');
+      if (btn) btn.style.opacity = '0';
+    });
+
+    // Copy link to clipboard on click
+    linkBtn.addEventListener('click', function(e) {
+      e.preventDefault();
+      const headingId = this.getAttribute('data-heading-id');
+      const url = window.location.origin + window.location.pathname + '#' + headingId;
+
+      navigator.clipboard.writeText(url).then(() => {
+        // Show feedback
+        const originalText = this.innerHTML;
+        this.innerHTML = '✓';
+        this.style.opacity = '1';
+
+        setTimeout(() => {
+          this.innerHTML = originalText;
+          this.style.opacity = '0.7';
+        }, 2000);
+      }).catch(err => {
+        console.error('Failed to copy:', err);
+      });
+    });
+  });
+}
+
+// Run on initial page load
+document.addEventListener('DOMContentLoaded', addHeadingLinks);
+
+// Also run when content changes (for spa navigation)
+const observer = new MutationObserver(() => {
+  addHeadingLinks();
+});
+
+observer.observe(document.body, {
+  childList: true,
+  subtree: true
+});
+</script>
+{% endblock scripts %}

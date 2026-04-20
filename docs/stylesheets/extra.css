@@ -1,3 +1,83 @@
 .md-grid {
   max-width: 80%;
 }
+
+/* API Reference Type Prefixes */
+
+.doc-class-prefix {
+  background-color: #2196F3;
+  color: white;
+  font-weight: bold;
+  padding: 0.25rem 0.5rem;
+  border-radius: 3px;
+  margin-right: 0.5rem;
+  font-size: 0.9em;
+  font-family: monospace;
+}
+
+.doc-method-prefix {
+  background-color: #FF9800;
+  color: white;
+  font-weight: bold;
+  padding: 0.25rem 0.5rem;
+  border-radius: 3px;
+  margin-right: 0.5rem;
+  font-size: 0.9em;
+  font-family: monospace;
+}
+
+.doc-func-prefix {
+  background-color: #4CAF50;
+  color: white;
+  font-weight: bold;
+  padding: 0.25rem 0.5rem;
+  border-radius: 3px;
+  margin-right: 0.5rem;
+  font-size: 0.9em;
+  font-family: monospace;
+}
+
+.doc-attr-prefix {
+  background-color: #9C27B0;
+  color: white;
+  font-weight: bold;
+  padding: 0.25rem 0.5rem;
+  border-radius: 3px;
+  margin-right: 0.5rem;
+  font-size: 0.9em;
+  font-family: monospace;
+}
+
+/* Full path styling in code blocks */
+h3 code, h4 code {
+  background-color: transparent;
+  color: inherit;
+  font-family: monospace;
+  padding: 0;
+  border-radius: 0;
+}
+
+/* Anchor link styling */
+h3, h4, h5, h6 {
+  position: relative;
+  scroll-margin-top: 4rem;
+}
+
+.heading-link {
+  font-size: 1.1em;
+  vertical-align: middle;
+}
+
+.heading-link:hover {
+  opacity: 1 !important;
+}
+
+/* Make code blocks in API docs more readable */
+.doc code {
+  font-size: 0.9em;
+}
+
+.doc pre code {
+  font-size: 0.85em;
+  line-height: 1.5;
+}
