@@ -135,7 +135,7 @@ The key benefit over global PPI++ becomes apparent when strata differ substantia
 
 ### Power-tuning
 
-Each stratum $k$ receives its **own optimal weight** $\hat{\lambda}_k$, computed with the same closed-form formula as PPI++, restricted to the $n_k$ labeled and $N_k$ unlabeled records within that stratum:
+Each stratum $k$ receives its **own optimal weight** $\hat{\lambda}_k$, computed with the same closed-form formula as PPI++, restricted to the $n_k$ labeled and $N_k$ unlabeled samples within that stratum:
 
 $$\hat{\lambda}_k = \frac{\widehat{\text{Cov}}_{n_k}(Y_k,\, \tilde{Y}_k)}{\left(1 + \tfrac{n_k}{N_k}\right)\widehat{\text{Var}}_{n_k + N_k}(\tilde{Y}_k)}$$
 
@@ -162,7 +162,7 @@ We define $\xi_i \in \{0, 1\}$ as the **sampling indicator**: $\xi_i = 1$ if a g
 
 ### Mean estimation
 
-The core of ASI is a per-record **IPW-corrected effective label**:
+The core of ASI is a per-sample **IPW-corrected effective label**:
 
 $$z_i(\lambda) = \lambda\,\tilde{Y}_i + \xi_i\,\frac{Y_i - \lambda\,\tilde{Y}_i}{\pi_i}$$
 
@@ -171,7 +171,7 @@ Expanding by case:
 - **Unlabeled** ($\xi_i = 0$): $\quad z_i = \lambda\,\tilde{Y}_i$
 - **Labeled** ($\xi_i = 1$): $\quad z_i = \lambda\,\tilde{Y}_i + \dfrac{Y_i - \lambda\,\tilde{Y}_i}{\pi_i}$
 
-For labeled samples, the residual $Y_i - \lambda\,\tilde{Y}_i$ is divided by $\pi_i$. This **up-weights** records that were less likely to be selected, ensuring each labeled sample represents its fair share of the population. The parameter $\lambda$ modulates how much weight the proxy label receives.
+For labeled samples, the residual $Y_i - \lambda\,\tilde{Y}_i$ is divided by $\pi_i$. This **up-weights** samples that were less likely to be selected, ensuring each labeled sample represents its fair share of the population. The parameter $\lambda$ modulates how much weight the proxy label receives.
 
 
 The ASI mean estimator is simply the average of the IPW-corrected labels:
@@ -200,7 +200,7 @@ where $z_{1-\alpha/2}$ is the standard normal quantile (e.g. $z_{0.975} = 1.96$ 
 
 The choice of $\lambda$ directly controls the width of the confidence interval. A poor value can increase variance relative to a human-only estimate. ASI derives a closed-form optimal $\lambda$ by minimising $\hat{\sigma}^2_{\text{SE}}(\lambda)$ analytically.
 
-Define two per-record quantities:
+Define two per-sample quantities:
 
 $$a_i = \tilde{Y}_i\!\left(\frac{\xi_i}{\pi_i} - 1\right), \qquad b_i = Y_i \cdot \frac{\xi_i}{\pi_i}$$
 
