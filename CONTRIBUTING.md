@@ -47,6 +47,16 @@ Install the hooks once after cloning:
 ```bash
 uv run prek install
 ```
+t
+**5. Testing notebooks locally (optional):**
+
+The project includes example notebooks in `docs/`. To test all notebooks locally:
+
+```bash
+make test-notebooks
+```
+
+Note: Notebook testing also runs in CI for all pull requests, so local testing is optional. The CI workflow ensures notebooks are executed and validated before merge.
 
 ---
 
@@ -69,9 +79,8 @@ glide/
 │   ├── ...
 │
 ├── core/                   # Shared building blocks (not part of the public API)
-│   ├── dataset.py                # Dataset container
 │   ├── utils.py                  # General-purpose helpers
-│   ├── simulated_datasets.py     # Synthetic dataset generators for tests
+│   ├── simulated_datasets.py     # Synthetic data generators for tests
 │   └── mean_inference_result/    # Result types returned by estimators
 │       ├── base.py
 │       ├── ...
@@ -101,7 +110,7 @@ New estimators should be backed by a scientific publication; include the referen
 1. **Identify** the inputs, outputs, and any tunable hyperparameters.
 2. **Implement** the estimator class:
    - If your estimator belongs to an existing family, add it to the corresponding file (e.g. PPI-based methods go in `glide/estimators/ppi.py`). Otherwise, create `glide/estimators/<name>.py`.
-   - `estimate(dataset)` runs the method and returns an inference result object. Reuse one from `glide/core` (e.g. a `MeanInferenceResult` subclass) or add a new one there.
+   - `estimate(array1, array2, ...)` runs the method and returns an inference result object. Reuse one from `glide/core` (e.g. a `MeanInferenceResult` subclass) or add a new one there.
    - If your estimator has hyperparameters, these should be optional parameters of `estimate()` with default values.
 3. **Export** the new class from `glide/estimators/__init__.py`.
 4. **Write tests** in `tests/estimators/test_<name>.py`. Cover at minimum:
@@ -109,7 +118,7 @@ New estimators should be backed by a scientific publication; include the referen
    - Known analytical results (e.g., the estimator reduces to the classical mean in special cases).
    - Doctests in the class docstring.
 5. **Write a numpy-style docstring** that includes the paper reference, parameter descriptions, and a small `Examples` section with a minimalistic runnable doctest. See existing estimators for inspiration.
-6. **Add an example notebook** under `docs/examples/` demonstrating the estimator on a synthetic dataset.
+6. **Add an example notebook** under `docs/examples/` demonstrating the estimator on some synthetic data.
 7. **Update `CHANGELOG.md`** under the `[Next release]` section.
 
 ### 3. Documentation
