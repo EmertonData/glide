@@ -6,7 +6,7 @@ from glide.simulators import generate_binary_dataset_with_oracle_sampling
 
 def test_generate_binary_dataset_with_oracle_sampling_empirical_means_and_correlation():
     y_true, y_proxy, uncertainty = generate_binary_dataset_with_oracle_sampling(
-        N=5000, true_mean=0.7, proxy_mean=0.6, correlation=0.5, random_seed=42
+        n_total=5000, true_mean=0.7, proxy_mean=0.6, correlation=0.5, random_seed=42
     )
     assert np.mean(y_true) == pytest.approx(0.7, abs=0.03)
     assert np.mean(y_proxy) == pytest.approx(0.6, abs=0.03)
@@ -18,6 +18,6 @@ def test_generate_binary_dataset_with_oracle_sampling_empirical_means_and_correl
 def test_generate_binary_dataset_with_oracle_rms_error_non_uniform():
     # With lower correlation, uncertainty variation is more visible
     _, _, uncertainty = generate_binary_dataset_with_oracle_sampling(
-        N=1000, true_mean=0.5, proxy_mean=0.5, correlation=0.3, random_seed=42
+        n_total=1000, true_mean=0.5, proxy_mean=0.5, correlation=0.3, random_seed=42
     )
     assert np.std(uncertainty) > 1e-2

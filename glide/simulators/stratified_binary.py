@@ -7,8 +7,8 @@ from glide.simulators.binary import generate_binary_dataset
 
 
 def generate_stratified_binary_dataset(
-    n: List[int],
-    N: List[int],
+    n_labeled: List[int],
+    n_unlabeled: List[int],
     true_mean: List[float],
     proxy_mean: List[float],
     correlation: List[float],
@@ -17,15 +17,15 @@ def generate_stratified_binary_dataset(
     """Generate a synthetic stratified binary-label dataset for evaluation.
 
     Generate multiple strata with potentially different parameters (true_mean, proxy_mean,
-    correlation, n, N per stratum). This enables simulation of heterogeneous data where
+    correlation, n_labeled, n_unlabeled per stratum). This enables simulation of heterogeneous data where
     different groups have different proxy-truth relationships.
 
     Parameters
     ----------
-    n : List[int]
+    n_labeled : List[int]
         Number of samples with both true and proxy labels per stratum.
         Length must equal number of strata.
-    N : List[int]
+    n_unlabeled : List[int]
         Number of samples with proxy labels only per stratum.
         Length must equal number of strata.
     true_mean : List[float]
@@ -43,9 +43,9 @@ def generate_stratified_binary_dataset(
     Returns
     -------
     Tuple[NDArray, NDArray, NDArray]
-        [0]: array of shape ``(n+N,)``, y_true with labeled values and NaN for unlabeled rows
-        [1]: array of shape ``(n+N,)``, y_proxy with all values present
-        [2]: groups: NDArray — shape ``(n+N,)``, integer stratum identifiers
+          0]: array of shape ``(n_labeled+n_unlabeled,)``, y_true with labeled values and NaN for unlabeled rows
+        [1]: array of shape ``(n_labeled+n_unlabeled,)``, y_proxy with all values present
+        [2]: groups: NDArray — shape ``(n_labeled+n_unlabeled,)``, integer stratum identifiers
 
     Raises
     ------
@@ -61,8 +61,8 @@ def generate_stratified_binary_dataset(
     >>> import numpy as np
     >>> from glide.simulators import generate_stratified_binary_dataset
     >>> y_true, y_proxy, groups = generate_stratified_binary_dataset(
-    ...     n=[50, 100],
-    ...     N=[200, 300],
+    ...     n_labeled=[50, 100],
+    ...     n_unlabeled=[200, 300],
     ...     true_mean=[0.6, 0.8],
     ...     proxy_mean=[0.5, 0.7],
     ...     correlation=[0.7, 0.75],
@@ -77,14 +77,14 @@ def generate_stratified_binary_dataset(
     >>> int(np.sum(~np.isnan(y_true)))
     150
     """
-    num_strata = len(n)
+    num_strata = len(n_labeled)
     if num_strata < 1:
         raise ValueError(f"Number of strata must be at least 1, got {num_strata}")
 
     # Validate all lists have the same length
     param_lengths = {
-        "n": len(n),
-        "N": len(N),
+        "n_labeled": len(n_labeled),
+        "n_unlabeled": len(n_unlabeled),
         "true_mean": len(true_mean),
         "proxy_mean": len(proxy_mean),
         "correlation": len(correlation),
@@ -104,8 +104,8 @@ def generate_stratified_binary_dataset(
     for stratum_id in range(num_strata):
         # Generate data for this stratum
         y_true_k, y_proxy_k = generate_binary_dataset(
-            n=n[stratum_id],
-            N=N[stratum_id],
+            n_labeled=n_labeled[stratum_id],
+            n_unlabeled=n_unlabeled[stratum_id],
             true_mean=true_mean[stratum_id],
             proxy_mean=proxy_mean[stratum_id],
             correlation=correlation[stratum_id],

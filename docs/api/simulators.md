@@ -1,4 +1,4 @@
-# Simulated Data
+# Data Simulators
 
 ## <span class="doc-module-prefix">module</span> glide.simulators
 

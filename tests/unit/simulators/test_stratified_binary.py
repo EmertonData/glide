@@ -6,8 +6,8 @@ from glide.simulators.stratified_binary import generate_stratified_binary_datase
 
 def test_generate_stratified_binary_dataset_structure_and_counts():
     y_true, y_proxy, groups = generate_stratified_binary_dataset(
-        n=[1, 2],
-        N=[2, 1],
+        n_labeled=[1, 2],
+        n_unlabeled=[2, 1],
         true_mean=[0.6, 0.8],
         proxy_mean=[0.5, 0.7],
         correlation=[0.75, 0.75],
@@ -28,14 +28,14 @@ def test_generate_stratified_binary_dataset_structure_and_counts():
 
 def test_generate_stratified_binary_dataset_empty_strata_raises():
     with pytest.raises(ValueError, match=r"Number of strata must be at least 1, got 0"):
-        generate_stratified_binary_dataset(n=[], N=[], true_mean=[], proxy_mean=[], correlation=[])
+        generate_stratified_binary_dataset(n_labeled=[], n_unlabeled=[], true_mean=[], proxy_mean=[], correlation=[])
 
 
 def test_generate_stratified_binary_dataset_mismatched_lists_raises():
     with pytest.raises(ValueError, match=r"All input lists must have the same length"):
         generate_stratified_binary_dataset(
-            n=[1, 2],
-            N=[2, 1, 3],
+            n_labeled=[1, 2],
+            n_unlabeled=[2, 1, 3],
             true_mean=[0.5, 0.6],
             proxy_mean=[0.5, 0.6],
             correlation=[0.8, 0.8],
@@ -44,16 +44,16 @@ def test_generate_stratified_binary_dataset_mismatched_lists_raises():
 
 def test_generate_stratified_binary_dataset_reproducibility():
     y_true1, y_proxy1, groups1 = generate_stratified_binary_dataset(
-        n=[1, 2],
-        N=[2, 1],
+        n_labeled=[1, 2],
+        n_unlabeled=[2, 1],
         true_mean=[0.6, 0.8],
         proxy_mean=[0.5, 0.7],
         correlation=[0.75, 0.75],
         random_seed=42,
     )
     y_true2, y_proxy2, groups2 = generate_stratified_binary_dataset(
-        n=[1, 2],
-        N=[2, 1],
+        n_labeled=[1, 2],
+        n_unlabeled=[2, 1],
         true_mean=[0.6, 0.8],
         proxy_mean=[0.5, 0.7],
         correlation=[0.75, 0.75],

@@ -5,8 +5,8 @@ from numpy.typing import NDArray
 
 
 def generate_binary_dataset(
-    n: int,
-    N: int,
+    n_labeled: int,
+    n_unlabeled: int,
     true_mean: float = 0.7,
     proxy_mean: float = 0.6,
     correlation: float = 0.8,
@@ -16,9 +16,9 @@ def generate_binary_dataset(
 
     Parameters
     ----------
-    n : int
+    n_labeled : int
         Number of samples with both true and proxy labels (the labeled subset).
-    N : int
+    n_unlabeled : int
         Number of samples with proxy labels only (the unlabeled subset).
     true_mean : float
         Expected mean value of the true labels.
@@ -32,8 +32,8 @@ def generate_binary_dataset(
     Returns
     -------
     Tuple[NDArray, NDArray]
-        [0]: array of shape ``(n+N,)``, y_true with labeled values and NaN for unlabeled rows
-        [1]: array of shape ``(n+N,)``, y_proxy with all values present
+        [0]: array of shape ``(n_labeled+n_unlabeled,)``, y_true with labeled values and NaN for unlabeled rows
+        [1]: array of shape ``(n_labeled+n_unlabeled,)``, y_proxy with all values present
 
     Raises
     ------
@@ -83,7 +83,7 @@ def generate_binary_dataset(
 
     The four outcomes ``(y_true=0, y_proxy=0)``, ``(y_true=0, y_proxy=1)``,
     ``(y_true=1, y_proxy=0)``, ``(y_true=1, y_proxy=1)`` are encoded as
-    integers 0–3 with probabilities ``[p00, p01, p10, p11]``.  The ``n``
+    integers 0–3 with probabilities ``[p00, p01, p10, p11]``.  The ``n_labeled``
     labeled pairs are drawn in one call via ``numpy.random.Generator.choice``.
 
     **Step 3 — Decoding labels from integers**
@@ -94,7 +94,7 @@ def generate_binary_dataset(
 
     **Step 4 — Unlabeled proxy sampling**
 
-    The ``N`` unlabeled samples have only ``y_proxy`` values, sampled
+    The ``n_unlabeled`` unlabeled samples have only ``y_proxy`` values, sampled
     independently from ``Bernoulli(p_p)`` (marginal proxy distribution), with
     no dependence on ``y_true``.
 
@@ -106,7 +106,7 @@ def generate_binary_dataset(
     --------
     >>> import numpy as np
     >>> from glide.simulators import generate_binary_dataset
-    >>> y_true, y_proxy = generate_binary_dataset(n=100, N=500, random_seed=42)
+    >>> y_true, y_proxy = generate_binary_dataset(n_labeled=100, n_unlabeled=500, random_seed=42)
     >>> len(y_true)
     600
     >>> len(y_proxy)
@@ -151,17 +151,17 @@ def generate_binary_dataset(
     probs = [p00, p01, p10, p11]
 
     # generate the outcome pairs as integers between 0 and 3 inclusive
-    samples = rng.choice(4, p=probs, size=n)
+    samples = rng.choice(4, p=probs, size=n_labeled)
     # extract the true and proxy values via integer division and modulo 2
     # we have 0 = (0, 0), 1 = (0, 1), 2 = (1, 0), 3 = (1, 1)
     y_true_labeled = samples // 2
     y_proxy_labeled = samples % 2
 
     # generate proxy values for unlabeled samples
-    y_proxy_unlabeled = rng.choice(2, p=[1 - p_p, p_p], size=N)
+    y_proxy_unlabeled = rng.choice(2, p=[1 - p_p, p_p], size=n_unlabeled)
 
     # Combine labeled and unlabeled: NaN for unlabeled y_true, all y_proxy values
-    y_true = np.hstack([y_true_labeled.astype(float), np.full(N, np.nan)])
+    y_true = np.hstack([y_true_labeled.astype(float), np.full(n_unlabeled, np.nan)])
     y_proxy = np.hstack([y_proxy_labeled.astype(float), y_proxy_unlabeled.astype(float)])
 
     return y_true, y_proxy

@@ -6,7 +6,14 @@ from glide.simulators import generate_gaussian_dataset
 
 def test_generate_gaussian_dataset_empirical_means_and_correlation():
     y_true, y_proxy = generate_gaussian_dataset(
-        n=500, N=500, true_mean=0.7, true_std=0.2, proxy_mean=0.6, proxy_std=0.3, correlation=0.8, random_seed=42
+        n_labeled=500,
+        n_unlabeled=500,
+        true_mean=0.7,
+        true_std=0.2,
+        proxy_mean=0.6,
+        proxy_std=0.3,
+        correlation=0.8,
+        random_seed=42,
     )
 
     # Extract labeled and unlabeled

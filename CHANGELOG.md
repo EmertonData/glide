@@ -12,8 +12,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### 🔄 Changed
 
-- Refactored `glide.core.simulated_datasets` into dedicated `glide.simulators` package with separate modules for each generator function
-- Refactored all estimators to use common methods
+- Refactored `glide.core.simulated_datasets` into dedicated `glide.simulators` module with separate files for each generator function
 - Replaced "semi-supervised" with "prediction-powered" everywhere in the docs and code
 - Rewrote CLT and Bootstrap confidence intervals to cache lower/upper bounds for a given confidence level
 

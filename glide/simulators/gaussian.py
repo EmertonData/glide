@@ -5,8 +5,8 @@ from numpy.typing import NDArray
 
 
 def generate_gaussian_dataset(
-    n: int,
-    N: int,
+    n_labeled: int,
+    n_unlabeled: int,
     true_mean: float = 0.7,
     true_std: float = 1,
     proxy_mean: float = 0.6,
@@ -18,9 +18,9 @@ def generate_gaussian_dataset(
 
     Parameters
     ----------
-    n : int
+    n_labeled : int
         Number of samples with both true and proxy labels (the labeled subset).
-    N : int
+    n_unlabeled : int
         Number of samples with proxy labels only (the unlabeled subset).
     true_mean : float
         Mean of the true label distribution.
@@ -38,8 +38,8 @@ def generate_gaussian_dataset(
     Returns
     -------
     Tuple[NDArray, NDArray]
-        [0]: array of shape ``(n+N,)``, y_true with labeled values and NaN for unlabeled rows
-        [1]: array of shape ``(n+N,)``, y_proxy with all values present
+        [0]: array of shape ``(n_labeled+n_unlabeled,)``, y_true with labeled values and NaN for unlabeled rows
+        [1]: array of shape ``(n_labeled+n_unlabeled,)``, y_proxy with all values present
 
     Notes
     -----
@@ -85,14 +85,14 @@ def generate_gaussian_dataset(
 
     **Step 2 — Sampling via the linear transform**
 
-    Let ``Z`` be a ``2 × (n+N)`` matrix whose entries are i.i.d. standard normals
+    Let ``Z`` be a ``2 × (n_labeled+n_unlabeled)`` matrix whose entries are i.i.d. standard normals
     ``Z_i ~ N(0, 1)``. Then:
 
     ```
     Y = L @ Z
     ```
 
-    gives a ``2 × (n+N)`` matrix where each column is a zero-mean sample from
+    gives a ``2 × (n_labeled+n_unlabeled)`` matrix where each column is a zero-mean sample from
     ``N(0, Σ)``. In component form, each column ``(Z₁, Z₂)`` maps to:
 
     ```
@@ -114,8 +114,8 @@ def generate_gaussian_dataset(
     y_proxy = proxy_mean + Y[1, :]
     ```
 
-    The first ``n`` columns form the labeled set (both ``y_true`` and ``y_proxy``
-    are observed); columns ``n`` through ``n+N-1`` form the unlabeled set
+    The first ``n_labeled`` columns form the labeled set (both ``y_true`` and ``y_proxy``
+    are observed); columns ``n_labeled`` through ``n_labeled+n_unlabeled-1`` form the unlabeled set
     (only ``y_proxy`` is observed).
     """
     if abs(correlation) > 1:
@@ -124,10 +124,10 @@ def generate_gaussian_dataset(
     angle = np.arccos(correlation)
     lin_transform = np.array([[true_std, 0], [proxy_std * np.cos(angle), proxy_std * np.sin(angle)]])
 
-    Y = lin_transform @ rng.standard_normal(size=(2, n + N))
+    Y = lin_transform @ rng.standard_normal(size=(2, n_labeled + n_unlabeled))
 
     y_true = true_mean + Y[0, :].copy()
-    y_true[n:] = np.nan
+    y_true[n_labeled:] = np.nan
     y_proxy = proxy_mean + Y[1, :]
 
     return y_true, y_proxy
