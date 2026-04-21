@@ -15,8 +15,8 @@ quality metric.
 import plotly.graph_objects as go
 import plotly.io as pio
 
-from glide.core.simulated_datasets import generate_binary_dataset
 from glide.estimators import PTDMeanEstimator
+from glide.simulators import generate_binary_dataset
 
 pio.renderers.default = "sphinx_gallery"
 
@@ -27,8 +27,8 @@ C_TRUTH = "#2C3E50"
 TRUE_RATE = 0.10
 
 y_true, y_proxy = generate_binary_dataset(
-    n=200,  # human labeled samples
-    N=2000,  # samples labeled only by the LLM-judge
+    n_labeled=200,  # human labeled samples
+    n_unlabeled=2000,  # samples labeled only by the LLM-judge
     true_mean=TRUE_RATE,
     proxy_mean=0.05,
     correlation=0.65,

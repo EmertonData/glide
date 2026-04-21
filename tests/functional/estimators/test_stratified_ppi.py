@@ -7,9 +7,9 @@ details, and therefore require larger datasets to hold reliably.
 import numpy as np
 import pytest
 
-from glide.core.simulated_datasets import generate_gaussian_dataset
 from glide.estimators.ppi import PPIMeanEstimator
 from glide.estimators.stratified_ppi import StratifiedPPIMeanEstimator
+from glide.simulators import generate_gaussian_dataset
 
 # ── tests ──────────────────────────────────────────────────────────────────────
 
@@ -24,7 +24,7 @@ def test_two_equal_strata_matches_ppi():
     n_labeled, n_unlabeled = 3, 4
 
     # Generate base numpy arrays
-    y_true, y_proxy = generate_gaussian_dataset(n_labeled, n_unlabeled, random_seed=0)
+    y_true, y_proxy = generate_gaussian_dataset(n_labeled=n_labeled, n_unlabeled=n_unlabeled, random_seed=0)
 
     # Per-stratum PPI reference (single copy)
     ppi_single = PPIMeanEstimator().estimate(y_true, y_proxy)
@@ -56,11 +56,11 @@ def test_stratified_ppi_narrower_ci_with_heterogeneous_strata():
 
     # Stratum A: low proxy noise
     y_true_a, y_proxy_a = generate_gaussian_dataset(
-        n_labeled, n_unlabeled, true_mean=0.6, true_std=0.1, random_seed=random_seed
+        n_labeled=n_labeled, n_unlabeled=n_unlabeled, true_mean=0.6, true_std=0.1, random_seed=random_seed
     )
     # Stratum B: high proxy noise → lower lambda is optimal
     y_true_b, y_proxy_b = generate_gaussian_dataset(
-        n_labeled, n_unlabeled, true_mean=0.4, true_std=1.5, random_seed=random_seed
+        n_labeled=n_labeled, n_unlabeled=n_unlabeled, true_mean=0.4, true_std=1.5, random_seed=random_seed
     )
 
     # Build stratified arrays

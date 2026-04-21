@@ -105,7 +105,7 @@ nav:
   - Contributing: contributing.md
   - API Reference:
     - Overview: api/index.md
-    - Data Utilities: api/simulated_datasets.md
+    - Data Utilities: api/simulators.md
     - Samplers: api/samplers.md
     - Estimators: api/estimators.md
     - Confidence Intervals: api/confidence_intervals.md
