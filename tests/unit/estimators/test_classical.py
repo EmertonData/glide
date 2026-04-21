@@ -18,42 +18,18 @@ def estimator() -> ClassicalMeanEstimator:
     return ClassicalMeanEstimator()
 
 
-@pytest.fixture
-def y() -> NDArray:
-    return np.array([2.0, 4.0, 6.0, 8.0])
+# --- _preprocess ---
 
 
-# --- _compute_mean_estimate ---
+def test_preprocess_removes_nan(estimator):
+    y = np.array([2.0, np.nan, 4.0])
+    result = estimator._preprocess(y)
+    np.testing.assert_array_equal(result, np.array([2.0, 4.0]))
 
 
-def test_compute_mean_estimate_known_values(estimator, y):
-    expected = 5.0
-    result = estimator._compute_mean_estimate(y)
-    assert result == pytest.approx(expected)
-
-
-# --- nan handling ---
-
-
-def test_compute_mean_estimate_ignores_nan(estimator):
-    y = np.array([2.0, 4.0, np.nan, 6.0, 8.0])
-    result = estimator._compute_mean_estimate(y)
-    assert result == pytest.approx(5.0)
-
-
-def test_compute_std_estimate_ignores_nan(estimator):
-    y = np.array([2.0, 4.0, np.nan, 6.0, 8.0])
-    result = estimator._compute_std_estimate(y)
-    assert result == pytest.approx(1.29, abs=0.01)
-
-
-# --- _compute_std_estimate ---
-
-
-def test_compute_std_estimate_known_values(estimator, y):
-    expected = 1.29
-    result = estimator._compute_std_estimate(y)
-    assert result == pytest.approx(expected, abs=0.01)
+def test_preprocess_raises_when_fewer_than_two_non_nan_values(estimator):
+    with pytest.raises(ValueError):
+        estimator._preprocess(np.array([np.nan, 1.0]))
 
 
 # --- estimate ---

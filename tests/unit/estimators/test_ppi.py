@@ -25,21 +25,6 @@ def estimator() -> PPIMeanEstimator:
     return PPIMeanEstimator()
 
 
-@pytest.fixture
-def y_true_labeled() -> NDArray:
-    return np.array([5.0, 6.0, 7.0])
-
-
-@pytest.fixture
-def y_proxy_labeled() -> NDArray:
-    return np.array([4.5, 5.5, 6.5])
-
-
-@pytest.fixture
-def y_proxy_unlabeled() -> NDArray:
-    return np.array([6.0, 7.0, 8.0])
-
-
 # --- _preprocess ---
 
 
@@ -78,40 +63,6 @@ def test_preprocess_raises_on_length_mismatch(estimator):
     y_proxy = np.array([1.0, 2.0])
     with pytest.raises(ValueError, match="y_true and y_proxy must have the same length"):
         estimator._preprocess(y_true, y_proxy)
-
-
-# --- _compute_tuning_parameter ---
-
-
-def test_compute_tuning_parameter_returns_one_when_power_tuning_false(
-    estimator, y_true_labeled, y_proxy_labeled, y_proxy_unlabeled
-):
-    result = estimator._compute_tuning_parameter(y_true_labeled, y_proxy_labeled, y_proxy_unlabeled, power_tuning=False)
-    assert result == 1.0
-
-
-def test_compute_tuning_parameter_known_value(estimator, y_true_labeled, y_proxy_labeled, y_proxy_unlabeled):
-    expected = 0.34
-    result = estimator._compute_tuning_parameter(y_true_labeled, y_proxy_labeled, y_proxy_unlabeled, power_tuning=True)
-    assert result == pytest.approx(expected, abs=0.01)
-
-
-# --- _compute_mean_estimate ---
-
-
-def test_compute_mean_estimate_known_values(estimator, y_true_labeled, y_proxy_labeled, y_proxy_unlabeled):
-    expected = 6.75
-    result = estimator._compute_mean_estimate(y_true_labeled, y_proxy_labeled, y_proxy_unlabeled, _lambda=0.5)
-    assert result == pytest.approx(expected)
-
-
-# --- _compute_std_estimate ---
-
-
-def test_compute_std_estimate_known_values(estimator, y_true_labeled, y_proxy_labeled, y_proxy_unlabeled):
-    expected = 0.41
-    result = estimator._compute_std_estimate(y_true_labeled, y_proxy_labeled, y_proxy_unlabeled, _lambda=0.5)
-    assert result == pytest.approx(expected, abs=1e-2)
 
 
 # --- estimate ---

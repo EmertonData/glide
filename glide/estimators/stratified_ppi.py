@@ -6,6 +6,11 @@ from numpy.typing import NDArray
 from glide.confidence_intervals import CLTConfidenceInterval
 from glide.core.mean_inference_result import PredictionPoweredMeanInferenceResult
 from glide.core.utils import compute_effective_sample_size
+from glide.estimators.ppi_core import (
+    _compute_ppi_mean_estimate,
+    _compute_ppi_std_estimate,
+    _compute_ppi_tuning_parameter,
+)
 
 
 class StratifiedPPIMeanEstimator:
@@ -82,50 +87,6 @@ class StratifiedPPIMeanEstimator:
 
         return strata
 
-    def _compute_tuning_parameter(
-        self,
-        y_true: NDArray,
-        y_proxy_labeled: NDArray,
-        y_proxy_unlabeled: NDArray,
-        power_tuning: bool,
-    ) -> float:
-        if not power_tuning:
-            return 1.0
-        n = len(y_true)
-        N = len(y_proxy_unlabeled)
-        y_proxy_all = np.hstack([y_proxy_labeled, y_proxy_unlabeled])
-        cov = np.cov(y_true, y_proxy_labeled, ddof=1)[0, 1]
-        var = np.var(y_proxy_all, ddof=1)
-        _lambda = cov / ((1 + n / N) * var)
-        return _lambda
-
-    def _compute_mean_estimate(
-        self,
-        y_true: NDArray,
-        y_proxy_labeled: NDArray,
-        y_proxy_unlabeled: NDArray,
-        _lambda: float,
-    ) -> float:
-        rectifier = np.mean(y_true) - _lambda * np.mean(y_proxy_labeled)
-        proxy_mean = _lambda * np.mean(y_proxy_unlabeled)
-        mean_estimate = proxy_mean + rectifier
-        return mean_estimate
-
-    def _compute_std_estimate(
-        self,
-        y_true: NDArray,
-        y_proxy_labeled: NDArray,
-        y_proxy_unlabeled: NDArray,
-        _lambda: float,
-    ) -> float:
-        n = len(y_true)
-        N = len(y_proxy_unlabeled)
-        rectifier_var = np.var(y_true - _lambda * y_proxy_labeled, ddof=1) / n
-        proxy_var = _lambda**2 * np.var(y_proxy_unlabeled, ddof=1) / N
-        var_estimate = proxy_var + rectifier_var
-        std_estimate = np.sqrt(var_estimate)
-        return std_estimate
-
     def estimate(
         self,
         y_true: NDArray,
@@ -197,9 +158,9 @@ class StratifiedPPIMeanEstimator:
             stratum_size = len(y_true_labeled) + len(y_proxy_unlabeled)
             w_k = stratum_size / total_size
 
-            lambda_k = self._compute_tuning_parameter(y_true_labeled, y_proxy_labeled, y_proxy_unlabeled, power_tuning)
-            mean_k = self._compute_mean_estimate(y_true_labeled, y_proxy_labeled, y_proxy_unlabeled, lambda_k)
-            std_k = self._compute_std_estimate(y_true_labeled, y_proxy_labeled, y_proxy_unlabeled, lambda_k)
+            lambda_k = _compute_ppi_tuning_parameter(y_true_labeled, y_proxy_labeled, y_proxy_unlabeled, power_tuning)
+            mean_k = _compute_ppi_mean_estimate(y_true_labeled, y_proxy_labeled, y_proxy_unlabeled, lambda_k)
+            std_k = _compute_ppi_std_estimate(y_true_labeled, y_proxy_labeled, y_proxy_unlabeled, lambda_k)
 
             weighted_mean += w_k * mean_k
             weighted_var += w_k**2 * std_k**2

@@ -63,28 +63,6 @@ def test_preprocess_raises_on_length_mismatch(estimator):
         estimator._preprocess(y_true, y_proxy)
 
 
-# ── _compute_tuning_parameter ────────────────────────────────────────────────────
-
-
-def test_compute_tuning_parameter_returns_one_when_power_tuning_false(estimator):
-    bootstrap_y_true_means = np.array([1.0, 2.0])
-    bootstrap_y_proxy_labeled_means = np.array([1.0, 2.0])
-    result = estimator._compute_tuning_parameter(
-        bootstrap_y_true_means, bootstrap_y_proxy_labeled_means, var_proxy_unlabeled=1.0, power_tuning=False
-    )
-    assert result == 1.0
-
-
-def test_compute_tuning_parameter_known_value(estimator):
-    bootstrap_y_true_means = np.array([1.0, 2.0, 3.0])
-    bootstrap_y_proxy_labeled_means = np.array([2.0, 4.0, 6.0])
-    result = estimator._compute_tuning_parameter(
-        bootstrap_y_true_means, bootstrap_y_proxy_labeled_means, var_proxy_unlabeled=0.5, power_tuning=True
-    )
-    expected = 2.0 / 4.5
-    assert result == pytest.approx(expected)
-
-
 # ── estimate ──────────────────────────────────────────────────────────────────
 
 

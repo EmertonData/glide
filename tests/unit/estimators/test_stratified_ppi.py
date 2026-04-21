@@ -33,14 +33,6 @@ def estimator() -> StratifiedPPIMeanEstimator:
     return StratifiedPPIMeanEstimator()
 
 
-@pytest.fixture
-def y_data():
-    y_true = np.array([5.0, 6.0, 7.0])
-    y_proxy_labeled = np.array([4.5, 5.5, 6.5])
-    y_proxy_unlabeled = np.array([6.0, 7.0, 8.0])
-    return y_true, y_proxy_labeled, y_proxy_unlabeled
-
-
 # --- _preprocess ---
 
 
@@ -77,44 +69,6 @@ def test_preprocess_raises_when_proxy_has_nan(estimator):
     grps = np.array(["A", "A", "B", "B"])
     with pytest.raises(ValueError, match="Input proxy values contain NaN"):
         estimator._preprocess(y_true, y_proxy, grps)
-
-
-# --- _compute_tuning_parameter ---
-
-
-def test_compute_tuning_parameter_returns_one_when_power_tuning_false(estimator):
-    y_true = np.array([5.0, 6.0])
-    y_proxy_labeled = np.array([4.9, 6.1])
-    y_proxy_unlabeled = np.array([5.2, 6.1])
-    result = estimator._compute_tuning_parameter(y_true, y_proxy_labeled, y_proxy_unlabeled, power_tuning=False)
-    assert result == 1.0
-
-
-def test_compute_tuning_parameter_known_values(estimator, y_data):
-    y_true, y_proxy_labeled, y_proxy_unlabeled = y_data
-    expected = 0.34
-    result = estimator._compute_tuning_parameter(y_true, y_proxy_labeled, y_proxy_unlabeled, power_tuning=True)
-    assert result == pytest.approx(expected, abs=0.01)
-
-
-# --- _compute_mean_estimate ---
-
-
-def test_compute_mean_estimate_known_values(estimator, y_data):
-    y_true, y_proxy_labeled, y_proxy_unlabeled = y_data
-    expected = 6.75
-    result = estimator._compute_mean_estimate(y_true, y_proxy_labeled, y_proxy_unlabeled, _lambda=0.5)
-    assert result == pytest.approx(expected)
-
-
-# --- _compute_std_estimate ---
-
-
-def test_compute_std_estimate_known_values(estimator, y_data):
-    y_true, y_proxy_labeled, y_proxy_unlabeled = y_data
-    expected = 0.41
-    result = estimator._compute_std_estimate(y_true, y_proxy_labeled, y_proxy_unlabeled, _lambda=0.5)
-    assert result == pytest.approx(expected, abs=1e-2)
 
 
 # --- estimate ---
