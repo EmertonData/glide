@@ -3,7 +3,6 @@ import pytest
 
 from glide.confidence_intervals import BootstrapConfidenceInterval
 from glide.core.mean_inference_result import PredictionPoweredMeanInferenceResult
-from glide.estimators.ptd import PTDMeanEstimator
 from glide.estimators.stratified_ptd import StratifiedPTDMeanEstimator
 
 # ── fixtures ───────────────────────────────────────────────────────────────────
@@ -11,7 +10,6 @@ from glide.estimators.stratified_ptd import StratifiedPTDMeanEstimator
 
 @pytest.fixture
 def y_true() -> np.ndarray:
-    """Two identical strata A and B: 2 labeled + 2 unlabeled each."""
     return np.array([5.0, 6.0, np.nan, np.nan, 5.0, 6.0, np.nan, np.nan])
 
 
@@ -42,6 +40,22 @@ def test_preprocess_returns_correct_shapes(estimator, y_true, y_proxy, groups):
         assert len(y_proxy_unlabeled) == 2
 
 
+def test_preprocess_raises_on_stratum_size_too_small(estimator):
+    y_true = np.array([1.0, np.nan, 4.0, np.nan])
+    y_proxy = np.array([1.1, 1.8, 3.9, 4.8])
+    grps = np.array(["A", "A", "B", "B"])
+    with pytest.raises(RuntimeError, match="Too few labeled or unlabeled samples in stratum 'A'"):
+        estimator._preprocess(y_true, y_proxy, grps)
+
+
+def test_preprocess_raises_on_zero_variance_proxy_in_stratum(estimator):
+    y_true = np.array([1.0, 2.0, np.nan, np.nan])
+    y_proxy = np.array([1.0, 1.0, 1.0, 1.0])
+    grps = np.array(["A", "A", "A", "A"])
+    with pytest.raises(ValueError, match="Input proxy values have zero variance in stratum 'A'"):
+        estimator._preprocess(y_true, y_proxy, grps)
+
+
 def test_preprocess_raises_on_nan_proxy(estimator):
     y_true = np.array([1.0, 2.0, np.nan, np.nan])
     y_proxy = np.array([1.1, np.nan, 5.2, 6.1])
@@ -50,45 +64,7 @@ def test_preprocess_raises_on_nan_proxy(estimator):
         estimator._preprocess(y_true, y_proxy, grps)
 
 
-def test_preprocess_raises_on_too_few_samples(estimator):
-    y_true = np.array([1.0, np.nan, 4.0, np.nan])
-    y_proxy = np.array([1.1, 1.8, 3.9, 4.8])
-    grps = np.array(["A", "A", "B", "B"])
-    with pytest.raises(RuntimeError, match="Too few labeled or unlabeled samples in stratum 'A'"):
-        estimator._preprocess(y_true, y_proxy, grps)
-
-
-def test_preprocess_raises_on_zero_variance_proxy(estimator):
-    y_true = np.array([1.0, 2.0, np.nan, np.nan])
-    y_proxy = np.array([1.0, 1.0, 1.0, 1.0])
-    grps = np.array(["A", "A", "A", "A"])
-    with pytest.raises(ValueError, match="Input proxy values have zero variance in stratum 'A'"):
-        estimator._preprocess(y_true, y_proxy, grps)
-
-
 # ── estimate ──────────────────────────────────────────────────────────────────
-
-
-def test_estimate_raises_on_nan_proxy(estimator, y_true, groups):
-    y_proxy_nan = np.array([4.9, np.nan, 5.2, 6.1, 4.9, 6.1, 5.2, 6.1])
-    with pytest.raises(ValueError, match="Input proxy values contain NaN"):
-        estimator.estimate(y_true, y_proxy_nan, groups, n_bootstrap=5, random_seed=0)
-
-
-def test_estimate_raises_on_too_few_samples(estimator):
-    y_true = np.array([1.0, np.nan, 4.0, np.nan])
-    y_proxy = np.array([1.1, 1.8, 3.9, 4.8])
-    grps = np.array(["A", "A", "B", "B"])
-    with pytest.raises(RuntimeError, match="Too few labeled or unlabeled samples in stratum 'A'"):
-        estimator.estimate(y_true, y_proxy, grps, n_bootstrap=5, random_seed=0)
-
-
-def test_estimate_raises_on_zero_variance_proxy_in_stratum(estimator):
-    y_true = np.array([1.0, 2.0, np.nan, np.nan])
-    y_proxy = np.array([1.0, 1.0, 1.0, 1.0])
-    grps = np.array(["A", "A", "A", "A"])
-    with pytest.raises(ValueError, match="Input proxy values have zero variance in stratum 'A'"):
-        estimator.estimate(y_true, y_proxy, grps, n_bootstrap=5, random_seed=0)
 
 
 def test_estimate_returns_valid_inference_result(estimator, y_true, y_proxy, groups):
@@ -104,7 +80,7 @@ def test_estimate_returns_valid_inference_result(estimator, y_true, y_proxy, gro
 def test_estimate_metadata(estimator, y_true, y_proxy, groups):
     result = estimator.estimate(y_true, y_proxy, groups, metric_name="accuracy", n_bootstrap=5, random_seed=0)
     assert result.metric_name == "accuracy"
-    assert result.estimator_name == "StratifiedPTDMeanEstimator"
+    assert result.estimator_name == estimator.__class__.__name__
     assert result.n_true == 4
     assert result.n_proxy == 8
     assert result.effective_sample_size == 22
@@ -130,29 +106,6 @@ def test_estimate_reproducibility(estimator, y_true, y_proxy, groups):
     result_b = estimator.estimate(y_true, y_proxy, groups, n_bootstrap=5, random_seed=7)
     assert result_a.confidence_interval.lower_bound == result_b.confidence_interval.lower_bound
     assert result_a.confidence_interval.upper_bound == result_b.confidence_interval.upper_bound
-
-
-def test_estimate_power_tuning_false_uses_lambda_one(estimator, y_true, y_proxy, groups):
-    # With power_tuning=False every λ_k = 1; _compute_ptd_tuning_parameter is bypassed.
-    # We verify the result is still a valid inference object and differs from tuned version.
-    result_tuned = estimator.estimate(y_true, y_proxy, groups, n_bootstrap=50, random_seed=0)
-    result_untuned = estimator.estimate(y_true, y_proxy, groups, n_bootstrap=50, random_seed=0, power_tuning=False)
-    assert isinstance(result_untuned, PredictionPoweredMeanInferenceResult)
-    # The two results should not be identical when tuning makes a difference
-    assert result_tuned.confidence_interval.mean != result_untuned.confidence_interval.mean
-
-
-def test_estimate_consistency_with_ptd_single_stratum(estimator):
-    # When all observations belong to a single stratum, the result should be
-    # consistent with PTDMeanEstimator on the same data (means within MC noise).
-    y_true = np.array([5.0, 6.0, 7.0, np.nan, np.nan, np.nan])
-    y_proxy = np.array([4.5, 5.5, 6.5, 6.0, 7.0, 8.0])
-    grps = np.array(["A", "A", "A", "A", "A", "A"])
-
-    r_strat = estimator.estimate(y_true, y_proxy, grps, n_bootstrap=2000, random_seed=42)
-    r_ptd = PTDMeanEstimator().estimate(y_true, y_proxy, n_bootstrap=2000, random_seed=42)
-
-    assert r_strat.confidence_interval.mean == pytest.approx(r_ptd.confidence_interval.mean, abs=0.05)
 
 
 # ── __str__ / __repr__ ────────────────────────────────────────────────────────

@@ -1,6 +1,7 @@
 import numpy as np
 import pytest
 
+from glide.confidence_intervals import CLTConfidenceInterval
 from glide.core.mean_inference_result import PredictionPoweredMeanInferenceResult
 from glide.estimators.stratified_ppi import StratifiedPPIMeanEstimator
 
@@ -9,12 +10,6 @@ from glide.estimators.stratified_ppi import StratifiedPPIMeanEstimator
 
 @pytest.fixture
 def y_true() -> np.ndarray:
-    """Ground-truth labels for two identical strata (A and B).
-
-    Stratum A: labeled = [(5.0, 4.9), (6.0, 6.1)], unlabeled proxy = [5.2, 6.1]
-    Stratum B: same as A.
-    n_true = 4, n_proxy = 8.
-    """
     return np.array([5.0, 6.0, np.nan, np.nan, 5.0, 6.0, np.nan, np.nan])
 
 
@@ -55,7 +50,6 @@ def test_preprocess_raises_on_stratum_size_too_small(estimator):
 
 
 def test_preprocess_raises_on_zero_variance_proxy_in_stratum(estimator):
-    # Stratum A: 2 labeled + 2 unlabeled, all proxy values are constant
     y_true = np.array([1.0, 2.0, np.nan, np.nan])
     y_proxy = np.array([1.0, 1.0, 1.0, 1.0])  # All constant
     grps = np.array(["A", "A", "A", "A"])
@@ -63,7 +57,7 @@ def test_preprocess_raises_on_zero_variance_proxy_in_stratum(estimator):
         estimator._preprocess(y_true, y_proxy, grps)
 
 
-def test_preprocess_raises_when_proxy_has_nan(estimator):
+def test_preprocess_raises_on_nan_proxy(estimator):
     y_true = np.array([1.0, 2.0, np.nan, np.nan])
     y_proxy = np.array([1.1, np.nan, 5.2, 6.1])  # NaN in proxy
     grps = np.array(["A", "A", "B", "B"])
@@ -74,18 +68,10 @@ def test_preprocess_raises_when_proxy_has_nan(estimator):
 # --- estimate ---
 
 
-def test_estimate_raises_when_stratum_has_too_few_labeled(estimator):
-    # Each stratum has only 1 labeled and 1 unlabeled sample — too few for variance
-    y_true = np.array([1.0, np.nan, 4.0, np.nan])
-    y_proxy = np.array([1.1, 1.8, 3.9, 4.8])
-    grps = np.array(["A", "A", "B", "B"])
-    with pytest.raises(RuntimeError, match="Too few labeled or unlabeled samples in dataset stratum 'A'"):
-        estimator.estimate(y_true, y_proxy, grps)
-
-
 def test_estimate_is_valid_inference_result(estimator, y_true, y_proxy, groups):
     result = estimator.estimate(y_true, y_proxy, groups)
     assert isinstance(result, PredictionPoweredMeanInferenceResult)
+    assert isinstance(result.confidence_interval, CLTConfidenceInterval)
     assert np.isfinite(result.confidence_interval.lower_bound)
     assert np.isfinite(result.confidence_interval.upper_bound)
     assert result.confidence_interval.lower_bound < result.confidence_interval.upper_bound
