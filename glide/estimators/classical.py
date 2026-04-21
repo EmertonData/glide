@@ -27,14 +27,11 @@ class ClassicalMeanEstimator:
     n: 4
     """
 
-    def _compute_mean_estimate(self, y: NDArray) -> float:
-        mean = np.nanmean(y)
-        return mean
-
-    def _compute_std_estimate(self, y: NDArray) -> float:
-        n_not_nan = np.sum(~np.isnan(y))
-        std = np.nanstd(y, ddof=1) / np.sqrt(n_not_nan)
-        return std
+    def _preprocess(self, y: NDArray) -> NDArray:
+        y_clean = y[~np.isnan(y)]
+        if len(y_clean) < 2:
+            raise ValueError(f"At least 2 non-NaN values are required, got {len(y_clean)}.")
+        return y_clean
 
     def estimate(
         self,
@@ -60,9 +57,15 @@ class ClassicalMeanEstimator:
             Contains the CLT-based confidence interval, the metric name,
             the estimator name (``"ClassicalMeanEstimator"``), and ``n``
             (number of observations).
+
+        Raises
+        ------
+        ValueError
+            If ``y`` contains fewer than 2 non-NaN values.
         """
-        mean = self._compute_mean_estimate(y)
-        std = self._compute_std_estimate(y)
+        y_clean = self._preprocess(y)
+        mean = np.mean(y_clean)
+        std = np.std(y_clean, ddof=1) / np.sqrt(len(y_clean))
         ci = CLTConfidenceInterval(
             mean=mean,
             std=std,
@@ -72,6 +75,6 @@ class ClassicalMeanEstimator:
             confidence_interval=ci,
             metric_name=metric_name,
             estimator_name=self.__class__.__name__,
-            n=len(y),
+            n=len(y_clean),
         )
         return result

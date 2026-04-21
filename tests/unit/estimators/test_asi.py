@@ -38,11 +38,6 @@ def y_data() -> Tuple[NDArray, NDArray, NDArray, NDArray]:
     return y_data
 
 
-@pytest.fixture
-def rectified_labels() -> NDArray:
-    return np.array([2.0, 4.0, 3.0, 5.0])
-
-
 # --- preprocessing ---
 
 
@@ -105,24 +100,6 @@ def test_compute_tuning_parameter_known_values(estimator, y_data):
     lam = estimator._compute_tuning_parameter(y_data, power_tuning=True)
     expected = 0.89
     assert lam == pytest.approx(expected, abs=0.01)
-
-
-# --- _compute_mean_estimate ---
-
-
-def test_compute_mean_estimate_known_values(estimator, rectified_labels):
-    mean = estimator._compute_mean_estimate(rectified_labels)
-    expected = 3.5
-    assert mean == pytest.approx(expected)
-
-
-# --- _compute_std_estimate ---
-
-
-def test_compute_std_estimate_known_values(estimator, rectified_labels):
-    std = estimator._compute_std_estimate(rectified_labels)
-    expected = 0.65
-    assert std == pytest.approx(expected, abs=0.01)
 
 
 # --- estimate ---

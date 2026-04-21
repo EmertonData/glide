@@ -6,6 +6,11 @@ from numpy.typing import NDArray
 from glide.confidence_intervals import BootstrapConfidenceInterval
 from glide.core.mean_inference_result import PredictionPoweredMeanInferenceResult
 from glide.core.utils import compute_effective_sample_size
+from glide.estimators.ptd_core import (
+    _compute_ptd_bootstrap_labeled_means,
+    _compute_ptd_bootstrap_mean_estimates,
+    _compute_ptd_tuning_parameter,
+)
 
 
 class PTDMeanEstimator:
@@ -65,50 +70,6 @@ class PTDMeanEstimator:
         y_proxy_unlabeled = y_proxy_all[~labeled_mask]
         return y_true, y_proxy_labeled, y_proxy_unlabeled
 
-    def _compute_bootstrap_labeled_estimates(
-        self,
-        y_true: NDArray,
-        y_proxy_labeled: NDArray,
-        n_bootstrap: int,
-        rng: np.random.Generator,
-    ) -> Tuple[NDArray, NDArray]:
-        n_labeled = len(y_true)
-        idx = rng.choice(n_labeled, size=(n_bootstrap, n_labeled), replace=True)
-        y_true_means = np.mean(y_true[idx], axis=1)
-        y_proxy_labeled_means = np.mean(y_proxy_labeled[idx], axis=1)
-        return y_true_means, y_proxy_labeled_means
-
-    def _compute_tuning_parameter(
-        self,
-        bootstrap_y_true_means: NDArray,
-        bootstrap_y_proxy_labeled_means: NDArray,
-        var_proxy_unlabeled: float,
-        power_tuning: bool,
-    ) -> float:
-        if not power_tuning:
-            return 1.0
-        cov_matrix = np.cov(bootstrap_y_true_means, bootstrap_y_proxy_labeled_means, ddof=1)
-        cov = cov_matrix[0, 1]
-        var_proxy_labeled = cov_matrix[1, 1]
-        denom = var_proxy_labeled + var_proxy_unlabeled
-        _lambda = cov / denom
-        return _lambda
-
-    def _compute_bootstrap_mean_estimates(
-        self,
-        bootstrap_y_true_means: NDArray,
-        bootstrap_y_proxy_labeled_means: NDArray,
-        mean_proxy_unlabeled: float,
-        var_proxy_unlabeled: float,
-        _lambda: float,
-        rng: np.random.Generator,
-    ) -> NDArray:
-        z = rng.standard_normal(len(bootstrap_y_true_means))
-        unlabeled_means = mean_proxy_unlabeled + z * np.sqrt(var_proxy_unlabeled)
-        rectifier_means = bootstrap_y_true_means - _lambda * bootstrap_y_proxy_labeled_means
-        bootstrap_mean_estimates = _lambda * unlabeled_means + rectifier_means
-        return bootstrap_mean_estimates
-
     def estimate(
         self,
         y_true: NDArray,
@@ -165,18 +126,18 @@ class PTDMeanEstimator:
 
         mean_proxy_unlabeled = np.mean(y_proxy_unlabeled)
         var_proxy_unlabeled = np.var(y_proxy_unlabeled, ddof=1) / len(y_proxy_unlabeled)
-        bootstrap_y_true_means, bootstrap_y_proxy_labeled_means = self._compute_bootstrap_labeled_estimates(
+        bootstrap_y_true_means, bootstrap_y_proxy_labeled_means = _compute_ptd_bootstrap_labeled_means(
             y_true_labeled, y_proxy_labeled, n_bootstrap, rng
         )
-        _lambda = self._compute_tuning_parameter(
+        lambda_ = _compute_ptd_tuning_parameter(
             bootstrap_y_true_means, bootstrap_y_proxy_labeled_means, var_proxy_unlabeled, power_tuning
         )
-        bootstrap_mean_estimates = self._compute_bootstrap_mean_estimates(
+        bootstrap_mean_estimates = _compute_ptd_bootstrap_mean_estimates(
             bootstrap_y_true_means,
             bootstrap_y_proxy_labeled_means,
             mean_proxy_unlabeled,
             var_proxy_unlabeled,
-            _lambda,
+            lambda_,
             rng,
         )
 

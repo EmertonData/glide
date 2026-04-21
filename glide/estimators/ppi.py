@@ -6,6 +6,11 @@ from numpy.typing import NDArray
 from glide.confidence_intervals import CLTConfidenceInterval
 from glide.core.mean_inference_result import PredictionPoweredMeanInferenceResult
 from glide.core.utils import compute_effective_sample_size
+from glide.estimators.ppi_core import (
+    _compute_ppi_mean_estimate,
+    _compute_ppi_std_estimate,
+    _compute_ppi_tuning_parameter,
+)
 
 
 class PPIMeanEstimator:
@@ -64,49 +69,6 @@ class PPIMeanEstimator:
         y_proxy_unlabeled = y_proxy_all[~labeled_mask]
         return y_true, y_proxy_labeled, y_proxy_unlabeled
 
-    def _compute_tuning_parameter(
-        self,
-        y_true: NDArray,
-        y_proxy_labeled: NDArray,
-        y_proxy_unlabeled: NDArray,
-        power_tuning: bool,
-    ) -> float:
-        if not power_tuning:
-            return 1.0
-        n_labeled = len(y_true)
-        n_unlabeled = len(y_proxy_unlabeled)
-        y_proxy_all = np.hstack([y_proxy_labeled, y_proxy_unlabeled])
-        cov = np.cov(y_true, y_proxy_labeled, ddof=1)[0, 1]
-        var = np.var(y_proxy_all, ddof=1)
-        _lambda = cov / ((1 + n_labeled / n_unlabeled) * var)
-        return _lambda
-
-    def _compute_mean_estimate(
-        self,
-        y_true: NDArray,
-        y_proxy_labeled: NDArray,
-        y_proxy_unlabeled: NDArray,
-        _lambda: float,
-    ) -> float:
-        rectifier = np.mean(y_true) - _lambda * np.mean(y_proxy_labeled)
-        proxy_mean = _lambda * np.mean(y_proxy_unlabeled)
-        mean_estimate = proxy_mean + rectifier
-        return mean_estimate
-
-    def _compute_std_estimate(
-        self,
-        y_true: NDArray,
-        y_proxy_labeled: NDArray,
-        y_proxy_unlabeled: NDArray,
-        _lambda: float,
-    ) -> float:
-        n_labeled, n_unlabeled = len(y_true), len(y_proxy_unlabeled)
-        rectifier_var = np.var(y_true - _lambda * y_proxy_labeled, ddof=1) / n_labeled
-        proxy_var = _lambda**2 * np.var(y_proxy_unlabeled, ddof=1) / n_unlabeled
-        var_estimate = proxy_var + rectifier_var
-        std_estimate = np.sqrt(var_estimate)
-        return std_estimate
-
     def estimate(
         self,
         y_true: NDArray,
@@ -155,9 +117,9 @@ class PPIMeanEstimator:
         """
         y_true_labeled, y_proxy_labeled, y_proxy_unlabeled = self._preprocess(y_true, y_proxy)
         n_labeled, n_unlabeled = len(y_true_labeled), len(y_proxy_unlabeled)
-        _lambda = self._compute_tuning_parameter(y_true_labeled, y_proxy_labeled, y_proxy_unlabeled, power_tuning)
-        mean = self._compute_mean_estimate(y_true_labeled, y_proxy_labeled, y_proxy_unlabeled, _lambda)
-        std = self._compute_std_estimate(y_true_labeled, y_proxy_labeled, y_proxy_unlabeled, _lambda)
+        lambda_ = _compute_ppi_tuning_parameter(y_true_labeled, y_proxy_labeled, y_proxy_unlabeled, power_tuning)
+        mean = _compute_ppi_mean_estimate(y_true_labeled, y_proxy_labeled, y_proxy_unlabeled, lambda_)
+        std = _compute_ppi_std_estimate(y_true_labeled, y_proxy_labeled, y_proxy_unlabeled, lambda_)
         confidence_interval = CLTConfidenceInterval(
             mean=mean,
             std=std,

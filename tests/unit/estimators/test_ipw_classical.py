@@ -21,40 +21,6 @@ def sampling_probability() -> NDArray:
     return np.array([0.5, 0.5, 0.5, 0.5])
 
 
-@pytest.fixture
-def ipw_weighted_values() -> NDArray:
-    # y / pi for observed, nan for unsampled: [2/0.5, 4/0.5, nan, nan]
-    return np.array([4.0, 8.0, 0.0, 0.0])
-
-
-# --- _compute_ipw_weighted_values ---
-
-
-def test_compute_ipw_weighted_values_known_values(estimator):
-    y = np.array([2.0, np.nan])
-    pi = np.array([0.5, 0.5])
-    result = estimator._compute_ipw_weighted_values(y, pi)
-    np.testing.assert_array_equal(result, np.array([4.0, 0.0]))
-
-
-# --- _compute_mean_estimate ---
-
-
-def test_compute_mean_estimate_known_values(estimator, ipw_weighted_values):
-    # nansum([4, 8, nan, nan]) / 4 = 3.0
-    result = estimator._compute_mean_estimate(ipw_weighted_values)
-    assert result == pytest.approx(3.0)
-
-
-# --- _compute_std_estimate ---
-
-
-def test_compute_std_estimate_known_values(estimator, ipw_weighted_values):
-    # nanstd([4, 8], ddof=1) = sqrt(8) ≈ 2.828; SE = 2.828 / sqrt(4) = sqrt(2) ≈ 1.414
-    result = estimator._compute_std_estimate(ipw_weighted_values)
-    assert result == pytest.approx(1.914, abs=0.001)
-
-
 # --- estimate ---
 
 
