@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 
-from glide.core.simulated_datasets import (
+from glide.simulators import (
     generate_binary_dataset,
     generate_binary_dataset_with_oracle_sampling,
     generate_gaussian_dataset,

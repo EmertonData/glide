@@ -7,9 +7,9 @@ details, and therefore require larger datasets to hold reliably.
 import numpy as np
 import pytest
 
-from glide.core.simulated_datasets import generate_gaussian_dataset
 from glide.estimators.classical import ClassicalMeanEstimator
 from glide.estimators.ipw_classical import IPWClassicalMeanEstimator
+from glide.simulators import generate_gaussian_dataset
 
 # ── tests ──────────────────────────────────────────────────────────────────────
 

@@ -15,8 +15,8 @@ quality metric.
 import plotly.graph_objects as go
 import plotly.io as pio
 
-from glide.core.simulated_datasets import generate_binary_dataset
 from glide.estimators import PTDMeanEstimator
+from glide.simulators import generate_binary_dataset
 
 pio.renderers.default = "sphinx_gallery"
 

@@ -39,7 +39,7 @@
 
 | Module | Description |
 |--------|-------------|
-| [`glide.core.simulated_datasets`](simulated_datasets.md) | Synthetic dataset generators for validation |
+| [`glide.simulators`](simulators.md) | Synthetic dataset generators for validation |
 
 ### Inference Results
 

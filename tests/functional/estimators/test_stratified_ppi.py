@@ -7,9 +7,9 @@ details, and therefore require larger datasets to hold reliably.
 import numpy as np
 import pytest
 
-from glide.core.simulated_datasets import generate_gaussian_dataset
 from glide.estimators.ppi import PPIMeanEstimator
 from glide.estimators.stratified_ppi import StratifiedPPIMeanEstimator
+from glide.simulators import generate_gaussian_dataset
 
 # ── tests ──────────────────────────────────────────────────────────────────────
 
