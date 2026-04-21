@@ -63,17 +63,15 @@ def test_stratified_ppi_narrower_ci_with_heterogeneous_strata():
         n_labeled=n_labeled, n_unlabeled=n_unlabeled, true_mean=0.4, true_std=1.5, random_seed=random_seed
     )
 
-    # Build stratified arrays
-    y_true_stratified = np.hstack([y_true_a, y_true_b])
-    y_proxy_stratified = np.hstack([y_proxy_a, y_proxy_b])
-    groups_stratified = np.hstack([np.full(len(y_true_a), 0), np.full(len(y_true_b), 1)])
-
-    # Standard PPI on the pooled dataset (ignores group structure)
+    # Build data arrays
     y_true_pooled = np.hstack([y_true_a, y_true_b])
     y_proxy_pooled = np.hstack([y_proxy_a, y_proxy_b])
+    groups = np.hstack([np.full(len(y_true_a), 0), np.full(len(y_true_b), 1)])
+
+    # Standard PPI on the pooled dataset (ignores group structure)
     ppi_result = PPIMeanEstimator().estimate(y_true_pooled, y_proxy_pooled)
 
-    stratified_result = StratifiedPPIMeanEstimator().estimate(y_true_stratified, y_proxy_stratified, groups_stratified)
+    stratified_result = StratifiedPPIMeanEstimator().estimate(y_true_pooled, y_proxy_pooled, groups)
 
     # Stratified CI must be strictly narrower
     eps = 1e-1

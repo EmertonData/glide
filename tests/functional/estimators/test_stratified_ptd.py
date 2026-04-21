@@ -31,18 +31,16 @@ def test_stratified_ptd_narrower_ci_with_heterogeneous_strata():
         n_labeled, n_unlabeled, true_mean=0.4, true_std=1.5, random_seed=random_seed
     )
 
-    # Build stratified arrays
-    y_true_stratified = np.hstack([y_true_a, y_true_b])
-    y_proxy_stratified = np.hstack([y_proxy_a, y_proxy_b])
-    groups_stratified = np.hstack([np.full(len(y_true_a), 0), np.full(len(y_true_b), 1)])
-
-    # Standard PTD on the pooled dataset (ignores group structure)
+    # Build data arrays
     y_true_pooled = np.hstack([y_true_a, y_true_b])
     y_proxy_pooled = np.hstack([y_proxy_a, y_proxy_b])
+    groups = np.hstack([np.full(len(y_true_a), 0), np.full(len(y_true_b), 1)])
+
+    # Standard PTD on the pooled dataset (ignores group structure)
     ptd_result = PTDMeanEstimator().estimate(y_true_pooled, y_proxy_pooled, n_bootstrap=2000, random_seed=random_seed)
 
     stratified_result = StratifiedPTDMeanEstimator().estimate(
-        y_true_stratified, y_proxy_stratified, groups_stratified, n_bootstrap=2000, random_seed=random_seed
+        y_true_pooled, y_proxy_pooled, groups, n_bootstrap=2000, random_seed=random_seed
     )
 
     # Stratified CI must be strictly narrower
