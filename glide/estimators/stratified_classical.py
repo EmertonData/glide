@@ -69,6 +69,11 @@ class StratifiedClassicalMeanEstimator:
             Contains the CLT-based confidence interval, the metric name,
             the estimator name (``"StratifiedClassicalMeanEstimator"``), and
             ``n`` (total number of samples).
+
+        Raises
+        ------
+        ValueError
+            If any stratum contains fewer than 2 non-NaN values.
         """
         not_nan_mask = ~np.isnan(y)
         n_total = np.sum(not_nan_mask)
@@ -79,6 +84,12 @@ class StratifiedClassicalMeanEstimator:
         for stratum_id in unique_strata:
             stratum_mask = groups == stratum_id
             y_stratum = y[stratum_mask & not_nan_mask]
+            if len(y_stratum) < 2:
+                raise ValueError(
+                    "At least 2 non-NaN values are required in each stratum, "
+                    f"got {len(y_stratum)} in stratum {stratum_id}."
+                )
+
             w_k = len(y_stratum) / n_total
             mean_k = np.mean(y_stratum)
             var_k = np.var(y_stratum, ddof=1) / len(y_stratum)

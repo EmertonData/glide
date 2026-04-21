@@ -57,6 +57,11 @@ class ClassicalMeanEstimator:
             Contains the CLT-based confidence interval, the metric name,
             the estimator name (``"ClassicalMeanEstimator"``), and ``n``
             (number of observations).
+
+        Raises
+        ------
+        ValueError
+            If ``y`` contains fewer than 2 non-NaN values.
         """
         y_clean = self._preprocess(y)
         mean = np.mean(y_clean)
