@@ -28,7 +28,9 @@ class StratifiedPTDMeanEstimator:
 
     Designed for the "small number of large strata" regime: the bootstrap CI
     becomes unreliable when strata are numerous and small (see Kluger et al., 2025,
-    Appendix B.2).
+    Appendix B.2). Note that the present implementation differs from Algorithm 6
+    therein since it computes per-stratum tuning parameters. However, it remains
+    statistically valid and may in fact be more precise.
 
     References
     ----------
