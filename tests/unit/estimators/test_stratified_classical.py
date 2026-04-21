@@ -63,6 +63,22 @@ def test_estimate_custom_confidence_level(estimator, y, groups):
     assert result.confidence_interval.upper_bound == pytest.approx(expected_upper, abs=0.001)
 
 
+def test_estimate_ignores_nans(estimator, y, groups):
+    y_with_nans = np.hstack([y, np.full(2, np.nan)])
+    groups_with_nans = np.hstack([groups, np.array(["A", "B"])])
+
+    result = estimator.estimate(y, groups, metric_name="performance")
+    result_with_nans = estimator.estimate(y_with_nans, groups_with_nans, metric_name="performance")
+    assert result == result_with_nans
+
+
+def test_estimate_raises_for_stratum_with_fewer_than_two_non_nan_values(y, groups, estimator):
+    y_augmented = np.hstack([y, np.array([np.nan, 1.0])])
+    groups_augmented = np.hstack([groups, np.array(["C", "C"])])
+    with pytest.raises(ValueError):
+        estimator.estimate(y_augmented, groups_augmented)
+
+
 # --- __str__ / __repr__ ---
 
 

@@ -87,21 +87,6 @@ class ASIMeanEstimator:
         rectified_labels = _lambda * y_proxy + xi * (y_true - _lambda * y_proxy) / pi
         return rectified_labels
 
-    def _compute_mean_estimate(
-        self,
-        rectified_labels: NDArray,
-    ) -> float:
-        mean_estimate = np.mean(rectified_labels)
-        return mean_estimate
-
-    def _compute_std_estimate(
-        self,
-        rectified_labels: NDArray,
-    ) -> float:
-        n = len(rectified_labels)
-        std_estimate = np.std(rectified_labels, ddof=1) / np.sqrt(n)
-        return std_estimate
-
     def estimate(
         self,
         y_true: NDArray,
@@ -153,8 +138,9 @@ class ASIMeanEstimator:
         y_data = self._preprocess(y_true, y_proxy, sampling_probabilities)
         _lambda = self._compute_tuning_parameter(y_data, power_tuning)
         rectified_labels = self._compute_rectified_labels(y_data, _lambda)
-        mean_estimate = self._compute_mean_estimate(rectified_labels)
-        std_estimate = self._compute_std_estimate(rectified_labels)
+        mean_estimate = np.mean(rectified_labels)
+        n = len(rectified_labels)
+        std_estimate = np.std(rectified_labels, ddof=1) / np.sqrt(n)
 
         y_true_processed, _, xi, _ = y_data
         n_true = int(xi.sum())

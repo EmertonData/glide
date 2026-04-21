@@ -29,15 +29,6 @@ class StratifiedClassicalMeanEstimator:
     n: 4
     """
 
-    def _compute_mean_estimate(self, y: NDArray) -> float:
-        mean = np.nanmean(y)
-        return mean
-
-    def _compute_std_estimate(self, y: NDArray) -> float:
-        n_not_nan = np.sum(~np.isnan(y))
-        std = np.nanstd(y, ddof=1) / np.sqrt(n_not_nan)
-        return std
-
     def estimate(
         self,
         y: NDArray,
@@ -78,20 +69,32 @@ class StratifiedClassicalMeanEstimator:
             Contains the CLT-based confidence interval, the metric name,
             the estimator name (``"StratifiedClassicalMeanEstimator"``), and
             ``n`` (total number of samples).
+
+        Raises
+        ------
+        ValueError
+            If any stratum contains fewer than 2 non-NaN values.
         """
-        n_total = len(y)
+        not_nan_mask = ~np.isnan(y)
+        n_total = np.sum(not_nan_mask)
         weighted_mean = 0.0
         weighted_var = 0.0
 
         unique_strata = np.unique(groups)
         for stratum_id in unique_strata:
             stratum_mask = groups == stratum_id
-            y_stratum = y[stratum_mask]
+            y_stratum = y[stratum_mask & not_nan_mask]
+            if len(y_stratum) < 2:
+                raise ValueError(
+                    "At least 2 non-NaN values are required in each stratum, "
+                    f"got {len(y_stratum)} in stratum {stratum_id}."
+                )
+
             w_k = len(y_stratum) / n_total
-            mean_k = self._compute_mean_estimate(y_stratum)
-            std_k = self._compute_std_estimate(y_stratum)
+            mean_k = np.mean(y_stratum)
+            var_k = np.var(y_stratum, ddof=1) / len(y_stratum)
             weighted_mean += w_k * mean_k
-            weighted_var += w_k**2 * std_k**2
+            weighted_var += w_k**2 * var_k
 
         std = np.sqrt(weighted_var)
         ci = CLTConfidenceInterval(
