@@ -28,7 +28,7 @@ def estimator() -> StratifiedPTDMeanEstimator:
     return StratifiedPTDMeanEstimator()
 
 
-# ── _preprocess ───────────────────────────────────────────────────────────────
+# ── _preprocess ---
 
 
 def test_preprocess_returns_correct_shapes(estimator, y_true, y_proxy, groups):
@@ -64,7 +64,7 @@ def test_preprocess_raises_on_nan_proxy(estimator):
         estimator._preprocess(y_true, y_proxy, grps)
 
 
-# ── estimate ──────────────────────────────────────────────────────────────────
+# --- estimate ---
 
 
 def test_estimate_returns_valid_inference_result(estimator, y_true, y_proxy, groups):
@@ -108,7 +108,7 @@ def test_estimate_reproducibility(estimator, y_true, y_proxy, groups):
     assert result_a.confidence_interval.upper_bound == result_b.confidence_interval.upper_bound
 
 
-# ── __str__ / __repr__ ────────────────────────────────────────────────────────
+# --- __str__ / __repr__ ---
 
 
 def test_str_format(estimator, y_true, y_proxy, groups):

@@ -74,7 +74,7 @@ class StratifiedPPIMeanEstimator:
             n_labeled = labeled_mask.sum()
             n_unlabeled = stratum_mask.sum() - n_labeled
             if min(n_labeled, n_unlabeled) <= 1:
-                raise RuntimeError(f"Too few labeled or unlabeled samples in dataset stratum '{stratum_id}'")
+                raise RuntimeError(f"Too few labeled or unlabeled samples in stratum '{stratum_id}'")
             if len(np.unique(stratum_y_proxy)) == 1:
                 raise ValueError(f"Input proxy values have zero variance in stratum '{stratum_id}'")
 

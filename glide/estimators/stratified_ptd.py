@@ -18,9 +18,9 @@ class StratifiedPTDMeanEstimator:
 
     Extends PTD to datasets partitioned into strata (e.g. by language, domain,
     or data source). A per-stratum power-tuned lambda is computed independently
-    independently within each stratum, and the final confidence interval is
-    constructed from a single bootstrap distribution obtained by combining the
-    per-stratum bootstrap estimates with population-proportional weights.
+    within each stratum, and the final confidence interval is constructed from a
+    single bootstrap distribution obtained by combining the per-stratum bootstrap
+    estimates with population-proportional weights.
 
     This yields narrower confidence intervals than standard PTD whenever strata
     differ in proxy quality, because the optimal lambda can adapt to each
@@ -73,7 +73,7 @@ class StratifiedPTDMeanEstimator:
 
             labeled_mask = ~np.isnan(stratum_y_true)
             n_labeled = labeled_mask.sum()
-            n_unlabeled = stratum_mask.sum() - n_labeled
+            n_unlabeled = len(stratum_y_true) - n_labeled
             if min(n_labeled, n_unlabeled) <= 1:
                 raise RuntimeError(f"Too few labeled or unlabeled samples in stratum '{stratum_name}'")
             if len(np.unique(stratum_y_proxy)) == 1:
@@ -150,7 +150,8 @@ class StratifiedPTDMeanEstimator:
         ------
         ValueError
             If any proxy value is NaN, or if all proxy values within a stratum are identical
-            (zero variance), which would cause a division by zero when computing lambda.
+            (zero variance), which would cause a division by zero when computing the
+            power-tuning parameter.
         RuntimeError
             If any stratum has fewer than 2 labeled or fewer than 2 unlabeled samples.
         """
