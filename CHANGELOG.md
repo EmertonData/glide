@@ -10,6 +10,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### ✨ Added
 
+- User guide section for Stratified PTD
+
 ### 🔄 Changed
 
 - Refactored all estimators to use common methods
