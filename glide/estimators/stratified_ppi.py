@@ -46,8 +46,6 @@ class StratifiedPPIMeanEstimator:
     >>> groups = np.array([0, 0, 0, 0, 1, 1, 1, 1])
     >>> estimator = StratifiedPPIMeanEstimator()
     >>> result = estimator.estimate(y_true, y_proxy, groups)
-    >>> print(result.estimator_name)
-    StratifiedPPIMeanEstimator
     >>> print(result)
     Metric: Metric
     Point Estimate: 3.086
@@ -105,10 +103,11 @@ class StratifiedPPIMeanEstimator:
             theta = sum_k  w_k * theta_k(lambda_k)
             sigma2 = sum_k  w_k^2 * sigma2_k(lambda_k)
 
-        where ``w_k = (n_k + N_k) / (n + N)`` is the fraction of samples in stratum *k*.
+        where ``w_k`` is the fraction of samples in stratum *k*.
 
-        Note that this assumes n_k / n and N_k / N are approximately the same for all k
-        which is important for statistical validity.
+        Note that this assumes the portions of labeled vs unlabeled samples are
+        approximately the same for all in all strata which is important for statistical
+        validity.
 
         Labeled and unlabeled samples are distinguished by ``NaN`` in ``y_true``:
         a sample is labeled if its ``y_true`` entry is not ``NaN``.
@@ -144,7 +143,8 @@ class StratifiedPPIMeanEstimator:
         ------
         ValueError
             If any proxy value is NaN, or if all proxy values within a stratum are identical
-            (zero variance), which would cause a division by zero when computing lambda.
+            (zero variance), which would cause a division by zero when computing the
+            power-tuning parameter.
         RuntimeError
             If any stratum has fewer than 2 labeled or fewer than 2 unlabeled samples.
         """
