@@ -70,20 +70,20 @@ class StratifiedClassicalMeanEstimator:
             the estimator name (``"StratifiedClassicalMeanEstimator"``), and
             ``n`` (total number of samples).
         """
-        n_total = len(y)
+        not_nan_mask = ~np.isnan(y)
+        n_total = np.sum(not_nan_mask)
         weighted_mean = 0.0
         weighted_var = 0.0
 
         unique_strata = np.unique(groups)
         for stratum_id in unique_strata:
             stratum_mask = groups == stratum_id
-            y_stratum = y[stratum_mask]
-            y_stratum = y_stratum[~np.isnan(y_stratum)]
+            y_stratum = y[stratum_mask & not_nan_mask]
             w_k = len(y_stratum) / n_total
             mean_k = np.mean(y_stratum)
-            std_k = np.std(y_stratum, ddof=1) / np.sqrt(len(y_stratum))
+            var_k = np.var(y_stratum, ddof=1) / len(y_stratum)
             weighted_mean += w_k * mean_k
-            weighted_var += w_k**2 * std_k**2
+            weighted_var += w_k**2 * var_k
 
         std = np.sqrt(weighted_var)
         ci = CLTConfidenceInterval(

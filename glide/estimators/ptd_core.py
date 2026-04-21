@@ -1,4 +1,4 @@
-from typing import Optional, Tuple
+from typing import Tuple
 
 import numpy as np
 from numpy.typing import NDArray
@@ -9,14 +9,9 @@ def _compute_ptd_bootstrap_labeled_means(
     y_proxy_labeled: NDArray,
     n_bootstrap: int,
     rng: np.random.Generator,
-    pi: Optional[NDArray] = None,
 ) -> Tuple[NDArray, NDArray]:
     n_labeled = len(y_true)
-    if pi is None:
-        idx = rng.choice(n_labeled, size=(n_bootstrap, n_labeled), replace=True)
-    else:
-        weights = pi / pi.sum()
-        idx = rng.choice(n_labeled, size=(n_bootstrap, n_labeled), replace=True, p=weights)
+    idx = rng.choice(n_labeled, size=(n_bootstrap, n_labeled), replace=True)
     y_true_means = np.mean(y_true[idx], axis=1)
     y_proxy_labeled_means = np.mean(y_proxy_labeled[idx], axis=1)
     return y_true_means, y_proxy_labeled_means
