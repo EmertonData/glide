@@ -7,9 +7,9 @@ details, and therefore require larger datasets to hold reliably.
 import numpy as np
 import pytest
 
-from glide.core.simulated_datasets import generate_gaussian_dataset
 from glide.estimators.classical import ClassicalMeanEstimator
 from glide.estimators.ipw_classical import IPWClassicalMeanEstimator
+from glide.simulators import generate_gaussian_dataset
 
 # ── tests ──────────────────────────────────────────────────────────────────────
 
@@ -27,7 +27,13 @@ def test_ipw_mean_matches_expected():
     true_std = 0.1
     rng = np.random.default_rng(seed=1)
 
-    y_true, _ = generate_gaussian_dataset(n, 0, true_mean=true_mean, true_std=true_std, random_seed=0)
+    y_true, _ = generate_gaussian_dataset(
+        n_labeled=n,
+        n_unlabeled=0,
+        true_mean=true_mean,
+        true_std=true_std,
+        random_seed=0,
+    )
     sampling_probability = np.clip(rng.random(n), 0.5, 1)
     y_true[rng.random(n) > sampling_probability] = np.nan
 
@@ -49,7 +55,7 @@ def test_uniform_sampling_probability_matches_classical():
     """
     n_labeled = 40
 
-    y_true, _ = generate_gaussian_dataset(n_labeled, 0, random_seed=0)
+    y_true, _ = generate_gaussian_dataset(n_labeled=n_labeled, n_unlabeled=0, random_seed=0)
     sampling_probability = np.ones(n_labeled)
 
     ipw_result = IPWClassicalMeanEstimator().estimate(y_true, sampling_probability)
