@@ -43,7 +43,7 @@ In PPI, each sample has two associated values:
 | Value | Present for | Description |
 |---|---|---|
 | $\tilde{Y}_i$ | All $n+N$ samples | Proxy label |
-| $Y_j$ | Labeled samples only ($n < N$) | Ground-truth label |
+| $Y_j$ | Labeled samples only ($n \ll N$) | Ground-truth label |
 
 ### Mean estimation
 
@@ -109,7 +109,7 @@ In Stratified PPI++, each sample has the same values as in PPI++ (a proxy label 
 | Value | Present for | Description |
 |---|---|---|
 | $\tilde{Y}_i$ | All $n+N$ samples | Proxy label |
-| $Y_j$ | Labeled samples only ($n < N$) | Ground-truth label |
+| $Y_j$ | Labeled samples only ($n \ll N$) | Ground-truth label |
 | $g_j$ | All $n+N$ samples | Stratum identifier |
 
 
@@ -278,7 +278,7 @@ When the proxy is informative (high bootstrap covariance with ground-truth means
 
 **Stratified PTD** [[7](#ref-7)] extends PTD to datasets naturally partitioned into **strata** (for example, by language, domain, or data source). The PTD bootstrap is run independently within each stratum, each with its own tuning parameter, and the per-stratum results are combined with population-proportional weights into a single confidence interval. When strata differ in proxy quality, this yields narrower intervals than a single global PTD run.
 
-GLIDE implements a stratified extension of Algorithm 3 from [[7](#ref-7)], applying the CLT speedup for the unlabeled mean independently within each stratum. This differs from Algorithm 6 of [[7](#ref-7)], which uses a single global power-tuning parameter. The per-stratum variant is statistically valid and tends to be more precise when strata differ in proxy quality.
+GLIDE implements a stratified extension of Algorithm 3 from [[7](#ref-7)], applying the CLT speedup for the unlabeled mean independently within each stratum. This differs from Algorithm 6 therein which uses a single global power-tuning parameter. The per-stratum variant is statistically valid and tends to be more precise when strata differ in proxy quality.
 
 Let $K$ denote the number of strata. Stratum $k$ contains $n_k + N_k$ total samples, of which $n_k$ are labeled and $N_k$ are unlabeled, with population weight:
 
@@ -300,7 +300,7 @@ The Stratified PTD point estimate is the mean of $B$ combined bootstrap estimate
 
 $$\hat{\theta}_{\text{SPTD}} = \frac{1}{B}\sum_{b=1}^{B}\hat{\theta}^{(b)}_{\text{SPTD}}$$
 
-where each $\hat{\theta}^{(b)}_{\text{SPTD}}$ is produced during the bootstrap procedure described below. Since each per-stratum term is an unbiased estimate of the stratum-$k$ mean and the weights $w_k$ sum to one, $\hat{\theta}_{\text{SPTD}}$ is an unbiased estimator of the population mean $\theta^*$.
+where each $\hat{\theta}^{(b)}_{\text{SPTD}}$ is produced during the stratified bootstrap procedure described below.
 
 ### Bootstrap procedure
 
@@ -330,13 +330,13 @@ The variance of the Stratified PTD estimator is the sample variance of the combi
 
 $$\hat{\sigma}^2_{\text{SPTD}} = \widehat{\text{Var}}_B\!\left(\hat{\theta}^{(1)}_{\text{SPTD}},\, \ldots,\, \hat{\theta}^{(B)}_{\text{SPTD}}\right)$$
 
-The confidence interval at level $1 - \alpha$ is the interval between the $\alpha/2$ and $1 - \alpha/2$ empirical quantiles of $\bigl\{\hat{\theta}^{(b)}_{\text{SPTD}}\bigr\}_{b=1}^B$, inheriting the robustness to non-Gaussianity that characterises PTD.
+The confidence interval at level $1 - \alpha$ is the interval between the $\alpha/2$ and $1 - \alpha/2$ empirical quantiles of $\bigl\{\hat{\theta}^{(b)}_{\text{SPTD}}\bigr\}_{b=1}^B$. This quantile-based approach adapts to any arbitrary shape of the residual distribution and remains reliable for small sample sizes.
 
 Stratified PTD is designed for a small number of large strata. As the number of strata grows, each stratum's labeled set shrinks and the bootstrap distribution becomes unreliable. When in doubt, prefer a coarser stratification with fewer, larger strata.
 
 ### Power-tuning
 
-Each stratum $k$ receives its own optimal tuning scalar $\hat{\lambda}_k$, estimated after the bootstrap loop from the bootstrap covariances within that stratum:
+Each stratum $k$ receives its own optimal tuning parameter $\hat{\lambda}_k$, estimated after the bootstrap loop from the bootstrap covariances within that stratum:
 
 $$\hat{\lambda}_k = \frac{\widehat{\text{Cov}}_B\!\left(\hat{\mu}_{\text{true},k},\; \hat{\mu}_{\text{proxy},k}\right)}{\widehat{\text{Var}}_B\!\left(\hat{\mu}_{\text{proxy},k}\right) + \hat{S}^\circ_{\gamma,k}}$$
 
