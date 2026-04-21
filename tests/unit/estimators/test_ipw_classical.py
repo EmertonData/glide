@@ -21,16 +21,6 @@ def sampling_probability() -> NDArray:
     return np.array([0.5, 0.5, 0.5, 0.5])
 
 
-# --- _compute_ipw_weighted_values ---
-
-
-def test_compute_ipw_weighted_values_known_values(estimator):
-    y = np.array([2.0, np.nan])
-    pi = np.array([0.5, 0.5])
-    result = estimator._compute_ipw_weighted_values(y, pi)
-    np.testing.assert_array_equal(result, np.array([4.0, 0.0]))
-
-
 # --- estimate ---
 
 

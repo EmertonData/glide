@@ -32,10 +32,6 @@ class IPWClassicalMeanEstimator:
     n: 3
     """
 
-    def _compute_ipw_weighted_values(self, y: NDArray, sampling_probability: NDArray) -> NDArray:
-        ipw_weighted_values = np.nan_to_num(y, nan=0) / sampling_probability
-        return ipw_weighted_values
-
     def estimate(
         self,
         y: NDArray,
@@ -73,7 +69,7 @@ class IPWClassicalMeanEstimator:
         if np.min(sampling_probability) <= 0 or np.max(sampling_probability) > 1:
             raise ValueError("Sampling probabilities should be in (0, 1]")
 
-        ipw_weighted_values = self._compute_ipw_weighted_values(y, sampling_probability)
+        ipw_weighted_values = np.nan_to_num(y, nan=0) / sampling_probability
 
         mean = np.mean(ipw_weighted_values)
         std = np.std(ipw_weighted_values, ddof=1) / np.sqrt(len(ipw_weighted_values))

@@ -4,7 +4,7 @@ import numpy as np
 from numpy.typing import NDArray
 
 
-def _compute_bootstrap_labeled_means(
+def _compute_ptd_bootstrap_labeled_means(
     y_true: NDArray,
     y_proxy_labeled: NDArray,
     n_bootstrap: int,
@@ -38,7 +38,7 @@ def _compute_ptd_tuning_parameter(
     return lambda_
 
 
-def _compute_ptd_bootstrap_estimates(
+def _compute_ptd_bootstrap_mean_estimates(
     bootstrap_y_true_means: NDArray,
     bootstrap_y_proxy_labeled_means: NDArray,
     mean_proxy_unlabeled: float,
