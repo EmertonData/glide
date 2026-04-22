@@ -12,6 +12,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - Functional test verifying that Neyman allocation yields narrower confidence intervals than proportional allocation when composed with `StratifiedPPIMeanEstimator`
 
 - `StratifiedPTDMeanEstimator` stratified extension of `PTDMeanEstimator`
+- Example gallery page for `StratifiedPTDMeanEstimator` demonstrating per-stratum power-tuning benefits
 
 ### 🔄 Changed
 
