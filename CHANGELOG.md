@@ -9,6 +9,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 ## [Next release]
 
 ### ✨ Added
+- Functional test verifying that Neyman allocation yields narrower confidence intervals than proportional allocation when composed with `StratifiedPPIMeanEstimator`
 
 ### 🔄 Changed
 
