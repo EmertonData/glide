@@ -102,6 +102,7 @@ nav:
     - Stratified PPI Validation: deep_dive/stratified_ppi_validation.ipynb
     - ASI Validation: deep_dive/asi_validation.ipynb
     - PTD Validation: deep_dive/ptd_validation.ipynb
+    - Stratified PTD Validation: deep_dive/stratified_ptd_validation.ipynb
   - Contributing: contributing.md
   - API Reference:
     - Overview: api/index.md
