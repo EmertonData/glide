@@ -93,25 +93,33 @@ def test_neyman_allocation_yields_narrower_ci_than_proportional():
     random_seed = 0
     budget = 20
 
+    # Common parameters
+    n_labeled_per_stratum = 200
+    n_unlabeled = 0
+    true_mean = 0.5
+    proxy_mean = 0.5
+    low_std = 0.2
+    high_std = 2.0
+
     # Stratum A: low variance (std_A = 0.2)
     y_true_a, y_proxy_a = generate_gaussian_dataset(
-        n_labeled=200,
-        n_unlabeled=0,
-        true_mean=0.5,
-        true_std=0.2,
-        proxy_mean=0.5,
-        proxy_std=0.2,
+        n_labeled=n_labeled_per_stratum,
+        n_unlabeled=n_unlabeled,
+        true_mean=true_mean,
+        true_std=low_std,
+        proxy_mean=proxy_mean,
+        proxy_std=low_std,
         random_seed=random_seed,
     )
 
     # Stratum B: high variance (std_B = 2.0, ratio 10:1)
     y_true_b, y_proxy_b = generate_gaussian_dataset(
-        n_labeled=200,
-        n_unlabeled=0,
-        true_mean=0.5,
-        true_std=2.0,
-        proxy_mean=0.5,
-        proxy_std=2.0,
+        n_labeled=n_labeled_per_stratum,
+        n_unlabeled=n_unlabeled,
+        true_mean=true_mean,
+        true_std=high_std,
+        proxy_mean=proxy_mean,
+        proxy_std=high_std,
         random_seed=random_seed,
     )
 
@@ -123,7 +131,7 @@ def test_neyman_allocation_yields_narrower_ci_than_proportional():
     # Helper to run pipeline for a given strategy
     def pipeline(strategy: Literal["proportional", "neyman"]):
         # Create proxy-only view (discard y_true)
-        y_proxy_only = y_proxy_full.copy()
+        y_proxy_only = y_proxy_full
 
         # Sample using stratified sampler
         _, xi = StratifiedSampler().sample(
@@ -131,8 +139,9 @@ def test_neyman_allocation_yields_narrower_ci_than_proportional():
         )
 
         # Reconstruct PPI dataset: restore y_true only for sampled records
+        sampled_mask = xi == 1
         y_true_ppi = np.full_like(y_true_full, np.nan)
-        y_true_ppi[xi == 1] = y_true_full[xi == 1]
+        y_true_ppi[sampled_mask] = y_true_full[sampled_mask]
 
         # Estimate using stratified PPI
         result = StratifiedPPIMeanEstimator().estimate(y_true_ppi, y_proxy_only, groups_full)
