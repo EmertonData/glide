@@ -278,7 +278,7 @@ When the proxy is informative (high bootstrap covariance with ground-truth means
 
 **Stratified PTD** [[7](#ref-7)] extends PTD to datasets naturally partitioned into **strata** (for example, by language, domain, or data source). The PTD bootstrap is run independently within each stratum, each with its own tuning parameter, and the per-stratum results are combined with population-proportional weights into a single confidence interval. When strata differ in proxy quality, this yields narrower intervals than a single global PTD run.
 
-GLIDE implements a stratified extension of Algorithm 3 from [[7](#ref-7)], applying the CLT speedup for the unlabeled mean independently within each stratum. This differs from Algorithm 6 therein which uses a single global power-tuning parameter. The per-stratum variant is statistically valid and tends to be more precise when strata differ in proxy quality.
+GLIDE implements a stratified extension of Algorithm 3 from [[7](#ref-7)], applying the CLT speedup for the unlabeled mean independently within each stratum.
 
 Let $K$ denote the number of strata. Stratum $k$ contains $n_k + N_k$ total samples, of which $n_k$ are labeled and $N_k$ are unlabeled, with population weight:
 
