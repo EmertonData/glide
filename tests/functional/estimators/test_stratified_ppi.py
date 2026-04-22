@@ -4,11 +4,14 @@ These tests verify end-to-end statistical properties rather than implementation
 details, and therefore require larger datasets to hold reliably.
 """
 
+from typing import Literal
+
 import numpy as np
 import pytest
 
 from glide.estimators.ppi import PPIMeanEstimator
 from glide.estimators.stratified_ppi import StratifiedPPIMeanEstimator
+from glide.samplers.stratified import StratifiedSampler
 from glide.simulators import generate_gaussian_dataset
 
 # ── tests ──────────────────────────────────────────────────────────────────────
@@ -78,3 +81,65 @@ def test_stratified_ppi_narrower_ci_with_heterogeneous_strata():
     # Stratified CI must be strictly narrower
     eps = 1e-1
     assert stratified_result.width < ppi_result.width - eps
+
+
+def test_neyman_allocation_yields_narrower_ci_than_proportional():
+    """Neyman allocation achieves narrower confidence intervals than proportional allocation.
+
+    When strata have heterogeneous variance, Neyman allocation optimally allocates the
+    labeling budget by sampling more heavily from high-variance strata. This reduces
+    overall variance compared to proportional allocation, which ignores stratum variance.
+    """
+    random_seed = 0
+    budget = 20
+
+    # Stratum A: low variance (std_A = 0.2)
+    y_true_a, y_proxy_a = generate_gaussian_dataset(
+        n_labeled=200,
+        n_unlabeled=0,
+        true_mean=0.5,
+        true_std=0.2,
+        proxy_mean=0.5,
+        proxy_std=0.2,
+        random_seed=random_seed,
+    )
+
+    # Stratum B: high variance (std_B = 2.0, ratio 10:1)
+    y_true_b, y_proxy_b = generate_gaussian_dataset(
+        n_labeled=200,
+        n_unlabeled=0,
+        true_mean=0.5,
+        true_std=2.0,
+        proxy_mean=0.5,
+        proxy_std=2.0,
+        random_seed=random_seed,
+    )
+
+    # Build full population: both strata, all records labeled
+    y_true_full = np.hstack([y_true_a, y_true_b])
+    y_proxy_full = np.hstack([y_proxy_a, y_proxy_b])
+    groups_full = np.hstack([np.full(len(y_true_a), "A"), np.full(len(y_true_b), "B")])
+
+    # Helper to run pipeline for a given strategy
+    def pipeline(strategy: Literal["proportional", "neyman"]):
+        # Create proxy-only view (discard y_true)
+        y_proxy_only = y_proxy_full.copy()
+
+        # Sample using stratified sampler
+        _, xi = StratifiedSampler().sample(
+            y_proxy_only, groups_full, budget=budget, strategy=strategy, random_seed=random_seed
+        )
+
+        # Reconstruct PPI dataset: restore y_true only for sampled records
+        y_true_ppi = np.full_like(y_true_full, np.nan)
+        y_true_ppi[xi == 1] = y_true_full[xi == 1]
+
+        # Estimate using stratified PPI
+        result = StratifiedPPIMeanEstimator().estimate(y_true_ppi, y_proxy_only, groups_full)
+        return result
+
+    neyman_result = pipeline("neyman")
+    proportional_result = pipeline("proportional")
+
+    # Neyman allocation must yield a strictly narrower CI
+    assert neyman_result.width < proportional_result.width
