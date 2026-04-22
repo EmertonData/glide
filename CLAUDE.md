@@ -63,7 +63,7 @@ Every PR must satisfy all of the following before merge:
 - One test per distinct function call — do not write redundant tests
 - Use the smallest arrays possibles (typically 2 elements, rarely more than 10); tests must be lightning fast
 - Use fixtures to factorize pervasive test elements (shared arrays, estimator instances, etc.)
-- Existing test files are the canonical reference for structure and patterns — follow `test_ppi.py`, `test_simulated_datasets.py`, etc. when writing new test files
+- Existing test files are the canonical reference for structure and patterns — follow `test_ppi.py`, `tests/unit/simulators/test_binary.py`, etc. when writing new test files
 - Use `pytest.approx(value, abs=0.01)` when comparing scalar floats in tests
 - Use `np.testing.assert_allclose` when comparing arrays of floats in tests
 - Use `np.testing.assert_array_equal` when comparing arrays of strings or categories in tests
