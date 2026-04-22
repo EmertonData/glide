@@ -40,11 +40,19 @@ def test_preprocess_returns_correct_shapes(estimator, y_true, y_proxy, groups):
         assert len(y_proxy_unlabeled) == 2
 
 
+def test_preprocess_raises_on_length_mismatch(estimator):
+    y_true = np.array([1.0, 2.0, np.nan, np.nan])
+    y_proxy = np.array([1.1, 1.8, 3.9])
+    grps = np.array(["A", "A", "A", "A"])
+    with pytest.raises(ValueError, match="y_true, y_proxy, and groups must have the same length"):
+        estimator._preprocess(y_true, y_proxy, grps)
+
+
 def test_preprocess_raises_on_stratum_size_too_small(estimator):
     y_true = np.array([1.0, np.nan, 4.0, np.nan])
     y_proxy = np.array([1.1, 1.8, 3.9, 4.8])
     grps = np.array(["A", "A", "B", "B"])
-    with pytest.raises(RuntimeError, match="Too few labeled or unlabeled samples in stratum 'A'"):
+    with pytest.raises(ValueError, match="Too few labeled or unlabeled samples in stratum 'A'"):
         estimator._preprocess(y_true, y_proxy, grps)
 
 

@@ -64,7 +64,7 @@ class PTDMeanEstimator:
         n_labeled = labeled_mask.sum()
         n_unlabeled = len(y_true_all) - n_labeled
         if min(n_labeled, n_unlabeled) <= 1:
-            raise RuntimeError("Too few labeled or unlabeled samples in dataset")
+            raise ValueError("Too few labeled or unlabeled samples in dataset")
         y_true = y_true_all[labeled_mask]
         y_proxy_labeled = y_proxy_all[labeled_mask]
         y_proxy_unlabeled = y_proxy_all[~labeled_mask]
@@ -119,6 +119,14 @@ class PTDMeanEstimator:
         PredictionPoweredMeanInferenceResult
             Contains a ``BootstrapConfidenceInterval``, metric name, estimator
             name (``"PTDMeanEstimator"``), and counts ``n_true`` / ``n_proxy``.
+
+        Raises
+        ------
+        ValueError
+            - If ``y_true`` and ``y_proxy`` have different lengths.
+            - If any proxy value is NaN.
+            - If all proxy values are identical (zero variance).
+            - If there are fewer than 2 labeled or fewer than 2 unlabeled samples.
         """
         y_true_labeled, y_proxy_labeled, y_proxy_unlabeled = self._preprocess(y_true, y_proxy)
         n_labeled, n_unlabeled = len(y_true_labeled), len(y_proxy_unlabeled)
