@@ -112,6 +112,7 @@ In Stratified PPI++, each sample has the same values as in PPI++ (a proxy label 
 | $Y_j$ | Labeled samples only ($n \ll N$) | Ground-truth label |
 | $g_j$ | All $n+N$ samples | Stratum identifier |
 
+The stratum identifiers allow to partition samples and their labels according to the stratum they belong to.
 
 ### Mean estimation
 
@@ -293,6 +294,8 @@ In Stratified PTD, each sample has the same values as in PTD, plus a stratum ide
 | $\tilde{Y}_i$ | All $n+N$ samples | Proxy label |
 | $Y_j$ | Labeled samples only ($n \ll N$) | Ground-truth label |
 | $g_j$ | All $n+N$ samples | Stratum identifier |
+
+The stratum identifiers allow to partition samples and their labels according to the stratum they belong to.
 
 ### Mean estimation
 
