@@ -276,7 +276,7 @@ When the proxy is informative (high bootstrap covariance with ground-truth means
 
 ## Stratified PTD
 
-**Stratified PTD** [[7](#ref-7)] extends PTD to datasets naturally partitioned into **strata** (for example, by language, domain, or data source). The PTD bootstrap is run independently within each stratum, each with its own tuning parameter, and the per-stratum results are combined with population-proportional weights into a single confidence interval. When strata differ in proxy quality, this yields narrower intervals than a single global PTD run.
+**Stratified PTD** [[7](#ref-7)] extends PTD to datasets naturally partitioned into **strata** (for example, by language, domain, or data source). The PTD bootstrap is run independently within each stratum, each with its own tuning parameter, and the per-stratum results are combined with population-proportional weights into a single estimate. When strata differ in proxy quality, this yields narrower confidence intervals than a single PTD run on the pooled data.
 
 GLIDE implements a stratified extension of Algorithm 3 from [[7](#ref-7)], applying the CLT speedup for the unlabeled mean independently within each stratum.
 
@@ -322,7 +322,7 @@ where each $Z^{(b)}_k$ is drawn independently across strata and iterations. The 
 
 $$\hat{\theta}^{(b)}_{\text{SPTD}} = \sum_{k=1}^{K} w_k \left[\lambda_k \cdot \tilde{\gamma}^{(b)}_k + \left(\hat{\mu}^{(b)}_{\text{true},k} - \lambda_k \cdot \hat{\mu}^{(b)}_{\text{proxy},k}\right)\right]$$
 
-The term $\hat{\mu}^{(b)}_{\text{true},k} - \lambda_k \cdot \hat{\mu}^{(b)}_{\text{proxy},k}$ captures the proxy bias in stratum $k$ on the labeled set, while $\lambda_k \cdot \tilde{\gamma}^{(b)}_k$ contributes the proxy signal on the stratum's unlabeled population.
+where each $\lambda_k$ is a power-tuning factor that controls the proxy labels' influence within stratum $k.$ The term $\hat{\mu}^{(b)}_{\text{true},k} - \lambda_k \cdot \hat{\mu}^{(b)}_{\text{proxy},k}$ measures the proxy bias in stratum $k$ on the labeled set, while $\lambda_k \cdot \tilde{\gamma}^{(b)}_k$ computes the proxy signal on the stratum's unlabeled population.
 
 ### Variance and confidence intervals
 
@@ -336,11 +336,11 @@ Stratified PTD is designed for a small number of large strata. As the number of 
 
 ### Power-tuning
 
-Each stratum $k$ receives its own optimal tuning parameter $\hat{\lambda}_k$, estimated after the bootstrap loop from the bootstrap covariances within that stratum:
+Each stratum $k$ receives its own optimal tuning parameter $\hat{\lambda}_k$, estimated after the bootstrap loop from the bootstrap covariances within that stratum. For each $k=1, \dots, K$, let $\hat{\mu}_{\text{true},k}$ and $\hat{\mu}_{\text{proxy},k}$ be the vectors of values $\hat{\mu}^{(b)}_{\text{true},k}$ and $\hat{\mu}^{(b)}_{\text{proxy},k}$ for $b=1,\dots,B$ respectively. The per-stratum optimal tuning parameter is computed as:
 
 $$\hat{\lambda}_k = \frac{\widehat{\text{Cov}}_B\!\left(\hat{\mu}_{\text{true},k},\; \hat{\mu}_{\text{proxy},k}\right)}{\widehat{\text{Var}}_B\!\left(\hat{\mu}_{\text{proxy},k}\right) + \hat{S}^\circ_{\gamma,k}}$$
 
-This is the same formula as PTD power-tuning, applied stratum by stratum. In strata where the proxy is informative, $\hat{\lambda}_k$ is close to 1 and the estimate benefits from the proxy signal. In strata where the proxy is weak, $\hat{\lambda}_k$ shrinks toward 0, falling back to the classical bootstrap mean for that stratum, without affecting any other stratum. It is standard to use optimal power tuning with the previous $\hat{\lambda}_k$ values.
+This is the same formula as PTD power-tuning, applied stratum by stratum. In strata where the proxy is informative, $\hat{\lambda}_k$ is close to 1 and the estimate benefits from the proxy signal. In strata where the proxy is weak, $\hat{\lambda}_k$ shrinks toward 0, falling back to the classical bootstrap mean for that stratum, without affecting the others. It is standard to use optimal power tuning with the $\hat{\lambda}_k$ values above.
 
 ---
 
