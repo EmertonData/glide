@@ -61,9 +61,8 @@ class PPIMeanEstimator:
         labeled_mask = ~np.isnan(y_true_all)
         n_labeled = sum(labeled_mask)
         n_unlabeled = len(y_true_all) - n_labeled
-        # at least 2 labeled and unlabeled samples are needed to compute a variance downstream
         if min(n_labeled, n_unlabeled) <= 1:
-            raise RuntimeError("Too few labeled or unlabeled samples in dataset")
+            raise ValueError("Too few labeled or unlabeled samples in dataset")
         y_true = y_true_all[labeled_mask]
         y_proxy_labeled = y_proxy_all[labeled_mask]
         y_proxy_unlabeled = y_proxy_all[~labeled_mask]
@@ -114,6 +113,14 @@ class PPIMeanEstimator:
             the estimator name (``"PPIMeanEstimator"``), and the counts
             ``n_true`` (labeled observations) and ``n_proxy`` (all observations
             with a proxy prediction).
+
+        Raises
+        ------
+        ValueError
+            - If ``y_true`` and ``y_proxy`` have different lengths.
+            - If any proxy value is NaN.
+            - If all proxy values are identical (zero variance).
+            - If there are fewer than 2 labeled or fewer than 2 unlabeled samples.
         """
         y_true_labeled, y_proxy_labeled, y_proxy_unlabeled = self._preprocess(y_true, y_proxy)
         n_labeled, n_unlabeled = len(y_true_labeled), len(y_proxy_unlabeled)

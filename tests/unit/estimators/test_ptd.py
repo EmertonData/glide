@@ -38,7 +38,7 @@ def test_preprocess(estimator, y_arrays):
 def test_preprocess_raises_when_only_one_sample(estimator):
     y_true = np.array([5.0, np.nan, np.nan])
     y_proxy = np.array([4.9, 5.2, 6.1])
-    with pytest.raises(RuntimeError, match="Too few labeled or unlabeled samples in dataset"):
+    with pytest.raises(ValueError, match="Too few labeled or unlabeled samples in dataset"):
         estimator._preprocess(y_true, y_proxy)
 
 

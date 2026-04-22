@@ -46,8 +46,6 @@ class StratifiedPPIMeanEstimator:
     >>> groups = np.array([0, 0, 0, 0, 1, 1, 1, 1])
     >>> estimator = StratifiedPPIMeanEstimator()
     >>> result = estimator.estimate(y_true, y_proxy, groups)
-    >>> print(result.estimator_name)
-    StratifiedPPIMeanEstimator
     >>> print(result)
     Metric: Metric
     Point Estimate: 3.086
@@ -64,6 +62,11 @@ class StratifiedPPIMeanEstimator:
         y_proxy: NDArray,
         groups: NDArray,
     ) -> List[Tuple[NDArray, NDArray, NDArray]]:
+        if len(y_true) != len(y_proxy) or len(y_true) != len(groups):
+            raise ValueError(
+                f"y_true, y_proxy, and groups must have the same length, "
+                f"got {len(y_true)}, {len(y_proxy)}, and {len(groups)}"
+            )
         if np.isnan(y_proxy).any():
             raise ValueError("Input proxy values contain NaN")
 
@@ -76,7 +79,7 @@ class StratifiedPPIMeanEstimator:
             n_labeled = labeled_mask.sum()
             n_unlabeled = stratum_mask.sum() - n_labeled
             if min(n_labeled, n_unlabeled) <= 1:
-                raise RuntimeError(f"Too few labeled or unlabeled samples in dataset stratum '{stratum_id}'")
+                raise ValueError(f"Too few labeled or unlabeled samples in stratum '{stratum_id}'")
             if len(np.unique(stratum_y_proxy)) == 1:
                 raise ValueError(f"Input proxy values have zero variance in stratum '{stratum_id}'")
 
@@ -105,10 +108,11 @@ class StratifiedPPIMeanEstimator:
             theta = sum_k  w_k * theta_k(lambda_k)
             sigma2 = sum_k  w_k^2 * sigma2_k(lambda_k)
 
-        where ``w_k = (n_k + N_k) / (n + N)`` is the fraction of samples in stratum *k*.
+        where ``w_k`` is the fraction of samples in stratum *k*.
 
-        Note that this assumes n_k / n and N_k / N are approximately the same for all k
-        which is important for statistical validity.
+        Note that this assumes the portions of labeled vs unlabeled samples are
+        approximately the same in all strata which is important for statistical
+        validity.
 
         Labeled and unlabeled samples are distinguished by ``NaN`` in ``y_true``:
         a sample is labeled if its ``y_true`` entry is not ``NaN``.
@@ -143,10 +147,10 @@ class StratifiedPPIMeanEstimator:
         Raises
         ------
         ValueError
-            If any proxy value is NaN, or if all proxy values within a stratum are identical
-            (zero variance), which would cause a division by zero when computing lambda.
-        RuntimeError
-            If any stratum has fewer than 2 labeled or fewer than 2 unlabeled samples.
+            - If ``y_true``, ``y_proxy``, and ``groups`` do not all have the same length.
+            - If any proxy value is NaN.
+            - If all proxy values within a stratum are identical (zero variance).
+            - If any stratum has fewer than 2 labeled or fewer than 2 unlabeled samples.
         """
         strata = self._preprocess(y_true, y_proxy, groups)
 
