@@ -43,7 +43,7 @@ In PPI, each sample has two associated values:
 | Value | Present for | Description |
 |---|---|---|
 | $\tilde{Y}_i$ | All $n+N$ samples | Proxy label |
-| $Y_j$ | Labeled samples only ($n < N$) | Ground-truth label |
+| $Y_j$ | Labeled samples only ($n \ll N$) | Ground-truth label |
 
 ### Mean estimation
 
@@ -109,9 +109,10 @@ In Stratified PPI++, each sample has the same values as in PPI++ (a proxy label 
 | Value | Present for | Description |
 |---|---|---|
 | $\tilde{Y}_i$ | All $n+N$ samples | Proxy label |
-| $Y_j$ | Labeled samples only ($n < N$) | Ground-truth label |
+| $Y_j$ | Labeled samples only ($n \ll N$) | Ground-truth label |
 | $g_j$ | All $n+N$ samples | Stratum identifier |
 
+The stratum identifiers allow to partition samples and their labels according to the stratum they belong to.
 
 ### Mean estimation
 
@@ -139,9 +140,7 @@ Each stratum $k$ receives its **own optimal weight** $\hat{\lambda}_k$, computed
 
 $$\hat{\lambda}_k = \frac{\widehat{\text{Cov}}_{n_k}(Y_k,\, \tilde{Y}_k)}{\left(1 + \tfrac{n_k}{N_k}\right)\widehat{\text{Var}}_{n_k + N_k}(\tilde{Y}_k)}$$
 
-This is the same formula as PPI++ power-tuning, applied stratum by stratum. In strata where the proxy is informative, $\hat{\lambda}_k$ is close to 1 and the stratum estimate benefits from the proxy signal. In strata where the proxy is weak or unreliable, $\hat{\lambda}_k$ shrinks toward 0, falling back to the classical human-only mean for that stratum, without affecting any other stratum.
-
-Setting `power_tuning=False` forces $\lambda_k = 1.0$ for all strata, recovering stratified PPI without the variance-minimising tuning.
+This is the same formula as PPI++ power-tuning, applied stratum by stratum. In strata where the proxy is informative, $\hat{\lambda}_k$ is close to 1 and the stratum estimate benefits from the proxy signal. In strata where the proxy is weak or unreliable, $\hat{\lambda}_k$ shrinks toward 0, falling back to the classical human-only mean for that stratum, without affecting any other stratum. It is standard to use optimal power tuning with the previous $\hat{\lambda}_k$ values.
 
 ---
 
@@ -273,6 +272,78 @@ $$\hat{\lambda} = \frac{\widehat{\text{Cov}}_B\!\left(\hat{\mu}_{\text{true}},\;
 where $\widehat{\text{Cov}}_B$ and $\widehat{\text{Var}}_B$ are computed across the $B$ bootstrap replicates of the labeled means, and $\hat{S}_{\gamma}^\circ$ is the estimated sampling variance of the unlabeled proxy mean. The denominator adds $\hat{S}_{\gamma}^\circ$ to account for the variance of the unlabeled proxies. This value can be readily used since a Gaussian approximation is made for the unlabeled mean.
 
 When the proxy is informative (high bootstrap covariance with ground-truth means), $\hat{\lambda}$ is large and the estimate borrows heavily from the proxy signal, narrowing the interval. When the proxy is uninformative, $\hat{\lambda}$ shrinks toward 0, down-weighting it. Fixing $\lambda = 1$, recovers the unweighted PTD estimator. It is standard to use the optimal value $\hat{\lambda}$ in practice.
+
+---
+
+## Stratified PTD
+
+**Stratified PTD** [[7](#ref-7)] extends PTD to datasets naturally partitioned into **strata** (for example, by language, domain, or data source). The PTD bootstrap is run independently within each stratum, each with its own tuning parameter, and the per-stratum results are combined with population-proportional weights into a single estimate. When strata differ in proxy quality, this yields narrower confidence intervals than a single PTD run on the pooled data.
+
+GLIDE implements a stratified extension of Algorithm 3 from [[7](#ref-7)], applying the CLT speedup for the unlabeled mean independently within each stratum.
+
+Let $K$ denote the number of strata. Stratum $k$ contains $n_k + N_k$ total samples, of which $n_k$ are labeled and $N_k$ are unlabeled, with population weight:
+
+$$w_k = \frac{n_k + N_k}{n + N}$$
+
+where $n = \sum_k n_k$ and $N = \sum_k N_k$.
+
+In Stratified PTD, each sample has the same values as in PTD, plus a stratum identifier:
+
+| Value | Present for | Description |
+|---|---|---|
+| $\tilde{Y}_i$ | All $n+N$ samples | Proxy label |
+| $Y_j$ | Labeled samples only ($n \ll N$) | Ground-truth label |
+| $g_j$ | All $n+N$ samples | Stratum identifier |
+
+The stratum identifiers allow to partition samples and their labels according to the stratum they belong to.
+
+### Mean estimation
+
+The Stratified PTD point estimate is the mean of $B$ combined bootstrap estimates:
+
+$$\hat{\theta}_{\text{SPTD}} = \frac{1}{B}\sum_{b=1}^{B}\hat{\theta}^{(b)}_{\text{SPTD}}$$
+
+where each $\hat{\theta}^{(b)}_{\text{SPTD}}$ is produced during the stratified bootstrap procedure described below.
+
+### Bootstrap procedure
+
+Denote $(\tilde{Y}^\circ_{k,i})_{i=1}^{N_k}$ the unlabeled proxies in stratum $k$ and $(\tilde{Y}^\bullet_{k,j})_{j=1}^{n_k}$ the labeled ones. Before the bootstrap loop, compute for each stratum $k$ the mean and sampling variance of the unlabeled proxy scores:
+
+$$\hat{\gamma}^\circ_k = \frac{1}{N_k}\sum_{i=1}^{N_k}\tilde{Y}^\circ_{k,i}, \qquad \hat{S}^\circ_{\gamma,k} = \frac{\widehat{\text{Var}}(\tilde{Y}^\circ_k)}{N_k}$$
+
+These quantities are computed once and reused across all $B$ iterations, applying the same CLT speedup as PTD to each stratum independently.
+
+For $b = 1, \dots, B$ and for each stratum $k$, sample $n_k$ indices $\mathcal{I}^{(b)}_k$ with replacement from $\{1, \dots, n_k\}$ and compute the bootstrap means of the labeled ground-truth and proxy labels:
+
+$$\hat{\mu}^{(b)}_{\text{true},k} = \frac{1}{n_k}\sum_{i \in \mathcal{I}^{(b)}_k} Y_{k,i}, \qquad \hat{\mu}^{(b)}_{\text{proxy},k} = \frac{1}{n_k}\sum_{i \in \mathcal{I}^{(b)}_k} \tilde{Y}^\bullet_{k,i}$$
+
+A perturbed draw of the unlabeled proxy mean for stratum $k$ is formed as:
+
+$$\tilde{\gamma}^{(b)}_k = \hat{\gamma}^\circ_k + Z^{(b)}_k \cdot \sqrt{\hat{S}^\circ_{\gamma,k}}, \qquad Z^{(b)}_k \sim \mathcal{N}(0, 1)$$
+
+where each $Z^{(b)}_k$ is drawn independently across strata and iterations. The per-stratum bootstrap estimates are then combined with population-proportional weights:
+
+$$\hat{\theta}^{(b)}_{\text{SPTD}} = \sum_{k=1}^{K} w_k \left[\lambda_k \cdot \tilde{\gamma}^{(b)}_k + \left(\hat{\mu}^{(b)}_{\text{true},k} - \lambda_k \cdot \hat{\mu}^{(b)}_{\text{proxy},k}\right)\right]$$
+
+where each $\lambda_k$ is a power-tuning factor that controls the proxy labels' influence within stratum $k.$ The term $\hat{\mu}^{(b)}_{\text{true},k} - \lambda_k \cdot \hat{\mu}^{(b)}_{\text{proxy},k}$ measures the proxy bias in stratum $k$ on the labeled set, while $\lambda_k \cdot \tilde{\gamma}^{(b)}_k$ computes the proxy signal on the stratum's unlabeled population.
+
+### Variance and confidence intervals
+
+The variance of the Stratified PTD estimator is the sample variance of the combined bootstrap estimates:
+
+$$\hat{\sigma}^2_{\text{SPTD}} = \widehat{\text{Var}}_B\!\left(\hat{\theta}^{(1)}_{\text{SPTD}},\, \ldots,\, \hat{\theta}^{(B)}_{\text{SPTD}}\right)$$
+
+The confidence interval at level $1 - \alpha$ is the interval between the $\alpha/2$ and $1 - \alpha/2$ empirical quantiles of $\bigl\{\hat{\theta}^{(b)}_{\text{SPTD}}\bigr\}_{b=1}^B$. This quantile-based approach adapts to any arbitrary shape of the residual distribution and remains reliable for small sample sizes.
+
+Stratified PTD is designed for a small number of large strata. As the number of strata grows, each stratum's labeled set shrinks and the bootstrap distribution becomes unreliable. When in doubt, prefer a coarser stratification with fewer, larger strata.
+
+### Power-tuning
+
+Each stratum $k$ receives its own optimal tuning parameter $\hat{\lambda}_k$, estimated after the bootstrap loop from the bootstrap covariances within that stratum. For each $k=1, \dots, K$, let $\hat{\mu}_{\text{true},k}$ and $\hat{\mu}_{\text{proxy},k}$ be the vectors of values $\hat{\mu}^{(b)}_{\text{true},k}$ and $\hat{\mu}^{(b)}_{\text{proxy},k}$ for $b=1,\dots,B$ respectively. The per-stratum optimal tuning parameter is computed as:
+
+$$\hat{\lambda}_k = \frac{\widehat{\text{Cov}}_B\!\left(\hat{\mu}_{\text{true},k},\; \hat{\mu}_{\text{proxy},k}\right)}{\widehat{\text{Var}}_B\!\left(\hat{\mu}_{\text{proxy},k}\right) + \hat{S}^\circ_{\gamma,k}}$$
+
+This is the same formula as PTD power-tuning, applied stratum by stratum. In strata where the proxy is informative, $\hat{\lambda}_k$ is close to 1 and the estimate benefits from the proxy signal. In strata where the proxy is weak, $\hat{\lambda}_k$ shrinks toward 0, falling back to the classical bootstrap mean for that stratum, without affecting the others. It is standard to use optimal power tuning with the $\hat{\lambda}_k$ values above.
 
 ---
 

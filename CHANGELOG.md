@@ -13,6 +13,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 - `StratifiedPTDMeanEstimator` stratified extension of `PTDMeanEstimator`
 
+- User guide section for Stratified PTD
+
 ### 🔄 Changed
 
 - Refactored `glide.core.simulated_datasets` into dedicated `glide.simulators` module with separate files for each generator function
