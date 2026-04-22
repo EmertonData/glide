@@ -64,7 +64,7 @@ class PTDMeanEstimator:
         n_labeled = labeled_mask.sum()
         n_unlabeled = len(y_true_all) - n_labeled
         if min(n_labeled, n_unlabeled) <= 1:
-            raise RuntimeError("Too few labeled or unlabeled samples in dataset")
+            raise ValueError("Too few labeled or unlabeled samples in dataset")
         y_true = y_true_all[labeled_mask]
         y_proxy_labeled = y_proxy_all[labeled_mask]
         y_proxy_unlabeled = y_proxy_all[~labeled_mask]
@@ -87,7 +87,7 @@ class PTDMeanEstimator:
         ``mean(y_true) - λ·mean(y_proxy_labeled)`` corrects the bias of the proxy,
         yielding a consistent estimate even when the proxy is imperfect.
 
-        The tuning scalar λ and the confidence interval are both derived from a
+        The tuning parameter λ and the confidence interval are both derived from a
         bootstrap over the labeled set only. The sampling variability of the
         unlabeled proxy mean is approximated by a single Gaussian draw per
         iteration, keeping the per-iteration cost O(n_labeled), where n_labeled
@@ -108,7 +108,7 @@ class PTDMeanEstimator:
         n_bootstrap : int, optional
             Number of bootstrap resamples. Defaults to ``2000``.
         power_tuning : bool, optional
-            If ``True`` (default), estimate the optimal tuning scalar λ from
+            If ``True`` (default), estimate the optimal tuning parameter λ from
             the bootstrap covariances. If ``False``, use λ = 1.
         random_seed : int, optional
             Seed for the random number generator, for reproducibility.
@@ -119,6 +119,14 @@ class PTDMeanEstimator:
         PredictionPoweredMeanInferenceResult
             Contains a ``BootstrapConfidenceInterval``, metric name, estimator
             name (``"PTDMeanEstimator"``), and counts ``n_true`` / ``n_proxy``.
+
+        Raises
+        ------
+        ValueError
+            - If ``y_true`` and ``y_proxy`` have different lengths.
+            - If any proxy value is NaN.
+            - If all proxy values are identical (zero variance).
+            - If there are fewer than 2 labeled or fewer than 2 unlabeled samples.
         """
         y_true_labeled, y_proxy_labeled, y_proxy_unlabeled = self._preprocess(y_true, y_proxy)
         n_labeled, n_unlabeled = len(y_true_labeled), len(y_proxy_unlabeled)

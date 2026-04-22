@@ -74,13 +74,16 @@ glide/
 │   ├── active.py
 │   ├── ...
 │
+├── simulators/               # Public API — synthetic data generators for tests
+│   ├── binary.py
+│   ├── ...
+│
 ├── confidence_intervals/   # Confidence interval
 │   ├── base.py
 │   ├── ...
 │
 ├── core/                   # Shared building blocks (not part of the public API)
 │   ├── utils.py                  # General-purpose helpers
-│   ├── simulated_datasets.py     # Synthetic data generators for tests
 │   └── mean_inference_result/    # Result types returned by estimators
 │       ├── base.py
 │       ├── ...
