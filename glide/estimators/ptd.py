@@ -87,7 +87,7 @@ class PTDMeanEstimator:
         ``mean(y_true) - λ·mean(y_proxy_labeled)`` corrects the bias of the proxy,
         yielding a consistent estimate even when the proxy is imperfect.
 
-        The tuning scalar λ and the confidence interval are both derived from a
+        The tuning parameter λ and the confidence interval are both derived from a
         bootstrap over the labeled set only. The sampling variability of the
         unlabeled proxy mean is approximated by a single Gaussian draw per
         iteration, keeping the per-iteration cost O(n_labeled), where n_labeled
@@ -108,7 +108,7 @@ class PTDMeanEstimator:
         n_bootstrap : int, optional
             Number of bootstrap resamples. Defaults to ``2000``.
         power_tuning : bool, optional
-            If ``True`` (default), estimate the optimal tuning scalar λ from
+            If ``True`` (default), estimate the optimal tuning parameter λ from
             the bootstrap covariances. If ``False``, use λ = 1.
         random_seed : int, optional
             Seed for the random number generator, for reproducibility.

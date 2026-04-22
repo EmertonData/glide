@@ -17,20 +17,18 @@ class StratifiedPTDMeanEstimator:
     """Stratified Predict-Then-Debias estimator for population mean.
 
     Extends PTD to datasets partitioned into strata (e.g. by language, domain,
-    or data source). A per-stratum power-tuned lambda is computed independently
+    or data source). A per-stratum power-tuning parameter is computed independently
     within each stratum, and the final confidence interval is constructed from a
     single bootstrap distribution obtained by combining the per-stratum bootstrap
     estimates with population-proportional weights.
 
     This yields narrower confidence intervals than standard PTD whenever strata
-    differ in proxy quality, because the optimal lambda can adapt to each
-    stratum's signal-to-noise ratio.
+    differ in proxy quality, because the optimal power-tuning parameter can adapt
+    to each stratum's signal-to-noise ratio.
 
     Designed for the "small number of large strata" regime: the bootstrap CI
     becomes unreliable when strata are numerous and small (see Kluger et al., 2025,
-    Appendix B.2). Note that the present implementation differs from Algorithm 6
-    therein since it computes per-stratum tuning parameters. However, it remains
-    statistically valid and may in fact be more precise.
+    Appendix B.2).
 
     References
     ----------
