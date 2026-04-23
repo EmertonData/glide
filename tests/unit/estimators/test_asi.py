@@ -41,7 +41,7 @@ def y_data() -> Tuple[NDArray, NDArray, NDArray, NDArray]:
 # --- preprocessing ---
 
 
-def test_preprocess(estimator, arrays):
+def test_preprocess_valid_output(estimator, arrays):
     y_true_input, y_proxy_input, sampling_probabilities = arrays
     y_true, y_proxy, xi, pi = estimator._preprocess(y_true_input, y_proxy_input, sampling_probabilities)
     assert len(y_true) == 4

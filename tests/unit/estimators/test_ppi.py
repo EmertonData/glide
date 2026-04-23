@@ -28,7 +28,7 @@ def estimator() -> PPIMeanEstimator:
 # --- _preprocess ---
 
 
-def test_preprocess(estimator, y_arrays):
+def test_preprocess_valid_output(estimator, y_arrays):
     y_true_all, y_proxy_all = y_arrays
     y_true, y_proxy_labeled, y_proxy_unlabeled = estimator._preprocess(y_true_all, y_proxy_all)
     assert len(y_true) == 2
