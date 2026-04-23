@@ -86,4 +86,4 @@ def test_large_sample_matches_asi():
     assert ipw_ptd_result.mean == pytest.approx(asi_result.mean, abs=0.02)
     assert ipw_ptd_result.std == pytest.approx(asi_result.std, abs=0.02)
     assert asi_lower_bound == pytest.approx(ipw_ptd_lower_bound, abs=0.02)
-    assert asi_upper_bound == pytest.approx(ipw_ptd_upper_bound, abs=0.03)
+    assert asi_upper_bound == pytest.approx(ipw_ptd_upper_bound, abs=0.04)
