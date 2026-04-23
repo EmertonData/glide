@@ -38,7 +38,7 @@ class StratifiedPTDMeanEstimator:
     Examples
     --------
     >>> import numpy as np
-    >>> from glide.estimators.stratified_ptd import StratifiedPTDMeanEstimator
+    >>> from glide.estimators import StratifiedPTDMeanEstimator
     >>> y_true = np.array([5.0, 6.0, np.nan, np.nan, 5.0, 6.0, np.nan, np.nan])
     >>> y_proxy = np.array([4.9, 6.1, 5.2, 6.1, 4.9, 6.1, 5.2, 6.1])
     >>> groups = np.array(["A", "A", "A", "A", "B", "B", "B", "B"])

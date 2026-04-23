@@ -17,7 +17,7 @@ class ActiveSampler:
     Examples
     --------
     >>> import numpy as np
-    >>> from glide.samplers.active import ActiveSampler
+    >>> from glide.samplers import ActiveSampler
     >>> uncertainties = np.array([0.1, 0.4])
     >>> sampler = ActiveSampler()
     >>> pi, xi = sampler.sample(uncertainties, budget=1, random_seed=0)
