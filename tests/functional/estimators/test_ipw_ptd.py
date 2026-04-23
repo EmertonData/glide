@@ -39,9 +39,9 @@ def test_equal_probabilities_match_simple_ptd():
         proxy_std=proxy_std,
         random_seed=0,
     )
-    sampling_probability = pi_value * np.ones(n_labeled + n_unlabeled)
+    pi = pi_value * np.ones(n_labeled + n_unlabeled)
 
-    ipw_ptd_result = IPWPTDMeanEstimator().estimate(y_true, y_proxy, sampling_probability)
+    ipw_ptd_result = IPWPTDMeanEstimator().estimate(y_true, y_proxy, pi)
     simple_ptd_result = PTDMeanEstimator().estimate(y_true, y_proxy)
 
     assert ipw_ptd_result.mean == pytest.approx(simple_ptd_result.mean, abs=0.02)
@@ -72,11 +72,11 @@ def test_large_sample_matches_asi():
         proxy_std=proxy_std,
         random_seed=random_seed,
     )
-    sampling_probability = np.clip(rng.random(n_samples), 0.5, 1)
-    y_true[rng.random(n_samples) > sampling_probability] = np.nan
+    pi = np.clip(rng.random(n_samples), 0.5, 1)
+    y_true[rng.random(n_samples) > pi] = np.nan
 
-    ipw_ptd_result = IPWPTDMeanEstimator().estimate(y_true, y_proxy, sampling_probability)
-    asi_result = ASIMeanEstimator().estimate(y_true, y_proxy, sampling_probability)
+    ipw_ptd_result = IPWPTDMeanEstimator().estimate(y_true, y_proxy, pi)
+    asi_result = ASIMeanEstimator().estimate(y_true, y_proxy, pi)
 
     asi_lower_bound = asi_result.confidence_interval.lower_bound
     ipw_ptd_lower_bound = ipw_ptd_result.confidence_interval.lower_bound
