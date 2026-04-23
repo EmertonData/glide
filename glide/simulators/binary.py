@@ -106,15 +106,13 @@ def generate_binary_dataset(
     --------
     >>> import numpy as np
     >>> from glide.simulators import generate_binary_dataset
-    >>> y_true, y_proxy = generate_binary_dataset(n_labeled=100, n_unlabeled=500, random_seed=42)
+    >>> y_true, y_proxy = generate_binary_dataset(n_labeled=3, n_unlabeled=5, random_seed=42)
     >>> len(y_true)
-    600
-    >>> len(y_proxy)
-    600
+    8
     >>> int(np.sum(~np.isnan(y_true)))
-    100
+    3
     >>> int(np.sum(~np.isnan(y_proxy)))
-    600
+    8
     """
     if not (0 < true_mean < 1):
         raise ValueError(f"true_mean must be in (0, 1), got {true_mean}")
