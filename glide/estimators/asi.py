@@ -32,9 +32,9 @@ class ASIMeanEstimator:
     >>> from glide.estimators.asi import ASIMeanEstimator
     >>> y_true = np.array([5.0, 6.0, np.nan, np.nan])
     >>> y_proxy = np.array([4.9, 6.1, 5.2, 6.1])
-    >>> sampling_probabilities = np.array([0.5, 0.7, 0.6, 0.2])
+    >>> pi = np.array([0.5, 0.7, 0.6, 0.2])
     >>> estimator = ASIMeanEstimator()
-    >>> result = estimator.estimate(y_true, y_proxy, sampling_probabilities)
+    >>> result = estimator.estimate(y_true, y_proxy, pi)
     >>> print(result)
     Metric: Metric
     Point Estimate: 5.563
@@ -49,11 +49,11 @@ class ASIMeanEstimator:
         self,
         y_true_all: NDArray,
         y_proxy: NDArray,
-        sampling_probabilities: NDArray,
+        pi: NDArray,
     ) -> Tuple[NDArray, NDArray, NDArray, NDArray]:
-        if not (len(y_true_all) == len(y_proxy) == len(sampling_probabilities)):
-            raise ValueError("y_true, y_proxy, and sampling_probabilities must all have the same length")
-        if np.min(sampling_probabilities) <= 0 or np.max(sampling_probabilities) > 1:
+        if not (len(y_true_all) == len(y_proxy) == len(pi)):
+            raise ValueError("y_true, y_proxy, and pi must all have the same length")
+        if np.min(pi) <= 0 or np.max(pi) > 1:
             raise ValueError("Sampling probabilities should be in (0, 1]")
         if np.isnan(y_proxy).any():
             raise ValueError("Input proxy values contain NaN")
@@ -61,7 +61,7 @@ class ASIMeanEstimator:
             raise ValueError("Input proxy values have zero variance")
         xi = (~np.isnan(y_true_all)).astype(float)
         y_true = np.where(np.isnan(y_true_all), -1.0, y_true_all)
-        return y_true, y_proxy, xi, sampling_probabilities
+        return y_true, y_proxy, xi, pi
 
     def _compute_tuning_parameter(
         self,
@@ -91,7 +91,7 @@ class ASIMeanEstimator:
         self,
         y_true: NDArray,
         y_proxy: NDArray,
-        sampling_probabilities: NDArray,
+        pi: NDArray,
         metric_name: str = "Metric",
         confidence_level: float = 0.95,
         power_tuning: bool = True,
@@ -111,7 +111,7 @@ class ASIMeanEstimator:
         y_proxy : NDArray
             Array of shape ``(n_samples,)`` with proxy predictions. Must be present for every
             sample and must not contain NaN.
-        sampling_probabilities : NDArray
+        pi : NDArray
             Array of shape ``(n_samples,)`` with the pre-determined sampling probability
             π_i ∈ (0, 1] for each sample.
         metric_name : str, optional
@@ -125,17 +125,19 @@ class ASIMeanEstimator:
         Returns
         -------
         PredictionPoweredMeanInferenceResult
-            Contains the CLT-based confidence interval, the metric name, the estimator
-            name (``"ASIMeanEstimator"``), and the counts ``n_true`` (labeled samples) and
+            Contains a ``CLTConfidenceInterval``, metric name, estimator
+            name (``"ASIMeanEstimator"``), and counts ``n_true`` (labeled samples) and
             ``n_proxy`` (total samples).
 
         Raises
         ------
         ValueError
-            If any value in ``sampling_probabilities`` is not in (0, 1], i.e.
-            less than or equal to 0 or greater than 1.
+            - If ``y_true``, ``y_proxy``, and ``pi`` do not all have the same length.
+            - If any proxy value is NaN.
+            - If all proxy values are identical (zero variance).
+            - If any value in ``pi`` is not in (0, 1].
         """
-        y_data = self._preprocess(y_true, y_proxy, sampling_probabilities)
+        y_data = self._preprocess(y_true, y_proxy, pi)
         _lambda = self._compute_tuning_parameter(y_data, power_tuning)
         rectified_labels = self._compute_rectified_labels(y_data, _lambda)
         mean_estimate = np.mean(rectified_labels)

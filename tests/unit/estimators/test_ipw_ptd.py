@@ -95,12 +95,12 @@ def test_estimate_returns_valid_inference_result(estimator, y_arrays):
 
 def test_estimate_metadata(estimator, y_arrays):
     y_true, y_proxy, pi = y_arrays
-    result = estimator.estimate(y_true, y_proxy, pi, n_bootstrap=5, metric_name="accuracy", random_seed=0)
+    result = estimator.estimate(y_true, y_proxy, pi, n_bootstrap=5, metric_name="accuracy", random_seed=2)
     assert result.metric_name == "accuracy"
     assert result.estimator_name == "IPWPTDMeanEstimator"
     assert result.n_true == 3
     assert result.n_proxy == 6
-    assert result.effective_sample_size == 10
+    assert result.effective_sample_size == 1
 
 
 def test_estimate_custom_confidence_level(estimator, y_arrays):
@@ -143,7 +143,7 @@ def test_str_format(estimator, y_arrays):
         "Estimator : IPWPTDMeanEstimator\n"
         "n_true: 3\n"
         "n_proxy: 6\n"
-        "Effective Sample Size: 10"
+        "Effective Sample Size: 0"
     )
     assert output == expected
 

@@ -118,7 +118,8 @@ class PTDMeanEstimator:
         -------
         PredictionPoweredMeanInferenceResult
             Contains a ``BootstrapConfidenceInterval``, metric name, estimator
-            name (``"PTDMeanEstimator"``), and counts ``n_true`` / ``n_proxy``.
+            name (``"PTDMeanEstimator"``), and counts ``n_true`` (labeled samples) and
+            ``n_proxy`` (total samples).
 
         Raises
         ------

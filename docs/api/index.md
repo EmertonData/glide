@@ -15,10 +15,11 @@
 | Class | Description |
 |-------|-------------|
 | [`PPIMeanEstimator`](estimators.md#ppimeanestimator) | Combines labeled data with proxy predictions |
-| [`StratifiedPPIMeanEstimator`](estimators.md#stratifiedppimeanestimator) | PPI with per-stratum optimal weighting |
+| [`StratifiedPPIMeanEstimator`](estimators.md#stratifiedppimeanestimator) | PPI with per-stratum optimal power-tuning |
 | [`ASIMeanEstimator`](estimators.md#asimeanestimator) | Active statistical inference with non-uniform sampling |
-| [`PTDMeanEstimator`](estimators.md#ptdmeanestimator) | Predict-then-debias with bootstrap confidence intervals |
-| [`StratifiedPTDMeanEstimator`](estimators.md#stratifiedptdmeanestimator) | PTD with per-stratum optimal weighting |
+| [`PTDMeanEstimator`](estimators.md#ptdmeanestimator) | Predict-then-debias (PTD) with bootstrap confidence intervals |
+| [`IPWPTDMeanEstimator`](estimators.md#ipwptdmeanestimator) | PTD with inverse probability weighting |
+| [`StratifiedPTDMeanEstimator`](estimators.md#stratifiedptdmeanestimator) | PTD with per-stratum optimal power-tuning |
 
 ## Confidence Intervals
 

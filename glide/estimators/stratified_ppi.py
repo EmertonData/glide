@@ -53,7 +53,7 @@ class StratifiedPPIMeanEstimator:
     Estimator : StratifiedPPIMeanEstimator
     n_true: 4
     n_proxy: 8
-    Effective Sample Size: 95
+    Effective Sample Size: 96
     """
 
     def _preprocess(

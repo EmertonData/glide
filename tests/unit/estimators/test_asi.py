@@ -19,8 +19,8 @@ def arrays(n_labeled: int = 2, n_unlabeled: int = 2, seed: int = 0) -> Tuple[NDA
     y_proxy_unlabeled = rng.normal(4.0, 1.0, size=n_unlabeled)
     y_true = np.hstack([y_true_vals, np.full(n_unlabeled, np.nan)])
     y_proxy = np.hstack([y_proxy_labeled, y_proxy_unlabeled])
-    sampling_probabilities = np.full(n_labeled + n_unlabeled, pi)
-    return y_true, y_proxy, sampling_probabilities
+    pi = np.full(n_labeled + n_unlabeled, pi)
+    return y_true, y_proxy, pi
 
 
 @pytest.fixture
@@ -42,8 +42,8 @@ def y_data() -> Tuple[NDArray, NDArray, NDArray, NDArray]:
 
 
 def test_preprocess_valid_output(estimator, arrays):
-    y_true_input, y_proxy_input, sampling_probabilities = arrays
-    y_true, y_proxy, xi, pi = estimator._preprocess(y_true_input, y_proxy_input, sampling_probabilities)
+    y_true_input, y_proxy_input, pi = arrays
+    y_true, y_proxy, xi, pi = estimator._preprocess(y_true_input, y_proxy_input, pi)
     assert len(y_true) == 4
     assert len(y_proxy) == 4
     assert len(xi) == 4
@@ -57,34 +57,34 @@ def test_preprocess_valid_output(estimator, arrays):
 def test_preprocess_raises_on_length_mismatch(estimator):
     y_true = np.array([1.0, np.nan])
     y_proxy = np.array([1.0, 1.0, 1.0])
-    sampling_probabilities = np.array([0.5, 0.5])
+    pi = np.array([0.5, 0.5])
     with pytest.raises(ValueError, match="same length"):
-        estimator._preprocess(y_true, y_proxy, sampling_probabilities)
+        estimator._preprocess(y_true, y_proxy, pi)
 
 
 @pytest.mark.parametrize("bad_pi", [0.0, -0.5, 2.0])
 def test_preprocess_raises_on_non_positive_pi(estimator, bad_pi):
     y_true = np.array([1.0, np.nan])
     y_proxy = np.array([1.0, 2.0])
-    sampling_probabilities = np.array([0.5, bad_pi])
+    pi = np.array([0.5, bad_pi])
     with pytest.raises(ValueError, match="Sampling probabilities should be in \\(0, 1]"):
-        estimator._preprocess(y_true, y_proxy, sampling_probabilities)
+        estimator._preprocess(y_true, y_proxy, pi)
 
 
 def test_preprocess_raises_on_constant_proxy(estimator):
     y_true = np.array([1.0, np.nan])
     y_proxy = np.array([1.0, 1.0])
-    sampling_probabilities = np.array([0.5, 0.5])
+    pi = np.array([0.5, 0.5])
     with pytest.raises(ValueError, match="Input proxy values have zero variance"):
-        estimator._preprocess(y_true, y_proxy, sampling_probabilities)
+        estimator._preprocess(y_true, y_proxy, pi)
 
 
 def test_preprocess_raises_on_nan_proxy(estimator):
     y_true = np.array([1.0, np.nan])
     y_proxy = np.array([1.0, float("nan")])
-    sampling_probabilities = np.array([0.5, 0.5])
+    pi = np.array([0.5, 0.5])
     with pytest.raises(ValueError, match="Input proxy values contain NaN"):
-        estimator._preprocess(y_true, y_proxy, sampling_probabilities)
+        estimator._preprocess(y_true, y_proxy, pi)
 
 
 # --- _compute_tuning_parameter ---
@@ -106,8 +106,8 @@ def test_compute_tuning_parameter_known_values(estimator, y_data):
 
 
 def test_estimate_is_valid_inference_result(estimator, arrays):
-    y_true, y_proxy, sampling_probabilities = arrays
-    result = estimator.estimate(y_true, y_proxy, sampling_probabilities)
+    y_true, y_proxy, pi = arrays
+    result = estimator.estimate(y_true, y_proxy, pi)
     assert isinstance(result, PredictionPoweredMeanInferenceResult)
     assert np.isfinite(result.confidence_interval.lower_bound)
     assert np.isfinite(result.confidence_interval.upper_bound)
@@ -116,18 +116,18 @@ def test_estimate_is_valid_inference_result(estimator, arrays):
 
 
 def test_estimate_metadata(estimator, arrays):
-    y_true, y_proxy, sampling_probabilities = arrays
-    result = estimator.estimate(y_true, y_proxy, sampling_probabilities, metric_name="TestMetric")
+    y_true, y_proxy, pi = arrays
+    result = estimator.estimate(y_true, y_proxy, pi, metric_name="TestMetric")
     assert result.metric_name == "TestMetric"
     assert result.estimator_name == estimator.__class__.__name__
     assert result.n_true == 2
     assert result.n_proxy == 4
-    assert result.effective_sample_size == 0
+    assert result.effective_sample_size == 1
 
 
 def test_estimate_custom_confidence_level(estimator, arrays):
-    y_true, y_proxy, sampling_probabilities = arrays
-    result = estimator.estimate(y_true, y_proxy, sampling_probabilities, confidence_level=0.95)
+    y_true, y_proxy, pi = arrays
+    result = estimator.estimate(y_true, y_proxy, pi, confidence_level=0.95)
 
     expected_mean = 3.92
     expected_std = 0.19
@@ -145,8 +145,8 @@ def test_estimate_custom_confidence_level(estimator, arrays):
 
 
 def test_str_format(estimator, arrays):
-    y_true, y_proxy, sampling_probabilities = arrays
-    result = estimator.estimate(y_true, y_proxy, sampling_probabilities, metric_name="accuracy")
+    y_true, y_proxy, pi = arrays
+    result = estimator.estimate(y_true, y_proxy, pi, metric_name="accuracy")
     output = str(result)
     expected = (
         "Metric: accuracy\n"
@@ -155,12 +155,12 @@ def test_str_format(estimator, arrays):
         "Estimator : ASIMeanEstimator\n"
         "n_true: 2\n"
         "n_proxy: 4\n"
-        "Effective Sample Size: 0"
+        "Effective Sample Size: 1"
     )
     assert output == expected
 
 
 def test_repr_equals_str(estimator, arrays):
-    y_true, y_proxy, sampling_probabilities = arrays
-    result = estimator.estimate(y_true, y_proxy, sampling_probabilities, metric_name="perf")
+    y_true, y_proxy, pi = arrays
+    result = estimator.estimate(y_true, y_proxy, pi, metric_name="perf")
     assert repr(result) == str(result)

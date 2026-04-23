@@ -53,6 +53,13 @@
       heading_level: 4
       show_root_heading: false
 
+### <span class="doc-class-prefix">class</span> glide.estimators.ipw_ptd.IPWPTDMeanEstimator {: #ipwptdmeanestimator }
+
+::: glide.estimators.ipw_ptd.IPWPTDMeanEstimator
+    options:
+      heading_level: 4
+      show_root_heading: false
+
 ### <span class="doc-class-prefix">class</span> glide.estimators.stratified_ptd.StratifiedPTDMeanEstimator {: #stratifiedptdmeanestimator }
 
 ::: glide.estimators.stratified_ptd.StratifiedPTDMeanEstimator

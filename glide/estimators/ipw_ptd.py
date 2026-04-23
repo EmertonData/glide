@@ -16,14 +16,14 @@ from glide.estimators.ptd_core import (
 class IPWPTDMeanEstimator:
     """Estimator for population mean using IPW-corrected Predict-Then-Debias (IPW-PTD).
 
-    Extends PTD to handle non-uniform, pre-determined labeled sampling probabilities
-    via inverse probability weighting. The bootstrap percentile confidence interval
-    requires no distributional assumptions on the proxy quality. The CLT speedup is
-    applied to the unlabeled set; only the labeled set is resampled at each iteration.
+    Extends PTD to handle non-uniform ground-truth labelling probabilities via inverse probability
+    weighting. The bootstrap percentile confidence interval requires no distributional
+    assumptions on the proxy quality. The CLT speedup is applied to the unlabeled proxies.
+    However, inverse probability weighting requires sampling over the whole dataset to
+    compute bootstrap ground-truth mean and labeled proxy mean estimates.
 
-    When all sampling probabilities are equal, recovers ``PTDMeanEstimator``. When n is
-    large (CLT applies), produces inference equivalent to ``ASIMeanEstimator``, but without
-    relying on the normal approximation for the labeled rectifier.
+    For large sample count (CLT applies), produces inference equivalent to ``ASIMeanEstimator``,
+    but without relying on the normal approximation for the labeled rectifier.
 
     References
     ----------
@@ -46,7 +46,7 @@ class IPWPTDMeanEstimator:
     Estimator : IPWPTDMeanEstimator
     n_true: 2
     n_proxy: 4
-    Effective Sample Size: 18
+    Effective Sample Size: 6
     """
 
     def _preprocess(
@@ -86,22 +86,22 @@ class IPWPTDMeanEstimator:
     ) -> PredictionPoweredMeanInferenceResult:
         """Estimate the population mean using IPW-corrected Predict-Then-Debias.
 
-        Labeled rows were drawn with known, non-uniform probabilities π_i. IPW
-        reweights each resampled labeled observation by 1/π_i, restoring unbiasedness.
+        Ground-truth labels were sampled with known, non-uniform probabilities π_i. IPW
+        reweights each ground-truth labeled observation by 1/π_i, removing bias.
         The unlabeled proxy mean is not resampled: its sampling variability is injected
-        via a single Gaussian draw per iteration (CLT speedup), keeping the per-iteration
-        cost O(n_labeled) rather than O(n_labeled + n_unlabeled).
+        via a single Gaussian draw per iteration (CLT speedup).
 
         Parameters
         ----------
         y_true : NDArray
-            Ground-truth labels of shape ``(M,)``. Use ``np.nan`` for unlabeled rows.
+            Array of shape ``(n_samples,)`` with ground-truth labels. Use ``np.nan`` for
+            unlabeled samples; non-NaN entries are treated as labeled.
         y_proxy : NDArray
-            Proxy predictions of shape ``(M,)``. Must be finite for every row.
+            Array of shape ``(n_samples,)`` with proxy predictions. Must be present for every
+            sample and must not contain NaN.
         pi : NDArray
-            Pre-determined sampling probabilities of shape ``(M,)``. Must be > 0 for
-            every labeled row (i.e. where ``y_true`` is not NaN). Values at unlabeled
-            positions are ignored.
+            Array of shape ``(n_samples,)`` with the ground-truth labelling probability
+            π_i ∈ (0, 1] for each sample.
         metric_name : str, optional
             Human-readable label for the metric. Defaults to ``"Metric"``.
         confidence_level : float, optional
@@ -109,8 +109,8 @@ class IPWPTDMeanEstimator:
         n_bootstrap : int, optional
             Number of bootstrap resamples. Defaults to ``2000``.
         power_tuning : bool, optional
-            If ``True`` (default), estimate the optimal tuning scalar λ from the
-            bootstrap covariances. If ``False``, use λ = 1.
+            If ``True`` (default), estimates λ from bootstrap covariances to minimise variance.
+            If ``False``, uses λ = 1.
         random_seed : int, optional
             Seed for the random number generator, for reproducibility.
             Defaults to ``None`` (non-deterministic).
@@ -118,8 +118,9 @@ class IPWPTDMeanEstimator:
         Returns
         -------
         PredictionPoweredMeanInferenceResult
-            Contains a ``BootstrapConfidenceInterval``, metric name, estimator name
-            (``"IPWPTDMeanEstimator"``), and counts ``n_true`` / ``n_proxy``.
+            Contains a ``BootstrapConfidenceInterval``, metric name, estimator
+            name (``"IPWPTDMeanEstimator"``), and counts ``n_true`` (labeled samples) and
+            ``n_proxy`` (total samples).
 
         Raises
         ------
@@ -128,7 +129,7 @@ class IPWPTDMeanEstimator:
             - If any proxy value is NaN.
             - If all proxy values are identical (zero variance).
             - If there are fewer than 2 labeled or fewer than 2 unlabeled samples.
-            - If any labeled sampling probability is ≤ 0.
+            - If any sampling probability is not in (0, 1].
         """
         y_true_clean, xi, n_labeled, n_unlabeled = self._preprocess(y_true, y_proxy, pi)
         rng = np.random.default_rng(random_seed)
@@ -159,7 +160,7 @@ class IPWPTDMeanEstimator:
             bootstrap_estimates=bootstrap_mean_estimates,
             confidence_level=confidence_level,
         )
-        effective_sample_size = compute_effective_sample_size(ipw_weighted_y_true_labeled, confidence_interval.var)
+        effective_sample_size = compute_effective_sample_size(y_true[xi == 1], confidence_interval.var)
         result = PredictionPoweredMeanInferenceResult(
             confidence_interval=confidence_interval,
             metric_name=metric_name,

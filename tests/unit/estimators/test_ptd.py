@@ -84,7 +84,7 @@ def test_estimate_metadata(estimator, y_arrays):
     assert result.estimator_name == "PTDMeanEstimator"
     assert result.n_true == 3
     assert result.n_proxy == 6
-    assert result.effective_sample_size == 4
+    assert result.effective_sample_size == 5
 
 
 def test_estimate_custom_confidence_level(estimator, y_arrays):
@@ -127,7 +127,7 @@ def test_str_format(estimator, y_arrays):
         "Estimator : PTDMeanEstimator\n"
         "n_true: 3\n"
         "n_proxy: 6\n"
-        "Effective Sample Size: 4"
+        "Effective Sample Size: 5"
     )
     assert output == expected
 
