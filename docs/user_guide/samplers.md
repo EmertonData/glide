@@ -29,7 +29,7 @@ This yields the same sampling probability $\pi_i = b / N$ for every sample, rega
 
 ### Neyman allocation
 
-Neyman allocation assigns more budget to strata with **higher proxy variance**, reducing the asymptotic variance of downstream estimators [[1](#ref-1)]. The raw allocation for stratum $h$ is:
+Neyman allocation assigns more budget to strata with **higher proxy variance**, reducing the asymptotic variance of downstream estimators [[2](#ref-2)]. The raw allocation for stratum $h$ is:
 
 $$n_h^{\text{ney}} = b \cdot \frac{N_h\, \hat{\sigma}_h}{\displaystyle\sum_{k=1}^{K} N_k\, \hat{\sigma}_k}$$
 
@@ -83,6 +83,73 @@ Note that uncertainty scores must be strictly positive. The `ActiveSampler` requ
 
 ---
 
+## Cost Optimal Random Sampler
+
+The `CostOptimalRandomSampler` solves a fundamental problem: given two annotation sources with **different costs and different error rates**, which should you use for each sample to stay within budget and maximise inference quality?
+
+The sampler models two raters:
+
+- **Proxy rater (G)**: cheap, always available, cost $c_g$ per record. Returns noisy labels.
+- **Ground truth rater (H)**: expensive, cost $c_h$ per record. Returns authoritative labels (e.g., human annotator).
+
+The goal is to mix annotations from both raters to meet a budget constraint while minimizing estimation error. The optimal solution is a **random sampling probability** $\pi$ that balances cost and proxy quality. This probability applies to all samples uniformly.
+
+### The optimal sampling probability
+
+The optimal annotation probability comes from cost–benefit analysis [[2](#ref-2)]. Let:
+
+- $\text{Var}(H)$ = variance of the ground truth labels
+- $\text{MSE}(H, G)$ = mean squared error between proxy and ground truth labels
+
+The optimal probability is given by **Proposition 1**:
+
+$$
+\pi^* = \begin{cases}
+\sqrt{\dfrac{c_g}{c_h} \cdot \dfrac{\text{MSE}(H, G)}{\text{Var}(H) - \text{MSE}(H, G)}} & \text{if } \text{MSE}(H, G) < \dfrac{c_h}{c_h + c_g} \cdot \text{Var}(H) \\[0.5em]
+1 & \text{otherwise}
+\end{cases}
+$$
+
+**Interpretation:**
+
+- When $\pi^* < 1$: the proxy is good enough that mixing it with ground truth is cost-efficient. Lower $\pi$ means annotate fewer samples with ground truth (and more with the cheap proxy).
+- When $\pi^* = 1$: the proxy is too poor to justify its cost savings. Always annotate with ground truth.
+
+The threshold depends on the cost ratio: expensive ground truth (large $c_h / c_g$) raises the bar for the proxy to be useful.
+
+### Burn-in phase
+
+To compute $\pi^*$, we need estimates of $\text{Var}(H)$ and $\text{MSE}(H, G)$. When no labeled transfer dataset is available, the sampler first annotates the first $n_b$ records unconditionally with ground truth ($\pi = 1$). This initial "burn-in" dataset is used to estimate the required statistics. Once $\pi^*$ is computed, the burn-in data can be retained and reused by downstream estimators that support inverse probability weighting.
+
+### Total cost and budget mapping
+
+The expected cost of annotating one record is determined by the probability of using each source:
+
+$$\mathbb{E}[\text{Cost per sample}] = c_h \cdot \pi + c_g \cdot (1 - \pi) = c_h \cdot \pi + c_g$$
+
+Given a budget $b$ and optimal probability $\pi^*$, the maximum number of samples that can be annotated is:
+
+$$T = \left\lfloor \frac{b}{c_h \cdot \pi^* + c_g} \right\rfloor$$
+
+### Sampling procedure
+
+The annotation process proceeds in two stages. **First**, the sampler selects $T$ samples uniformly at random from the full dataset (without replacement if $T < n$). **Second**, for each selected sample, it independently decides which annotation source to use:
+
+$$\xi_i \sim \mathrm{Bernoulli}(\pi^*), \quad i = 1, \ldots, T$$
+
+where $\xi_i = 1$ means the sample receives ground truth annotation and $\xi_i = 0$ means it receives proxy annotation. All $T$ selected samples have the same drawing probability $\pi_i = \pi^*$.
+
+### Important constraints
+
+- The proxy must not be **too good** ($\text{MSE}(H, G) > 0$) and not **too poor** ($\text{MSE}(H, G) < \text{Var}(H)$); if either condition is violated, estimation is degenerate and the sampler raises an error.
+- The ground truth labels must have **non-zero variance**; constant labels make estimation impossible.
+- Costs must be strictly positive (`y_true_cost > 0`, `y_proxy_cost > 0`).
+- The budget must be large enough to afford at least one record.
+
+---
+
 ## References
 
 <a id="ref-1"></a>[1] <a id="ref-1-link" href="https://www.ecva.net/papers/eccv_2024/papers_ECCV/papers/12117.pdf">Fogliato, Riccardo, Pratik Patil, Mathew Monfort, and Pietro Perona. "A framework for efficient model evaluation through stratification, sampling, and estimation." *European Conference on Computer Vision*, pp. 140–158. Springer Nature Switzerland, 2024.</a>
+
+<a id="ref-2"></a>[2] <a id="ref-2-link" href="https://arxiv.org/abs/2506.07949">Angelopoulos, A. N., Eisenstein, J., Berant, J., Agarwal, A., and Fisch, A. (2025). "Cost-Optimal Active AI Model Evaluation." *arXiv preprint arXiv:2506.07949*, §2 — Optimal Random Annotation.</a>
