@@ -3,6 +3,7 @@ import pytest
 from numpy.typing import NDArray
 
 from glide.estimators.ptd_core import (
+    _compute_ipw_ptd_bootstrap_labeled_means,
     _compute_ptd_bootstrap_labeled_means,
     _compute_ptd_bootstrap_mean_estimates,
     _compute_ptd_tuning_parameter,
@@ -22,6 +23,22 @@ def bootstrap_y_true_means() -> NDArray:
 @pytest.fixture
 def bootstrap_y_proxy_labeled_means() -> NDArray:
     return np.array([2.0, 4.0, 6.0])
+
+
+# --- _compute_ipw_ptd_bootstrap_labeled_means ---
+
+
+def test_compute_ipw_ptd_bootstrap_labeled_means_known_result(rng):
+    y_true = np.array([5.0, 6.0, 7.0])
+    y_proxy_labeled = np.array([4.5, 5.5, 6.5])
+    pi = np.array([0.4, 0.6, 0.5])
+    y_true_means, y_proxy_means = _compute_ipw_ptd_bootstrap_labeled_means(
+        y_true, y_proxy_labeled, pi, n_bootstrap=4, rng=rng
+    )
+    expected_y_true_means = np.array([11.333333, 12.5, 12.5, 12.666667])
+    expected_y_proxy_means = np.array([10.444444, 11.25, 11.25, 11.722222])
+    np.testing.assert_allclose(y_true_means, expected_y_true_means, rtol=1e-5)
+    np.testing.assert_allclose(y_proxy_means, expected_y_proxy_means, rtol=1e-5)
 
 
 # --- _compute_ptd_bootstrap_labeled_means ---

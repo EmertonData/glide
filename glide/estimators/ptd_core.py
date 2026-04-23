@@ -33,6 +33,20 @@ def _compute_ptd_tuning_parameter(
     return lambda_
 
 
+def _compute_ipw_ptd_bootstrap_labeled_means(
+    y_true: NDArray,
+    y_proxy_labeled: NDArray,
+    pi: NDArray,
+    n_bootstrap: int,
+    rng: np.random.Generator,
+) -> Tuple[NDArray, NDArray]:
+    n_labeled = len(y_true)
+    idx = rng.choice(n_labeled, size=(n_bootstrap, n_labeled), replace=True)
+    y_true_means = np.mean(y_true[idx] / pi[idx], axis=1)
+    y_proxy_labeled_means = np.mean(y_proxy_labeled[idx] / pi[idx], axis=1)
+    return y_true_means, y_proxy_labeled_means
+
+
 def _compute_ptd_bootstrap_mean_estimates(
     bootstrap_y_true_means: NDArray,
     bootstrap_y_proxy_labeled_means: NDArray,
