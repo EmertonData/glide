@@ -14,6 +14,7 @@ hooks = [
 [[repos]]
 repo = "local"
 hooks = [
+  { id = "normalize-notebooks", name = "Normalize notebook source format", entry = "uv run python -c 'import glob, nbformat; [nbformat.write(nbformat.read(f, 4), f) for f in glob.glob(\"docs/**/*.ipynb\", recursive=True)]'", language = "system", pass_filenames = false },
   { id = "ty", name = "ty", entry = "uv run ty check", language = "system", types_or = ["python", "jupyter"], pass_filenames = false },
   { id = "mkdocs-execute", name = "mkdocs-execute must be true", entry = "bash -c '! grep -E \"^[[:space:]]*execute:[[:space:]]*false\" mkdocs.yml'", language = "system", files = "mkdocs\\.yml", pass_filenames = false },
 ]

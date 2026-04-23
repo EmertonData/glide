@@ -31,7 +31,7 @@ def test_upper_bound():
     assert ci.upper_bound == pytest.approx(expected, abs=0.0001)
 
 
-def test_counds_change_with_confidence_level():
+def test_bounds_change_with_confidence_level():
     ci = CLTConfidenceInterval(mean=0.0, std=1.0, confidence_level=0.95)
     lower_95 = ci.lower_bound
     upper_95 = ci.upper_bound
