@@ -43,6 +43,7 @@ class StratifiedPTDMeanEstimator:
     >>> y_proxy = np.array([4.9, 6.1, 5.2, 6.1, 4.9, 6.1, 5.2, 6.1])
     >>> groups = np.array(["A", "A", "A", "A", "B", "B", "B", "B"])
     >>> estimator = StratifiedPTDMeanEstimator()
+    >>> # Run estimation with small n_bootstrap for illustration.
     >>> result = estimator.estimate(y_true, y_proxy, groups, n_bootstrap=5, random_seed=0)
     >>> print(result)
     Metric: Metric

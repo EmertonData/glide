@@ -34,6 +34,7 @@ def test_preprocess_valid_output(estimator, y_arrays):
     assert np.sum(np.isnan(y_true_clean)) == 0
     assert len(xi) == 6
     assert np.isin(xi, [0.0, 1.0]).all()
+    assert np.sum(xi) == 3
     assert n_labeled == 3
     assert n_unlabeled == 3
 

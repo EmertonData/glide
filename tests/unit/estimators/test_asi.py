@@ -4,6 +4,7 @@ import numpy as np
 import pytest
 from numpy.typing import NDArray
 
+from glide.confidence_intervals import CLTConfidenceInterval
 from glide.core.mean_inference_result import PredictionPoweredMeanInferenceResult
 from glide.estimators.asi import ASIMeanEstimator
 
@@ -109,6 +110,7 @@ def test_estimate_is_valid_inference_result(estimator, arrays):
     y_true, y_proxy, pi = arrays
     result = estimator.estimate(y_true, y_proxy, pi)
     assert isinstance(result, PredictionPoweredMeanInferenceResult)
+    assert isinstance(result.confidence_interval, CLTConfidenceInterval)
     assert np.isfinite(result.confidence_interval.lower_bound)
     assert np.isfinite(result.confidence_interval.upper_bound)
     assert result.confidence_interval.lower_bound < result.confidence_interval.upper_bound

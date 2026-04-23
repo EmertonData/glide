@@ -38,6 +38,7 @@ class IPWPTDMeanEstimator:
     >>> y_proxy = np.array([0.9, 0.1, 0.8, 0.2])
     >>> pi      = np.array([0.4, 0.6, 0.3, 0.7])
     >>> estimator = IPWPTDMeanEstimator()
+    >>> # Run estimation with small n_bootstrap for illustration.
     >>> result = estimator.estimate(y_true, y_proxy, pi, n_bootstrap=5, random_seed=0)
     >>> print(result)
     Metric: Metric
