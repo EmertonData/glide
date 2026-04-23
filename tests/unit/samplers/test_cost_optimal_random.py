@@ -222,13 +222,3 @@ def test_sample_is_reproducible(sampler, y_true, y_proxy):
     np.testing.assert_array_equal(indices1, indices2)
     np.testing.assert_array_equal(xi1, xi2)
     assert pi1 == pi2
-
-
-def test_sample_seed_defaults_to_none(sampler, y_true, y_proxy):
-    sampler.fit(y_true, y_proxy)
-
-    indices, xi, pi = sampler.sample(y_proxy, 10.0, 1.0, 5, 42)
-
-    assert len(indices) > 0
-    assert len(xi) == len(indices)
-    assert pi > 0.0

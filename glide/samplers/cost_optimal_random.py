@@ -157,7 +157,7 @@ class CostOptimalRandomSampler:
         Parameters
         ----------
         y_proxy : NDArray
-            Proxy labels, shape (N,), dtype float.
+            Proxy labels, shape ``(n_samples,)``.
         y_true_cost : float
             Per-record cost of the expensive rater (H). Must be strictly positive.
         y_proxy_cost : float
