@@ -15,6 +15,7 @@
 |-------|-------------|
 | [`ActiveSampler`](samplers.md#glide.samplers.active.ActiveSampler) | Uncertainty-based active sampling |
 | [`StratifiedSampler`](samplers.md#glide.samplers.stratified.StratifiedSampler) | Stratified budget allocation with Neyman/proportional strategies |
+| [`CostOptimalRandomSampler`](samplers.md#costoptimalrandomsampler) | Cost-optimal random sampling |
 
 ## Estimators
 
@@ -40,22 +41,8 @@
 
 | Class | Description |
 |-------|-------------|
-<<<<<<< feat/optimal-random-sampler
-| [`ActiveSampler`](samplers.md#activesampler) | Uncertainty-based active sampling |
-| [`StratifiedSampler`](samplers.md#stratifiedsampler) | Stratified budget allocation with Neyman/proportional strategies |
-| [`CostOptimalRandomSampler`](samplers.md#costoptimalrandomsampler) | Cost-optimal random sampling |
-
-## Data & Results
-
-### Data Utilities
-
-| Module | Description |
-|--------|-------------|
-| [`glide.simulators`](simulators.md) | Synthetic dataset generators for validation |
-=======
 | [`CLTConfidenceInterval`](confidence_intervals.md#glide.confidence_intervals.clt.CLTConfidenceInterval) | CLT-based normal approximation confidence intervals |
 | [`BootstrapConfidenceInterval`](confidence_intervals.md#glide.confidence_intervals.bootstrap.BootstrapConfidenceInterval) | Quantile-based bootstrap confidence intervals |
->>>>>>> main
 
 ## Inference Results
 
