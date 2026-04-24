@@ -33,7 +33,7 @@ class StratifiedSampler:
     Examples
     --------
     >>> import numpy as np
-    >>> from glide.samplers.stratified import StratifiedSampler
+    >>> from glide.samplers import StratifiedSampler
     >>> y_proxy = np.array([0.8, 0.9, 0.85, 0.88, 0.2, 0.3])
     >>> groups = np.array(["A", "A", "A", "A", "B", "B"], dtype=object)
     >>> sampler = StratifiedSampler()

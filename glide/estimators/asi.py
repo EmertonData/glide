@@ -29,7 +29,7 @@ class ASIMeanEstimator:
     Examples
     --------
     >>> import numpy as np
-    >>> from glide.estimators.asi import ASIMeanEstimator
+    >>> from glide.estimators import ASIMeanEstimator
     >>> y_true = np.array([5.0, 6.0, np.nan, np.nan])
     >>> y_proxy = np.array([4.9, 6.1, 5.2, 6.1])
     >>> sampling_probabilities = np.array([0.5, 0.7, 0.6, 0.2])

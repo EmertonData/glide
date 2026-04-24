@@ -16,7 +16,7 @@ class StratifiedClassicalMeanEstimator:
     Examples
     --------
     >>> import numpy as np
-    >>> from glide.estimators.stratified_classical import StratifiedClassicalMeanEstimator
+    >>> from glide.estimators import StratifiedClassicalMeanEstimator
     >>> y = np.array([1.0, 3.0, 5.0, 7.0])
     >>> groups = np.array(["A", "A", "B", "B"])
     >>> estimator = StratifiedClassicalMeanEstimator()

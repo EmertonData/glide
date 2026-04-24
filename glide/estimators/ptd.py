@@ -36,7 +36,7 @@ class PTDMeanEstimator:
     Examples
     --------
     >>> import numpy as np
-    >>> from glide.estimators.ptd import PTDMeanEstimator
+    >>> from glide.estimators import PTDMeanEstimator
     >>> y_true = np.array([5.0, 6.0, np.nan, np.nan])
     >>> y_proxy = np.array([4.9, 6.1, 5.2, 6.1])
     >>> estimator = PTDMeanEstimator()

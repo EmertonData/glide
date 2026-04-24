@@ -34,7 +34,7 @@ class PPIMeanEstimator:
     Examples
     --------
     >>> import numpy as np
-    >>> from glide.estimators.ppi import PPIMeanEstimator
+    >>> from glide.estimators import PPIMeanEstimator
     >>> y_true = np.array([5.0, 6.0, np.nan, np.nan])
     >>> y_proxy = np.array([4.9, 6.1, 5.2, 6.1])
     >>> estimator = PPIMeanEstimator()

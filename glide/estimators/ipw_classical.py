@@ -19,7 +19,7 @@ class IPWClassicalMeanEstimator:
     Examples
     --------
     >>> import numpy as np
-    >>> from glide.estimators.ipw_classical import IPWClassicalMeanEstimator
+    >>> from glide.estimators import IPWClassicalMeanEstimator
     >>> y = np.array([5.0, 6.0, 4.0, np.nan, np.nan, np.nan])
     >>> pi = np.array([0.2, 0.8, 0.6, 0.6, 0.4, 0.4])
     >>> estimator = IPWClassicalMeanEstimator()

@@ -117,6 +117,18 @@ def generate_gaussian_dataset(
     The first ``n_labeled`` columns form the labeled set (both ``y_true`` and ``y_proxy``
     are observed); columns ``n_labeled`` through ``n_labeled+n_unlabeled-1`` form the unlabeled set
     (only ``y_proxy`` is observed).
+
+    Examples
+    --------
+    >>> import numpy as np
+    >>> from glide.simulators import generate_gaussian_dataset
+    >>> y_true, y_proxy = generate_gaussian_dataset(n_labeled=3, n_unlabeled=5, random_seed=42)
+    >>> len(y_true)
+    8
+    >>> int(np.sum(~np.isnan(y_true)))
+    3
+    >>> int(np.sum(~np.isnan(y_proxy)))
+    8
     """
     if abs(correlation) > 1:
         raise ValueError("Correlation should be between -1 and 1")
