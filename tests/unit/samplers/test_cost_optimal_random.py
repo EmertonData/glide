@@ -39,30 +39,32 @@ def fitted_sampler_high_MSE(sampler) -> CostOptimalRandomSampler:
 
 def test_fit_raises_on_empty_y_true(sampler):
     with pytest.raises(ValueError, match=r"y_true must not be empty"):
-        sampler.fit(np.array([]), np.array([1.0]))
+        sampler.fit(y_true=np.array([]), y_proxy=np.array([1.0]))
 
 
 def test_fit_raises_on_length_mismatch(sampler):
     with pytest.raises(ValueError, match="must have the same length"):
-        sampler.fit(np.array([1.0, 2.0]), np.array([1.1]))
+        sampler.fit(y_true=np.array([1.0, 2.0]), y_proxy=np.array([1.1]))
 
 
-def test_fit_raises_on_nan_in_input(sampler):
+def test_fit_raises_on_nan_in_y_true(sampler):
     with pytest.raises(ValueError, match="Input contains NaN values"):
-        sampler.fit(np.array([1.0, np.nan]), np.array([1.1, 1.9]))
+        sampler.fit(y_true=np.array([1.0, np.nan]), y_proxy=np.array([1.1, 1.9]))
 
+
+def test_fit_raises_on_nan_in_y_proxy(sampler):
     with pytest.raises(ValueError, match="Input contains NaN values"):
-        sampler.fit(np.array([1.0, 2.0]), np.array([1.1, np.nan]))
+        sampler.fit(y_true=np.array([1.0, 2.0]), y_proxy=np.array([1.1, np.nan]))
 
 
 def test_fit_raises_on_zero_variance_y_true(sampler):
     with pytest.raises(ValueError, match="Input ground-truth values have zero variance"):
-        sampler.fit(np.array([1.0, 1.0]), np.array([1.1, 1.1]))
+        sampler.fit(y_true=np.array([1.0, 1.0]), y_proxy=np.array([1.1, 1.1]))
 
 
 def test_fit_raises_on_zero_mse(sampler):
     with pytest.raises(ValueError, match="Proxy values have zero MSE with ground-truths"):
-        sampler.fit(np.array([1.0, 2.0]), np.array([1.0, 2.0]))
+        sampler.fit(y_true=np.array([1.0, 2.0]), y_proxy=np.array([1.0, 2.0]))
 
 
 # --- _compute_optimal_probability ---
@@ -98,10 +100,13 @@ def test_sample_invalid_n_samples(fitted_sampler, n_samples):
 
 
 @pytest.mark.parametrize("cost", [0.0, -1.0])
-def test_sample_invalid_costs(fitted_sampler, cost):
+def test_sample_invalid_y_true_cost(fitted_sampler, cost):
     with pytest.raises(ValueError, match=r"y_true_cost must be strictly positive"):
         fitted_sampler.sample(n_samples=2, y_true_cost=cost, y_proxy_cost=1.0, budget=5, random_seed=42)
 
+
+@pytest.mark.parametrize("cost", [0.0, -1.0])
+def test_sample_invalid_y_proxy_cost(fitted_sampler, cost):
     with pytest.raises(ValueError, match=r"y_proxy_cost must be strictly positive"):
         fitted_sampler.sample(n_samples=2, y_true_cost=10.0, y_proxy_cost=cost, budget=5, random_seed=42)
 

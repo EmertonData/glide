@@ -15,7 +15,7 @@
 |-------|-------------|
 | [`ActiveSampler`](samplers.md#glide.samplers.active.ActiveSampler) | Uncertainty-based active sampling |
 | [`StratifiedSampler`](samplers.md#glide.samplers.stratified.StratifiedSampler) | Stratified budget allocation with Neyman/proportional strategies |
-| [`CostOptimalRandomSampler`](samplers.md#costoptimalrandomsampler) | Cost-optimal random sampling |
+| [`CostOptimalRandomSampler`](samplers.md#glide.samplers.cost_optimal_random.CostOptimalRandomSampler) | Cost-optimal random sampling |
 
 ## Estimators
 
