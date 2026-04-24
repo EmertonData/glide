@@ -58,7 +58,7 @@ class IPWClassicalMeanEstimator:
         ClassicalMeanInferenceResult
             Contains the CLT-based confidence interval, the metric name,
             the estimator name (``"IPWClassicalMeanEstimator"``), and ``n``
-            (number of observations).
+            (number of labeled observations).
 
         Raises
         ------
@@ -69,15 +69,17 @@ class IPWClassicalMeanEstimator:
         if np.min(sampling_probability) <= 0 or np.max(sampling_probability) > 1:
             raise ValueError("Sampling probabilities should be in (0, 1]")
 
+        n_labeled = np.sum(~np.isnan(y))
+        total_size = len(y)
         ipw_weighted_values = np.nan_to_num(y, nan=0) / sampling_probability
 
         mean = np.mean(ipw_weighted_values)
-        std = np.std(ipw_weighted_values, ddof=1) / np.sqrt(len(ipw_weighted_values))
+        std = np.std(ipw_weighted_values, ddof=1) / np.sqrt(total_size)
         ci = CLTConfidenceInterval(mean=mean, std=std, confidence_level=confidence_level)
         result = ClassicalMeanInferenceResult(
             confidence_interval=ci,
             metric_name=metric_name,
             estimator_name=self.__class__.__name__,
-            n=np.sum(~np.isnan(y)),
+            n=n_labeled,
         )
         return result

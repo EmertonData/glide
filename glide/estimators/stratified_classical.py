@@ -76,7 +76,7 @@ class StratifiedClassicalMeanEstimator:
             If any stratum contains fewer than 2 non-NaN values.
         """
         not_nan_mask = ~np.isnan(y)
-        n_total = np.sum(not_nan_mask)
+        total_size = np.sum(not_nan_mask)
         weighted_mean = 0.0
         weighted_var = 0.0
 
@@ -90,9 +90,10 @@ class StratifiedClassicalMeanEstimator:
                     f"got {len(y_stratum)} in stratum {stratum_id}."
                 )
 
-            w_k = len(y_stratum) / n_total
+            stratum_size = len(y_stratum)
+            w_k = stratum_size / total_size
             mean_k = np.mean(y_stratum)
-            var_k = np.var(y_stratum, ddof=1) / len(y_stratum)
+            var_k = np.var(y_stratum, ddof=1) / stratum_size
             weighted_mean += w_k * mean_k
             weighted_var += w_k**2 * var_k
 
@@ -106,6 +107,6 @@ class StratifiedClassicalMeanEstimator:
             confidence_interval=ci,
             metric_name=metric_name,
             estimator_name=self.__class__.__name__,
-            n=n_total,
+            n=total_size,
         )
         return result
