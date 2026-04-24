@@ -2,7 +2,7 @@ import numpy as np
 from numpy.typing import NDArray
 
 
-def _compute_ppi_tuning_parameter(
+def _compute_tuning_parameter(
     y_true: NDArray,
     y_proxy_labeled: NDArray,
     y_proxy_unlabeled: NDArray,
@@ -19,7 +19,7 @@ def _compute_ppi_tuning_parameter(
     return lambda_
 
 
-def _compute_ppi_mean_estimate(
+def _compute_mean_estimate(
     y_true: NDArray,
     y_proxy_labeled: NDArray,
     y_proxy_unlabeled: NDArray,
@@ -31,7 +31,7 @@ def _compute_ppi_mean_estimate(
     return mean_estimate
 
 
-def _compute_ppi_std_estimate(
+def _compute_std_estimate(
     y_true: NDArray,
     y_proxy_labeled: NDArray,
     y_proxy_unlabeled: NDArray,

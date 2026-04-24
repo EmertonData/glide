@@ -7,9 +7,9 @@ from glide.confidence_intervals import CLTConfidenceInterval
 from glide.core.mean_inference_result import PredictionPoweredMeanInferenceResult
 from glide.core.utils import compute_effective_sample_size
 from glide.estimators.ppi_core import (
-    _compute_ppi_mean_estimate,
-    _compute_ppi_std_estimate,
-    _compute_ppi_tuning_parameter,
+    _compute_mean_estimate,
+    _compute_std_estimate,
+    _compute_tuning_parameter,
 )
 
 
@@ -34,7 +34,7 @@ class PPIMeanEstimator:
     Examples
     --------
     >>> import numpy as np
-    >>> from glide.estimators.ppi import PPIMeanEstimator
+    >>> from glide.estimators import PPIMeanEstimator
     >>> y_true = np.array([5.0, 6.0, np.nan, np.nan])
     >>> y_proxy = np.array([4.9, 6.1, 5.2, 6.1])
     >>> estimator = PPIMeanEstimator()
@@ -124,9 +124,9 @@ class PPIMeanEstimator:
         """
         y_true_labeled, y_proxy_labeled, y_proxy_unlabeled = self._preprocess(y_true, y_proxy)
         n_labeled, n_unlabeled = len(y_true_labeled), len(y_proxy_unlabeled)
-        lambda_ = _compute_ppi_tuning_parameter(y_true_labeled, y_proxy_labeled, y_proxy_unlabeled, power_tuning)
-        mean = _compute_ppi_mean_estimate(y_true_labeled, y_proxy_labeled, y_proxy_unlabeled, lambda_)
-        std = _compute_ppi_std_estimate(y_true_labeled, y_proxy_labeled, y_proxy_unlabeled, lambda_)
+        lambda_ = _compute_tuning_parameter(y_true_labeled, y_proxy_labeled, y_proxy_unlabeled, power_tuning)
+        mean = _compute_mean_estimate(y_true_labeled, y_proxy_labeled, y_proxy_unlabeled, lambda_)
+        std = _compute_std_estimate(y_true_labeled, y_proxy_labeled, y_proxy_unlabeled, lambda_)
         confidence_interval = CLTConfidenceInterval(
             mean=mean,
             std=std,
