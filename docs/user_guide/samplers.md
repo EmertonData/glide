@@ -83,6 +83,71 @@ Note that uncertainty scores must be strictly positive. The `ActiveSampler` requ
 
 ---
 
+## Cost Optimal Random Sampler
+
+The `CostOptimalRandomSampler` addresses the following setting: two annotation sources are available, one **cheap but error-prone** (the proxy rater) and one **expensive but highly reliable** (the ground truth rater). The proxy is queried for every sample in the dataset. The sampler decides which samples to also send to the expensive rater, so that downstream estimation of the mean ground truth rating is as precise as possible within the available budget.
+
+The sampler models two raters:
+
+- **Proxy rater ($G$)**: cheap, always queried, cost $c_g$ per sample. Returns noisy labels.
+- **Ground truth rater ($H$)**: expensive, cost $c_h$ per sample ($c_g < c_h$). Returns authoritative labels (e.g., a human annotator).
+
+The simplest annotation policy queries the ground truth rater at a **fixed probability $\pi$** for every sample, regardless of its characteristics. When $\pi$ is too large the cost is too high; when $\pi$ is too small the downstream estimation variance blows up. The `CostOptimalRandomSampler` finds the optimal balance.
+
+### The optimal sampling probability
+
+The optimal probability minimises estimation error subject to the cost budget (see [[2](#ref-2), Proposition 1]). It depends on two quantities:
+
+- $\text{Var}(H)$: variance of the ground truth labels
+- $\text{MSE}(H, G) = \mathbb{E}[(H - G)^2]$: mean squared error of the proxy relative to the ground truth
+
+The optimal probability $\pi^*$ is then:
+
+$$
+\pi^* = \begin{cases}
+\sqrt{\dfrac{c_g}{c_h} \cdot \dfrac{\text{MSE}(H, G)}{\text{Var}(H) - \text{MSE}(H, G)}} & \text{if } \text{MSE}(H, G) < \dfrac{c_h}{c_h + c_g} \cdot \text{Var}(H) \\[0.5em]
+1 & \text{otherwise}
+\end{cases}
+$$
+
+**Interpretation:**
+
+- If the first case condition holds, the proxy is accurate enough that querying the ground truth rater on only a fraction $\pi^* < 1$ of samples is cost-efficient. The optimal rate varies inversely with both the ratio $\text{Var}(H) / \text{MSE}(H, G)$ and the cost ratio $c_h / c_g$: a more accurate proxy or a more expensive ground truth rater both lead to a lower $\pi^*$.
+- In the second case, the proxy is too unreliable and every sample must be sent to the expensive rater ($\pi^* = 1$).
+
+The intuition: if $H$ has high variance but $G$ closely tracks it, the estimator can primarily exploit the proxy's cheap, high-quality predictions, querying the ground truth rater at a low rate only to correct for residual bias.
+
+### Burn-in phase
+
+To compute $\pi^*$, estimates of $\text{Var}(H)$ and $\text{MSE}(H, G)$ are needed. When no labeled data is available upfront, one can first annotate a number of initial samples unconditionally with ground truth ($\pi = 1$). This burn-in dataset is used to compute the required statistics. Once $\pi^*$ is determined, the burn-in data can be retained and reused by downstream estimators that support inverse probability weighting.
+
+### Total cost and budget mapping
+
+Since the proxy is queried for every sample, the expected cost per sample is:
+
+$$\mathbb{E}[\text{Cost per sample}] = c_g + c_h \cdot \pi$$
+
+Given a budget $b$ and optimal probability $\pi^*$, the maximum number of samples that can be processed is:
+
+$$T = \left\lfloor \frac{b}{c_g + c_h \cdot \pi^*} \right\rfloor$$
+
+### Sampling procedure
+
+The annotation process proceeds in two stages. First, the sampler determines which samples to process, depending on how $T$ compares to the dataset size $N$:
+
+- If $T < N$: then $T$ samples are drawn uniformly at random without replacement from the dataset.
+- If $T \geq N$: all $N$ samples are used.
+
+Second, each selected sample is independently sent to the expensive rater with probability $\pi^*$:
+
+$$\xi_i \sim \mathrm{Bernoulli}(\pi^*), \quad i = 1, \ldots, \min(T, N)$$
+
+where $\xi_i = 1$ means the sample additionally receives ground truth annotation and $\xi_i = 0$ means only the proxy annotation is used. All selected samples share the same drawing probability $\pi_i = \pi^*$.
+
+---
+
 ## References
 
 <a id="ref-1"></a>[1] <a id="ref-1-link" href="https://www.ecva.net/papers/eccv_2024/papers_ECCV/papers/12117.pdf">Fogliato, Riccardo, Pratik Patil, Mathew Monfort, and Pietro Perona. "A framework for efficient model evaluation through stratification, sampling, and estimation." *European Conference on Computer Vision*, pp. 140–158. Springer Nature Switzerland, 2024.</a>
+
+<a id="ref-2"></a>[2] <a id="ref-2-link" href="https://arxiv.org/abs/2506.07949">Angelopoulos, Anastasios N., Jacob Eisenstein, Jonathan Berant, Alekh Agarwal, and Adam Fisch. "Cost-optimal active ai model evaluation." arXiv preprint arXiv:2506.07949 (2025).</a>
