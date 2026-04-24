@@ -29,7 +29,7 @@ This yields the same sampling probability $\pi_i = b / N$ for every sample, rega
 
 ### Neyman allocation
 
-Neyman allocation assigns more budget to strata with **higher proxy variance**, reducing the asymptotic variance of downstream estimators [[2](#ref-2)]. The raw allocation for stratum $h$ is:
+Neyman allocation assigns more budget to strata with **higher proxy variance**, reducing the asymptotic variance of downstream estimators [[1](#ref-1)]. The raw allocation for stratum $h$ is:
 
 $$n_h^{\text{ney}} = b \cdot \frac{N_h\, \hat{\sigma}_h}{\displaystyle\sum_{k=1}^{K} N_k\, \hat{\sigma}_k}$$
 
@@ -85,23 +85,23 @@ Note that uncertainty scores must be strictly positive. The `ActiveSampler` requ
 
 ## Cost Optimal Random Sampler
 
-The `CostOptimalRandomSampler` solves a fundamental problem: given two annotation sources with **different costs and different error rates**, which should you use for each sample to stay within budget and maximise inference quality?
+The `CostOptimalRandomSampler` addresses the following setting: two annotation sources are available, one **cheap but error-prone** (the proxy rater) and one **expensive but highly reliable** (the ground truth rater). The proxy is queried for every sample in the dataset. The sampler decides which samples to also send to the expensive rater, so that downstream estimation of the mean ground truth rating is as precise as possible within the available budget.
 
 The sampler models two raters:
 
-- **Proxy rater (G)**: cheap, always available, cost $c_g$ per record. Returns noisy labels.
-- **Ground truth rater (H)**: expensive, cost $c_h$ per record. Returns authoritative labels (e.g., human annotator).
+- **Proxy rater ($G$)**: cheap, always queried, cost $c_g$ per record. Returns noisy labels.
+- **Ground truth rater ($H$)**: expensive, cost $c_h$ per record ($c_g < c_h$). Returns authoritative labels (e.g., a human annotator).
 
-The goal is to mix annotations from both raters to minimize estimation error while ensuring a budget constraint is met. The optimal solution is a **random sampling probability** $\pi$ that balances cost and proxy quality. This probability applies to all samples uniformly.
+The simplest annotation policy queries the ground truth rater at a **fixed probability $\pi$** for every sample, regardless of its characteristics. When $\pi$ is too large the cost is too high; when $\pi$ is too small the downstream estimation variance blows up. The `CostOptimalRandomSampler` finds the optimal balance.
 
 ### The optimal sampling probability
 
-The optimal annotation probability comes from cost–benefit analysis . Let:
+The optimal probability minimises estimation error subject to the cost budget (see [[2](#ref-2), Proposition 1]). It depends on two quantities:
 
-- $\text{Var}(H)$ = variance of the ground truth labels
-- $\text{MSE}(H, G)$ = mean squared error between proxy and ground truth labels
+- $\text{Var}(H)$: variance of the ground truth labels
+- $\text{MSE}(H, G) = \mathbb{E}[(H - G)^2]$: mean squared error of the proxy relative to the ground truth
 
-The optimal probability is given by (see [[2](#ref-2), Proposition 1]):
+The optimal probability $\pi^*$ is then:
 
 $$
 \pi^* = \begin{cases}
@@ -112,39 +112,37 @@ $$
 
 **Interpretation:**
 
-- If the first case condition is verified, the proxy is good enough so that mixing it with ground truth is cost-efficient. The latter is only used for a fraction of samples ($\pi^* < 1$). Lower $\pi$ means annotate fewer samples with ground truth. Note that the cheap proxy is used for all samples
-- In the second case, the proxy is too poor so that ground truth annotations are always needed ($\pi^* = 1$).
+- If the first case condition holds, the proxy is accurate enough that querying the ground truth rater on only a fraction $\pi^* < 1$ of samples is cost-efficient. The optimal rate varies inversely with both the ratio $\text{Var}(H) / \text{MSE}(H, G)$ and the cost ratio $c_h / c_g$: a more accurate proxy or a more expensive ground truth rater both lead to a lower $\pi^*$.
+- In the second case, the proxy is too unreliable and every sample must be sent to the expensive rater ($\pi^* = 1$).
 
-The threshold depends on the cost ratio: expensive ground truth (large $c_h / c_g$) raises the bar for the proxy to be useful.
+The intuition: if $H$ has high variance but $G$ closely tracks it, the estimator can primarily exploit the proxy's cheap, high-quality predictions, querying the ground truth rater at a low rate only to correct for residual bias.
 
 ### Burn-in phase
 
-To compute $\pi^*$, we need estimates of $\text{Var}(H)$ and $\text{MSE}(H, G)$. When no labeled transfer dataset is available, the sampler first annotates the first $n_b$ records unconditionally with ground truth ($\pi = 1$). This initial "burn-in" dataset is used to estimate the required statistics. Once $\pi^*$ is computed, the burn-in data can be retained and reused by downstream estimators that support inverse probability weighting.
+To compute $\pi^*$, estimates of $\text{Var}(H)$ and $\text{MSE}(H, G)$ are needed. When no labeled data is available upfront, one can first annotate the initial $n_b$ records unconditionally with ground truth ($\pi = 1$). This burn-in dataset is used to compute the required statistics. Once $\pi^*$ is determined, the burn-in data can be retained and reused by downstream estimators that support inverse probability weighting.
 
 ### Total cost and budget mapping
 
-The expected cost of annotating one record is determined by the probability of using each source:
+Since the proxy is queried for every sample, the expected cost per sample is:
 
-$$\mathbb{E}[\text{Cost per sample}] = c_h \cdot \pi + c_g \cdot (1 - \pi) = c_h \cdot \pi + c_g$$
+$$\mathbb{E}[\text{Cost per sample}] = c_g + c_h \cdot \pi$$
 
-Given a budget $b$ and optimal probability $\pi^*$, the maximum number of samples that can be annotated is:
+Given a budget $b$ and optimal probability $\pi^*$, the maximum number of samples that can be processed is:
 
-$$T = \left\lfloor \frac{b}{c_h \cdot \pi^* + c_g} \right\rfloor$$
+$$T = \left\lfloor \frac{b}{c_g + c_h \cdot \pi^*} \right\rfloor$$
 
 ### Sampling procedure
 
-The annotation process proceeds in two stages. **First**, the sampler selects $T$ samples uniformly at random from the full dataset (without replacement if $T < n$). **Second**, for each selected sample, it independently decides which annotation source to use:
+The annotation process proceeds in two stages. **First**, the sampler determines which samples to process, depending on how $T$ compares to the dataset size $N$:
 
-$$\xi_i \sim \mathrm{Bernoulli}(\pi^*), \quad i = 1, \ldots, T$$
+- If $T < N$: then $T$ samples are drawn uniformly at random without replacement from the dataset.
+- If $T \geq N$: all $N$ samples are used.
 
-where $\xi_i = 1$ means the sample receives ground truth annotation and $\xi_i = 0$ means it receives proxy annotation. All $T$ selected samples have the same drawing probability $\pi_i = \pi^*$.
+**Second**, each selected sample is independently sent to the expensive rater with probability $\pi^*$:
 
-### Important constraints
+$$\xi_i \sim \mathrm{Bernoulli}(\pi^*), \quad i = 1, \ldots, \min(T, N)$$
 
-- The proxy must not be **too good** ($\text{MSE}(H, G) > 0$) and not **too poor** ($\text{MSE}(H, G) < \text{Var}(H)$); if either condition is violated, estimation is degenerate and the sampler raises an error.
-- The ground truth labels must have **non-zero variance**; constant labels make estimation impossible.
-- Costs must be strictly positive (`y_true_cost > 0`, `y_proxy_cost > 0`).
-- The budget must be large enough to afford at least one record.
+where $\xi_i = 1$ means the sample additionally receives ground truth annotation and $\xi_i = 0$ means only the proxy annotation is used. All selected samples share the same drawing probability $\pi_i = \pi^*$.
 
 ---
 
