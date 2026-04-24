@@ -5,3 +5,7 @@
 ---
 
 ::: glide.samplers.stratified.StratifiedSampler
+
+---
+
+::: glide.samplers.cost_optimal_random.CostOptimalRandomSampler
