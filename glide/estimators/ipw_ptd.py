@@ -1,3 +1,4 @@
+import warnings
 from typing import Optional, Tuple
 
 import numpy as np
@@ -70,8 +71,8 @@ class IPWPTDMeanEstimator:
         if min(n_labeled, n_unlabeled) <= 1:
             raise ValueError("Too few labeled or unlabeled samples in dataset")
         y_true_no_nan = np.nan_to_num(y_true, nan=0)
-        if np.min(pi) <= 0 or np.max(pi) > 1:
-            raise ValueError("Sampling probabilities should be in (0, 1]")
+        if np.min(pi) < 0 or np.max(pi) > 1:
+            raise ValueError("Sampling probabilities should be in [0, 1]")
         return y_true_no_nan, xi, n_labeled, n_unlabeled
 
     def estimate(
@@ -102,7 +103,7 @@ class IPWPTDMeanEstimator:
             sample and must not contain NaN.
         pi : NDArray
             Array of shape ``(n_samples,)`` with the ground-truth labelling probability
-            π_i ∈ (0, 1] for each sample.
+            π_i ∈ [0, 1] for each sample.
         metric_name : str, optional
             Human-readable label for the metric. Defaults to ``"Metric"``.
         confidence_level : float, optional
@@ -130,14 +131,22 @@ class IPWPTDMeanEstimator:
             - If any proxy value is NaN.
             - If all proxy values are identical (zero variance).
             - If there are fewer than 2 labeled or fewer than 2 unlabeled samples.
-            - If any sampling probability is not in (0, 1].
+            - If any sampling probability is not in [0, 1].
         """
         y_true_clean, xi, n_labeled, n_unlabeled = self._preprocess(y_true, y_proxy, pi)
         rng = np.random.default_rng(random_seed)
 
-        ipw_weighted_y_true_labeled = y_true_clean * xi / pi
-        ipw_weighted_y_proxy_labeled = y_proxy * xi / pi
-        ipw_weighted_y_proxy_unlabeled = y_proxy * (1 - xi) / (1 - pi)
+        non_zero_pi_mask = pi > 0
+        non_one_pi_mask = pi < 1
+
+        with warnings.catch_warnings():
+            warnings.filterwarnings("ignore")
+            labeled_ipw_weights = xi / pi
+            unlabeled_ipw_weights = (1 - xi) / (1 - pi)
+
+        ipw_weighted_y_true_labeled = (y_true_clean * labeled_ipw_weights)[non_zero_pi_mask]
+        ipw_weighted_y_proxy_labeled = (y_proxy * labeled_ipw_weights)[non_zero_pi_mask]
+        ipw_weighted_y_proxy_unlabeled = (y_proxy * unlabeled_ipw_weights)[non_one_pi_mask]
 
         mean_proxy_unlabeled = np.mean(ipw_weighted_y_proxy_unlabeled)
         var_proxy_unlabeled = np.var(ipw_weighted_y_proxy_unlabeled, ddof=1) / len(ipw_weighted_y_proxy_unlabeled)

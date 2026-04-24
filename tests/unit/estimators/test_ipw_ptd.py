@@ -76,7 +76,7 @@ def test_preprocess_raises_on_invalid_pi(estimator, bad_pi):
     y_true = np.array([1.0, 2.0, np.nan, np.nan])
     y_proxy = np.array([0.9, 1.9, 0.8, 1.8])
     pi = np.array([0.5, bad_pi, 0.5, 0.5])
-    with pytest.raises(ValueError, match="Sampling probabilities should be in \\(0, 1]"):
+    with pytest.raises(ValueError, match="Sampling probabilities should be in \\[0, 1\\]"):
         estimator._preprocess(y_true, y_proxy, pi)
 
 
