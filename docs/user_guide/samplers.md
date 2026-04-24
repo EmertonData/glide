@@ -92,16 +92,16 @@ The sampler models two raters:
 - **Proxy rater (G)**: cheap, always available, cost $c_g$ per record. Returns noisy labels.
 - **Ground truth rater (H)**: expensive, cost $c_h$ per record. Returns authoritative labels (e.g., human annotator).
 
-The goal is to mix annotations from both raters to meet a budget constraint while minimizing estimation error. The optimal solution is a **random sampling probability** $\pi$ that balances cost and proxy quality. This probability applies to all samples uniformly.
+The goal is to mix annotations from both raters to minimize estimation error while ensuring a budget constraint is met. The optimal solution is a **random sampling probability** $\pi$ that balances cost and proxy quality. This probability applies to all samples uniformly.
 
 ### The optimal sampling probability
 
-The optimal annotation probability comes from cost–benefit analysis [[2](#ref-2)]. Let:
+The optimal annotation probability comes from cost–benefit analysis . Let:
 
 - $\text{Var}(H)$ = variance of the ground truth labels
 - $\text{MSE}(H, G)$ = mean squared error between proxy and ground truth labels
 
-The optimal probability is given by **Proposition 1**:
+The optimal probability is given by (see [[2](#ref-2), Proposition 1]):
 
 $$
 \pi^* = \begin{cases}
@@ -112,8 +112,8 @@ $$
 
 **Interpretation:**
 
-- When $\pi^* < 1$: the proxy is good enough that mixing it with ground truth is cost-efficient. Lower $\pi$ means annotate fewer samples with ground truth (and more with the cheap proxy).
-- When $\pi^* = 1$: the proxy is too poor to justify its cost savings. Always annotate with ground truth.
+- If the first case condition is verified, the proxy is good enough so that mixing it with ground truth is cost-efficient. The latter is only used for a fraction of samples ($\pi^* < 1$). Lower $\pi$ means annotate fewer samples with ground truth. Note that the cheap proxy is used for all samples
+- In the second case, the proxy is too poor so that ground truth annotations are always needed ($\pi^* = 1$).
 
 The threshold depends on the cost ratio: expensive ground truth (large $c_h / c_g$) raises the bar for the proxy to be useful.
 
@@ -152,4 +152,4 @@ where $\xi_i = 1$ means the sample receives ground truth annotation and $\xi_i =
 
 <a id="ref-1"></a>[1] <a id="ref-1-link" href="https://www.ecva.net/papers/eccv_2024/papers_ECCV/papers/12117.pdf">Fogliato, Riccardo, Pratik Patil, Mathew Monfort, and Pietro Perona. "A framework for efficient model evaluation through stratification, sampling, and estimation." *European Conference on Computer Vision*, pp. 140–158. Springer Nature Switzerland, 2024.</a>
 
-<a id="ref-2"></a>[2] <a id="ref-2-link" href="https://arxiv.org/abs/2506.07949">Angelopoulos, A. N., Eisenstein, J., Berant, J., Agarwal, A., and Fisch, A. (2025). "Cost-Optimal Active AI Model Evaluation." *arXiv preprint arXiv:2506.07949*, §2 — Optimal Random Annotation.</a>
+<a id="ref-2"></a>[2] <a id="ref-2-link" href="https://arxiv.org/abs/2506.07949">Angelopoulos, Anastasios N., Jacob Eisenstein, Jonathan Berant, Alekh Agarwal, and Adam Fisch. "Cost-optimal active ai model evaluation." arXiv preprint arXiv:2506.07949 (2025).</a>
