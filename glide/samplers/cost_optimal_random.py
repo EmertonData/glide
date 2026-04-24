@@ -118,12 +118,13 @@ class CostOptimalRandomSampler:
     ) -> Tuple[NDArray, NDArray, float]:
         """Sample observations with cost-optimal allocation between raters.
 
-        Determines the optimal probability of requesting the expensive rater
-        (ground truth) in addition to the cheap rater (proxy) based on relative costs
-        and annotation quality. Each observation receives a drawing probability
-        that is either the optimal value or 1.0 (if the budget constraint binds).
-        Probabilities are capped at 1 before sampling, so the actual number of
-        selected items is a random variable.
+        Derives the optimal probability of querying the expensive rater (ground truth)
+        based on relative costs and proxy quality. The budget determines the maximum
+        number of samples that can be annotated; if this is less than the dataset size,
+        samples are drawn uniformly at random without replacement. For each selected
+        sample, an independent Bernoulli draw with the optimal probability determines
+        whether the expensive rater is also queried; these indicators are returned
+        alongside the selected indices and the optimal probability.
 
         Parameters
         ----------
@@ -142,16 +143,10 @@ class CostOptimalRandomSampler:
         Returns
         -------
         Tuple[NDArray, NDArray, float]
-            Let T <= n_samples the maximum number of samples that can be annotated
-            within the budget:
-
-            [0]: indices, shape (T,), dtype int — sorted indices of the T samples selected
-                 uniformly at random from the input for annotation.
-            [1]: xi, shape (T,), dtype float — Bernoulli indicators for each selected
-                 sample: 1 if the expensive rater (ground truth) was selected, 0 if only
-                 the cheap rater (proxy) is used.
-            [2]: pi, dtype float — optimal annotation probability used (probability of
-                 selecting the expensive rater for each sample).
+            [0]: array of shape ``(T,)``, sorted indices of the T selected samples,
+            where T is the maximum number of samples affordable within the budget.
+            [1]: array of shape ``(T,)``, xi with Bernoulli indicators for each selected sample.
+            [2]: float, pi with the optimal probability used for each Bernoulli draw.
 
         Raises
         ------
