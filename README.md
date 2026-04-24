@@ -10,6 +10,7 @@
   <a href="https://github.com/EmertonData/glide/releases"><img src="https://img.shields.io/github/v/release/EmertonData/glide" alt="Release"></a>
   <a href="https://github.com/EmertonData/glide/commits/master"><img src="https://img.shields.io/github/commits-since/EmertonData/glide/latest" alt="Commits"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-Apache%202.0-blue" alt="License"></a>
+  <a href="https://www.linkedin.com/build-relation/newsletter-follow?entityUrn=7453423077557952512"><img src="https://img.shields.io/badge/Follow-LinkedIn-0A66C2" alt="LinkedIn"></a>
 </p>
 
 <p align="center">
@@ -85,9 +86,9 @@ If you use Glide in your research, please cite:
 | 2025 | [Can Unconfident LLM Annotations Be Used for Confident Conclusions?](https://aclanthology.org/2025.naacl-long.179/) |NAACL'25|[Link](https://github.com/kristinagligoric/confidence-driven-inference)| samplers.ActiveSampler, estimators.ASIMeanEstimator |
 | 2025 | [Prediction-Powered Inference with Imputed Covariates and Nonuniform Sampling](https://arxiv.org/abs/2501.18577) |Preprint|[Link](https://github.com/DanKluger/PTDBoot)| estimators.PTDMeanEstimator |
 
+## 📬 Stay Updated
 
-
-
+Follow our [LinkedIn newsletter](https://www.linkedin.com/build-relation/newsletter-follow?entityUrn=7453423077557952512) for updates on GLIDE and GenAI evaluation.
 
 ## 🏛️ Affiliation
 
