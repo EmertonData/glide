@@ -28,4 +28,8 @@
 
 ---
 
+::: glide.estimators.ipw_ptd.IPWPTDMeanEstimator
+
+---
+
 ::: glide.estimators.stratified_ptd.StratifiedPTDMeanEstimator

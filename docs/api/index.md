@@ -35,6 +35,7 @@
 | [`StratifiedPPIMeanEstimator`](estimators.md#glide.estimators.stratified_ppi.StratifiedPPIMeanEstimator) | PPI with per-stratum optimal weighting |
 | [`ASIMeanEstimator`](estimators.md#glide.estimators.asi.ASIMeanEstimator) | Active statistical inference with non-uniform sampling |
 | [`PTDMeanEstimator`](estimators.md#glide.estimators.ptd.PTDMeanEstimator) | Predict-then-debias with bootstrap confidence intervals |
+| [`IPWPTDMeanEstimator`](estimators.md#glide.estimators.ipw_ptd.IPWPTDMeanEstimator) | PTD with inverse probability weighting |
 | [`StratifiedPTDMeanEstimator`](estimators.md#glide.estimators.stratified_ptd.StratifiedPTDMeanEstimator) | PTD with per-stratum optimal weighting |
 
 ## Confidence Intervals

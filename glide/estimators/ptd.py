@@ -40,6 +40,7 @@ class PTDMeanEstimator:
     >>> y_true = np.array([5.0, 6.0, np.nan, np.nan])
     >>> y_proxy = np.array([4.9, 6.1, 5.2, 6.1])
     >>> estimator = PTDMeanEstimator()
+    >>> # Run estimation with small n_bootstrap for illustration.
     >>> result = estimator.estimate(y_true, y_proxy, n_bootstrap=5, random_seed=0)
     >>> print(result)
     Metric: Metric
@@ -118,7 +119,8 @@ class PTDMeanEstimator:
         -------
         PredictionPoweredMeanInferenceResult
             Contains a ``BootstrapConfidenceInterval``, metric name, estimator
-            name (``"PTDMeanEstimator"``), and counts ``n_true`` / ``n_proxy``.
+            name (``"PTDMeanEstimator"``), and counts ``n_true`` (labeled samples) and
+            ``n_proxy`` (total samples).
 
         Raises
         ------

@@ -9,6 +9,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 ## [Next release]
 
 ### ✨ Added
+- `IPWPTDMeanEstimator` for inverse probability weighted PTD mean estimation
 - Section about `CostOptimalRandomSampler` in the user guide
 - `CostOptimalRandomSampler` for cost-optimal annotation strategy
 - Stratified PTD scientific validation notebook
