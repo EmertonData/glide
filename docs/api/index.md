@@ -33,6 +33,7 @@
 |-------|-------------|
 | [`ActiveSampler`](samplers.md#activesampler) | Uncertainty-based active sampling |
 | [`StratifiedSampler`](samplers.md#stratifiedsampler) | Stratified budget allocation with Neyman/proportional strategies |
+| [`CostOptimalRandomSampler`](samplers.md#costoptimalrandomsampler) | Cost-optimal random sampling |
 
 ## Data & Results
 
