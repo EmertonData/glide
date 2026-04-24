@@ -74,7 +74,8 @@ class CostOptimalRandomSampler:
             - If either array contains NaN, is empty, or arrays have different lengths.
             - If the variance of ``y_true`` is zero (all labels are identical).
             - If the mean squared error between ``y_true`` and ``y_proxy`` is zero
-              (proxy labels match ground truth perfectly).
+              (proxy labels match ground truth perfectly). This would lead to zero
+              annotation probability making sampling impossible.
         """
         if len(y_true) == 0:
             raise ValueError("y_true must not be empty")
@@ -181,11 +182,9 @@ class CostOptimalRandomSampler:
             )
 
         rng = np.random.default_rng(random_seed)
-        N = n_samples
-        if T < N:
-            indices = np.sort(rng.choice(N, size=T, replace=False))
+        if T < n_samples:
+            indices = np.sort(rng.choice(n_samples, size=T, replace=False))
         else:
-            indices = np.arange(N)
-
+            indices = np.arange(n_samples)
         xi = rng.binomial(n=1, p=pi, size=len(indices)).astype(float)
         return indices, pi, xi

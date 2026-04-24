@@ -69,17 +69,12 @@ def test_fit_raises_on_zero_mse(sampler):
 
 
 def test_compute_optimal_probability_pi_one(fitted_sampler_high_MSE):
-    y_true_cost = 1.0
-    y_proxy_cost = 10.0
-    pi = fitted_sampler_high_MSE._compute_optimal_probability(y_true_cost, y_proxy_cost)
-
+    pi = fitted_sampler_high_MSE._compute_optimal_probability(y_true_cost=1.0, y_proxy_cost=10.0)
     assert pi == 1.0
 
 
 def test_compute_optimal_probability_pi_known_value(fitted_sampler):
-    y_true_cost = 10.0
-    y_proxy_cost = 1.0
-    pi = fitted_sampler._compute_optimal_probability(y_true_cost, y_proxy_cost)
+    pi = fitted_sampler._compute_optimal_probability(y_true_cost=10.0, y_proxy_cost=1.0)
 
     expected_pi = 0.0451
 
@@ -129,11 +124,11 @@ def test_sample_valid_output(fitted_sampler):
     )
 
     assert isinstance(indices, np.ndarray)
-    assert isinstance(xi, np.ndarray)
     assert isinstance(pi, float)
+    assert isinstance(xi, np.ndarray)
     assert len(indices) <= n_samples
-    assert len(xi) == len(indices)
     assert 0.0 < pi <= 1.0
+    assert len(xi) == len(indices)
     assert np.all(indices[:-1] <= indices[1:])
     assert np.isin(xi, [0.0, 1.0]).all()
 
@@ -147,5 +142,5 @@ def test_sample_reproducibility(fitted_sampler):
     )
 
     np.testing.assert_array_equal(indices1, indices2)
-    np.testing.assert_array_equal(xi1, xi2)
     assert pi1 == pi2
+    np.testing.assert_array_equal(xi1, xi2)
