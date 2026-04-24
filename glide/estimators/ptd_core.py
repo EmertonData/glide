@@ -4,7 +4,7 @@ import numpy as np
 from numpy.typing import NDArray
 
 
-def _compute_ptd_bootstrap_labeled_means(
+def _compute_bootstrap_labeled_means(
     y_true: NDArray,
     y_proxy_labeled: NDArray,
     n_bootstrap: int,
@@ -12,12 +12,12 @@ def _compute_ptd_bootstrap_labeled_means(
 ) -> Tuple[NDArray, NDArray]:
     n_labeled = len(y_true)
     idx = rng.choice(n_labeled, size=(n_bootstrap, n_labeled), replace=True)
-    y_true_means = np.mean(y_true[idx], axis=1)
-    y_proxy_labeled_means = np.mean(y_proxy_labeled[idx], axis=1)
-    return y_true_means, y_proxy_labeled_means
+    bootstrap_y_true_means = np.mean(y_true[idx], axis=1)
+    bootstrap_y_proxy_labeled_means = np.mean(y_proxy_labeled[idx], axis=1)
+    return bootstrap_y_true_means, bootstrap_y_proxy_labeled_means
 
 
-def _compute_ptd_tuning_parameter(
+def _compute_tuning_parameter(
     bootstrap_y_true_means: NDArray,
     bootstrap_y_proxy_labeled_means: NDArray,
     var_proxy_unlabeled: float,
@@ -33,7 +33,7 @@ def _compute_ptd_tuning_parameter(
     return lambda_
 
 
-def _compute_ptd_bootstrap_mean_estimates(
+def _compute_bootstrap_mean_estimates(
     bootstrap_y_true_means: NDArray,
     bootstrap_y_proxy_labeled_means: NDArray,
     mean_proxy_unlabeled: float,
@@ -41,8 +41,9 @@ def _compute_ptd_bootstrap_mean_estimates(
     lambda_: float,
     rng: np.random.Generator,
 ) -> NDArray:
-    z = rng.standard_normal(len(bootstrap_y_true_means))
+    n_bootstrap = len(bootstrap_y_true_means)
+    z = rng.standard_normal(n_bootstrap)
     unlabeled_means = mean_proxy_unlabeled + z * np.sqrt(var_proxy_unlabeled)
-    rectifier_means = bootstrap_y_true_means - lambda_ * bootstrap_y_proxy_labeled_means
-    bootstrap_mean_estimates = lambda_ * unlabeled_means + rectifier_means
+    rectifiers = bootstrap_y_true_means - lambda_ * bootstrap_y_proxy_labeled_means
+    bootstrap_mean_estimates = lambda_ * unlabeled_means + rectifiers
     return bootstrap_mean_estimates

@@ -7,9 +7,9 @@ from glide.confidence_intervals import BootstrapConfidenceInterval
 from glide.core.mean_inference_result import PredictionPoweredMeanInferenceResult
 from glide.core.utils import compute_effective_sample_size
 from glide.estimators.ptd_core import (
-    _compute_ptd_bootstrap_labeled_means,
-    _compute_ptd_bootstrap_mean_estimates,
-    _compute_ptd_tuning_parameter,
+    _compute_bootstrap_labeled_means,
+    _compute_bootstrap_mean_estimates,
+    _compute_tuning_parameter,
 )
 
 
@@ -173,13 +173,13 @@ class StratifiedPTDMeanEstimator:
             mean_proxy_unlabeled_k = np.mean(y_proxy_unlabeled)
             var_proxy_unlabeled_k = np.var(y_proxy_unlabeled, ddof=1) / len(y_proxy_unlabeled)
 
-            bootstrap_y_true_means_k, bootstrap_y_proxy_labeled_means_k = _compute_ptd_bootstrap_labeled_means(
+            bootstrap_y_true_means_k, bootstrap_y_proxy_labeled_means_k = _compute_bootstrap_labeled_means(
                 y_true_labeled, y_proxy_labeled, n_bootstrap, rng
             )
-            lambda_k = _compute_ptd_tuning_parameter(
+            lambda_k = _compute_tuning_parameter(
                 bootstrap_y_true_means_k, bootstrap_y_proxy_labeled_means_k, var_proxy_unlabeled_k, power_tuning
             )
-            bootstrap_estimates_k = _compute_ptd_bootstrap_mean_estimates(
+            bootstrap_estimates_k = _compute_bootstrap_mean_estimates(
                 bootstrap_y_true_means_k,
                 bootstrap_y_proxy_labeled_means_k,
                 mean_proxy_unlabeled_k,
