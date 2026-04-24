@@ -22,20 +22,24 @@ class CostOptimalRandomSampler:
     Examples
     --------
     >>> import numpy as np
-    >>> from glide.samplers.cost_optimal_random import CostOptimalRandomSampler
+    >>> from glide.samplers import CostOptimalRandomSampler
     >>> y_true = np.array([1.0, 2.0])
     >>> y_proxy = np.array([1.1, 1.9])
     >>> sampler = CostOptimalRandomSampler()
     >>> sampler = sampler.fit(y_true, y_proxy)
-    >>> indices, xi, pi = sampler.sample(
-    ...     y_proxy=y_proxy,
+    >>> indices, pi, xi = sampler.sample(
+    ...     n_samples=2,
     ...     y_true_cost=10.0,
     ...     y_proxy_cost=1.0,
     ...     budget=2,
     ...     random_seed=42
     ... )
-    >>> len(indices)
-    1
+    >>> indices
+    array([0])
+    >>> pi # doctest: +ELLIPSIS
+    0.045...
+    >>> xi
+    array([0.])
     """
 
     def fit(
@@ -54,10 +58,10 @@ class CostOptimalRandomSampler:
         Parameters
         ----------
         y_true : NDArray
-            Ground truth labels, shape (n_samples,), dtype float. Must not contain
+            Ground truth labels, shape (n_samples,). Must not contain
             NaN values.
         y_proxy : NDArray
-            Proxy labels, shape (n_samples,), dtype float. Must not contain NaN values.
+            Proxy labels, shape (n_samples,). Must not contain NaN values.
 
         Returns
         -------
@@ -105,17 +109,17 @@ class CostOptimalRandomSampler:
                 * self._mean_squared_error
                 / (self._y_true_variance - self._mean_squared_error)
             )
-            pi = np.sqrt(ratio)
+            pi = float(np.sqrt(ratio))
         return pi
 
     def sample(
         self,
-        y_proxy: NDArray,
+        n_samples: int,
         y_true_cost: float,
         y_proxy_cost: float,
         budget: float,
         random_seed: Optional[Union[int, SeedSequence]] = None,
-    ) -> Tuple[NDArray, NDArray, float]:
+    ) -> Tuple[NDArray, float, NDArray]:
         """Sample observations with cost-optimal allocation between raters.
 
         Derives the optimal probability of querying the expensive rater (ground truth)
@@ -128,8 +132,8 @@ class CostOptimalRandomSampler:
 
         Parameters
         ----------
-        y_proxy : NDArray
-            Proxy labels, shape ``(n_samples,)``.
+        n_samples : int
+            Total number of candidate samples to draw from. Must be a strictly positive integer.
         y_true_cost : float
             Per-sample cost of the expensive rater (H). Must be strictly positive.
         y_proxy_cost : float
@@ -142,22 +146,25 @@ class CostOptimalRandomSampler:
 
         Returns
         -------
-        Tuple[NDArray, NDArray, float]
+        Tuple[NDArray, float, NDArray]
             [0]: array of shape ``(T,)``, sorted indices of the T selected samples,
             where T is the maximum number of samples affordable within the budget.
-            [1]: array of shape ``(T,)``, xi with Bernoulli indicators for each selected sample.
-            [2]: float, pi with the optimal probability used for each Bernoulli draw.
+            [1]: float, pi with the optimal probability used for each Bernoulli draw.
+            [2]: array of shape ``(T,)``, xi with Bernoulli indicators for each selected sample.
 
         Raises
         ------
         ValueError
             - If fit() has not been called yet.
+            - If ``n_samples`` is not a strictly positive integer.
             - If ``y_true_cost`` or ``y_proxy_cost`` is not strictly positive.
             - If ``budget`` is not strictly positive.
             - If ``budget`` is too small to afford a single sample.
         """
         if not hasattr(self, "_y_true_variance") or not hasattr(self, "_mean_squared_error"):
             raise RuntimeError("fit() must be called before sample()")
+        if not isinstance(n_samples, int) or n_samples <= 0:
+            raise ValueError(f"n_samples must be a strictly positive integer; got {n_samples!r}.")
         if y_true_cost <= 0.0:
             raise ValueError(f"y_true_cost must be strictly positive; got {y_true_cost}.")
         if y_proxy_cost <= 0.0:
@@ -174,11 +181,11 @@ class CostOptimalRandomSampler:
             )
 
         rng = np.random.default_rng(random_seed)
-        N = len(y_proxy)
+        N = n_samples
         if T < N:
             indices = np.sort(rng.choice(N, size=T, replace=False))
         else:
             indices = np.arange(N)
 
         xi = rng.binomial(n=1, p=pi, size=len(indices)).astype(float)
-        return indices, xi, pi
+        return indices, pi, xi

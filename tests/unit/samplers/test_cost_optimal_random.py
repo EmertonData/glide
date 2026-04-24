@@ -2,7 +2,7 @@ import numpy as np
 import pytest
 from numpy.typing import NDArray
 
-from glide.samplers.cost_optimal_random import CostOptimalRandomSampler
+from glide.samplers import CostOptimalRandomSampler
 
 
 @pytest.fixture
@@ -91,52 +91,59 @@ def test_compute_optimal_probability_pi_known_value(fitted_sampler):
 # --- sample ---
 
 
-def test_sample_raises_if_fit_not_called(sampler, y_proxy):
+def test_sample_raises_if_fit_not_called(sampler):
     with pytest.raises(RuntimeError, match="fit\\(\\) must be called before sample"):
-        sampler.sample(y_proxy=y_proxy, y_true_cost=10.0, y_proxy_cost=1.0, budget=5, random_seed=42)
+        sampler.sample(n_samples=2, y_true_cost=10.0, y_proxy_cost=1.0, budget=5, random_seed=42)
+
+
+@pytest.mark.parametrize("n_samples", [0, -1, 1.5])
+def test_sample_invalid_n_samples(fitted_sampler, n_samples):
+    with pytest.raises(ValueError, match=r"n_samples must be a strictly positive integer"):
+        fitted_sampler.sample(n_samples=n_samples, y_true_cost=10.0, y_proxy_cost=1.0, budget=5, random_seed=42)
 
 
 @pytest.mark.parametrize("cost", [0.0, -1.0])
-def test_sample_invalid_costs(fitted_sampler, y_proxy, cost):
+def test_sample_invalid_costs(fitted_sampler, cost):
     with pytest.raises(ValueError, match=r"y_true_cost must be strictly positive"):
-        fitted_sampler.sample(y_proxy=y_proxy, y_true_cost=cost, y_proxy_cost=1.0, budget=5, random_seed=42)
+        fitted_sampler.sample(n_samples=2, y_true_cost=cost, y_proxy_cost=1.0, budget=5, random_seed=42)
 
     with pytest.raises(ValueError, match=r"y_proxy_cost must be strictly positive"):
-        fitted_sampler.sample(y_proxy=y_proxy, y_true_cost=10.0, y_proxy_cost=cost, budget=5, random_seed=42)
+        fitted_sampler.sample(n_samples=2, y_true_cost=10.0, y_proxy_cost=cost, budget=5, random_seed=42)
 
 
 @pytest.mark.parametrize("budget", [0.0, -1.0])
-def test_sample_invalid_budget(fitted_sampler, y_proxy, budget):
+def test_sample_invalid_budget(fitted_sampler, budget):
     with pytest.raises(ValueError, match=r"budget must be strictly positive"):
-        fitted_sampler.sample(y_proxy=y_proxy, y_true_cost=10.0, y_proxy_cost=1.0, budget=budget, random_seed=42)
+        fitted_sampler.sample(n_samples=2, y_true_cost=10.0, y_proxy_cost=1.0, budget=budget, random_seed=42)
 
 
-def test_sample_budget_too_small_raises(fitted_sampler, y_proxy):
+def test_sample_budget_too_small_raises(fitted_sampler):
     with pytest.raises(ValueError, match="Budget .* is too small"):
-        fitted_sampler.sample(y_proxy=y_proxy, y_true_cost=100.0, y_proxy_cost=1.0, budget=1, random_seed=42)
+        fitted_sampler.sample(n_samples=2, y_true_cost=100.0, y_proxy_cost=1.0, budget=1, random_seed=42)
 
 
-def test_sample_valid_output(fitted_sampler, y_proxy):
-    indices, xi, pi = fitted_sampler.sample(
-        y_proxy=y_proxy, y_true_cost=10.0, y_proxy_cost=1.0, budget=5, random_seed=42
+def test_sample_valid_output(fitted_sampler):
+    n_samples = 2
+    indices, pi, xi = fitted_sampler.sample(
+        n_samples=n_samples, y_true_cost=10.0, y_proxy_cost=1.0, budget=5, random_seed=42
     )
 
     assert isinstance(indices, np.ndarray)
     assert isinstance(xi, np.ndarray)
     assert isinstance(pi, float)
-    assert len(indices) <= len(y_proxy)
+    assert len(indices) <= n_samples
     assert len(xi) == len(indices)
     assert 0.0 < pi <= 1.0
     assert np.all(indices[:-1] <= indices[1:])
     assert np.isin(xi, [0.0, 1.0]).all()
 
 
-def test_sample_reproducibility(fitted_sampler, y_proxy):
-    indices1, xi1, pi1 = fitted_sampler.sample(
-        y_proxy=y_proxy, y_true_cost=10.0, y_proxy_cost=1.0, budget=5, random_seed=42
+def test_sample_reproducibility(fitted_sampler):
+    indices1, pi1, xi1 = fitted_sampler.sample(
+        n_samples=2, y_true_cost=10.0, y_proxy_cost=1.0, budget=5, random_seed=42
     )
-    indices2, xi2, pi2 = fitted_sampler.sample(
-        y_proxy=y_proxy, y_true_cost=10.0, y_proxy_cost=1.0, budget=5, random_seed=42
+    indices2, pi2, xi2 = fitted_sampler.sample(
+        n_samples=2, y_true_cost=10.0, y_proxy_cost=1.0, budget=5, random_seed=42
     )
 
     np.testing.assert_array_equal(indices1, indices2)
