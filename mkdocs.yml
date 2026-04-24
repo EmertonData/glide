@@ -48,17 +48,9 @@ plugins:
           paths: [.]
           options:
             docstring_style: numpy
-            show_submodules: false
-            show_root_heading: false
-            group_by_category: true
-            show_category_heading: true
-            show_root_toc_entry: false
+            show_root_heading: true
             show_symbol_type_heading: true
-            show_symbol_type_toc: true
-            members_order: alphabetical
             separate_signature: true
-            show_bases: true
-            show_source: true
   - mkdocs-jupyter:
       include_source: true
       execute: true
@@ -106,10 +98,10 @@ nav:
   - Contributing: contributing.md
   - API Reference:
     - Overview: api/index.md
-    - Data Utilities: api/simulators.md
+    - Simulators: api/simulators.md
     - Samplers: api/samplers.md
     - Estimators: api/estimators.md
     - Confidence Intervals: api/confidence_intervals.md
-    - Inference Results: api/core/mean_inference_results.md
+    - Inference Results: api/mean_inference_results.md
     - I/O: api/io.md
 

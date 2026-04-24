@@ -33,7 +33,7 @@ class StratifiedSampler:
     Examples
     --------
     >>> import numpy as np
-    >>> from glide.samplers.stratified import StratifiedSampler
+    >>> from glide.samplers import StratifiedSampler
     >>> y_proxy = np.array([0.8, 0.9, 0.85, 0.88, 0.2, 0.3])
     >>> groups = np.array(["A", "A", "A", "A", "B", "B"], dtype=object)
     >>> sampler = StratifiedSampler()
@@ -167,9 +167,10 @@ class StratifiedSampler:
         Parameters
         ----------
         y_proxy : NDArray
-            Proxy labels for all samples. Must be 1-dimensional.
+            Proxy labels for all samples, shape ``(n_samples,)``. Must be 1-dimensional.
         groups : NDArray
-            Stratum identifiers for all samples. Must be 1-dimensional with same length as y_proxy.
+            Stratum identifiers for all samples, shape ``(n_samples,)``.
+            Must be 1-dimensional with same length as y_proxy.
         budget : int
             Target annotation budget. Must be positive. Mandatory.
         strategy : str, optional
@@ -184,7 +185,7 @@ class StratifiedSampler:
         Tuple[NDArray, NDArray]
             A tuple ``(pi, xi)`` where ``pi`` is an array of drawing probabilities
             in ``(0, 1]`` and ``xi`` is an array of Bernoulli selection indicators
-            (1 if selected for annotation, 0 otherwise), both of shape ``(N,)``.
+            (1 if selected for annotation, 0 otherwise), both of shape ``(n_samples,)``.
 
         Raises
         ------

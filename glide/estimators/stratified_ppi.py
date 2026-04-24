@@ -7,9 +7,9 @@ from glide.confidence_intervals import CLTConfidenceInterval
 from glide.core.mean_inference_result import PredictionPoweredMeanInferenceResult
 from glide.core.utils import compute_effective_sample_size
 from glide.estimators.ppi_core import (
-    _compute_ppi_mean_estimate,
-    _compute_ppi_std_estimate,
-    _compute_ppi_tuning_parameter,
+    _compute_mean_estimate,
+    _compute_std_estimate,
+    _compute_tuning_parameter,
 )
 
 
@@ -40,7 +40,7 @@ class StratifiedPPIMeanEstimator:
     Examples
     --------
     >>> import numpy as np
-    >>> from glide.estimators.stratified_ppi import StratifiedPPIMeanEstimator
+    >>> from glide.estimators import StratifiedPPIMeanEstimator
     >>> y_true = np.array([1.0, 2.0, np.nan, np.nan, 4.0, 5.0, np.nan, np.nan])
     >>> y_proxy = np.array([1.1, 2.2, 1.5, 1.8, 3.9, 5.1, 4.5, 4.8])
     >>> groups = np.array([0, 0, 0, 0, 1, 1, 1, 1])
@@ -162,9 +162,9 @@ class StratifiedPPIMeanEstimator:
             stratum_size = len(y_true_labeled) + len(y_proxy_unlabeled)
             w_k = stratum_size / total_size
 
-            lambda_k = _compute_ppi_tuning_parameter(y_true_labeled, y_proxy_labeled, y_proxy_unlabeled, power_tuning)
-            mean_k = _compute_ppi_mean_estimate(y_true_labeled, y_proxy_labeled, y_proxy_unlabeled, lambda_k)
-            std_k = _compute_ppi_std_estimate(y_true_labeled, y_proxy_labeled, y_proxy_unlabeled, lambda_k)
+            lambda_k = _compute_tuning_parameter(y_true_labeled, y_proxy_labeled, y_proxy_unlabeled, power_tuning)
+            mean_k = _compute_mean_estimate(y_true_labeled, y_proxy_labeled, y_proxy_unlabeled, lambda_k)
+            std_k = _compute_std_estimate(y_true_labeled, y_proxy_labeled, y_proxy_unlabeled, lambda_k)
 
             weighted_mean += w_k * mean_k
             weighted_var += w_k**2 * std_k**2
