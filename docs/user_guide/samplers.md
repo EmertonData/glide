@@ -89,8 +89,8 @@ The `CostOptimalRandomSampler` addresses the following setting: two annotation s
 
 The sampler models two raters:
 
-- **Proxy rater ($G$)**: cheap, always queried, cost $c_g$ per record. Returns noisy labels.
-- **Ground truth rater ($H$)**: expensive, cost $c_h$ per record ($c_g < c_h$). Returns authoritative labels (e.g., a human annotator).
+- **Proxy rater ($G$)**: cheap, always queried, cost $c_g$ per sample. Returns noisy labels.
+- **Ground truth rater ($H$)**: expensive, cost $c_h$ per sample ($c_g < c_h$). Returns authoritative labels (e.g., a human annotator).
 
 The simplest annotation policy queries the ground truth rater at a **fixed probability $\pi$** for every sample, regardless of its characteristics. When $\pi$ is too large the cost is too high; when $\pi$ is too small the downstream estimation variance blows up. The `CostOptimalRandomSampler` finds the optimal balance.
 
@@ -119,7 +119,7 @@ The intuition: if $H$ has high variance but $G$ closely tracks it, the estimator
 
 ### Burn-in phase
 
-To compute $\pi^*$, estimates of $\text{Var}(H)$ and $\text{MSE}(H, G)$ are needed. When no labeled data is available upfront, one can first annotate the initial $n_b$ records unconditionally with ground truth ($\pi = 1$). This burn-in dataset is used to compute the required statistics. Once $\pi^*$ is determined, the burn-in data can be retained and reused by downstream estimators that support inverse probability weighting.
+To compute $\pi^*$, estimates of $\text{Var}(H)$ and $\text{MSE}(H, G)$ are needed. When no labeled data is available upfront, one can first annotate a number of initial samples unconditionally with ground truth ($\pi = 1$). This burn-in dataset is used to compute the required statistics. Once $\pi^*$ is determined, the burn-in data can be retained and reused by downstream estimators that support inverse probability weighting.
 
 ### Total cost and budget mapping
 
@@ -133,12 +133,12 @@ $$T = \left\lfloor \frac{b}{c_g + c_h \cdot \pi^*} \right\rfloor$$
 
 ### Sampling procedure
 
-The annotation process proceeds in two stages. **First**, the sampler determines which samples to process, depending on how $T$ compares to the dataset size $N$:
+The annotation process proceeds in two stages. First, the sampler determines which samples to process, depending on how $T$ compares to the dataset size $N$:
 
 - If $T < N$: then $T$ samples are drawn uniformly at random without replacement from the dataset.
 - If $T \geq N$: all $N$ samples are used.
 
-**Second**, each selected sample is independently sent to the expensive rater with probability $\pi^*$:
+Second, each selected sample is independently sent to the expensive rater with probability $\pi^*$:
 
 $$\xi_i \sim \mathrm{Bernoulli}(\pi^*), \quad i = 1, \ldots, \min(T, N)$$
 
