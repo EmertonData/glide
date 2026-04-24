@@ -8,9 +8,9 @@ from glide.confidence_intervals import BootstrapConfidenceInterval
 from glide.core.mean_inference_result import PredictionPoweredMeanInferenceResult
 from glide.core.utils import compute_effective_sample_size
 from glide.estimators.ptd_core import (
-    _compute_ptd_bootstrap_labeled_means,
-    _compute_ptd_bootstrap_mean_estimates,
-    _compute_ptd_tuning_parameter,
+    _compute_bootstrap_labeled_means,
+    _compute_bootstrap_mean_estimates,
+    _compute_tuning_parameter,
 )
 
 
@@ -162,13 +162,13 @@ class IPWPTDMeanEstimator:
         mean_proxy_unlabeled = np.mean(ipw_weighted_y_proxy_unlabeled)
         var_proxy_unlabeled = np.var(ipw_weighted_y_proxy_unlabeled, ddof=1) / len(ipw_weighted_y_proxy_unlabeled)
 
-        bootstrap_y_true_means, bootstrap_y_proxy_labeled_means = _compute_ptd_bootstrap_labeled_means(
+        bootstrap_y_true_means, bootstrap_y_proxy_labeled_means = _compute_bootstrap_labeled_means(
             ipw_weighted_y_true_labeled, ipw_weighted_y_proxy_labeled, n_bootstrap, rng
         )
-        lambda_ = _compute_ptd_tuning_parameter(
+        lambda_ = _compute_tuning_parameter(
             bootstrap_y_true_means, bootstrap_y_proxy_labeled_means, var_proxy_unlabeled, power_tuning
         )
-        bootstrap_mean_estimates = _compute_ptd_bootstrap_mean_estimates(
+        bootstrap_mean_estimates = _compute_bootstrap_mean_estimates(
             bootstrap_y_true_means,
             bootstrap_y_proxy_labeled_means,
             mean_proxy_unlabeled,
