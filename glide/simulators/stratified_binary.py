@@ -61,21 +61,19 @@ def generate_stratified_binary_dataset(
     >>> import numpy as np
     >>> from glide.simulators import generate_stratified_binary_dataset
     >>> y_true, y_proxy, groups = generate_stratified_binary_dataset(
-    ...     n_labeled=[50, 100],
-    ...     n_unlabeled=[200, 300],
+    ...     n_labeled=[2, 3],
+    ...     n_unlabeled=[4, 5],
     ...     true_mean=[0.6, 0.8],
     ...     proxy_mean=[0.5, 0.7],
     ...     correlation=[0.7, 0.75],
     ...     random_seed=42
     ... )
     >>> len(y_true)
-    650
-    >>> len(y_proxy)
-    650
+    14
     >>> len(groups)
-    650
+    14
     >>> int(np.sum(~np.isnan(y_true)))
-    150
+    5
     """
     num_strata = len(n_labeled)
     if num_strata < 1:

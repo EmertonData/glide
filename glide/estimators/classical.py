@@ -15,7 +15,7 @@ class ClassicalMeanEstimator:
     Examples
     --------
     >>> import numpy as np
-    >>> from glide.estimators.classical import ClassicalMeanEstimator
+    >>> from glide.estimators import ClassicalMeanEstimator
     >>> y = np.array([5.0, 6.0, 4.0, 7.0])
     >>> estimator = ClassicalMeanEstimator()
     >>> result = estimator.estimate(y)

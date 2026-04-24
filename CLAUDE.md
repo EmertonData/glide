@@ -109,6 +109,7 @@ Do not use needless type conversions like `float()` or `int()` unless required b
 
 - NumPy-style docstrings with paper references for all public API
 - Public API docstrings must include an `Examples` section with runnable doctests
+- In doctests, always import from the public package namespaces: `from glide.estimators import ...`, `from glide.samplers import ...`, `from glide.simulators import ...` — never from submodules directly.
 - **No docstrings for test functions or private methods** — test code is self-documenting via clear variable names and assertion structure; private methods are internal only.
 
 ### Documentation

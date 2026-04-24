@@ -40,7 +40,7 @@ class StratifiedPPIMeanEstimator:
     Examples
     --------
     >>> import numpy as np
-    >>> from glide.estimators.stratified_ppi import StratifiedPPIMeanEstimator
+    >>> from glide.estimators import StratifiedPPIMeanEstimator
     >>> y_true = np.array([1.0, 2.0, np.nan, np.nan, 4.0, 5.0, np.nan, np.nan])
     >>> y_proxy = np.array([1.1, 2.2, 1.5, 1.8, 3.9, 5.1, 4.5, 4.8])
     >>> groups = np.array([0, 0, 0, 0, 1, 1, 1, 1])
