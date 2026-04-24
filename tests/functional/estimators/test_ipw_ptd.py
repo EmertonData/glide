@@ -16,7 +16,8 @@ from glide.simulators import generate_gaussian_dataset
 
 
 def test_deterministic_probabilities_match_simple_ptd():
-    """When all π_i are deterministic, IPW weights induce the same result as in PTDMeanEstimator."""
+    """When all π_i are deterministic (either 0 or 1), IPW weights induce
+    the same result as in PTDMeanEstimator."""
     n_labeled, n_unlabeled = 100, 400
     true_mean = 3
     true_std = 0.1
@@ -31,15 +32,22 @@ def test_deterministic_probabilities_match_simple_ptd():
         true_std=true_std,
         proxy_mean=proxy_mean,
         proxy_std=proxy_std,
-        random_seed=0,
+        random_seed=random_seed,
     )
     pi = (~np.isnan(y_true)).astype(float)
 
     ipw_ptd_result = IPWPTDMeanEstimator().estimate(y_true, y_proxy, pi, random_seed=random_seed)
-    simple_ptd_result = PTDMeanEstimator().estimate(y_true, y_proxy)
+    simple_ptd_result = PTDMeanEstimator().estimate(y_true, y_proxy, random_seed=random_seed)
+
+    simple_ptd_lower_bound = simple_ptd_result.confidence_interval.lower_bound
+    ipw_ptd_lower_bound = ipw_ptd_result.confidence_interval.lower_bound
+    simple_ptd_upper_bound = simple_ptd_result.confidence_interval.upper_bound
+    ipw_ptd_upper_bound = ipw_ptd_result.confidence_interval.upper_bound
 
     assert ipw_ptd_result.mean == pytest.approx(simple_ptd_result.mean, abs=0.01)
     assert ipw_ptd_result.std == pytest.approx(simple_ptd_result.std, abs=0.01)
+    assert simple_ptd_lower_bound == pytest.approx(ipw_ptd_lower_bound, abs=0.01)
+    assert simple_ptd_upper_bound == pytest.approx(ipw_ptd_upper_bound, abs=0.01)
 
 
 def test_equal_probabilities_match_simple_ptd():
@@ -65,12 +73,12 @@ def test_equal_probabilities_match_simple_ptd():
         true_std=true_std,
         proxy_mean=proxy_mean,
         proxy_std=proxy_std,
-        random_seed=0,
+        random_seed=random_seed,
     )
     pi = pi_value * np.ones(n_labeled + n_unlabeled)
 
     ipw_ptd_result = IPWPTDMeanEstimator().estimate(y_true, y_proxy, pi, random_seed=random_seed)
-    simple_ptd_result = PTDMeanEstimator().estimate(y_true, y_proxy)
+    simple_ptd_result = PTDMeanEstimator().estimate(y_true, y_proxy, random_seed=random_seed)
 
     assert ipw_ptd_result.mean == pytest.approx(simple_ptd_result.mean, abs=0.02)
 
@@ -114,4 +122,4 @@ def test_large_sample_matches_asi():
     assert ipw_ptd_result.mean == pytest.approx(asi_result.mean, abs=0.02)
     assert ipw_ptd_result.std == pytest.approx(asi_result.std, abs=0.02)
     assert asi_lower_bound == pytest.approx(ipw_ptd_lower_bound, abs=0.02)
-    assert asi_upper_bound == pytest.approx(ipw_ptd_upper_bound, abs=0.04)
+    assert asi_upper_bound == pytest.approx(ipw_ptd_upper_bound, abs=0.03)

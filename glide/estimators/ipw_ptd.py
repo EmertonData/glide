@@ -142,7 +142,6 @@ class IPWPTDMeanEstimator:
             - If any labeled sample (non-NaN ``y_true``) has a labeling probability of 0.
             - If any unlabeled sample (NaN ``y_true``) has a labeling probability of 1.
             - If there are fewer than 2 labeled or fewer than 2 unlabeled samples.
-            - If ``confidence_level`` is not in (0, 1).
         """
         y_true_clean, xi, n_labeled, n_unlabeled = self._preprocess(y_true, y_proxy, pi)
         rng = np.random.default_rng(random_seed)
