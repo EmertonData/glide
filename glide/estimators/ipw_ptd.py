@@ -65,14 +65,22 @@ class IPWPTDMeanEstimator:
             raise ValueError("Input proxy values contain NaN")
         if len(np.unique(y_proxy)) == 1:
             raise ValueError("Input proxy values have zero variance")
-        xi = (~np.isnan(y_true)).astype(float)
+        if np.min(pi) < 0 or np.max(pi) > 1:
+            raise ValueError("Sampling probabilities should be in [0, 1]")
+
+        y_true_non_nan_mask = ~np.isnan(y_true)
+        xi = y_true_non_nan_mask.astype(float)
+
+        if np.any(y_true_non_nan_mask & (pi == 0)):
+            raise ValueError("Samples with non-zero probability of being labeled cannot be labeled")
+        if np.any(~y_true_non_nan_mask & (pi == 1)):
+            raise ValueError("Samples with probability one of being labeled must be labeled")
+
         n_labeled = int(xi.sum())
         n_unlabeled = len(y_true) - n_labeled
         if min(n_labeled, n_unlabeled) <= 1:
             raise ValueError("Too few labeled or unlabeled samples in dataset")
         y_true_no_nan = np.nan_to_num(y_true, nan=0)
-        if np.min(pi) < 0 or np.max(pi) > 1:
-            raise ValueError("Sampling probabilities should be in [0, 1]")
         return y_true_no_nan, xi, n_labeled, n_unlabeled
 
     def estimate(
@@ -130,8 +138,11 @@ class IPWPTDMeanEstimator:
             - If ``y_true``, ``y_proxy``, and ``pi`` do not all have the same length.
             - If any proxy value is NaN.
             - If all proxy values are identical (zero variance).
-            - If there are fewer than 2 labeled or fewer than 2 unlabeled samples.
             - If any sampling probability is not in [0, 1].
+            - If any labeled sample (non-NaN ``y_true``) has a labeling probability of 0.
+            - If any unlabeled sample (NaN ``y_true``) has a labeling probability of 1.
+            - If there are fewer than 2 labeled or fewer than 2 unlabeled samples.
+            - If ``confidence_level`` is not in (0, 1).
         """
         y_true_clean, xi, n_labeled, n_unlabeled = self._preprocess(y_true, y_proxy, pi)
         rng = np.random.default_rng(random_seed)

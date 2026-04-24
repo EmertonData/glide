@@ -80,6 +80,22 @@ def test_preprocess_raises_on_invalid_pi(estimator, bad_pi):
         estimator._preprocess(y_true, y_proxy, pi)
 
 
+def test_preprocess_raises_on_labeled_samples_with_zero_pi(estimator):
+    y_true = np.array([1.0, 2.0, np.nan, np.nan])
+    y_proxy = np.array([0.9, 1.9, 0.8, 1.8])
+    pi = np.array([0.5, 0.0, 0.5, 0.5])
+    with pytest.raises(ValueError, match="Samples with non-zero probability of being labeled cannot be labeled"):
+        estimator._preprocess(y_true, y_proxy, pi)
+
+
+def test_preprocess_raises_on_unlabeled_samples_with_one_pi(estimator):
+    y_true = np.array([1.0, np.nan, np.nan, np.nan])
+    y_proxy = np.array([0.9, 1.9, 0.8, 1.8])
+    pi = np.array([0.5, 1.0, 0.5, 0.5])
+    with pytest.raises(ValueError, match="Samples with probability one of being labeled must be labeled"):
+        estimator._preprocess(y_true, y_proxy, pi)
+
+
 # ── estimate ──────────────────────────────────────────────────────────────────
 
 
