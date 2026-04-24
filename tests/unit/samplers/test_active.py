@@ -18,14 +18,10 @@ def sampler() -> ActiveSampler:
 # --- _validate ---
 
 
-def test_validate_raises_on_zero_uncertainty(sampler):
+@pytest.mark.parametrize("bad_uncertainty", [0.0, -0.1])
+def test_validate_raises_on_non_positive_uncertainty(sampler, bad_uncertainty):
     with pytest.raises(ValueError, match="non-positive"):
-        sampler._validate(np.array([0.0, 0.5]))
-
-
-def test_validate_raises_on_negative_uncertainty(sampler):
-    with pytest.raises(ValueError, match="non-positive"):
-        sampler._validate(np.array([-0.1, 0.5]))
+        sampler._validate(np.array([bad_uncertainty, 0.5]))
 
 
 def test_validate_raises_on_nan_uncertainty(sampler):
@@ -36,8 +32,19 @@ def test_validate_raises_on_nan_uncertainty(sampler):
 # --- sample ---
 
 
-def test_sample_returns_valid_arrays(sampler, uncertainties):
-    pi, xi = sampler.sample(uncertainties, budget=5, random_seed=0)
+@pytest.mark.parametrize("bad_budget", [0.0, True, -1, 1.5])
+def test_sample_invalid_budget(sampler, uncertainties, bad_budget):
+    with pytest.raises(ValueError, match="budget"):
+        sampler.sample(uncertainties, budget=bad_budget, random_seed=0)
+
+
+def test_sample_budget_exceeds_length(sampler, uncertainties):
+    with pytest.raises(ValueError, match="budget"):
+        sampler.sample(uncertainties, budget=len(uncertainties) + 1, random_seed=0)
+
+
+def test_sample_valid_output(sampler, uncertainties):
+    pi, xi = sampler.sample(uncertainties, budget=5)
     assert len(pi) == len(uncertainties)
     assert len(xi) == len(uncertainties)
     assert np.all(pi > 0)
@@ -50,37 +57,8 @@ def test_sample_pi_clipped_and_higher_uncertainty_gets_higher_pi(sampler):
     np.testing.assert_allclose(pi, np.array([0.0, 1.0]), atol=0.001)
 
 
-def test_sample_invalid_budget_zero(sampler, uncertainties):
-    with pytest.raises(ValueError, match="budget"):
-        sampler.sample(uncertainties, budget=0, random_seed=0)
-
-
-def test_sample_invalid_boolean_budget(sampler, uncertainties):
-    with pytest.raises(ValueError, match="budget"):
-        sampler.sample(uncertainties, budget=True, random_seed=0)
-
-
-def test_sample_invalid_budget_negative(sampler, uncertainties):
-    with pytest.raises(ValueError, match="budget"):
-        sampler.sample(uncertainties, budget=-1, random_seed=0)
-
-
-def test_sample_invalid_budget_float(sampler, uncertainties):
-    with pytest.raises(ValueError, match="budget"):
-        sampler.sample(uncertainties, budget=1.5, random_seed=0)
-
-
 def test_sample_is_reproducible(sampler, uncertainties):
     pi1, xi1 = sampler.sample(uncertainties, budget=5, random_seed=42)
     pi2, xi2 = sampler.sample(uncertainties, budget=5, random_seed=42)
+    np.testing.assert_array_equal(pi1, pi2)
     np.testing.assert_array_equal(xi1, xi2)
-
-
-def test_sample_seed_defaults_to_none_without_exception(sampler, uncertainties):
-    pi, xi = sampler.sample(uncertainties, budget=5)
-    assert len(pi) == len(uncertainties)
-
-
-def test_sample_budget_exceeds_length(sampler, uncertainties):
-    with pytest.raises(ValueError, match="budget"):
-        sampler.sample(uncertainties, budget=len(uncertainties) + 1, random_seed=0)
