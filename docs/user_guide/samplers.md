@@ -85,7 +85,7 @@ Note that uncertainty scores must be strictly positive. The `ActiveSampler` requ
 
 ## Cost Optimal Random Sampler
 
-The `CostOptimalRandomSampler` addresses the following setting: two annotation sources are available, one **cheap but error-prone** (the proxy rater) and one **expensive but highly reliable** (the ground truth rater). The proxy is queried for every sample in the dataset. The sampler decides which samples to also send to the expensive rater, so that downstream estimation of the mean ground truth rating is as precise as possible within the available budget.
+The `CostOptimalRandomSampler` addresses the following setting: two annotation sources are available, one **cheap but error-prone** (the proxy rater) and one **expensive but highly reliable** (the ground truth rater). A budget limit is imposed, potentially limiting the number of samples that can be annotated. The sampler determines how many samples are affordable and the proxy is queried for all of them. The sampler additionally decides which samples to also send to the expensive rater, so that downstream estimation of the mean ground truth rating is as precise as possible within the available budget.
 
 The sampler models two raters:
 
@@ -119,7 +119,7 @@ The intuition: if $H$ has high variance but $G$ closely tracks it, the estimator
 
 ### Burn-in phase
 
-To compute $\pi^*$, estimates of $\text{Var}(H)$ and $\text{MSE}(H, G)$ are needed. When no labeled data is available upfront, one can first annotate a number of initial samples unconditionally with ground truth ($\pi = 1$). This burn-in dataset is used to compute the required statistics. Once $\pi^*$ is determined, the burn-in data can be retained and reused by downstream estimators that support inverse probability weighting.
+To compute $\pi^*$, estimates of $\text{Var}(H)$ and $\text{MSE}(H, G)$ are needed. When no labeled data is available upfront, one can first annotate a number of initial samples unconditionally with ground truth ($\pi = 1$). This burn-in dataset is used to compute the required statistics. Once $\pi^*$ is determined, the subsequent data is annotated with this probability and can be used by downstream estimators that support inverse probability weighting.
 
 ### Total cost and budget mapping
 
