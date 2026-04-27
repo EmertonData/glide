@@ -128,7 +128,7 @@ def test_sample_valid_output(fitted_sampler):
     n_samples = 2
     pi, xi = fitted_sampler.sample(n_samples=n_samples, y_true_cost=10.0, y_proxy_cost=1.0, budget=5, random_seed=42)
     assert pi == pytest.approx(0.045, abs=0.01)
-    assert np.array_equal(xi, np.array([0.0, 0.0]))
+    np.testing.assert_array_equal(xi, np.array([0.0, 0.0]))
 
 
 def test_sample_reproducibility(fitted_sampler):

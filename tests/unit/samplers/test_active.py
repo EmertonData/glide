@@ -50,7 +50,7 @@ def test_sample_valid_output(sampler, uncertainties):
     )
     np.testing.assert_allclose(pi, expected_pi, atol=1e-10)
     expected_xi = np.array([0.0, 0.0, 1.0, 1.0, 1.0, 0.0, 1.0, 1.0, 1.0])
-    assert np.array_equal(xi, expected_xi)
+    np.testing.assert_array_equal(xi, expected_xi)
 
 
 def test_sample_pi_clipped_and_higher_uncertainty_gets_higher_pi(sampler):

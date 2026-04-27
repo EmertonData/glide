@@ -83,7 +83,6 @@ class CostOptimalRandomSampler:
             raise ValueError(f"y_true and y_proxy must have the same length; got {len(y_true)} and {len(y_proxy)}.")
         if np.any(np.isnan(y_true)) or np.any(np.isnan(y_proxy)):
             raise ValueError("Input contains NaN values")
-
         if np.all(y_true == y_proxy):
             raise ValueError("Proxy values have zero MSE with ground-truths")
 
