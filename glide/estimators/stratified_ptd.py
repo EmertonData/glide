@@ -163,15 +163,16 @@ class StratifiedPTDMeanEstimator:
         total_size = len(y_true)
         rng = np.random.default_rng(random_seed)
 
-        combined_bootstrap_estimates = np.zeros(n_bootstrap)
+        weighted_bootstrap_estimates = np.zeros(n_bootstrap)
         y_true_parts = []
 
         for y_true_labeled, y_proxy_labeled, y_proxy_unlabeled in strata:
-            stratum_size = len(y_true_labeled) + len(y_proxy_unlabeled)
+            stratum_n_labeled, stratum_n_unlabeled = len(y_true_labeled), len(y_proxy_unlabeled)
+            stratum_size = stratum_n_labeled + stratum_n_unlabeled
             w_k = stratum_size / total_size
 
             mean_proxy_unlabeled_k = np.mean(y_proxy_unlabeled)
-            var_proxy_unlabeled_k = np.var(y_proxy_unlabeled, ddof=1) / len(y_proxy_unlabeled)
+            var_proxy_unlabeled_k = np.var(y_proxy_unlabeled, ddof=1) / stratum_n_unlabeled
 
             bootstrap_y_true_means_k, bootstrap_y_proxy_labeled_means_k = _compute_bootstrap_labeled_means(
                 y_true_labeled, y_proxy_labeled, n_bootstrap, rng
@@ -188,11 +189,11 @@ class StratifiedPTDMeanEstimator:
                 rng,
             )
 
-            combined_bootstrap_estimates += w_k * bootstrap_estimates_k
+            weighted_bootstrap_estimates += w_k * bootstrap_estimates_k
             y_true_parts.append(y_true_labeled)
 
         confidence_interval = BootstrapConfidenceInterval(
-            bootstrap_estimates=combined_bootstrap_estimates,
+            bootstrap_estimates=weighted_bootstrap_estimates,
             confidence_level=confidence_level,
         )
         y_true_all = np.hstack(y_true_parts)
