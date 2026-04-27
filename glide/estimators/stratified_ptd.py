@@ -101,7 +101,7 @@ class StratifiedPTDMeanEstimator:
         Splits arrays by unique values in ``groups``, applies the PTD bootstrap
         algorithm within each stratum with a per-stratum power-tuning, and
         combines the resulting per-stratum bootstrap arrays with weights proportional
-        to stratum sizes into a single ``BootstrapConfidenceInterval``:
+        to the stratum sizes into a single ``BootstrapConfidenceInterval``:
 
             theta = sum_k  w_k * theta_k(lambda_k)
 
