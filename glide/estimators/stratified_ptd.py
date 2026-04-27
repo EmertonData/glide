@@ -111,9 +111,8 @@ class StratifiedPTDMeanEstimator:
 
         where ``w_k`` is the fraction of samples in stratum *k*.
 
-        Note that this assumes the portions of labeled vs unlabeled samples are
-        approximately the same in all strata which is important for statistical
-        validity.
+        Note that this assumes that these fractions reflect the true strata weights
+        in the target data distribution which is important for statistical validity.
 
         Labeled and unlabeled samples are distinguished by ``NaN`` in ``y_true``:
         a sample is labeled if its ``y_true`` entry is not ``NaN``.
