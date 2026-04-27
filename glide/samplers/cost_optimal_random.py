@@ -27,19 +27,19 @@ class CostOptimalRandomSampler:
     >>> y_proxy = np.array([1.1, 1.9])
     >>> sampler = CostOptimalRandomSampler()
     >>> sampler = sampler.fit(y_true, y_proxy)
-    >>> indices, pi, xi = sampler.sample(
+    >>> pi, xi = sampler.sample(
     ...     n_samples=2,
     ...     y_true_cost=10.0,
     ...     y_proxy_cost=1.0,
     ...     budget=2,
     ...     random_seed=42
     ... )
-    >>> indices
-    array([0])
     >>> pi # doctest: +ELLIPSIS
     0.045...
-    >>> xi
-    array([0.])
+    >>> xi[0]  # doctest: +ELLIPSIS
+    np.float64(0.0)
+    >>> np.isnan(xi[1])  # doctest: +ELLIPSIS
+    np.True_
     """
 
     def fit(
@@ -84,13 +84,14 @@ class CostOptimalRandomSampler:
         if np.any(np.isnan(y_true)) or np.any(np.isnan(y_proxy)):
             raise ValueError("Input contains NaN values")
 
-        y_true_variance = np.var(y_true, ddof=1)
-        if y_true_variance == 0.0:
+        if np.all(y_true == y_proxy):
+            raise ValueError("Proxy values have zero MSE with ground-truths")
+
+        if len(np.unique(y_true)) < 2:
             raise ValueError("Input ground-truth values have zero variance")
 
+        y_true_variance = np.var(y_true, ddof=1)
         mean_squared_error = np.mean((y_true - y_proxy) ** 2)
-        if mean_squared_error == 0.0:
-            raise ValueError("Proxy values have zero MSE with ground-truths")
 
         self._y_true_variance = y_true_variance
         self._mean_squared_error = mean_squared_error
@@ -120,16 +121,18 @@ class CostOptimalRandomSampler:
         y_proxy_cost: float,
         budget: float,
         random_seed: Optional[Union[int, SeedSequence]] = None,
-    ) -> Tuple[NDArray, float, NDArray]:
+    ) -> Tuple[float, NDArray]:
         """Sample observations with cost-optimal allocation between raters.
 
         Derives the optimal probability of querying the expensive rater (ground truth)
-        based on relative costs and proxy quality. The budget determines the maximum
-        number of samples that can be annotated; if this is less than the dataset size,
-        samples are drawn uniformly at random without replacement. For each selected
-        sample, an independent Bernoulli draw with the optimal probability determines
-        whether the expensive rater is also queried; these indicators are returned
-        alongside the selected indices and the optimal probability.
+        based on relative costs and proxy quality. Determines the maximum number of samples
+        that can be afforded within the budget, then selects those samples for annotation.
+
+        If the budget can afford fewer samples than n_samples, samples are drawn uniformly
+        at random without replacement. Otherwise, all n_samples are selected.
+
+        For each selected sample, an independent Bernoulli draw with the optimal probability
+        determines whether the expensive rater is also queried (1) or only the proxy is used (0).
 
         Parameters
         ----------
@@ -147,11 +150,10 @@ class CostOptimalRandomSampler:
 
         Returns
         -------
-        Tuple[NDArray, float, NDArray]
-            [0]: array of shape ``(T,)``, sorted indices of the T selected samples,
-            where T is the maximum number of samples affordable within the budget.
-            [1]: float, pi with the optimal probability used for each Bernoulli draw.
-            [2]: array of shape ``(T,)``, xi with Bernoulli indicators for each selected sample.
+        Tuple[float, NDArray]
+            [0]: float, pi with the optimal probability of querying the expensive rater.
+            [1]: array of shape ``(n_samples,)``, xi with indicators for each sample:
+            1 if both raters are queried, 0 if only proxy is used, NaN if sample is not selected.
 
         Raises
         ------
@@ -175,16 +177,17 @@ class CostOptimalRandomSampler:
 
         pi = self._compute_optimal_probability(y_true_cost, y_proxy_cost)
         cost_per_sample = y_true_cost * pi + y_proxy_cost
-        T = int(np.floor(budget / cost_per_sample))
-        if T < 1:
+        n_affordable = int(np.floor(budget / cost_per_sample))
+        if n_affordable < 1:
             raise ValueError(
                 f"Budget {budget} is too small to afford a single sample at cost_per_sample={cost_per_sample}."
             )
 
         rng = np.random.default_rng(random_seed)
-        if T < n_samples:
-            indices = np.sort(rng.choice(n_samples, size=T, replace=False))
+        xi = np.full(n_samples, np.nan)
+        if n_affordable < n_samples:
+            indices = np.sort(rng.choice(n_samples, size=n_affordable, replace=False))
         else:
             indices = np.arange(n_samples)
-        xi = rng.binomial(n=1, p=pi, size=len(indices)).astype(float)
-        return indices, pi, xi
+        xi[indices] = rng.binomial(n=1, p=pi, size=len(indices)).astype(float)
+        return pi, xi

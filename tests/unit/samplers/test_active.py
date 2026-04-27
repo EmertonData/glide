@@ -44,12 +44,13 @@ def test_sample_budget_exceeds_length(sampler, uncertainties):
 
 
 def test_sample_valid_output(sampler, uncertainties):
-    pi, xi = sampler.sample(uncertainties, budget=5)
-    assert len(pi) == len(uncertainties)
-    assert len(xi) == len(uncertainties)
-    assert np.all(pi > 0)
-    assert np.all(pi <= 1)
-    assert np.isin(xi, [0.0, 1.0]).all()
+    pi, xi = sampler.sample(uncertainties, budget=5, random_seed=42)
+    expected_pi = np.array(
+        [0.11111111, 0.22222222, 0.33333333, 0.44444444, 0.55555556, 0.66666667, 0.77777778, 0.88888889, 1.0]
+    )
+    np.testing.assert_allclose(pi, expected_pi, atol=1e-10)
+    expected_xi = np.array([0.0, 0.0, 1.0, 1.0, 1.0, 0.0, 1.0, 1.0, 1.0])
+    assert np.array_equal(xi, expected_xi)
 
 
 def test_sample_pi_clipped_and_higher_uncertainty_gets_higher_pi(sampler):
