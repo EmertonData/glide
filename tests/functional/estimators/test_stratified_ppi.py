@@ -47,6 +47,26 @@ def test_two_equal_strata_matches_ppi():
     assert result_stratified.std == pytest.approx(result_single.std / np.sqrt(2), abs=1e-10)
 
 
+def test_single_stratum_matches_ppi():
+    """Stratified PPI with a single stratum reproduces PPI exactly.
+
+    With one stratum covering all data, the stratified estimator applies the same
+    estimation procedure as PPI on the same arrays. Given that the computations
+    are the same, the results match to floating-point precision.
+    """
+    n_labeled, n_unlabeled = 5, 8
+    random_seed = 7
+
+    y_true, y_proxy = generate_gaussian_dataset(n_labeled, n_unlabeled, random_seed=random_seed)
+    groups = np.full(len(y_true), "A")
+
+    stratified_result = StratifiedPPIMeanEstimator().estimate(y_true, y_proxy, groups)
+    ppi_result = PPIMeanEstimator().estimate(y_true, y_proxy)
+
+    assert stratified_result.mean == pytest.approx(ppi_result.mean, abs=1e-10)
+    assert stratified_result.std == pytest.approx(ppi_result.std, abs=1e-10)
+
+
 def test_stratified_ppi_narrower_ci_with_heterogeneous_strata():
     """Stratified PPI yields a narrower CI than standard PPI on heterogeneous strata.
 
