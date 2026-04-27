@@ -73,6 +73,8 @@ def test_fit_raises_on_zero_mse(sampler):
 def test_compute_optimal_probability_pi_one(fitted_sampler_high_MSE):
     pi = fitted_sampler_high_MSE._compute_optimal_probability(y_true_cost=1.0, y_proxy_cost=10.0)
     assert pi == 1.0
+    assert fitted_sampler_high_MSE._y_true_variance == pytest.approx(50.0, abs=0.01)
+    assert fitted_sampler_high_MSE._mean_squared_error == pytest.approx(6.5, abs=0.01)
 
 
 def test_compute_optimal_probability_pi_known_value(fitted_sampler):
@@ -124,28 +126,14 @@ def test_sample_budget_too_small_raises(fitted_sampler):
 
 def test_sample_valid_output(fitted_sampler):
     n_samples = 2
-    indices, pi, xi = fitted_sampler.sample(
-        n_samples=n_samples, y_true_cost=10.0, y_proxy_cost=1.0, budget=5, random_seed=42
-    )
-
-    assert isinstance(indices, np.ndarray)
-    assert isinstance(pi, float)
-    assert isinstance(xi, np.ndarray)
-    assert len(indices) <= n_samples
-    assert 0.0 < pi <= 1.0
-    assert len(xi) == len(indices)
-    assert np.all(indices[:-1] <= indices[1:])
-    assert np.isin(xi, [0.0, 1.0]).all()
+    pi, xi = fitted_sampler.sample(n_samples=n_samples, y_true_cost=10.0, y_proxy_cost=1.0, budget=5, random_seed=42)
+    assert pi == pytest.approx(0.045, abs=0.01)
+    np.testing.assert_array_equal(xi, np.array([0.0, 0.0]))
 
 
 def test_sample_reproducibility(fitted_sampler):
-    indices1, pi1, xi1 = fitted_sampler.sample(
-        n_samples=2, y_true_cost=10.0, y_proxy_cost=1.0, budget=5, random_seed=42
-    )
-    indices2, pi2, xi2 = fitted_sampler.sample(
-        n_samples=2, y_true_cost=10.0, y_proxy_cost=1.0, budget=5, random_seed=42
-    )
+    pi1, xi1 = fitted_sampler.sample(n_samples=2, y_true_cost=10.0, y_proxy_cost=1.0, budget=5, random_seed=42)
+    pi2, xi2 = fitted_sampler.sample(n_samples=2, y_true_cost=10.0, y_proxy_cost=1.0, budget=5, random_seed=42)
 
-    np.testing.assert_array_equal(indices1, indices2)
     assert pi1 == pi2
     np.testing.assert_array_equal(xi1, xi2)
