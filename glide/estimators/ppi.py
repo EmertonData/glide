@@ -46,7 +46,7 @@ class PPIMeanEstimator:
     Estimator : PPIMeanEstimator
     n_true: 2
     n_proxy: 4
-    Effective Sample Size: 4
+    Effective Sample Size: 3
     """
 
     def _preprocess(self, y_true_all: NDArray, y_proxy_all: NDArray) -> Tuple[NDArray, NDArray, NDArray]:

@@ -9,9 +9,8 @@ from typing import Literal
 import numpy as np
 import pytest
 
-from glide.estimators.ppi import PPIMeanEstimator
-from glide.estimators.stratified_ppi import StratifiedPPIMeanEstimator
-from glide.samplers.stratified import StratifiedSampler
+from glide.estimators import PPIMeanEstimator, StratifiedPPIMeanEstimator
+from glide.samplers import StratifiedSampler
 from glide.simulators import generate_gaussian_dataset
 
 # ── tests ──────────────────────────────────────────────────────────────────────

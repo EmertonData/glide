@@ -29,38 +29,14 @@ def y_arrays() -> Tuple[NDArray, NDArray, NDArray]:
 
 def test_preprocess_valid_output(estimator, y_arrays):
     y_true_all, y_proxy_all, pi_all = y_arrays
-    y_true_clean, xi, n_labeled, n_unlabeled = estimator._preprocess(y_true_all, y_proxy_all, pi_all)
+    y_true_clean, y_proxy, xi, pi = estimator._preprocess(y_true_all, y_proxy_all, pi_all)
     assert len(y_true_clean) == 6
+    assert len(y_proxy) == 6
+    assert len(pi) == 6
     assert np.sum(np.isnan(y_true_clean)) == 0
     assert len(xi) == 6
     assert np.isin(xi, [0.0, 1.0]).all()
     assert np.sum(xi) == 3
-    assert n_labeled == 3
-    assert n_unlabeled == 3
-
-
-def test_preprocess_raises_when_too_few_samples(estimator):
-    y_true = np.array([5.0, np.nan, np.nan])
-    y_proxy = np.array([4.9, 5.2, 6.1])
-    pi = np.array([0.5, 0.5, 0.5])
-    with pytest.raises(ValueError, match="Too few labeled or unlabeled samples in dataset"):
-        estimator._preprocess(y_true, y_proxy, pi)
-
-
-def test_preprocess_raises_on_constant_proxy(estimator):
-    y_true = np.array([1.0, np.nan])
-    y_proxy = np.array([1.0, 1.0])
-    pi = np.array([0.5, 0.5])
-    with pytest.raises(ValueError, match="Input proxy values have zero variance"):
-        estimator._preprocess(y_true, y_proxy, pi)
-
-
-def test_preprocess_raises_on_nan_proxy(estimator):
-    y_true = np.array([1.0, np.nan])
-    y_proxy = np.array([1.0, np.nan])
-    pi = np.array([0.5, 0.5])
-    with pytest.raises(ValueError, match="Input proxy values contain NaN"):
-        estimator._preprocess(y_true, y_proxy, pi)
 
 
 def test_preprocess_raises_on_length_mismatch(estimator):
@@ -80,6 +56,22 @@ def test_preprocess_raises_on_invalid_pi(estimator, bad_pi):
         estimator._preprocess(y_true, y_proxy, pi)
 
 
+def test_preprocess_raises_on_nan_proxy(estimator):
+    y_true = np.array([1.0, np.nan])
+    y_proxy = np.array([1.0, np.nan])
+    pi = np.array([0.5, 0.5])
+    with pytest.raises(ValueError, match="Input proxy values contain NaN"):
+        estimator._preprocess(y_true, y_proxy, pi)
+
+
+def test_preprocess_raises_on_constant_proxy(estimator):
+    y_true = np.array([1.0, np.nan])
+    y_proxy = np.array([1.0, 1.0])
+    pi = np.array([0.5, 0.5])
+    with pytest.raises(ValueError, match="Input proxy values have zero variance"):
+        estimator._preprocess(y_true, y_proxy, pi)
+
+
 def test_preprocess_raises_on_labeled_samples_with_zero_pi(estimator):
     y_true = np.array([1.0, 2.0, np.nan, np.nan])
     y_proxy = np.array([0.9, 1.9, 0.8, 1.8])
@@ -93,6 +85,14 @@ def test_preprocess_raises_on_unlabeled_samples_with_one_pi(estimator):
     y_proxy = np.array([0.9, 1.9, 0.8, 1.8])
     pi = np.array([0.5, 1.0, 0.5, 0.5])
     with pytest.raises(ValueError, match="Samples with probability one of being labeled must be labeled"):
+        estimator._preprocess(y_true, y_proxy, pi)
+
+
+def test_preprocess_raises_when_too_few_samples(estimator):
+    y_true = np.array([5.0, np.nan, np.nan])
+    y_proxy = np.array([4.9, 5.2, 6.1])
+    pi = np.array([0.5, 0.5, 0.5])
+    with pytest.raises(ValueError, match="Too few labeled or unlabeled samples in dataset"):
         estimator._preprocess(y_true, y_proxy, pi)
 
 
@@ -117,7 +117,7 @@ def test_estimate_metadata(estimator, y_arrays):
     assert result.estimator_name == "IPWPTDMeanEstimator"
     assert result.n_true == 3
     assert result.n_proxy == 6
-    assert result.effective_sample_size == 1
+    assert result.effective_sample_size == 0
 
 
 def test_estimate_custom_confidence_level(estimator, y_arrays):

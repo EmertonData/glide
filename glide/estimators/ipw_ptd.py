@@ -35,11 +35,10 @@ class IPWPTDMeanEstimator:
     --------
     >>> import numpy as np
     >>> from glide.estimators.ipw_ptd import IPWPTDMeanEstimator
-    >>> y_true  = np.array([1.0, 0.0, np.nan, np.nan])
+    >>> y_true = np.array([1.0, 0.0, np.nan, np.nan])
     >>> y_proxy = np.array([0.9, 0.1, 0.8, 0.2])
-    >>> pi      = np.array([0.4, 0.6, 0.3, 0.7])
+    >>> pi = np.array([0.4, 0.6, 0.3, 0.7])
     >>> estimator = IPWPTDMeanEstimator()
-    >>> # Run estimation with small n_bootstrap for illustration.
     >>> result = estimator.estimate(y_true, y_proxy, pi, n_bootstrap=5, random_seed=0)
     >>> print(result)
     Metric: Metric
@@ -56,17 +55,17 @@ class IPWPTDMeanEstimator:
         y_true: NDArray,
         y_proxy: NDArray,
         pi: NDArray,
-    ) -> Tuple[NDArray, NDArray, int, int]:
+    ) -> Tuple[NDArray, NDArray, NDArray, NDArray]:
         if not (len(y_true) == len(y_proxy) == len(pi)):
             raise ValueError(
                 f"y_true, y_proxy, and pi must have the same length, got {len(y_true)}, {len(y_proxy)}, and {len(pi)}"
             )
+        if np.min(pi) < 0 or np.max(pi) > 1:
+            raise ValueError("Sampling probabilities should be in [0, 1]")
         if np.isnan(y_proxy).any():
             raise ValueError("Input proxy values contain NaN")
         if len(np.unique(y_proxy)) == 1:
             raise ValueError("Input proxy values have zero variance")
-        if np.min(pi) < 0 or np.max(pi) > 1:
-            raise ValueError("Sampling probabilities should be in [0, 1]")
 
         y_true_non_nan_mask = ~np.isnan(y_true)
         xi = y_true_non_nan_mask.astype(float)
@@ -80,8 +79,8 @@ class IPWPTDMeanEstimator:
         n_unlabeled = len(y_true) - n_labeled
         if min(n_labeled, n_unlabeled) <= 1:
             raise ValueError("Too few labeled or unlabeled samples in dataset")
-        y_true_no_nan = np.nan_to_num(y_true, nan=0)
-        return y_true_no_nan, xi, n_labeled, n_unlabeled
+        y_true_clean = np.nan_to_num(y_true, nan=0)
+        return y_true_clean, y_proxy, xi, pi
 
     def estimate(
         self,
@@ -96,8 +95,9 @@ class IPWPTDMeanEstimator:
     ) -> PredictionPoweredMeanInferenceResult:
         """Estimate the population mean using IPW-corrected Predict-Then-Debias.
 
-        Ground-truth labels were sampled with known, non-uniform probabilities π_i. IPW
-        reweights each ground-truth labeled observation by 1/π_i, removing bias.
+        Ground-truth labels were sampled with known, non-uniform probabilities π_i.
+        Inverse probability weighting (IPW) corrects for this non-uniform selection,
+        yielding valid confidence intervals under any sampling rule.
         The unlabeled proxy mean is not resampled: its sampling variability is injected
         via a single Gaussian draw per iteration (CLT speedup).
 
@@ -143,7 +143,7 @@ class IPWPTDMeanEstimator:
             - If any unlabeled sample (NaN ``y_true``) has a labeling probability of 1.
             - If there are fewer than 2 labeled or fewer than 2 unlabeled samples.
         """
-        y_true_clean, xi, n_labeled, n_unlabeled = self._preprocess(y_true, y_proxy, pi)
+        y_true_clean, y_proxy, xi, pi = self._preprocess(y_true, y_proxy, pi)
         rng = np.random.default_rng(random_seed)
 
         non_zero_pi_mask = pi > 0
@@ -154,15 +154,16 @@ class IPWPTDMeanEstimator:
             labeled_ipw_weights = xi / pi
             unlabeled_ipw_weights = (1 - xi) / (1 - pi)
 
-        ipw_weighted_y_true_labeled = (y_true_clean * labeled_ipw_weights)[non_zero_pi_mask]
-        ipw_weighted_y_proxy_labeled = (y_proxy * labeled_ipw_weights)[non_zero_pi_mask]
-        ipw_weighted_y_proxy_unlabeled = (y_proxy * unlabeled_ipw_weights)[non_one_pi_mask]
+        weighted_y_true_labeled = (y_true_clean * labeled_ipw_weights)[non_zero_pi_mask]
+        weighted_y_proxy_labeled = (y_proxy * labeled_ipw_weights)[non_zero_pi_mask]
+        weighted_y_proxy_unlabeled = (y_proxy * unlabeled_ipw_weights)[non_one_pi_mask]
 
-        mean_proxy_unlabeled = np.mean(ipw_weighted_y_proxy_unlabeled)
-        var_proxy_unlabeled = np.var(ipw_weighted_y_proxy_unlabeled, ddof=1) / len(ipw_weighted_y_proxy_unlabeled)
+        mean_proxy_unlabeled = np.mean(weighted_y_proxy_unlabeled)
+        n_proxy_unlabeled = len(weighted_y_proxy_unlabeled)
+        var_proxy_unlabeled = np.var(weighted_y_proxy_unlabeled, ddof=1) / n_proxy_unlabeled
 
         bootstrap_y_true_means, bootstrap_y_proxy_labeled_means = _compute_bootstrap_labeled_means(
-            ipw_weighted_y_true_labeled, ipw_weighted_y_proxy_labeled, n_bootstrap, rng
+            weighted_y_true_labeled, weighted_y_proxy_labeled, n_bootstrap, rng
         )
         lambda_ = _compute_tuning_parameter(
             bootstrap_y_true_means, bootstrap_y_proxy_labeled_means, var_proxy_unlabeled, power_tuning
@@ -175,6 +176,9 @@ class IPWPTDMeanEstimator:
             lambda_,
             rng,
         )
+
+        n_labeled = int(xi.sum())
+        n_unlabeled = len(y_true) - n_labeled
 
         confidence_interval = BootstrapConfidenceInterval(
             bootstrap_estimates=bootstrap_mean_estimates,

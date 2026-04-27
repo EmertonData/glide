@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 
-from glide.samplers.active import ActiveSampler
+from glide.samplers import ActiveSampler
 
 
 @pytest.fixture

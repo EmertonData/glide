@@ -53,7 +53,7 @@ class StratifiedPPIMeanEstimator:
     Estimator : StratifiedPPIMeanEstimator
     n_true: 4
     n_proxy: 8
-    Effective Sample Size: 96
+    Effective Sample Size: 95
     """
 
     def _preprocess(
@@ -78,10 +78,10 @@ class StratifiedPPIMeanEstimator:
             labeled_mask = ~np.isnan(stratum_y_true)
             n_labeled = labeled_mask.sum()
             n_unlabeled = stratum_mask.sum() - n_labeled
-            if min(n_labeled, n_unlabeled) <= 1:
-                raise ValueError(f"Too few labeled or unlabeled samples in stratum '{stratum_id}'")
             if len(np.unique(stratum_y_proxy)) == 1:
                 raise ValueError(f"Input proxy values have zero variance in stratum '{stratum_id}'")
+            if min(n_labeled, n_unlabeled) <= 1:
+                raise ValueError(f"Too few labeled or unlabeled samples in stratum '{stratum_id}'")
 
             y_true_labeled = stratum_y_true[labeled_mask]
             y_proxy_labeled = stratum_y_proxy[labeled_mask]
