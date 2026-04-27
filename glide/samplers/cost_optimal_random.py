@@ -85,7 +85,6 @@ class CostOptimalRandomSampler:
             raise ValueError("Input contains NaN values")
         if np.all(y_true == y_proxy):
             raise ValueError("Proxy values have zero MSE with ground-truths")
-
         if len(np.unique(y_true)) < 2:
             raise ValueError("Input ground-truth values have zero variance")
 
