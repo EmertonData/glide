@@ -98,7 +98,7 @@ When the proxy is informative (high covariance with human labels), $\hat{\lambda
 
 ## Stratified PPI++
 
-Standard PPI++ assumes that labeled and unlabeled samples are drawn uniformly from a single population. In practice, the dataset is often naturally partitioned into **strata** (for example, by language, domain, or question type), and the proxy model may behave very differently across these strata. **Stratified PPI++** [[5](#ref-5), [6](#ref-6)] exploits this structure: rather than applying one global estimate, it runs PPI++ independently within each stratum and combines the results with population-proportional weights.
+Standard PPI++ assumes that labeled and unlabeled samples are drawn uniformly from a single population. In practice, the dataset is often naturally partitioned into **strata** (for example, by language, domain, or question type), and the proxy model may behave very differently across these strata. **Stratified PPI++** [[5](#ref-5), [6](#ref-6)] exploits this structure: rather than applying one global estimate, it runs PPI++ independently within each stratum and combines the results with weights proportional to stratum size.
 
 Let $K$ denote the number of strata. Stratum $k$ contains $n_k+N_k$ total samples (labeled + unlabeled), of which $n_k$ are labeled. We let $n = \sum_k n_k$ and $N = \sum_k N_k$ be the total numbers of labeled and unlabeled samples respectively. We assume that $n_k/n \approx N_k/N$ for all $k$ and compute the **population weight** of stratum $k$ as:
 
@@ -253,13 +253,7 @@ $$\hat{\theta}^{(b)}_{\text{PTD}} = \lambda \cdot \tilde{\gamma}^{(b)} + \left(\
 
 where $\lambda$ is a power-tuning factor that controls the proxy labels' influence similarly to previous sections. The term $\hat{\mu}^{(b)}_{\text{true}} - \lambda \cdot \hat{\mu}^{(b)}_{\text{proxy}}$ captures the proxy bias measured on the labeled set, while $\lambda \cdot \tilde{\gamma}^{(b)}$ contributes the proxy signal on the full unlabeled population. Together they form a bias-corrected estimate of $\theta^*$ for each bootstrap replicate.
 
-### Variance and confidence intervals
-
-The variance of the PTD estimator is the sample variance of the bootstrap estimates:
-
-$$\hat{\sigma}^2_{\text{PTD}} = \widehat{\text{Var}}_B\!\left(\hat{\theta}^{(1)}_{\text{PTD}},\, \ldots,\, \hat{\theta}^{(B)}_{\text{PTD}}\right)$$
-
-where $\widehat{\text{Var}}_B$ is the sample variance computed across the $B$ bootstrap replicates.
+### Confidence intervals
 
 The confidence interval at level $1 - \alpha$ is the interval between the $\alpha/2$ and $1 - \alpha/2$ empirical quantiles of $\bigl\{\hat{\theta}^{(1)}_{\text{PTD}},\, \ldots,\, \hat{\theta}^{(B)}_{\text{PTD}}\bigr\}$. This bootstrap percentile approach adapts to the actual shape of the residual distribution, making it reliable even when $n$ is small.
 
@@ -277,7 +271,7 @@ When the proxy is informative (high bootstrap covariance with ground-truth means
 
 ## Stratified PTD
 
-**Stratified PTD** [[7](#ref-7)] extends PTD to datasets naturally partitioned into **strata** (for example, by language, domain, or data source). The PTD bootstrap is run independently within each stratum, each with its own tuning parameter, and the per-stratum results are combined with population-proportional weights into a single estimate. When strata differ in proxy quality, this yields narrower confidence intervals than a single PTD run on the pooled data.
+**Stratified PTD** [[7](#ref-7)] extends PTD to datasets naturally partitioned into **strata** (for example, by language, domain, or data source). The PTD bootstrap is run independently within each stratum, each with its own tuning parameter, and the per-stratum results are combined with weights proportional to stratum size into a single estimate. When strata differ in proxy quality, this yields narrower confidence intervals than a single PTD run on the pooled data.
 
 GLIDE implements a stratified extension of Algorithm 3 from [[7](#ref-7)], applying the CLT speedup for the unlabeled mean independently within each stratum.
 
@@ -311,7 +305,7 @@ Denote $(\tilde{Y}^\circ_{k,i})_{i=1}^{N_k}$ the unlabeled proxies in stratum $k
 
 $$\hat{\gamma}^\circ_k = \frac{1}{N_k}\sum_{i=1}^{N_k}\tilde{Y}^\circ_{k,i}, \qquad \hat{S}^\circ_{\gamma,k} = \frac{\widehat{\text{Var}}(\tilde{Y}^\circ_k)}{N_k}$$
 
-These quantities are computed once and reused across all $B$ iterations, applying the same CLT speedup as PTD to each stratum independently.
+These quantities are computed once and reused across all $B$ iterations, applying the CLT speedup to each stratum independently.
 
 For $b = 1, \dots, B$ and for each stratum $k$, sample $n_k$ indices $\mathcal{I}^{(b)}_k$ with replacement from $\{1, \dots, n_k\}$ and compute the bootstrap means of the labeled ground-truth and proxy labels:
 
@@ -321,21 +315,18 @@ A perturbed draw of the unlabeled proxy mean for stratum $k$ is formed as:
 
 $$\tilde{\gamma}^{(b)}_k = \hat{\gamma}^\circ_k + Z^{(b)}_k \cdot \sqrt{\hat{S}^\circ_{\gamma,k}}, \qquad Z^{(b)}_k \sim \mathcal{N}(0, 1)$$
 
-where each $Z^{(b)}_k$ is drawn independently across strata and iterations. The per-stratum bootstrap estimates are then combined with population-proportional weights:
+where each $Z^{(b)}_k$ is drawn independently across strata and iterations. The per-stratum bootstrap estimates are then combined with weights proportional to stratum size:
 
 $$\hat{\theta}^{(b)}_{\text{SPTD}} = \sum_{k=1}^{K} w_k \left[\lambda_k \cdot \tilde{\gamma}^{(b)}_k + \left(\hat{\mu}^{(b)}_{\text{true},k} - \lambda_k \cdot \hat{\mu}^{(b)}_{\text{proxy},k}\right)\right]$$
 
 where each $\lambda_k$ is a power-tuning factor that controls the proxy labels' influence within stratum $k.$ The term $\hat{\mu}^{(b)}_{\text{true},k} - \lambda_k \cdot \hat{\mu}^{(b)}_{\text{proxy},k}$ measures the proxy bias in stratum $k$ on the labeled set, while $\lambda_k \cdot \tilde{\gamma}^{(b)}_k$ computes the proxy signal on the stratum's unlabeled population.
 
-### Variance and confidence intervals
-
-The variance of the Stratified PTD estimator is the sample variance of the combined bootstrap estimates:
-
-$$\hat{\sigma}^2_{\text{SPTD}} = \widehat{\text{Var}}_B\!\left(\hat{\theta}^{(1)}_{\text{SPTD}},\, \ldots,\, \hat{\theta}^{(B)}_{\text{SPTD}}\right)$$
+### Confidence intervals
 
 The confidence interval at level $1 - \alpha$ is the interval between the $\alpha/2$ and $1 - \alpha/2$ empirical quantiles of $\bigl\{\hat{\theta}^{(b)}_{\text{SPTD}}\bigr\}_{b=1}^B$. This quantile-based approach adapts to any arbitrary shape of the residual distribution and remains reliable for small sample sizes.
 
-Stratified PTD is designed for a small number of large strata. As the number of strata grows, each stratum's labeled set shrinks and the bootstrap distribution becomes unreliable. When in doubt, prefer a coarser stratification with fewer, larger strata.
+Keep in mind that Stratified PTD is designed for a small number of large strata. The theoretical guarantees assume that the number of strata $K$ stays fixed as sample size grows and that each stratum contains a non-vanishing share of the data. In practice, many small strata mean that per-stratum statistical estimates become unreliable. When in doubt, prefer a coarser stratification with fewer, larger strata.
+
 
 ### Power-tuning
 
