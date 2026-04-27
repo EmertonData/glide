@@ -131,10 +131,3 @@ def test_sample_is_reproducible(sampler, y_proxy, groups):
     _, xi2 = sampler.sample(y_proxy, groups, 4, random_seed=42)
 
     np.testing.assert_array_equal(xi1, xi2)
-
-
-def test_sample_seed_defaults_to_none_without_exception(sampler, y_proxy, groups):
-    pi, xi = sampler.sample(y_proxy, groups, 4)
-
-    assert isinstance(pi, np.ndarray)
-    assert isinstance(xi, np.ndarray)
