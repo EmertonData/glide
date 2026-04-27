@@ -19,16 +19,12 @@ class StratifiedPTDMeanEstimator:
     Extends PTD to datasets partitioned into strata (e.g. by language, domain,
     or data source). A per-stratum power-tuning parameter is computed independently
     within each stratum, and the final confidence interval is constructed from a
-    single bootstrap distribution obtained by combining the per-stratum bootstrap
-    estimates with population-proportional weights.
+    bootstrap distribution obtained by combining the per-stratum bootstrap
+    estimates with weights proportional to the stratum sizes.
 
     This yields narrower confidence intervals than standard PTD whenever strata
     differ in proxy quality, because the optimal power-tuning parameter can adapt
     to each stratum's signal-to-noise ratio.
-
-    Designed for the "small number of large strata" regime: the bootstrap CI
-    becomes unreliable when strata are numerous and small (see Kluger et al., 2025,
-    Appendix B.2).
 
     References
     ----------
@@ -104,12 +100,14 @@ class StratifiedPTDMeanEstimator:
 
         Splits arrays by unique values in ``groups``, applies the PTD bootstrap
         algorithm within each stratum with a per-stratum power-tuning, and
-        combines the resulting per-stratum bootstrap arrays with
-        population-proportional weights into a single ``BootstrapConfidenceInterval``:
+        combines the resulting per-stratum bootstrap arrays with weights proportional
+        to stratum sizes into a single ``BootstrapConfidenceInterval``:
 
             theta = sum_k  w_k * theta_k(lambda_k)
 
-        where ``w_k`` is the fraction of samples in stratum *k*.
+        where ``w_k`` is the fraction of samples in stratum *k* and ``theta_k(lambda_k)``
+        is the mean estimate for that stratum computed with power-tuning parameter
+        ``lambda_k``.
 
         Note that this assumes the portions of labeled vs unlabeled samples are
         approximately the same in all strata which is important for statistical
