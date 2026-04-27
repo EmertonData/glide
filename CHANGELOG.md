@@ -9,18 +9,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 ## [Next release]
 
 ### ✨ Added
-- Section about `CostOptimalRandomSampler` in the user guide
 - `CostOptimalRandomSampler` for cost-optimal annotation strategy
-- Stratified PTD scientific validation notebook
-- Example page for the `StratifiedPTDMeanEstimator`
-- Functional test verifying that Neyman allocation yields narrower confidence intervals than proportional allocation when composed with `StratifiedPPIMeanEstimator`
 - `StratifiedPTDMeanEstimator` stratified extension of `PTDMeanEstimator`
-- User guide section for Stratified PTD
 
 ### 🔄 Changed
 - Refactored `glide.core.simulated_datasets` into dedicated `glide.simulators` module with separate files for each generator function
 - Replaced "semi-supervised" with "prediction-powered" everywhere in the docs and code
-- Rewrote CLT and Bootstrap confidence intervals to cache lower/upper bounds for a given confidence level
 
 ### 🐛 Fixed
 - Handling of NaN values in `StratifiedClassicalMeanEstimator`
@@ -32,39 +26,34 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 ## [0.4.0] – 2026-04-20
 
 ### ✨ Added
-- Example section in the documentation with a page for PTD
-- PTD scientific validation notebook
-- Section about PTD in the user guide
-- Entry for `PTDMeanEstimator` in the ReadMe papers
-- CI workflow to verify notebook execution 
-- `PTDMeanEstimator` for mean estimation with Predict-Then-Debias (bootstrap)
+- Examples section in the documentation
 - Section on which estimator to use in the user guide
+- `PTDMeanEstimator` for mean estimation with Predict-Then-Debias (bootstrap)
 - `BootStrapConfidenceInterval` and `ConfidenceInterval` Protocol
 - `IPWClassicalMeanEstimator` for inverse probability weighted classical mean estimation
 - `StratifiedClassicalMeanEstimator` for Stratified classical mean estimation
-- Export JSON step in quickstart
-- Stratified PPI tutorial notebook
-- Code of conduct
-- Tutorial for ASI
-- Issue templates
 - `StratifiedSampler` for optimal per-stratum annotation budget allocation with Neyman and proportional strategies
-- Overload for the __setitem__ method for Dataset to support `str`
+- Tutorial for Stratified PPI
+- Tutorial for ASI
+- Code of conduct
+- Issue templates
 - Doctest for `glide.io.to_json`
   
 ### 🔄 Changed
 - Removed dataset container object `Dataset`
 - Improved efficiency of `BootstrapConfidenceInterval.test_null_hypothesis()` from O(n) to O(log n) using binary search on sorted bootstrap samples
-- Renamed `compute_lambda` to `compute_tuning_parameter`
-- Refactored ASI user to journey to use numpy arrays only
+- Refactored ASI to use numpy arrays only
 - Refactored stratified PPI to accept numpy arrays as input
 - Restructured "User guide" into three pages "Evaluation Workflow", "Samplers" and "Estimators"
 - Logo
-- Decoupled Stratified PPI from PPI
 - `CONTRIBUTING.md` now explains how to setup pre-commits
 - Image in the user guide explaining the control sample
 
+### 🐛 Fixed
+- CI for notebooks execution
+
 ### 💛 Contributors
-Thank you to everyone who contributed to this release: @gmartinon-ed, @imerad, @mraki-ed and @vwoelffel-ed
+Thank you to everyone who contributed to this release: @gmartinon-ed, @imerad, @mraki-ed, @vwoelffel-ed
 
 ---
 
