@@ -21,6 +21,11 @@ def y_arrays() -> Tuple[NDArray, NDArray, NDArray, NDArray]:
 
 
 @pytest.fixture
+def y_true_processed() -> NDArray:
+    return np.array([3.0, 5.0, 0.0, 0.0])
+
+
+@pytest.fixture
 def estimator() -> ASIMeanEstimator:
     return ASIMeanEstimator()
 
@@ -85,17 +90,15 @@ def test_preprocess_raises_on_unlabeled_samples_with_one_pi(estimator):
 # --- _compute_tuning_parameter ---
 
 
-def test_compute_tuning_parameter_returns_one_when_power_tuning_false(estimator, y_arrays):
-    y_true_input, y_proxy, xi, pi = y_arrays
-    y_true, y_proxy, xi, pi = estimator._preprocess(y_true_input, y_proxy, pi)
-    lam = estimator._compute_tuning_parameter(y_true, y_proxy, xi, pi, power_tuning=False)
+def test_compute_tuning_parameter_returns_one_when_power_tuning_false(estimator, y_arrays, y_true_processed):
+    _, y_proxy, xi, pi = y_arrays
+    lam = estimator._compute_tuning_parameter(y_true_processed, y_proxy, xi, pi, power_tuning=False)
     assert lam == 1.0
 
 
-def test_compute_tuning_parameter_known_values(estimator, y_arrays):
-    y_true_input, y_proxy, xi, pi = y_arrays
-    y_true, y_proxy, xi, pi = estimator._preprocess(y_true_input, y_proxy, pi)
-    lam = estimator._compute_tuning_parameter(y_true, y_proxy, xi, pi, power_tuning=True)
+def test_compute_tuning_parameter_known_values(estimator, y_arrays, y_true_processed):
+    _, y_proxy, xi, pi = y_arrays
+    lam = estimator._compute_tuning_parameter(y_true_processed, y_proxy, xi, pi, power_tuning=True)
     expected = 0.89
     assert lam == pytest.approx(expected, abs=0.01)
 

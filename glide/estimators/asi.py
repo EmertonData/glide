@@ -66,8 +66,8 @@ class ASIMeanEstimator:
         if np.any(~y_true_non_nan_mask & (pi == 1)):
             raise ValueError("Samples with probability one of being labeled must be labeled")
 
-        y_true = np.where(np.isnan(y_true_all), -1.0, y_true_all)
-        return y_true, y_proxy, xi, pi
+        y_true_clean = np.nan_to_num(y_true_all, nan=0)
+        return y_true_clean, y_proxy, xi, pi
 
     def _compute_tuning_parameter(
         self,
