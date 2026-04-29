@@ -7,8 +7,7 @@ details, and therefore require larger datasets to hold reliably.
 import numpy as np
 import pytest
 
-from glide.estimators.classical import ClassicalMeanEstimator
-from glide.estimators.stratified_classical import StratifiedClassicalMeanEstimator
+from glide.estimators import ClassicalMeanEstimator, StratifiedClassicalMeanEstimator
 from glide.simulators import generate_gaussian_dataset
 
 # ── tests ──────────────────────────────────────────────────────────────────────

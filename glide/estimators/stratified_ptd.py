@@ -73,11 +73,10 @@ class StratifiedPTDMeanEstimator:
             labeled_mask = ~np.isnan(stratum_y_true)
             n_labeled = labeled_mask.sum()
             n_unlabeled = len(stratum_y_true) - n_labeled
-            if min(n_labeled, n_unlabeled) <= 1:
-                raise ValueError(f"Too few labeled or unlabeled samples in stratum '{stratum_name}'")
             if len(np.unique(stratum_y_proxy)) == 1:
                 raise ValueError(f"Input proxy values have zero variance in stratum '{stratum_name}'")
-
+            if min(n_labeled, n_unlabeled) <= 1:
+                raise ValueError(f"Too few labeled or unlabeled samples in stratum '{stratum_name}'")
             y_true_labeled = stratum_y_true[labeled_mask]
             y_proxy_labeled = stratum_y_proxy[labeled_mask]
             y_proxy_unlabeled = stratum_y_proxy[~labeled_mask]
