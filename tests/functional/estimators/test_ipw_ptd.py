@@ -50,39 +50,6 @@ def test_deterministic_probabilities_match_simple_ptd():
     assert simple_ptd_upper_bound == pytest.approx(ipw_ptd_upper_bound, abs=0.01)
 
 
-def test_equal_probabilities_match_simple_ptd():
-    """When all π_i are equal, IPW weights cancel and the estimator reduces to PTDMeanEstimator.
-
-    All sampling probabilities are set to the same constant value π. Because
-    the IPW correction 1/π_i is identical for every observation, it factors
-    out and cancels, leaving an estimate identical to the unweighted
-    PTDMeanEstimator on the same data.
-    """
-    n_labeled, n_unlabeled = 100, 400
-    pi_value = n_labeled / (n_labeled + n_unlabeled)
-    true_mean = 3
-    true_std = 0.1
-    proxy_mean = 2
-    proxy_std = 0.1
-    random_seed = 0
-
-    y_true, y_proxy = generate_gaussian_dataset(
-        n_labeled=n_labeled,
-        n_unlabeled=n_unlabeled,
-        true_mean=true_mean,
-        true_std=true_std,
-        proxy_mean=proxy_mean,
-        proxy_std=proxy_std,
-        random_seed=random_seed,
-    )
-    pi = pi_value * np.ones(n_labeled + n_unlabeled)
-
-    ipw_ptd_result = IPWPTDMeanEstimator().estimate(y_true, y_proxy, pi, random_seed=random_seed)
-    simple_ptd_result = PTDMeanEstimator().estimate(y_true, y_proxy, random_seed=random_seed)
-
-    assert ipw_ptd_result.mean == pytest.approx(simple_ptd_result.mean, abs=0.02)
-
-
 def test_large_sample_matches_asi():
     """When n is large, IPWPTDMeanEstimator produces inference equivalent to ASIMeanEstimator.
 

@@ -44,5 +44,5 @@ def test_equal_probabilities_match_simple_ppi():
     asi_result = ASIMeanEstimator().estimate(y_true, y_proxy, pi)
     ppi_result = PPIMeanEstimator().estimate(y_true, y_proxy)
 
-    assert asi_result.mean == pytest.approx(ppi_result.mean, abs=0.01)
-    assert asi_result.std == pytest.approx(ppi_result.std, abs=0.01)
+    assert asi_result.mean == pytest.approx(ppi_result.mean, abs=9e-3)
+    assert asi_result.std == pytest.approx(ppi_result.std, abs=9e-3)
