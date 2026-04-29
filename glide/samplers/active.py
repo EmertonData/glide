@@ -91,9 +91,9 @@ class ActiveSampler:
         self._validate(uncertainties)
         rng = np.random.default_rng(random_seed)
 
-        drawing_probabilities = budget * uncertainties / uncertainties.sum()
+        pi = budget * uncertainties / uncertainties.sum()
         # Cap at 1: a Bernoulli probability cannot exceed 1.
-        clipped_probabilities = np.minimum(drawing_probabilities, 1.0)
-        indicators = rng.binomial(n=1, p=clipped_probabilities).astype(float)
+        pi = np.minimum(pi, 1.0)
+        xi = rng.binomial(n=1, p=pi).astype(float)
 
-        return clipped_probabilities, indicators
+        return pi, xi
