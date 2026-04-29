@@ -2,15 +2,13 @@
 IPWPTDMeanEstimator
 =========================================
 
-IPW-PTD extends Predict-Then-Debias to handle non-uniform sampling probabilities.
-It uses inverse probability weighting to correct for biased ground-truth labeling,
-yielding valid estimates even when the labeling process is selective.
+IPW-PTD extends Predict-Then-Debias to handle non-uniform sampling probabilities
+via inverse probability weighting.
 """
 
 ##############################################################################
-# Create a simulated dataset with 240 samples, all labeled by a proxy model
+# Create a simulated dataset with 2200 samples, all labeled by a proxy model
 # and a subset labeled by humans with non-uniform probabilities.
-# The ground-truth hallucination rate is 12%.
 
 import numpy as np
 import plotly.graph_objects as go
@@ -25,57 +23,50 @@ pio.renderers.default = "sphinx_gallery"
 C_GLIDE = "#E74C3C"
 C_TRUTH = "#2C3E50"
 
-TRUE_RATE = 0.12
-N_TOTAL = 240
-N_LABELED = 60
+TRUE_RATE = 0.10
 
-y_true_all, y_proxy_all = generate_binary_dataset(
-    n_labeled=N_LABELED,
-    n_unlabeled=N_TOTAL - N_LABELED,
+y_true_all, y_proxy = generate_binary_dataset(
+    n_labeled=2200,
+    n_unlabeled=0,
     true_mean=TRUE_RATE,
-    proxy_mean=0.10,
-    correlation=0.68,
+    proxy_mean=0.08,
+    correlation=0.70,
     random_seed=42,
 )
 
 ##############################################################################
-# Assign non-uniform sampling probabilities. The first 60 samples (with higher
-# proxy quality) have a higher probability of being labeled. This creates
-# selection bias that IPW-PTD corrects for via inverse probability weighting.
+# Assign non-uniform sampling probabilities based on proxy score to create
+# selection bias. Higher-scoring samples are more likely to be labeled.
 
-pi = np.zeros(N_TOTAL)
-pi[:N_LABELED] = 0.60  # Higher prob for higher-quality samples
-pi[N_LABELED:] = 0.20  # Lower prob for lower-quality samples
+pi = 0.2 + 0.3 * y_proxy
+pi = np.clip(pi, 0.1, 0.7)
 
 ##############################################################################
-# Select which samples are actually labeled. Labeled samples get their true
-# values; unlabeled samples are marked with NaN.
+# Randomly label samples according to their probabilities.
 
-y_true = np.full(N_TOTAL, np.nan)
-y_true[:N_LABELED] = y_true_all[:N_LABELED]
+rng = np.random.default_rng(42)
+y_true = np.full(2200, np.nan)
+is_labeled = rng.uniform(0, 1, 2200) < pi
+y_true[is_labeled] = y_true_all[is_labeled]
 
 ##############################################################################
-# Compute the IPW-PTD estimate. By incorporating sampling probabilities π,
-# IPW-PTD corrects for selection bias and produces a valid confidence interval
-# even when labeling is non-uniform.
+# Compute the IPW-PTD estimate.
 
-ipw_ptd_result = IPWPTDMeanEstimator().estimate(
-    y_true, y_proxy_all, pi, metric_name="Hallucination Rate", random_seed=42
-)
+result = IPWPTDMeanEstimator().estimate(y_true, y_proxy, pi, metric_name="Hallucination Rate", random_seed=42)
 
 ##############################################################################
 # Plot the IPW-PTD estimate with its confidence interval next to the true rate.
 
-mean = ipw_ptd_result.mean
-lo = ipw_ptd_result.confidence_interval.lower_bound
-hi = ipw_ptd_result.confidence_interval.upper_bound
-ipw_ptd_label = "IPW-PTD (GLIDE)"
+mean = result.mean
+lo = result.confidence_interval.lower_bound
+hi = result.confidence_interval.upper_bound
+label = "IPW-PTD (GLIDE)"
 
 fig = go.Figure()
 
 fig.add_trace(
     go.Bar(
-        x=[ipw_ptd_label],
+        x=[label],
         y=[mean],
         marker_color=[C_GLIDE],
         width=0.2,
@@ -93,7 +84,7 @@ fig.add_trace(
 )
 
 fig.add_annotation(
-    x=ipw_ptd_label,
+    x=label,
     y=hi,
     text=f"{mean:.1%}<br>[{lo:.1%}, {hi:.1%}]",
     showarrow=False,
@@ -124,7 +115,7 @@ fig.add_annotation(
 )
 
 fig.update_layout(
-    title=dict(text="IPW-PTD corrects for biased sampling", font=dict(size=14)),
+    title=dict(text="IPW-PTD delivers an unbiased estimate under non-uniform sampling", font=dict(size=14)),
     yaxis=dict(
         title="Hallucination Rate",
         tickformat=".0%",
