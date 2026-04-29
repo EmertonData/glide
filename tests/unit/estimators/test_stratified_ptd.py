@@ -48,6 +48,14 @@ def test_preprocess_raises_on_length_mismatch(estimator):
         estimator._preprocess(y_true, y_proxy, grps)
 
 
+def test_preprocess_raises_on_nan_proxy(estimator):
+    y_true = np.array([1.0, 2.0, np.nan, np.nan])
+    y_proxy = np.array([1.1, np.nan, 5.2, 6.1])
+    grps = np.array(["A", "A", "A", "A"])
+    with pytest.raises(ValueError, match="Input proxy values contain NaN"):
+        estimator._preprocess(y_true, y_proxy, grps)
+
+
 def test_preprocess_raises_on_stratum_size_too_small(estimator):
     y_true = np.array([1.0, np.nan, 4.0, np.nan])
     y_proxy = np.array([1.1, 1.8, 3.9, 4.8])
@@ -61,14 +69,6 @@ def test_preprocess_raises_on_zero_variance_proxy_in_stratum(estimator):
     y_proxy = np.array([1.0, 1.0, 1.0, 1.0])
     grps = np.array(["A", "A", "A", "A"])
     with pytest.raises(ValueError, match="Input proxy values have zero variance in stratum 'A'"):
-        estimator._preprocess(y_true, y_proxy, grps)
-
-
-def test_preprocess_raises_on_nan_proxy(estimator):
-    y_true = np.array([1.0, 2.0, np.nan, np.nan])
-    y_proxy = np.array([1.1, np.nan, 5.2, 6.1])
-    grps = np.array(["A", "A", "A", "A"])
-    with pytest.raises(ValueError, match="Input proxy values contain NaN"):
         estimator._preprocess(y_true, y_proxy, grps)
 
 
