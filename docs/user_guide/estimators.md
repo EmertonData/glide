@@ -350,7 +350,7 @@ In IPW-PTD, each sample has four associated values:
 |---|---|---|
 | $\tilde{Y}_i$ | All $n+N$ samples | Proxy label |
 | $\pi_i$ | All $n+N$ samples | Known, pre-determined labeling probability |
-| $\xi_i$ | All $n+N$ samples | Sampling indicator ($\xi_i = 1$ if labeled, $\xi_i = 0$ if unlabeled) |
+| $\xi_i$ | All $n+N$ samples | Sampling indicator such that $\Pr(\xi_i = 1) = \pi_i = 1 - \Pr(\xi_i = 0)$ |
 | $Y_i$ | Labeled samples only ($n \ll N$) | Ground-truth label |
 
 The binary indicator $\xi_i = 1$ if sample $i$ is labeled and $\xi_i = 0$ otherwise; by design, $\Pr(\xi_i = 1) = \pi_i$.
@@ -359,12 +359,12 @@ The binary indicator $\xi_i = 1$ if sample $i$ is labeled and $\xi_i = 0$ otherw
 
 IPW-PTD applies inverse probability weighting to correct for non-uniform labeling probabilities. The IPW-corrected weights are:
 
-- **For labeled samples**: $w^\bullet_i = \frac{1}{\pi_i}$ (up-weight labeled samples with low labeling probability)
-- **For unlabeled samples**: $w^\circ_i = \frac{1}{1 - \pi_i}$ (up-weight unlabeled samples with high labeling probability)
+- $w^\bullet_i = \frac{\xi_i}{\pi_i}$ (labeled contribution; equals $\frac{1}{\pi_i}$ for labeled samples, $0$ for unlabeled)
+- $w^\circ_i = \frac{1 - \xi_i}{1 - \pi_i}$ (unlabeled contribution; equals $0$ for labeled samples, $\frac{1}{1-\pi_i}$ for unlabeled)
 
 Before the bootstrap loop, compute the weighted means from labeled and unlabeled data:
 
-$$\hat{\mu}^\bullet_{\text{true}} = \frac{\sum_{j=1}^{n} w^\bullet_j\, Y_j}{\sum_{j=1}^{n} w^\bullet_j}, \qquad \hat{\mu}^\bullet_{\text{proxy}} = \frac{\sum_{j=1}^{n} w^\bullet_j\, \tilde{Y}_j}{\sum_{j=1}^{n} w^\bullet_j}, \qquad \hat{\mu}^\circ_{\text{proxy}} = \frac{\sum_{i=1}^{N} w^\circ_i\, \tilde{Y}_i}{\sum_{i=1}^{N} w^\circ_i}$$
+$$\hat{\mu}^\bullet_{\text{true}} = \frac{1}{n}\sum_{j=1}^{n} w^\bullet_j\, Y_j, \qquad \hat{\mu}^\bullet_{\text{proxy}} = \frac{1}{n}\sum_{j=1}^{n} w^\bullet_j\, \tilde{Y}_j, \qquad \hat{\mu}^\circ_{\text{proxy}} = \frac{1}{N}\sum_{i=1}^{N} w^\circ_i\, \tilde{Y}_i$$
 
 The superscripts $\bullet$ (labeled) and $\circ$ (unlabeled) indicate which subset each mean comes from. The IPW-PTD point estimate is computed as the mean of $B$ bootstrap estimates (see bootstrap procedure below).
 
