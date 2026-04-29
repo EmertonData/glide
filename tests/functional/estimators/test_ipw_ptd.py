@@ -36,7 +36,9 @@ def test_deterministic_probabilities_match_simple_ptd():
     )
     pi = (~np.isnan(y_true)).astype(float)
 
-    ipw_ptd_result = IPWPTDMeanEstimator().estimate(y_true, y_proxy, pi, random_seed=random_seed)
+    with pytest.warns(UserWarning, match="Some observations have pi=0"):
+        with pytest.warns(UserWarning, match="Some observations have pi=1"):
+            ipw_ptd_result = IPWPTDMeanEstimator().estimate(y_true, y_proxy, pi, random_seed=random_seed)
     simple_ptd_result = PTDMeanEstimator().estimate(y_true, y_proxy, random_seed=random_seed)
 
     simple_ptd_lower_bound = simple_ptd_result.confidence_interval.lower_bound
