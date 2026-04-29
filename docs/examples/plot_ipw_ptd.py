@@ -25,9 +25,9 @@ C_TRUTH = "#2C3E50"
 
 TRUE_RATE = 0.10
 
-y_true_all, y_proxy = generate_binary_dataset(
-    n_labeled=2200,
-    n_unlabeled=0,
+y_true, y_proxy = generate_binary_dataset(
+    n_labeled=150,
+    n_unlabeled=850,
     true_mean=TRUE_RATE,
     proxy_mean=0.08,
     correlation=0.70,
@@ -35,19 +35,10 @@ y_true_all, y_proxy = generate_binary_dataset(
 )
 
 ##############################################################################
-# Assign non-uniform sampling probabilities based on proxy score to create
-# selection bias. Higher-scoring samples are more likely to be labeled.
+# Assign non-uniform sampling probabilities. Labeled samples have higher
+# probability, creating selection bias corrected by IPW.
 
-pi = 0.2 + 0.3 * y_proxy
-pi = np.clip(pi, 0.1, 0.7)
-
-##############################################################################
-# Randomly label samples according to their probabilities.
-
-rng = np.random.default_rng(42)
-y_true = np.full(2200, np.nan)
-is_labeled = rng.uniform(0, 1, 2200) < pi
-y_true[is_labeled] = y_true_all[is_labeled]
+pi = np.hstack([np.full(150, 0.80), np.full(850, 0.15)])
 
 ##############################################################################
 # Compute the IPW-PTD estimate.
