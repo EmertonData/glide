@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 
-from glide.samplers.stratified import StratifiedSampler
+from glide.samplers import StratifiedSampler
 
 
 @pytest.fixture

@@ -26,7 +26,7 @@ def y_arrays() -> Tuple[NDArray, NDArray]:
 # ── _preprocess ───────────────────────────────────────────────────────────────
 
 
-def test_preprocess(estimator, y_arrays):
+def test_preprocess_valid_output(estimator, y_arrays):
     y_true_all, y_proxy_all = y_arrays
     y_true, y_proxy_labeled, y_proxy_unlabeled = estimator._preprocess(y_true_all, y_proxy_all)
     assert len(y_true) == 3
@@ -35,7 +35,7 @@ def test_preprocess(estimator, y_arrays):
     assert not np.any(np.isnan(y_true))
 
 
-def test_preprocess_raises_when_only_one_sample(estimator):
+def test_preprocess_raises_when_too_few_samples(estimator):
     y_true = np.array([5.0, np.nan, np.nan])
     y_proxy = np.array([4.9, 5.2, 6.1])
     with pytest.raises(ValueError, match="Too few labeled or unlabeled samples in dataset"):
