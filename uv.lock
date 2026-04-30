@@ -837,7 +837,6 @@ doc = [
     { name = "mkdocs-jupyter" },
     { name = "mkdocs-material" },
     { name = "mkdocstrings", extra = ["python"] },
-    { name = "pandas" },
     { name = "plotly" },
     { name = "scikit-learn" },
 ]
@@ -862,7 +861,6 @@ doc = [
     { name = "mkdocs-jupyter", specifier = ">=0.25.1" },
     { name = "mkdocs-material", specifier = ">=9.7.4" },
     { name = "mkdocstrings", extras = ["python"], specifier = ">=1.0.3" },
-    { name = "pandas", specifier = ">=3.0.2" },
     { name = "plotly", specifier = ">=6.0.0" },
     { name = "scikit-learn", specifier = ">=1.8.0" },
 ]
