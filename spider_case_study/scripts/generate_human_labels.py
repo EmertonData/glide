@@ -28,6 +28,7 @@ SYSTEM_PROMPT = (
     "You are a senior database expert performing rigorous quality evaluation of AI-generated SQL queries. "
     "Given a question, the gold (correct) SQL, and the predicted SQL, determine if the predicted SQL is "
     "semantically equivalent to the gold SQL and would return the same results. "
+    "NOTE: no database schema is provided — evaluate based solely on the question intent and SQL structure. "
     "Be rigorous: consider edge cases such as different column selections, missing WHERE clauses, "
     "or different GROUP BY behaviour that may change results."
 )
@@ -144,7 +145,6 @@ def main() -> None:
                 client,
                 model=MODEL,
                 max_tokens=512,
-                temperature=0.0,
                 system=SYSTEM_PROMPT,
                 messages=[{"role": "user", "content": user_prompt}],
             )

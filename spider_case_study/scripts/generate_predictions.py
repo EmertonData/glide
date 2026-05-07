@@ -105,7 +105,7 @@ def main() -> None:
     OUTPUT_PATH.parent.mkdir(parents=True, exist_ok=True)
 
     print("Loading Spider 1.0 dataset from HuggingFace...")
-    dataset = load_dataset("xlangai/spider", split="train", trust_remote_code=True)
+    dataset = load_dataset("xlangai/spider", split="train")
     print(f"  Train split: {len(dataset)} examples")
 
     examples = _select_examples(dataset)
@@ -126,8 +126,8 @@ def main() -> None:
             print(f"  [{i + 1}/{len(remaining)}] {ex['example_id']} ({ex['db_id']})")
 
             system_prompt = (
-                "You are an expert SQL writer. Given a natural language question and the target database, "
-                "write the SQL query that answers it. Return ONLY valid SQL, no explanations."
+                "You are an expert SQL writer. Given a natural language question and a database name, "
+                "write the SQL query that answers the question. Return ONLY valid SQL, no explanations."
             )
             user_prompt = f"Database: {ex['db_id']}\nQuestion: {ex['question']}\n\nReturn your SQL query:"
 
