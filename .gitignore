@@ -33,3 +33,6 @@ coverage.xml
 
 # VSCode
 .vscode
+
+# Spider case study generated data
+spider_case_study/data/

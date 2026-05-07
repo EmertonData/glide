@@ -68,6 +68,13 @@ doc = [
     "plotly>=6.0.0",
     "scikit-learn>=1.8.0"
 ]
+tutorial = [
+    "anthropic>=0.49.0",
+    "datasets>=4.8.5",
+    "pandas>=2.2.0",
+    "plotly>=6.0.0",
+    "pyarrow>=19.0.0",
+]
 
 [tool.uv]
 default-groups = ["dev"]
