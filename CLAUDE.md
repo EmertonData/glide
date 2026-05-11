@@ -78,6 +78,7 @@ Every PR must satisfy all of the following before merge:
 
 - **Self-explanatory, no abbreviations** — BAD: `ess`, GOOD: `effective_sample_size`
 - **Consistent across classes** — all estimators must use the same name for equivalent concepts (e.g., don't use `ppi_mean` in one and `asi_mean` in another; use `compute_mean_estimate` everywhere)
+- **Avoid "CI" abbreviation** — In documentation and tutorials, always spell out "confidence interval" instead of using "CI", which is easily confused with "continuous integration"
 
 ### Return Statements
 
