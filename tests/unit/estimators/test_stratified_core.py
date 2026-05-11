@@ -21,7 +21,7 @@ def groups() -> np.ndarray:
     return np.array(["A", "A", "A", "A", "B", "B", "B", "B"])
 
 
-# --- _preprocess ---
+# --- preprocess ---
 
 
 def test_preprocess_returns_correct_shapes(y_true, y_proxy, groups):
