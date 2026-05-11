@@ -7,8 +7,9 @@ via inverse probability weighting.
 """
 
 ##############################################################################
-# Create a simulated dataset with 1000 samples, all labeled by a proxy model.
-# Then assign non-uniform sampling probabilities and randomly mask labels.
+# Create a simulated dataset with 1000 samples, all having proxy and ground-truth
+# labels, then assign non-uniform sampling probabilities and randomly mask
+# ground-truth labels. The ground-truth hallucination rate is 10%.
 
 import numpy as np
 import plotly.graph_objects as go
@@ -36,9 +37,8 @@ y_true, y_proxy = generate_binary_dataset(
 )
 
 ##############################################################################
-# Assign non-uniform sampling probabilities drawn from [0.5, 1] and randomly
-# mask labels based on these probabilities. This ensures pi truly reflects
-# the probability each label was observed.
+# Assign non-uniform sampling probabilities and randomly mask labels based on
+# these probabilities.
 
 rng = np.random.default_rng(seed=42)
 pi = np.clip(rng.random(len(y_true)), 0.5, 1.0)
