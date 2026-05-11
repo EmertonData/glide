@@ -7,8 +7,8 @@ via inverse probability weighting.
 """
 
 ##############################################################################
-# Create a simulated dataset with 2200 samples, all labeled by a proxy model
-# and a subset labeled by humans with non-uniform probabilities.
+# Create a simulated dataset with 1000 samples, all labeled by a proxy model.
+# Then assign non-uniform sampling probabilities and randomly mask labels.
 
 import numpy as np
 import plotly.graph_objects as go
@@ -25,9 +25,10 @@ C_TRUTH = "#2C3E50"
 
 TRUE_RATE = 0.10
 
+# Generate a complete dataset with all samples labeled
 y_true, y_proxy = generate_binary_dataset(
-    n_labeled=150,
-    n_unlabeled=850,
+    n_labeled=1000,
+    n_unlabeled=0,
     true_mean=TRUE_RATE,
     proxy_mean=0.08,
     correlation=0.70,
@@ -35,10 +36,13 @@ y_true, y_proxy = generate_binary_dataset(
 )
 
 ##############################################################################
-# Assign non-uniform sampling probabilities. Labeled samples have higher
-# probability, creating selection bias corrected by IPW.
+# Assign non-uniform sampling probabilities drawn from [0.5, 1] and randomly
+# mask labels based on these probabilities. This ensures pi truly reflects
+# the probability each label was observed.
 
-pi = np.hstack([np.full(150, 0.80), np.full(850, 0.15)])
+rng = np.random.default_rng(seed=42)
+pi = np.clip(rng.random(len(y_true)), 0.5, 1.0)
+y_true[rng.random(len(y_true)) > pi] = np.nan
 
 ##############################################################################
 # Compute the IPW-PTD estimate.
