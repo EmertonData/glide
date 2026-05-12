@@ -78,7 +78,6 @@ Every PR must satisfy all of the following before merge:
 
 - **Self-explanatory, no abbreviations** — BAD: `ess`, GOOD: `effective_sample_size`
 - **Consistent across classes** — all estimators must use the same name for equivalent concepts (e.g., don't use `ppi_mean` in one and `asi_mean` in another; use `compute_mean_estimate` everywhere)
-- **Avoid "CI" abbreviation** — In documentation and tutorials, always spell out "confidence interval" instead of using "CI", which is easily confused with "continuous integration"
 
 ### Return Statements
 
@@ -120,6 +119,7 @@ Do not use needless type conversions like `float()` or `int()` unless required b
 - Always add elements to the "Added" or "Changed" sections of `CHANGELOG.md` at the top of the existing list
 - Avoid using and escaping underscores in math mode in jupyter notebooks.
 - Avoid making excessive use of dashes like this — when writing documentation and notebooks. Prefer commas, colons and parentheses where possible.
+- In documentation and tutorials, always spell out "confidence interval" instead of using "CI", which is easily confused with "continuous integration".
 
 ### No Redundancy
 
