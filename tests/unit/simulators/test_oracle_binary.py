@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 
-from glide.simulators.oracle_binary import generate_binary_dataset_with_oracle_sampling
+from glide.simulators import generate_binary_dataset_with_oracle_sampling
 
 
 def test_generate_binary_dataset_with_oracle_sampling_structure_and_counts():

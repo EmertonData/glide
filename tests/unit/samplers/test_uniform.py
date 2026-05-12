@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 
-from glide.samplers.uniform import UniformSampler
+from glide.samplers import UniformSampler
 
 
 @pytest.fixture

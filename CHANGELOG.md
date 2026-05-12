@@ -9,7 +9,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 ## [Next release]
 
 ### ✨ Added
-- `UniformSampler` for uniform random sampling.
+- `UniformSampler` for uniform random sampling
 - Section about IPWPTD in the user guide
 - `IPWPTDMeanEstimator` for inverse probability weighted PTD mean estimation
 - Section about `CostOptimalRandomSampler` in the user guide

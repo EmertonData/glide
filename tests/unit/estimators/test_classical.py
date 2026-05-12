@@ -3,7 +3,7 @@ import pytest
 from numpy.typing import NDArray
 
 from glide.core.mean_inference_result import ClassicalMeanInferenceResult
-from glide.estimators.classical import ClassicalMeanEstimator
+from glide.estimators import ClassicalMeanEstimator
 
 
 @pytest.fixture

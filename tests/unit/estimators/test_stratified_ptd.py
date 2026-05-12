@@ -3,7 +3,7 @@ import pytest
 
 from glide.confidence_intervals import BootstrapConfidenceInterval
 from glide.core.mean_inference_result import PredictionPoweredMeanInferenceResult
-from glide.estimators.stratified_ptd import StratifiedPTDMeanEstimator
+from glide.estimators import StratifiedPTDMeanEstimator
 
 # ── fixtures ───────────────────────────────────────────────────────────────────
 
