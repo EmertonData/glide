@@ -9,7 +9,7 @@ from glide.estimators.ppi_core import (
     _compute_std_estimate,
     _compute_tuning_parameter,
 )
-from glide.estimators.stratified_core import preprocess
+from glide.estimators.stratified_core import _preprocess
 
 
 class StratifiedPPIMeanEstimator:
@@ -117,7 +117,7 @@ class StratifiedPPIMeanEstimator:
             - If all proxy values within a stratum are identical (zero variance).
             - If any stratum has fewer than 2 labeled or fewer than 2 unlabeled samples.
         """
-        strata = preprocess(y_true, y_proxy, groups)
+        strata = _preprocess(y_true, y_proxy, groups)
 
         weighted_mean = 0.0
         weighted_var = 0.0

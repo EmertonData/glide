@@ -11,7 +11,7 @@ from glide.estimators.ptd_core import (
     _compute_bootstrap_mean_estimates,
     _compute_tuning_parameter,
 )
-from glide.estimators.stratified_core import preprocess
+from glide.estimators.stratified_core import _preprocess
 
 
 class StratifiedPTDMeanEstimator:
@@ -121,7 +121,7 @@ class StratifiedPTDMeanEstimator:
               cause a division by zero when computing the power-tuning parameter.
             - If any stratum has fewer than 2 labeled or fewer than 2 unlabeled samples.
         """
-        strata = preprocess(y_true, y_proxy, groups)
+        strata = _preprocess(y_true, y_proxy, groups)
 
         total_size = len(y_true)
         rng = np.random.default_rng(random_seed)

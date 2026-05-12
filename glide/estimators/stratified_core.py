@@ -4,7 +4,7 @@ import numpy as np
 from numpy.typing import NDArray
 
 
-def preprocess(
+def _preprocess(
     y_true: NDArray,
     y_proxy: NDArray,
     groups: NDArray,
