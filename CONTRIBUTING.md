@@ -130,7 +130,7 @@ New estimators and samplers should be backed by a scientific publication. Please
 1. **Identify** the inputs the sampler requires (e.g. proxy labels, uncertainty scores, stratum labels), the budget parameter, and what values it returns.
 2. **Implement** the sampler class:
    - Create `glide/samplers/<name>.py`.
-   - `sample(...)` runs the sampling procedure and returns the computed values (at least a vector `xi` of sampling indicators and possibly a vector `pi` of sampling probbailities).
+   - `sample(...)` runs the sampling procedure and returns the computed values (at least a vector `xi` of sampling indicators and possibly a vector `pi` of sampling probabilities).
    - If your sampler has hyperparameters, these should be optional parameters of `sample()` with default values.
 3. **Export** the new class from `glide/samplers/__init__.py`.
 4. **Write unit tests** in `tests/unit/samplers/test_<name>.py`. Cover at minimum:
