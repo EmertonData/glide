@@ -1,4 +1,4 @@
-from typing import List, Optional, Tuple
+from typing import Optional
 
 import numpy as np
 from numpy.typing import NDArray
@@ -11,6 +11,7 @@ from glide.estimators.ptd_core import (
     _compute_bootstrap_mean_estimates,
     _compute_tuning_parameter,
 )
+from glide.estimators.stratified_core import _preprocess
 
 
 class StratifiedPTDMeanEstimator:
@@ -49,40 +50,6 @@ class StratifiedPTDMeanEstimator:
     n_proxy: 8
     Effective Sample Size: 22
     """
-
-    def _preprocess(
-        self,
-        y_true: NDArray,
-        y_proxy: NDArray,
-        groups: NDArray,
-    ) -> List[Tuple[NDArray, NDArray, NDArray]]:
-        if len(y_true) != len(y_proxy) or len(y_true) != len(groups):
-            raise ValueError(
-                f"y_true, y_proxy, and groups must have the same length, "
-                f"got {len(y_true)}, {len(y_proxy)}, and {len(groups)}"
-            )
-        if np.isnan(y_proxy).any():
-            raise ValueError("Input proxy values contain NaN")
-
-        strata = []
-        for stratum_name in np.unique(groups):
-            stratum_mask = groups == stratum_name
-            stratum_y_true = y_true[stratum_mask]
-            stratum_y_proxy = y_proxy[stratum_mask]
-
-            labeled_mask = ~np.isnan(stratum_y_true)
-            n_labeled = labeled_mask.sum()
-            n_unlabeled = len(stratum_y_true) - n_labeled
-            if len(np.unique(stratum_y_proxy)) == 1:
-                raise ValueError(f"Input proxy values have zero variance in stratum '{stratum_name}'")
-            if min(n_labeled, n_unlabeled) <= 1:
-                raise ValueError(f"Too few labeled or unlabeled samples in stratum '{stratum_name}'")
-            y_true_labeled = stratum_y_true[labeled_mask]
-            y_proxy_labeled = stratum_y_proxy[labeled_mask]
-            y_proxy_unlabeled = stratum_y_proxy[~labeled_mask]
-            strata.append((y_true_labeled, y_proxy_labeled, y_proxy_unlabeled))
-
-        return strata
 
     def estimate(
         self,
@@ -154,7 +121,7 @@ class StratifiedPTDMeanEstimator:
               cause a division by zero when computing the power-tuning parameter.
             - If any stratum has fewer than 2 labeled or fewer than 2 unlabeled samples.
         """
-        strata = self._preprocess(y_true, y_proxy, groups)
+        strata = _preprocess(y_true, y_proxy, groups)
 
         total_size = len(y_true)
         rng = np.random.default_rng(random_seed)
