@@ -13,10 +13,10 @@ def generate_binary_dataset_with_oracle_sampling(
 ) -> Tuple[NDArray, NDArray, NDArray]:
     """Generate a synthetic binary dataset with oracle sampling probabilities.
 
-    All n_total samples have ground-truth labels (y_true), proxy predictions (y_proxy),
-    and an oracle root mean square error (RMSE) derived from the analytical
-    proxy error. The RMSE values are non-uniform: samples where the proxy is less
-    reliable receive higher RMSE following the optimal sampling rule.
+    All n_total samples have ground-truth labels (y_true_oracle), proxy predictions (y_proxy),
+    and an oracle uncertainty score derived from the analytical
+    proxy error. The uncertainty values are non-uniform: samples where the proxy is less
+    reliable receive higher uncertainty following the optimal sampling rule.
 
     The sampling is based on a latent variable which determines the correlation
     between y_true and y_proxy in each sample. This variable is sampled uniformly
@@ -40,10 +40,10 @@ def generate_binary_dataset_with_oracle_sampling(
     Returns
     -------
     Tuple[NDArray, NDArray, NDArray]
-        [0]: array of shape ``(n_total,)``, y_true with the full ground-truth labels for all n_total
-        samples (no NaN); the caller is responsible for masking unlabeled rows
+        [0]: array of shape ``(n_total,)``, y_true_oracle with the full ground-truth labels for all n_total
+        samples (no NaN); use ``simulate_annotation`` to mask unlabeled rows
         [1]: array of shape ``(n_total,)``, y_proxy with proxy predictions
-        [2]: array of shape ``(n_total,)``, uncertainty with oracle RMSE per sample
+        [2]: array of shape ``(n_total,)``, uncertainty (oracle uncertainty score) per sample
 
     Raises
     ------
@@ -101,8 +101,8 @@ def generate_binary_dataset_with_oracle_sampling(
     Because ``E[x] = 0`` for ``x ~ Uniform(-1, 1)``, the marginal
     correlation ``E[corr(X)] = correlation`` exactly, preserving the target
     value on average.  Samples with low ``x`` have lower conditional
-    correlation (proxy less reliable → higher oracle RMSE); samples with high
-    ``x`` have higher conditional correlation (proxy more reliable → lower RMSE).
+    correlation (proxy less reliable → higher uncertainty); samples with high
+    ``x`` have higher conditional correlation (proxy more reliable → lower uncertainty).
 
     ``correlation_spread`` is chosen as 90 % of the largest value that keeps
     all four per-sample probabilities strictly positive for every
@@ -156,23 +156,23 @@ def generate_binary_dataset_with_oracle_sampling(
     The outcome integer encodes both labels: ``y_true = outcome // 2``,
     ``y_proxy = outcome % 2``.
 
-    **Step 5 — Oracle RMSE**
+    **Step 5 — Oracle uncertainty**
 
     The optimal sampling probability satisfies
-    ``RMSE = sqrt(E[(y_proxy - y_true)²]) = sqrt(error_prob(x))``.
+    ``uncertainty = sqrt(E[(y_proxy - y_true)²]) = sqrt(error_prob(x))``.
     These values are stored directly as ``uncertainty``.
 
     Examples
     --------
     >>> from glide.simulators import generate_binary_dataset_with_oracle_sampling
-    >>> y_true, y_proxy, uncertainty = generate_binary_dataset_with_oracle_sampling(n_total=4, random_seed=0)
-    >>> len(y_true)
+    >>> y_true_oracle, y_proxy, uncertainty = generate_binary_dataset_with_oracle_sampling(n_total=4, random_seed=0)
+    >>> len(y_true_oracle)
     4
     >>> len(y_proxy)
     4
     >>> len(uncertainty)
     4
-    >>> bool(np.all(np.isin(y_true, [0.0, 1.0])))
+    >>> bool(np.all(np.isin(y_true_oracle, [0.0, 1.0])))
     True
     >>> bool(np.all(np.isin(y_proxy, [0.0, 1.0])))
     True
@@ -234,10 +234,10 @@ def generate_binary_dataset_with_oracle_sampling(
             np.where(u < 1.0 - p11_x, 2, 3),
         ),
     )
-    y_true_arr = samples // 2
+    y_true_oracle_arr = samples // 2
     y_proxy_arr = samples % 2
 
-    # Oracle RMSE: sqrt(P(error | x_i))
+    # Oracle uncertainty: sqrt(P(error | x_i))
     uncertainty = np.sqrt(error_prob_x)
 
-    return y_true_arr.astype(float), y_proxy_arr.astype(float), uncertainty
+    return y_true_oracle_arr.astype(float), y_proxy_arr.astype(float), uncertainty
