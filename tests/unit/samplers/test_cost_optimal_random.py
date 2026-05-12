@@ -38,7 +38,7 @@ def fitted_sampler_high_MSE(sampler) -> CostOptimalRandomSampler:
 
 
 def test_fit_raises_on_empty_y_true(sampler):
-    with pytest.raises(ValueError, match=r"y_true must not be empty"):
+    with pytest.raises(ValueError, match=r"'y_true' must not be empty"):
         sampler.fit(y_true=np.array([]), y_proxy=np.array([1.0]))
 
 
@@ -97,25 +97,25 @@ def test_sample_raises_if_fit_not_called(sampler):
 
 @pytest.mark.parametrize("n_samples", [0, -1, 1.5])
 def test_sample_invalid_n_samples(fitted_sampler, n_samples):
-    with pytest.raises(ValueError, match=r"n_samples must be a strictly positive integer"):
+    with pytest.raises(ValueError, match=r"'n_samples' must be a strictly positive integer"):
         fitted_sampler.sample(n_samples=n_samples, y_true_cost=10.0, y_proxy_cost=1.0, budget=5, random_seed=42)
 
 
 @pytest.mark.parametrize("cost", [0.0, -1.0])
 def test_sample_invalid_y_true_cost(fitted_sampler, cost):
-    with pytest.raises(ValueError, match=r"y_true_cost must be strictly positive"):
+    with pytest.raises(ValueError, match=r"'y_true_cost' must be strictly positive"):
         fitted_sampler.sample(n_samples=2, y_true_cost=cost, y_proxy_cost=1.0, budget=5, random_seed=42)
 
 
 @pytest.mark.parametrize("cost", [0.0, -1.0])
 def test_sample_invalid_y_proxy_cost(fitted_sampler, cost):
-    with pytest.raises(ValueError, match=r"y_proxy_cost must be strictly positive"):
+    with pytest.raises(ValueError, match=r"'y_proxy_cost' must be strictly positive"):
         fitted_sampler.sample(n_samples=2, y_true_cost=10.0, y_proxy_cost=cost, budget=5, random_seed=42)
 
 
 @pytest.mark.parametrize("budget", [0.0, -1.0])
 def test_sample_invalid_budget(fitted_sampler, budget):
-    with pytest.raises(ValueError, match=r"budget must be strictly positive"):
+    with pytest.raises(ValueError, match=r"'budget' must be strictly positive"):
         fitted_sampler.sample(n_samples=2, y_true_cost=10.0, y_proxy_cost=1.0, budget=budget, random_seed=42)
 
 
