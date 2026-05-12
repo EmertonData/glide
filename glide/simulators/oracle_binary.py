@@ -19,21 +19,21 @@ def generate_binary_dataset_with_oracle_sampling(
     reliable receive higher uncertainty following the optimal sampling rule.
 
     The sampling is based on a latent variable which determines the correlation
-    between y_true and y_proxy in each sample. This variable is sampled uniformly
+    between y_true_oracle and y_proxy in each sample. This variable is sampled uniformly
     around the given correlation value with limited spread within the interval of
     possible correlation levels given true_mean and proxy_mean. This way, the
-    correlation between y_true and y_proxy matches the target value on average.
+    correlation between y_true_oracle and y_proxy matches the target value on average.
 
     Parameters
     ----------
     n_total : int
         Total number of samples.
     true_mean : float
-        Expected mean of y_true. Must be in (0, 1).
+        Expected mean of y_true_oracle. Must be in (0, 1).
     proxy_mean : float
         Expected mean of y_proxy. Must be in (0, 1).
     correlation : float
-        Pearson correlation between y_true and y_proxy (marginal, across all samples).
+        Pearson correlation between y_true_oracle and y_proxy (marginal, across all samples).
     random_seed : int, optional
         Seed for reproducibility.
 
@@ -59,16 +59,16 @@ def generate_binary_dataset_with_oracle_sampling(
     -----
     **Step 1 — Global joint distribution**
 
-    For two binary variables with marginals ``p_t = P(y_true=1)`` and
+    For two binary variables with marginals ``p_t = P(y_true_oracle=1)`` and
     ``p_p = P(y_proxy=1)``, the Pearson correlation uniquely determines the
     joint distribution.  Let ``D = sqrt(p_t * p_p * (1-p_t) * (1-p_p))``
     (product of standard deviations).  Then:
 
     ```
-    p11 = P(y_true=1, y_proxy=1) = correlation * D + p_t * p_p
-    p00 = P(y_true=0, y_proxy=0) = 1 - p_t - p_p + p11
-    p01 = P(y_true=0, y_proxy=1) = p_p - p11
-    p10 = P(y_true=1, y_proxy=0) = p_t - p11
+    p11 = P(y_true_oracle=1, y_proxy=1) = correlation * D + p_t * p_p
+    p00 = P(y_true_oracle=0, y_proxy=0) = 1 - p_t - p_p + p11
+    p01 = P(y_true_oracle=0, y_proxy=1) = p_p - p11
+    p10 = P(y_true_oracle=1, y_proxy=0) = p_t - p11
     ```
 
     These four probabilities are fully determined by ``(p_t, p_p, correlation)``
@@ -119,7 +119,7 @@ def generate_binary_dataset_with_oracle_sampling(
     ```
     p11(x) = corr(x) * D + p_t * p_p          # varies with x
     error_prob(x) = p01(x) + p10(x)
-                    = p_t + p_p - 2 * p11(x)    # proxy ≠ y_true
+                    = p_t + p_p - 2 * p11(x)    # proxy ≠ y_true_oracle
     ```
 
     ``error_prob(x)`` is the per-sample proxy error probability, which
@@ -134,10 +134,10 @@ def generate_binary_dataset_with_oracle_sampling(
     ``u ~ Uniform(0,1)`` draw:
 
     ```
-    u < p00(x)                 → outcome 0 : (y_true=0, y_proxy=0)
-    u < p00(x)+p01(x)          → outcome 1 : (y_true=0, y_proxy=1)
-    u < p00(x)+p01(x)+p10(x)   → outcome 2 : (y_true=1, y_proxy=0)
-    else                       → outcome 3 : (y_true=1, y_proxy=1)
+    u < p00(x)                 → outcome 0 : (y_true_oracle=0, y_proxy=0)
+    u < p00(x)+p01(x)          → outcome 1 : (y_true_oracle=0, y_proxy=1)
+    u < p00(x)+p01(x)+p10(x)   → outcome 2 : (y_true_oracle=1, y_proxy=0)
+    else                       → outcome 3 : (y_true_oracle=1, y_proxy=1)
     ```
 
     The crucial simplification is that the second threshold collapses to the
@@ -153,13 +153,13 @@ def generate_binary_dataset_with_oracle_sampling(
     ```
 
     This means only two of the three thresholds require per-sample arrays.
-    The outcome integer encodes both labels: ``y_true = outcome // 2``,
+    The outcome integer encodes both labels: ``y_true_oracle = outcome // 2``,
     ``y_proxy = outcome % 2``.
 
     **Step 5 — Oracle uncertainty**
 
     The optimal sampling probability satisfies
-    ``uncertainty = sqrt(E[(y_proxy - y_true)²]) = sqrt(error_prob(x))``.
+    ``uncertainty = sqrt(E[(y_proxy - y_true_oracle)²]) = sqrt(error_prob(x))``.
     These values are stored directly as ``uncertainty``.
 
     Examples

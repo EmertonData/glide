@@ -9,6 +9,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 ## [Next release]
 
 ### ✨ Added
+- `simulate_annotation` for simulating annotation in the simulation lifecycle
 - Example for `IPWPTDMeanEstimator`
 - Section about IPWPTD in the user guide
 - `IPWPTDMeanEstimator` for inverse probability weighted PTD mean estimation
