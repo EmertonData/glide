@@ -1,5 +1,11 @@
 {
+  "permissions": {
+    "allow": [
+      "Bash(python3)"
+    ]
+  },
   "enabledPlugins": {
-    "code-review@claude-plugins-official": true
+    "code-review@claude-plugins-official": true,
+    "skill-creator@claude-plugins-official": true
   }
 }
