@@ -1,0 +1,59 @@
+{
+  "skill_name": "ticket",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Write a ticket for implementing Cluster PTD, section B.1 of https://arxiv.org/abs/2501.18577",
+      "expected_output": "A feature ticket markdown file in tickets/ with Background (plain-language explanation of Cluster PTD), Design choices (codebase fit), Implementation (Python pseudocode with signatures, NumPy docstrings, tentative implementation), Corner cases, and Acceptance criteria specific to this feature.",
+      "files": [],
+      "assertions": [
+        {"text": "has_background_section: the ticket contains a ## Background section"},
+        {"text": "has_design_choices_section: the ticket contains a ## Design choices section"},
+        {"text": "has_implementation_section: the ticket contains a ## Implementation section with at least one Python code block"},
+        {"text": "has_corner_cases_section: the ticket contains a ## Corner cases section"},
+        {"text": "has_acceptance_criteria_section: the ticket contains an ## Acceptance criteria section"},
+        {"text": "acceptance_criteria_are_specific: the acceptance criteria mention a concrete class or method name relevant to Cluster PTD (e.g. ClusterPTDMeanEstimator), not just generic CLAUDE.md boilerplate"},
+        {"text": "uses_typing_module_conventions: pseudocode uses Optional, List, etc. from the typing module — not int | None or bare list[str]"},
+        {"text": "filename_prefixed_feat: the output filename starts with feat-"},
+        {"text": "numpy_docstrings_present: pseudocode contains Parameters followed by ---------- (NumPy docstring pattern)"}
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "Write a refactoring ticket to factorize the preprocess method from StratifiedPPI and StratifiedPTD estimators",
+      "expected_output": "A refactoring ticket markdown file in tickets/ with Background (current duplication with file/line pointers), Design choices (proposed shared implementation), Implementation (before/after pseudocode, list of affected files), Corner cases, and specific Acceptance criteria.",
+      "files": [],
+      "assertions": [
+        {"text": "has_background_with_file_pointers: the Background section mentions specific file paths (glide/estimators/stratified_ppi.py and stratified_ptd.py)"},
+        {"text": "has_implementation_with_affected_files: the ticket lists specific files to create or modify"},
+        {"text": "has_acceptance_criteria_section: the ticket contains an ## Acceptance criteria section"},
+        {"text": "acceptance_criteria_are_specific: the acceptance criteria name a specific method or file (e.g. _preprocess_strata, stratified_core.py), not just 'refactor passes tests'"},
+        {"text": "filename_prefixed_ref: the output filename starts with ref-"}
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "Write a documentation ticket to improve the R-judge case study notebook. It is too verbose with many redundancies. The goal is conciseness: one sentence, one job.",
+      "expected_output": "A documentation ticket markdown file in tickets/ with Background (specific identified redundancies and verbose sections), Design choices (editing approach), Content plan (cell-by-cell or section-by-section), and Acceptance criteria naming specific artefacts.",
+      "files": [],
+      "assertions": [
+        {"text": "has_background_with_specific_issues: the Background identifies specific cells or sections by number or name that are redundant (not vague)"},
+        {"text": "has_content_plan: a Content plan or equivalent section lists cell-level or section-level edits"},
+        {"text": "acceptance_criteria_name_artefacts: the acceptance criteria name specific cells or sections that should be deleted, merged, or shortened — not 'make doc passes'"},
+        {"text": "filename_prefixed_doc: the output filename starts with doc-"}
+      ]
+    },
+    {
+      "id": 4,
+      "prompt": "Write a repository ticket to test multiple versions of Python and Scipy in CI according to our SPEC-0 commitment",
+      "expected_output": "A repository ticket markdown file in tickets/ with Background (current CI gap, SPEC-0 requirements), Design choices (matrix strategy approach), Task breakdown (specific config file changes), and Acceptance criteria that are concretely testable.",
+      "files": [],
+      "assertions": [
+        {"text": "mentions_spec0_versions: the ticket references concrete Python and SciPy versions from the SPEC-0 window (e.g. Python 3.12, 3.13, SciPy 1.13 through 1.17)"},
+        {"text": "has_task_breakdown: a Task breakdown or equivalent section contains specific subtasks naming config files (e.g. .github/workflows/compat.yml, pyproject.toml)"},
+        {"text": "acceptance_criteria_are_testable: the acceptance criteria describe a concrete CI outcome (e.g. 'all N matrix cells pass on main'), not just 'update the config'"},
+        {"text": "filename_prefixed_repo: the output filename starts with repo-"}
+      ]
+    }
+  ]
+}
