@@ -43,14 +43,14 @@ class ClassName:
     --------
     >>> from glide.estimators import ClassName
     >>> estimator = ClassName(param=value)
-    >>> result = estimator.compute_mean_estimate(labeled, proxy)
+    >>> result = estimator.estimate(labeled, proxy)
     1.5
     """
 
     def __init__(self, param: Type) -> None:
         self.param = param
 
-    def compute_mean_estimate(self, labeled: NDArray, proxy: NDArray) -> float:
+    def estimate(self, labeled: NDArray, proxy: NDArray) -> float:
         """One-line summary.
 
         Parameters
@@ -69,7 +69,7 @@ class ClassName:
         --------
         >>> from glide.estimators import ClassName
         >>> estimator = ClassName(param=value)
-        >>> estimator.compute_mean_estimate(np.array([1.0, 2.0]), np.array([1.1, 1.9]))
+        >>> estimator.estimate(np.array([1.0, 2.0]), np.array([1.1, 1.9]))
         1.5
         """
         # [Explain this step in plain language, e.g. "Compute the correction term that removes proxy bias"]
@@ -95,10 +95,10 @@ For each property, state it plainly and show the corresponding test structure.]
 def test_single_stratum_equals_ppi():
     y_true = np.array([1.0, 2.0, np.nan, np.nan])
     y_proxy = np.array([1.1, 1.9, 2.1, 0.9])
-    strata = np.array(["a", "a", "a", "a"])
+    groups = np.array(["a", "a", "a", "a"])
 
-    result_stratified = StratifiedPPIMeanEstimator(...).compute_mean_estimate(y_true, y_proxy, strata)
-    result_ppi = PPIMeanEstimator(...).compute_mean_estimate(y_true, y_proxy)
+    result_stratified = StratifiedPPIMeanEstimator(...).estimate(y_true, y_proxy, groups)
+    result_ppi = PPIMeanEstimator(...).estimate(y_true, y_proxy)
 
     np.testing.assert_allclose(result_stratified, result_ppi, atol=1e-10)
 ```
@@ -111,10 +111,10 @@ def test_single_stratum_equals_ppi():
 def test_stratified_ppi_tighter_than_ppi():
     y_true = np.array([1.0, 2.0, np.nan, np.nan])
     y_proxy = np.array([1.1, 1.9, 2.1, 0.9])
-    strata = np.array(["a", "a", "b", "b"])
+    groups = np.array(["a", "a", "b", "b"])
 
-    ci_stratified = StratifiedPPIMeanEstimator(...).compute_mean_estimate(y_true, y_proxy, strata)
-    ci_ppi = PPIMeanEstimator(...).compute_mean_estimate(y_true, y_proxy)
+    ci_stratified = StratifiedPPIMeanEstimator(...).estimate(y_true, y_proxy, groups)
+    ci_ppi = PPIMeanEstimator(...).estimate(y_true, y_proxy)
 
     assert ci_stratified.width <= ci_ppi.width
 ```
