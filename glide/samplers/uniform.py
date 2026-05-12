@@ -28,7 +28,7 @@ class UniformSampler:
         """Sample observations uniformly at random without replacement.
 
         Selects exactly ``budget`` observations from a pool of ``n_samples``
-        via ``numpy.random.Generator.choice`` without replacement.
+        without replacement.
 
         Parameters
         ----------
