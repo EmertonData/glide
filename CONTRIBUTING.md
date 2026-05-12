@@ -10,7 +10,7 @@ Depending on what you want to do, jump to the relevant section:
 - **Improving CI, tooling, or the Makefile?** → [Repository hygiene](#4-repository-hygiene)
 - **Restructuring code without changing behaviour?** → [Refactoring](#5-refactoring)
 
-Before writing any code, please [open an issue](https://github.com/EmertonData/glide/issues) to discuss the scope of your change. This is especially important for new estimators and samplers: sharing the reference paper upfront gives maintainers a chance to read it and frame the ticket to guide your implementation. PRs for new estimators or samplers that arrive without a prior discussion may be closed until that step is completed. When you are ready to submit, fork the repository, create a branch off `main`, and open a pull request against `main`. The PR template lists all conditions that must be satisfied before requesting a review.
+Before writing any code, please [open an issue](https://github.com/EmertonData/glide/issues) to discuss the scope of your change. This is highly recommended and especially important for new estimators and samplers: sharing the reference paper upfront gives maintainers a chance to read it and frame the ticket to guide your implementation. When you are ready to submit, fork the repository, create a branch off `main`, and open a pull request against `main`. The PR template lists all conditions that must be satisfied before requesting a review.
 
 ---
 
@@ -122,7 +122,7 @@ New estimators and samplers should be backed by a scientific publication. Please
    - Doctests in the class docstring.
 5. **Write functional tests** in `tests/functional/estimators/test_<name>.py`. If applicable, test expected behaviors and properties of your estimator in specific situations, see existing files in `tests/functional/estimators` for examples
 6. **Write a numpy-style docstring** that includes the reference paper, parameter descriptions, and a small `Examples` section with a minimalistic runnable doctest. See existing estimators for inspiration.
-7. **Add an example notebook** under `docs/examples/` demonstrating the estimator on some synthetic data.
+7. **Add an example script** in `docs/examples/plot_<name>.py` demonstrating the estimator on some synthetic data.
 8. **Update `CHANGELOG.md`** under the `[Next release]` section.
 
 **Adding a new sampler — step by step**
@@ -130,7 +130,7 @@ New estimators and samplers should be backed by a scientific publication. Please
 1. **Identify** the inputs the sampler requires (e.g. proxy labels, uncertainty scores, stratum labels), the budget parameter, and what values it returns.
 2. **Implement** the sampler class:
    - Create `glide/samplers/<name>.py`.
-   - `sample(...)` runs the sampling procedure and returns the computed values. 
+   - `sample(...)` runs the sampling procedure and returns the computed values (at least a vector `xi` of sampling indicators and possibly a vector `pi` of sampling probbailities).
    - If your sampler has hyperparameters, these should be optional parameters of `sample()` with default values.
 3. **Export** the new class from `glide/samplers/__init__.py`.
 4. **Write unit tests** in `tests/unit/samplers/test_<name>.py`. Cover at minimum:
