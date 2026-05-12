@@ -225,7 +225,7 @@ In PTD, each sample has two associated values:
 | $\tilde{Y}_i$ | All $n+N$ samples | Proxy label |
 | $Y_j$ | Labeled samples only ($n \ll N$) | Ground-truth label |
 
-Denote $(\tilde{Y}^\circ_i)_{i=1}^N$ the unlabeled proxies and $(\tilde{Y}^\bullet_i)_{i=1}^n$ the labeled ones.
+Denote $(\tilde{Y}^\circ_i)_{i=1}^N$ the unlabeled proxies and $(\tilde{Y}^\bullet_j)_{j=1}^n$ the labeled ones.
 
 ### Mean estimation
 
@@ -239,7 +239,7 @@ where each $\hat{\theta}^{(b)}_{\text{PTD}}$ is computed during the bootstrap pr
 
 For $b = 1, \dots, B$, sample a set of indices $\mathcal{I}^{(b)}$ of size $n$ uniformly with replacement from $\{1, \dots, n\}$ and compute the bootstrap means of the labeled ground-truth and proxy labels:
 
-$$\hat{\mu}^{(b)}_{\text{true}} = \frac{1}{n}\sum_{i\in \mathcal{I}^{(b)}} Y_i, \qquad \hat{\mu}^{(b)}_{\text{proxy}} = \frac{1}{n}\sum_{i\in \mathcal{I}^{(b)}} \tilde{Y}^\bullet_i$$
+$$\hat{\mu}^{(b)}_{\text{true}} = \frac{1}{n}\sum_{j\in \mathcal{I}^{(b)}} Y_j, \qquad \hat{\mu}^{(b)}_{\text{proxy}} = \frac{1}{n}\sum_{j\in \mathcal{I}^{(b)}} \tilde{Y}^\bullet_j$$
 
 The third ingredient needed is a perturbed draw of the unlabeled proxy mean, $\tilde{\gamma}^{(b)}$. Naively, this would require resampling all $N$ proxy labels on the unlabeled samples at each iteration. Algorithm 3 in [[7](#ref-7)] avoids this cost: by the CLT, the mean of $N$ i.i.d. proxy scores is approximately Gaussian with mean $\hat{\gamma}^\circ = \frac{1}{N}\sum_{i=1}^{N}\tilde{Y}^\circ_i$ and variance $\hat{S}_{\gamma}^\circ = \widehat{\text{Var}}(\tilde{Y}^\circ) / N$, so instead of resampling all $N$ unlabeled proxy scores at each iteration, we replace that expensive resample with a single standard gaussian draw, mimicking bootstrap randomness at a far lower computational cost:
 
@@ -309,7 +309,7 @@ These quantities are computed once and reused across all $B$ iterations, applyin
 
 For $b = 1, \dots, B$ and for each stratum $k$, sample $n_k$ indices $\mathcal{I}^{(b)}_k$ with replacement from $\{1, \dots, n_k\}$ and compute the bootstrap means of the labeled ground-truth and proxy labels:
 
-$$\hat{\mu}^{(b)}_{\text{true},k} = \frac{1}{n_k}\sum_{i \in \mathcal{I}^{(b)}_k} Y^k_{i}, \qquad \hat{\mu}^{(b)}_{\text{proxy},k} = \frac{1}{n_k}\sum_{i \in \mathcal{I}^{(b)}_k} \tilde{Y}^{k, \bullet}_{i}$$
+$$\hat{\mu}^{(b)}_{\text{true},k} = \frac{1}{n_k}\sum_{j \in \mathcal{I}^{(b)}_k} Y^k_{j}, \qquad \hat{\mu}^{(b)}_{\text{proxy},k} = \frac{1}{n_k}\sum_{j \in \mathcal{I}^{(b)}_k} \tilde{Y}^{k, \bullet}_{j}$$
 
 A perturbed draw of the unlabeled proxy mean for stratum $k$ is formed as:
 
