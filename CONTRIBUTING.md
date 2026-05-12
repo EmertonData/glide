@@ -47,7 +47,7 @@ Install the hooks once after cloning:
 ```bash
 uv run prek install
 ```
-t
+
 **5. Testing notebooks locally (optional):**
 
 The project includes example notebooks in `docs/`. To test all notebooks locally:
