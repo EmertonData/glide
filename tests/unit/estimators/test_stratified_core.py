@@ -3,28 +3,14 @@ import pytest
 
 from glide.estimators.stratified_core import preprocess
 
-# ── helpers ────────────────────────────────────────────────────────────────────
-
-
-@pytest.fixture
-def y_true() -> np.ndarray:
-    return np.array([5.0, 6.0, np.nan, np.nan, 5.0, 6.0, np.nan, np.nan])
-
-
-@pytest.fixture
-def y_proxy() -> np.ndarray:
-    return np.array([4.9, 6.1, 5.2, 6.1, 4.9, 6.1, 5.2, 6.1])
-
-
-@pytest.fixture
-def groups() -> np.ndarray:
-    return np.array(["A", "A", "A", "A", "B", "B", "B", "B"])
-
-
 # --- preprocess ---
 
 
-def test_preprocess_returns_correct_shapes(y_true, y_proxy, groups):
+def test_preprocess_returns_correct_shapes():
+    y_true = np.array([5.0, 6.0, np.nan, np.nan, 5.0, 6.0, np.nan, np.nan])
+    y_proxy = np.array([4.9, 6.1, 5.2, 6.1, 4.9, 6.1, 5.2, 6.1])
+    groups = np.array(["A", "A", "A", "A", "B", "B", "B", "B"])
+
     strata = preprocess(y_true, y_proxy, groups)
     assert len(strata) == 2
     for y_true_labeled, y_proxy_labeled, y_proxy_unlabeled in strata:
