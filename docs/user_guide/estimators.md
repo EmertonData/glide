@@ -372,11 +372,11 @@ The IPW-PTD bootstrap reweights samples by their inverse selection probability, 
 
 Before the bootstrap loop, compute the weighted unlabeled proxy mean and its sampling variance:
 
-$$\hat{\gamma}^\circ = \frac{1}{n+N}\sum_{j=1}^{n+N} w^\circ_j\tilde{Y}_j, \qquad \hat{S}_{\gamma}^\circ = \frac{\widehat{\text{Var}}(w^\circ_i\, \tilde{Y}_i)}{n+N}$$
+$$\hat{\gamma}^\circ = \frac{1}{n+N}\sum_{i=1}^{n+N} w^\circ_i\tilde{Y}_i, \qquad \hat{S}_{\gamma}^\circ = \frac{\widehat{\text{Var}}(w^\circ_i\, \tilde{Y}_i)}{n+N}$$
 
 For $b = 1, \dots, B$, sample $n+N$ indices $\mathcal{I}^{(b)}$ uniformly with replacement from all samples and compute the bootstrap means of the weighted labeled ground-truth and proxy labels:
 
-$$\hat{\mu}^{(b)}_{\text{true}} = \frac{1}{n+N}\sum_{j\in \mathcal{I}^{(b)}} w^\bullet_j\, Y_j, \qquad \hat{\mu}^{(b)}_{\text{proxy}} = \frac{1}{n+N}\sum_{j\in \mathcal{I}^{(b)}} w^\bullet_j\, \tilde{Y}_j$$
+$$\hat{\mu}^{(b)}_{\text{true}} = \frac{1}{n+N}\sum_{i\in \mathcal{I}^{(b)}} w^\bullet_i\, Y_i, \qquad \hat{\mu}^{(b)}_{\text{proxy}} = \frac{1}{n+N}\sum_{i\in \mathcal{I}^{(b)}} w^\bullet_i\, \tilde{Y}_i$$
 
 Note that the first mean may involve absent ground-truth annotations $Y_j$, but these are masked off by zero weights.
 
