@@ -138,9 +138,9 @@ The key benefit over global PPI++ becomes apparent when strata differ substantia
 
 Each stratum $k$ receives its **own optimal weight** $\hat{\lambda}_k$, computed with the same closed-form formula as PPI++, restricted to the $n_k$ labeled and $N_k$ unlabeled samples within that stratum:
 
-$$\hat{\lambda}_k = \frac{\widehat{\text{Cov}}_{n_k}(Y_k,\, \tilde{Y}_k)}{\left(1 + \tfrac{n_k}{N_k}\right)\widehat{\text{Var}}_{n_k + N_k}(\tilde{Y}_k)}$$
+$$\hat{\lambda}_k = \frac{\widehat{\text{Cov}}_{n_k}(Y^k,\, \tilde{Y}^{k, \bullet})}{\left(1 + \tfrac{n_k}{N_k}\right)\widehat{\text{Var}}_{n_k + N_k}(\tilde{Y}^k)},$$
 
-This is the same formula as PPI++ power-tuning, applied stratum by stratum. In strata where the proxy is informative, $\hat{\lambda}_k$ is close to 1 and the stratum estimate benefits from the proxy signal. In strata where the proxy is weak or unreliable, $\hat{\lambda}_k$ shrinks toward 0, falling back to the classical human-only mean for that stratum, without affecting any other stratum. It is standard to use optimal power-tuning with the previous $\hat{\lambda}_k$ values.
+where $Y^k$ is the vector of ground-truths in stratum $k$ (i.e. available $Y_j$ values with $j$ such that $g_j = k$), $\tilde{Y}^{k, \bullet}$ is the vector of proxy labels on the labeled portion of stratum $k$ and $\tilde{Y}^{k}$ contains all proxy labels in stratum $k$. This is the same formula as PPI++ power-tuning, applied stratum by stratum. In strata where the proxy is informative, $\hat{\lambda}_k$ is close to 1 and the stratum estimate benefits from the proxy signal. In strata where the proxy is weak or unreliable, $\hat{\lambda}_k$ shrinks toward 0, falling back to the classical human-only mean for that stratum, without affecting any other stratum. It is standard to use optimal power-tuning with the previous $\hat{\lambda}_k$ values.
 
 ---
 
@@ -225,7 +225,7 @@ In PTD, each sample has two associated values:
 | $\tilde{Y}_i$ | All $n+N$ samples | Proxy label |
 | $Y_j$ | Labeled samples only ($n \ll N$) | Ground-truth label |
 
-Denote $(\tilde{Y}^\circ_i)_{i=1}^N$ the unlabeled proxies and $(\tilde{Y}^\bullet_i)_{i=1}^n$ the labeled ones.
+Denote $(\tilde{Y}^\circ_i)_{i=1}^N$ the unlabeled proxies and $(\tilde{Y}^\bullet_j)_{j=1}^n$ the labeled ones.
 
 ### Mean estimation
 
@@ -239,7 +239,7 @@ where each $\hat{\theta}^{(b)}_{\text{PTD}}$ is computed during the bootstrap pr
 
 For $b = 1, \dots, B$, sample a set of indices $\mathcal{I}^{(b)}$ of size $n$ uniformly with replacement from $\{1, \dots, n\}$ and compute the bootstrap means of the labeled ground-truth and proxy labels:
 
-$$\hat{\mu}^{(b)}_{\text{true}} = \frac{1}{n}\sum_{i\in \mathcal{I}^{(b)}} Y_i, \qquad \hat{\mu}^{(b)}_{\text{proxy}} = \frac{1}{n}\sum_{i\in \mathcal{I}^{(b)}} \tilde{Y}^\bullet_i$$
+$$\hat{\mu}^{(b)}_{\text{true}} = \frac{1}{n}\sum_{j\in \mathcal{I}^{(b)}} Y_j, \qquad \hat{\mu}^{(b)}_{\text{proxy}} = \frac{1}{n}\sum_{j\in \mathcal{I}^{(b)}} \tilde{Y}^\bullet_j$$
 
 The third ingredient needed is a perturbed draw of the unlabeled proxy mean, $\tilde{\gamma}^{(b)}$. Naively, this would require resampling all $N$ proxy labels on the unlabeled samples at each iteration. Algorithm 3 in [[7](#ref-7)] avoids this cost: by the CLT, the mean of $N$ i.i.d. proxy scores is approximately Gaussian with mean $\hat{\gamma}^\circ = \frac{1}{N}\sum_{i=1}^{N}\tilde{Y}^\circ_i$ and variance $\hat{S}_{\gamma}^\circ = \widehat{\text{Var}}(\tilde{Y}^\circ) / N$, so instead of resampling all $N$ unlabeled proxy scores at each iteration, we replace that expensive resample with a single standard gaussian draw, mimicking bootstrap randomness at a far lower computational cost:
 
@@ -301,19 +301,19 @@ where each $\hat{\theta}^{(b)}_{\text{SPTD}}$ is produced during the stratified 
 
 ### Bootstrap procedure
 
-Denote $(\tilde{Y}^\circ_{k,i})_{i=1}^{N_k}$ the unlabeled proxies in stratum $k$ and $(\tilde{Y}^\bullet_{k,j})_{j=1}^{n_k}$ the labeled ones. Before the bootstrap loop, compute for each stratum $k$ the mean and sampling variance of the unlabeled proxy scores:
+Denote $(\tilde{Y}^{k, \circ}_{i})_{i=1}^{N_k}$ the unlabeled proxies in stratum $k$ and $(\tilde{Y}^{k, \bullet}_{j})_{j=1}^{n_k}$ the labeled ones. Before the bootstrap loop, compute for each stratum $k$ the mean and sampling variance of the unlabeled proxy scores:
 
-$$\hat{\gamma}^\circ_k = \frac{1}{N_k}\sum_{i=1}^{N_k}\tilde{Y}^\circ_{k,i}, \qquad \hat{S}^\circ_{\gamma,k} = \frac{\widehat{\text{Var}}(\tilde{Y}^\circ_k)}{N_k}$$
+$$\hat{\gamma}^\circ_k = \frac{1}{N_k}\sum_{i=1}^{N_k}\tilde{Y}^{k, \circ}_{i}, \qquad \hat{S}^{\circ}_{\gamma,k} = \frac{\widehat{\text{Var}}(\tilde{Y}^{k, \circ})}{N_k}$$
 
 These quantities are computed once and reused across all $B$ iterations, applying the CLT speedup to each stratum independently.
 
 For $b = 1, \dots, B$ and for each stratum $k$, sample $n_k$ indices $\mathcal{I}^{(b)}_k$ with replacement from $\{1, \dots, n_k\}$ and compute the bootstrap means of the labeled ground-truth and proxy labels:
 
-$$\hat{\mu}^{(b)}_{\text{true},k} = \frac{1}{n_k}\sum_{i \in \mathcal{I}^{(b)}_k} Y_{k,i}, \qquad \hat{\mu}^{(b)}_{\text{proxy},k} = \frac{1}{n_k}\sum_{i \in \mathcal{I}^{(b)}_k} \tilde{Y}^\bullet_{k,i}$$
+$$\hat{\mu}^{(b)}_{\text{true},k} = \frac{1}{n_k}\sum_{j \in \mathcal{I}^{(b)}_k} Y^k_{j}, \qquad \hat{\mu}^{(b)}_{\text{proxy},k} = \frac{1}{n_k}\sum_{j \in \mathcal{I}^{(b)}_k} \tilde{Y}^{k, \bullet}_{j}$$
 
 A perturbed draw of the unlabeled proxy mean for stratum $k$ is formed as:
 
-$$\tilde{\gamma}^{(b)}_k = \hat{\gamma}^\circ_k + Z^{(b)}_k \cdot \sqrt{\hat{S}^\circ_{\gamma,k}}, \qquad Z^{(b)}_k \sim \mathcal{N}(0, 1)$$
+$$\tilde{\gamma}^{(b)}_k = \hat{\gamma}^\circ_k + Z^{(b)}_k \cdot \sqrt{\hat{S}^{\circ}_{\gamma,k}}, \qquad Z^{(b)}_k \sim \mathcal{N}(0, 1)$$
 
 where each $Z^{(b)}_k$ is drawn independently across strata and iterations. The per-stratum bootstrap estimates are then combined with weights proportional to stratum size:
 
@@ -332,7 +332,7 @@ Keep in mind that Stratified PTD is designed for a small number of large strata.
 
 Each stratum $k$ receives its own optimal tuning parameter $\hat{\lambda}_k$, estimated after the bootstrap loop from the bootstrap covariances within that stratum. For each $k=1, \dots, K$, let $\hat{\mu}_{\text{true},k}$ and $\hat{\mu}_{\text{proxy},k}$ be the vectors of values $\hat{\mu}^{(b)}_{\text{true},k}$ and $\hat{\mu}^{(b)}_{\text{proxy},k}$ for $b=1,\dots,B$ respectively. The per-stratum optimal tuning parameter is computed as:
 
-$$\hat{\lambda}_k = \frac{\widehat{\text{Cov}}_B\!\left(\hat{\mu}_{\text{true},k},\; \hat{\mu}_{\text{proxy},k}\right)}{\widehat{\text{Var}}_B\!\left(\hat{\mu}_{\text{proxy},k}\right) + \hat{S}^\circ_{\gamma,k}}$$
+$$\hat{\lambda}_k = \frac{\widehat{\text{Cov}}_B\!\left(\hat{\mu}_{\text{true},k},\; \hat{\mu}_{\text{proxy},k}\right)}{\widehat{\text{Var}}_B\!\left(\hat{\mu}_{\text{proxy},k}\right) + \hat{S}^{\circ}_{\gamma,k}}$$
 
 This is the same formula as PTD power-tuning, applied stratum by stratum. In strata where the proxy is informative, $\hat{\lambda}_k$ is close to 1 and the estimate benefits from the proxy signal. In strata where the proxy is weak, $\hat{\lambda}_k$ shrinks toward 0, falling back to the classical bootstrap mean for that stratum, without affecting the others. It is standard to use optimal power-tuning with the $\hat{\lambda}_k$ values above.
 
@@ -372,11 +372,11 @@ The IPW-PTD bootstrap reweights samples by their inverse selection probability, 
 
 Before the bootstrap loop, compute the weighted unlabeled proxy mean and its sampling variance:
 
-$$\hat{\gamma}^\circ = \frac{1}{n+N}\sum_{j=1}^{n+N} w^\circ_j\tilde{Y}_j, \qquad \hat{S}_{\gamma}^\circ = \frac{\widehat{\text{Var}}(w^\circ_i\, \tilde{Y}_i)}{n+N}$$
+$$\hat{\gamma}^\circ = \frac{1}{n+N}\sum_{i=1}^{n+N} w^\circ_i\tilde{Y}_i, \qquad \hat{S}_{\gamma}^\circ = \frac{\widehat{\text{Var}}(w^\circ_i\, \tilde{Y}_i)}{n+N}$$
 
 For $b = 1, \dots, B$, sample $n+N$ indices $\mathcal{I}^{(b)}$ uniformly with replacement from all samples and compute the bootstrap means of the weighted labeled ground-truth and proxy labels:
 
-$$\hat{\mu}^{(b)}_{\text{true}} = \frac{1}{n+N}\sum_{j\in \mathcal{I}^{(b)}} w^\bullet_j\, Y_j, \qquad \hat{\mu}^{(b)}_{\text{proxy}} = \frac{1}{n+N}\sum_{j\in \mathcal{I}^{(b)}} w^\bullet_j\, \tilde{Y}_j$$
+$$\hat{\mu}^{(b)}_{\text{true}} = \frac{1}{n+N}\sum_{i\in \mathcal{I}^{(b)}} w^\bullet_i\, Y_i, \qquad \hat{\mu}^{(b)}_{\text{proxy}} = \frac{1}{n+N}\sum_{i\in \mathcal{I}^{(b)}} w^\bullet_i\, \tilde{Y}_i$$
 
 Note that the first mean may involve absent ground-truth annotations $Y_j$, but these are masked off by zero weights.
 
