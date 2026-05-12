@@ -106,7 +106,7 @@ Reproduce the bug in a failing test first — this confirms the bug exists and g
 
 ### 2. New features
 
-New estimators should be backed by a scientific publication; include the reference in the issue and in the class docstring.
+New estimators and samplers should be backed by a scientific publication. Please first [open an issue](https://github.com/EmertonData/glide/issues) sharing the reference paper to give maintainers a chance to read and frame it to guide your implementation.
 
 **Adding a new estimator — step by step**
 
@@ -116,17 +116,16 @@ New estimators should be backed by a scientific publication; include the referen
    - `estimate(array1, array2, ...)` runs the method and returns an inference result object. Reuse one from `glide/core` (e.g. a `MeanInferenceResult` subclass) or add a new one there.
    - If your estimator has hyperparameters, these should be optional parameters of `estimate()` with default values.
 3. **Export** the new class from `glide/estimators/__init__.py`.
-4. **Write tests** in `tests/estimators/test_<name>.py`. Cover at minimum:
+4. **Write unit tests** in `tests/unit/estimators/test_<name>.py`. Cover at minimum:
    - Correct output type and shape.
    - Known analytical results (e.g., the estimator reduces to the classical mean in special cases).
    - Doctests in the class docstring.
-5. **Write a numpy-style docstring** that includes the paper reference, parameter descriptions, and a small `Examples` section with a minimalistic runnable doctest. See existing estimators for inspiration.
-6. **Add an example notebook** under `docs/examples/` demonstrating the estimator on some synthetic data.
-7. **Update `CHANGELOG.md`** under the `[Next release]` section.
+5. **Write functional tests** in `tests/functional/estimators/test_<name>.py`. If applicable, test expected behaviors and properties of your estimator in specific situations, see existing files in `tests/functional/estimators` for examples
+6. **Write a numpy-style docstring** that includes the reference paper, parameter descriptions, and a small `Examples` section with a minimalistic runnable doctest. See existing estimators for inspiration.
+7. **Add an example notebook** under `docs/examples/` demonstrating the estimator on some synthetic data.
+8. **Update `CHANGELOG.md`** under the `[Next release]` section.
 
 **Adding a new sampler — step by step**
-
-New samplers should be backed by a scientific publication; include the reference in the issue and in the class docstring.
 
 1. **Identify** the inputs the sampler requires (e.g. proxy labels, uncertainty scores, stratum labels), the budget parameter, and what values it returns.
 2. **Implement** the sampler class:
@@ -139,8 +138,8 @@ New samplers should be backed by a scientific publication; include the reference
    - Known analytical results (e.g., uniform inputs should yield equal probabilities).
    - Edge cases for input parameters (e.g. budget exceeds dataset size).
    - Doctests in the class docstring.
-5. **Write a numpy-style docstring** that includes the paper reference, parameter descriptions, and a small `Examples` section with a minimalistic runnable doctest. See existing samplers for inspiration.
-6. **Write functional tests** in `tests/functional/samplers/test_<name>.py`. If applicable, test expected behaviors of your sampler. See existing files in `tests/functional/samplers` for examples.
+5. **Write functional tests** in `tests/functional/samplers/test_<name>.py`. If applicable, test expected behaviors and properties of your sampler. See existing files in `tests/functional/samplers` for examples.
+6. **Write a numpy-style docstring** that includes the reference paper, parameter descriptions, and a small `Examples` section with a minimalistic runnable doctest. See existing samplers for inspiration.
 7. **Update `CHANGELOG.md`** under the `[Next release]` section.
 
 ### 3. Documentation
