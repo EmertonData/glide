@@ -136,7 +136,7 @@ New estimators and samplers should be backed by a scientific publication. Please
 4. **Write unit tests** in `tests/unit/samplers/test_<name>.py`. Cover at minimum:
    - Correct output type and shape.
    - Known analytical results (e.g., uniform inputs should yield equal probabilities).
-   - Edge cases for input parameters (e.g. budget exceeds dataset size).
+   - Edge cases for input parameters (e.g. budget equals dataset size).
    - Doctests in the class docstring.
 5. **Write functional tests** in `tests/functional/samplers/test_<name>.py`. If applicable, test expected behaviors and properties of your sampler. See existing files in `tests/functional/samplers` for examples.
 6. **Write a numpy-style docstring** that includes the reference paper, parameter descriptions, and a small `Examples` section with a minimalistic runnable doctest. See existing samplers for inspiration.
