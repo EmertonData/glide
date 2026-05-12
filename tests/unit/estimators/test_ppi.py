@@ -4,7 +4,7 @@ from numpy.typing import NDArray
 
 from glide.confidence_intervals import CLTConfidenceInterval
 from glide.core.mean_inference_result import PredictionPoweredMeanInferenceResult
-from glide.estimators.ppi import PPIMeanEstimator
+from glide.estimators import PPIMeanEstimator
 
 # ── helpers ────────────────────────────────────────────────────────────────────
 

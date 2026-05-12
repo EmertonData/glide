@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 
-from glide.simulators.binary import generate_binary_dataset
+from glide.simulators import generate_binary_dataset
 
 
 def test_generate_binary_dataset_structure_and_counts():
