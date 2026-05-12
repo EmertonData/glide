@@ -5,16 +5,6 @@
 - Which issue does it close? (use `Closes #<number>`)
 - Any noteworthy implementation decisions or trade-offs?
 
-### Type of change
-
-Checkbox list:
-- [ ] Bug fix
-- [ ] New feature
-- [ ] Breaking change
-- [ ] Refactoring (no behavior change)
-- [ ] Documentation
-- [ ] Repository hygiene
-
 ### Checklist
 
 Quality gates that must be satisfied before requesting a review:
@@ -34,5 +24,4 @@ Quality gates that must be satisfied before requesting a review:
 
 Disclose if an LLM was used in writing this PR:
 - [ ] No LLM used
-- [ ] LLM used: ___
-- [ ] I went through and validated all the code myself
+- [ ] I used an LLM and I went through and validated all the code myself
