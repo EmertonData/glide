@@ -5,7 +5,7 @@
 
 {% if page.nb_url %}
     <div style="margin-top: 1rem;">
-        <a href="{{ page.nb_url }}" style="display: inline-block; padding: 0.35rem 0.75rem; font-size: 0.8rem; font-weight: 500; color: #fff; background: linear-gradient(135deg, #6366f1, #06b6d4); border-radius: 4px; text-decoration: none;">
+        <a href="{{ page.nb_url }}" download style="display: inline-block; padding: 0.35rem 0.75rem; font-size: 0.8rem; font-weight: 500; color: #fff; background: linear-gradient(135deg, #6366f1, #06b6d4); border-radius: 4px; text-decoration: none;">
             {% if page.file.src_path.endswith('.ipynb') %}
                 Click here to download this notebook
             {% else %}
@@ -19,6 +19,27 @@
 {% block scripts %}
 {{ super() }}
 <script>
+function ensureDownloadAttributes() {
+  // Add download attribute to all notebook and script links
+  const links = document.querySelectorAll('a[href$=".ipynb"], a[href$=".py"], a[href$=".zip"]');
+  links.forEach(link => {
+    link.setAttribute('download', '');
+  });
+}
+
+// Run when DOM is ready
+document.addEventListener('DOMContentLoaded', ensureDownloadAttributes);
+
+// Also run on spa navigation
+const observer = new MutationObserver(() => {
+  ensureDownloadAttributes();
+});
+
+observer.observe(document.body, {
+  childList: true,
+  subtree: true
+});
+
 function addHeadingLinks() {
   // Add anchor link functionality to all headings in main article content
   const headings = document.querySelectorAll('article h2, article h3, article h4, article h5, article h6');
