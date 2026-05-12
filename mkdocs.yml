@@ -96,6 +96,7 @@ nav:
     - ASI Validation: deep_dive/asi_validation.ipynb
     - PTD Validation: deep_dive/ptd_validation.ipynb
     - Stratified PTD Validation: deep_dive/stratified_ptd_validation.ipynb
+    - Agentic System Evaluation Case Study: deep_dive/icml_case_study.ipynb
   - Contributing: contributing.md
   - API Reference:
     - Overview: api/index.md

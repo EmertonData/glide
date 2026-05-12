@@ -338,6 +338,74 @@ This is the same formula as PTD power-tuning, applied stratum by stratum. In str
 
 ---
 
+## Inverse Probability Weighted Predict-Then-Debias (IPW-PTD)
+
+**Inverse Probability Weighted Predict-Then-Debias (IPW-PTD)** [[7](#ref-7)] combines the robustness of PTD's bootstrap confidence intervals with **Inverse Probability Weighting** to handle non-uniform ground-truth labeling probabilities. In practice, labeled data is often collected through a cost-optimal sampling process where samples are selected for human annotation based on the proxy model's uncertainty. For example, when using an LLM-as-Judge, samples on which the model has high uncertainty receive higher labeling probability, while confident predictions receive lower probability. IPW-PTD corrects for this non-uniform selection while maintaining the empirical distribution advantage of bootstrap inference.
+
+Standard PTD assumes that labeled and unlabeled samples are drawn **uniformly at random**. IPW-PTD relaxes this: each sample $i$ has a known, pre-determined probability $\pi_i \in (0, 1)$ of being selected for human annotation. IPW reweights labeled samples inversely to their selection probability, ensuring that samples with low labeling probability ($\pi_i$) are upweighted appropriately.
+
+In IPW-PTD, each sample has four associated values:
+
+| Value | Present for | Description |
+|---|---|---|
+| $\tilde{Y}_i$ | All $n+N$ samples | Proxy label |
+| $\pi_i$ | All $n+N$ samples | Known, pre-determined labeling probability |
+| $\xi_i$ | All $n+N$ samples | Sampling indicator such that $\Pr(\xi_i = 1) = \pi_i = 1 - \Pr(\xi_i = 0)$ |
+| $Y_i$ | Labeled samples only ($n \ll N$) | Ground-truth label |
+
+The binary indicator $\xi_i = 1$ if sample $i$ is labeled and $\xi_i = 0$ otherwise; by design, $\Pr(\xi_i = 1) = \pi_i$.
+
+### Mean estimation
+
+IPW-PTD applies inverse probability weighting to correct for non-uniform labeling probabilities. The IPW-corrected weights are:
+
+- $w^\bullet_i = \frac{\xi_i}{\pi_i}$ (labeled contribution; equals $\frac{1}{\pi_i}$ for labeled samples, $0$ for unlabeled)
+- $w^\circ_i = \frac{1 - \xi_i}{1 - \pi_i}$ (unlabeled contribution; equals $0$ for labeled samples, $\frac{1}{1-\pi_i}$ for unlabeled)
+
+Before the bootstrap loop, compute the weighted means from labeled and unlabeled data:
+
+$$\hat{\mu}^\bullet_{\text{true}} = \frac{1}{n}\sum_{j=1}^{n} w^\bullet_j\, Y_j, \qquad \hat{\mu}^\bullet_{\text{proxy}} = \frac{1}{n}\sum_{j=1}^{n} w^\bullet_j\, \tilde{Y}_j, \qquad \hat{\mu}^\circ_{\text{proxy}} = \frac{1}{N}\sum_{i=1}^{N} w^\circ_i\, \tilde{Y}_i$$
+
+The superscripts $\bullet$ (labeled) and $\circ$ (unlabeled) indicate which subset each mean comes from. The IPW-PTD point estimate is computed as the mean of $B$ bootstrap estimates (see bootstrap procedure below).
+
+### Bootstrap procedure
+
+The IPW-PTD bootstrap reweights samples by their inverse selection probability, then resamples from the weighted labeled data.
+
+Before the bootstrap loop, compute the weighted unlabeled proxy mean and its sampling variance:
+
+$$\hat{\gamma}^\circ = \hat{\mu}^\circ_{\text{proxy}}, \qquad \hat{S}_{\gamma}^\circ = \frac{\widehat{\text{Var}}(w^\circ_i\, \tilde{Y}_i)}{N}$$
+
+For $b = 1, \dots, B$, sample $n$ indices $\mathcal{I}^{(b)}$ uniformly with replacement from the labeled samples and compute the bootstrap means of the weighted labeled ground-truth and proxy labels:
+
+$$\hat{\mu}^{(b)}_{\text{true}} = \frac{1}{n}\sum_{j\in \mathcal{I}^{(b)}} w^\bullet_j\, Y_j, \qquad \hat{\mu}^{(b)}_{\text{proxy}} = \frac{1}{n}\sum_{j\in \mathcal{I}^{(b)}} w^\bullet_j\, \tilde{Y}_j$$
+
+The unlabeled proxy mean is held fixed across iterations. Instead of resampling all unlabeled data (expensive), the sampling variability is approximated using the CLT by drawing a single Gaussian perturbation with variance $\hat{S}_{\gamma}^\circ$:
+
+$$\tilde{\gamma}^{(b)} = \hat{\gamma}^\circ + Z^{(b)} \cdot \sqrt{\hat{S}_{\gamma}^\circ}, \qquad Z^{(b)} \sim \mathcal{N}(0,\, 1)$$
+
+The weighted labeled bootstrap means are combined with this perturbed unlabeled mean:
+
+$$\hat{\theta}^{(b)}_{\text{IPW-PTD}} = \lambda \cdot \tilde{\gamma}^{(b)} + \left(\hat{\mu}^{(b)}_{\text{true}} - \lambda \cdot \hat{\mu}^{(b)}_{\text{proxy}}\right)$$
+
+where $\lambda$ is a power-tuning factor (see power-tuning below). The term $\hat{\mu}^{(b)}_{\text{true}} - \lambda \cdot \hat{\mu}^{(b)}_{\text{proxy}}$ captures the IPW-corrected proxy bias measured on the labeled set, while $\lambda \cdot \tilde{\gamma}^{(b)}$ contributes the weighted proxy signal on the unlabeled population.
+
+### Confidence intervals
+
+The confidence interval at level $1 - \alpha$ is the interval between the $\alpha/2$ and $1 - \alpha/2$ empirical quantiles of $\bigl\{\hat{\theta}^{(1)}_{\text{IPW-PTD}},\, \ldots,\, \hat{\theta}^{(B)}_{\text{IPW-PTD}}\bigr\}$. The bootstrap percentile approach makes no distributional assumptions and adapts to the actual shape of the residuals, remaining reliable even for small $n$ or non-Gaussian errors.
+
+### Power-tuning
+
+The optimal $\lambda$ is estimated from bootstrap covariances of the weighted labeled means. Let $\hat{\mu}_{\text{true}}$ and $\hat{\mu}_{\text{proxy}}$ be the vectors of bootstrap replicates $\hat{\mu}^{(b)}_{\text{true}}$ and $\hat{\mu}^{(b)}_{\text{proxy}}$ for $b=1,\dots,B$. After running the bootstrap loop:
+
+$$\hat{\lambda} = \frac{\widehat{\text{Cov}}_B\!\left(\hat{\mu}_{\text{true}},\; \hat{\mu}_{\text{proxy}}\right)}{\widehat{\text{Var}}_B\!\left(\hat{\mu}_{\text{proxy}}\right) + \hat{S}_{\gamma}^\circ}$$
+
+where $\widehat{\text{Cov}}_B$ and $\widehat{\text{Var}}_B$ are sample covariance and variance computed across bootstrap replicates, and $\hat{S}_{\gamma}^\circ$ is the CLT-approximated sampling variance of the weighted unlabeled proxy mean. The denominator accounts for both sources of uncertainty: labeled bootstrap variability and unlabeled sampling variability (estimated via CLT).
+
+When the proxy is informative (high covariance with ground-truth), $\hat{\lambda}$ is large and the estimate gains precision from the proxy signal. When the proxy is uninformative, $\hat{\lambda}$ shrinks toward 0, reducing reliance on it. For large sample counts, IPW-PTD produces inference equivalent to ASI but without requiring a normal approximation. It is standard to use the optimal $\hat{\lambda}$ in practice.
+
+---
+
 ## References
 
 <a id="ref-1"></a>[1] <a id="ref-1-link" href="https://www.science.org/doi/10.1126/science.adi6000">Angelopoulos, Anastasios N., Stephen Bates, Clara Fannjiang, Michael I. Jordan, and Tijana Zrnic. "Prediction-powered inference." *Science* 382, no. 6671 (2023): 669–674</a>.

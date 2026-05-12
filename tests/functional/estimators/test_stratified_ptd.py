@@ -7,8 +7,7 @@ details, and therefore require larger datasets to hold reliably.
 import numpy as np
 import pytest
 
-from glide.estimators.ptd import PTDMeanEstimator
-from glide.estimators.stratified_ptd import StratifiedPTDMeanEstimator
+from glide.estimators import PTDMeanEstimator, StratifiedPTDMeanEstimator
 from glide.simulators import generate_gaussian_dataset
 
 # ── tests ──────────────────────────────────────────────────────────────────────

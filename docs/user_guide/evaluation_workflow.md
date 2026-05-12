@@ -15,7 +15,7 @@ GLIDE addresses this by combining large pools of cheap proxy labels with small s
 The workflow has three stages:
 
 ```
-Large proxy-labelled dataset
+Large proxy-labeled dataset
          │
          ▼
   [1] Sampler — which samples to annotate?
@@ -40,7 +40,7 @@ A sampler is useful when you still need to **allocate an annotation budget** and
 
 ## Stage 1: Sampling
 
-You start with a fully proxy-labelled dataset. The sampler's job is to assign a sampling probability $\pi_i$ to each sample and to select $b$ samples for human annotation where $b$ represents an annotation budget to be allocated. The probabilities $\pi_i$ are needed by the downstream estimator to correct for non-uniform selection.
+You start with a fully proxy-labeled dataset. The sampler's job is to assign a sampling probability $\pi_i$ to each sample and to select $b$ samples for human annotation where $b$ represents an annotation budget to be allocated. The probabilities $\pi_i$ are needed by the downstream estimator to correct for non-uniform selection.
 
 ### Guided sampling
 
@@ -56,11 +56,11 @@ Samplers compute drawing probabilities for each sample. These are used to select
 
 ## Stage 2: Human annotation
 
-The selected samples ($\xi_i = 1$) must be labelled by humans before estimation can proceed. This is typically handled through an annotation process, where annotators are presented with each item and record their judgements according to a predefined rubric.
+The selected samples ($\xi_i = 1$) must be labeled by humans before estimation can proceed. This is typically handled through an annotation process, where annotators are presented with each item and record their judgements according to a predefined rubric.
 
 For many evaluation tasks, such as assessing factual accuracy, safety, or subtle reasoning, the annotation requires genuine expertise: annotators must be qualified to make reliable judgements on the items at hand. Expert annotation is accurate, but calling upon it comes at a cost, which is why allocating the annotation budget efficiently matters.
 
-Once all selected samples have been labelled, you have everything needed to run the estimator.
+Once all selected samples have been labeled, you have everything needed to run the estimator.
 
 ---
 

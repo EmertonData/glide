@@ -32,9 +32,9 @@ class ASIMeanEstimator:
     >>> from glide.estimators import ASIMeanEstimator
     >>> y_true = np.array([5.0, 6.0, np.nan, np.nan])
     >>> y_proxy = np.array([4.9, 6.1, 5.2, 6.1])
-    >>> sampling_probabilities = np.array([0.5, 0.7, 0.6, 0.2])
+    >>> pi = np.array([0.5, 0.7, 0.6, 0.2])
     >>> estimator = ASIMeanEstimator()
-    >>> result = estimator.estimate(y_true, y_proxy, sampling_probabilities)
+    >>> result = estimator.estimate(y_true, y_proxy, pi)
     >>> print(result)
     Metric: Metric
     Point Estimate: 5.563
@@ -49,28 +49,36 @@ class ASIMeanEstimator:
         self,
         y_true_all: NDArray,
         y_proxy: NDArray,
-        sampling_probabilities: NDArray,
+        pi: NDArray,
     ) -> Tuple[NDArray, NDArray, NDArray, NDArray]:
-        if not (len(y_true_all) == len(y_proxy) == len(sampling_probabilities)):
-            raise ValueError("y_true, y_proxy, and sampling_probabilities must all have the same length")
-        if np.min(sampling_probabilities) <= 0 or np.max(sampling_probabilities) > 1:
+        if not (len(y_true_all) == len(y_proxy) == len(pi)):
+            raise ValueError("y_true, y_proxy, and pi must all have the same length")
+        if np.min(pi) <= 0 or np.max(pi) > 1:
             raise ValueError("Sampling probabilities should be in (0, 1]")
         if np.isnan(y_proxy).any():
             raise ValueError("Input proxy values contain NaN")
         if len(np.unique(y_proxy)) == 1:
             raise ValueError("Input proxy values have zero variance")
-        xi = (~np.isnan(y_true_all)).astype(float)
-        y_true = np.where(np.isnan(y_true_all), -1.0, y_true_all)
-        return y_true, y_proxy, xi, sampling_probabilities
+
+        y_true_non_nan_mask = ~np.isnan(y_true_all)
+        xi = y_true_non_nan_mask.astype(float)
+
+        if np.any(~y_true_non_nan_mask & (pi == 1)):
+            raise ValueError("Samples with probability one of being labeled must be labeled")
+
+        y_true_clean = np.nan_to_num(y_true_all, nan=0)
+        return y_true_clean, y_proxy, xi, pi
 
     def _compute_tuning_parameter(
         self,
-        y_data: Tuple[NDArray, NDArray, NDArray, NDArray],
+        y_true: NDArray,
+        y_proxy: NDArray,
+        xi: NDArray,
+        pi: NDArray,
         power_tuning: bool,
     ) -> float:
         if not power_tuning:
             return 1.0
-        y_true, y_proxy, xi, pi = y_data
         a = y_proxy * (xi / pi - 1)
         b = y_true * xi / pi
         cov_matrix = np.cov(a, b, ddof=1)
@@ -80,10 +88,12 @@ class ASIMeanEstimator:
 
     def _compute_rectified_labels(
         self,
-        y_data: Tuple[NDArray, NDArray, NDArray, NDArray],
+        y_true: NDArray,
+        y_proxy: NDArray,
+        xi: NDArray,
+        pi: NDArray,
         _lambda: float,
     ) -> NDArray:
-        y_true, y_proxy, xi, pi = y_data
         rectified_labels = _lambda * y_proxy + xi * (y_true - _lambda * y_proxy) / pi
         return rectified_labels
 
@@ -91,7 +101,7 @@ class ASIMeanEstimator:
         self,
         y_true: NDArray,
         y_proxy: NDArray,
-        sampling_probabilities: NDArray,
+        pi: NDArray,
         metric_name: str = "Metric",
         confidence_level: float = 0.95,
         power_tuning: bool = True,
@@ -111,7 +121,7 @@ class ASIMeanEstimator:
         y_proxy : NDArray
             Array of shape ``(n_samples,)`` with proxy predictions. Must be present for every
             sample and must not contain NaN.
-        sampling_probabilities : NDArray
+        pi : NDArray
             Array of shape ``(n_samples,)`` with the pre-determined sampling probability
             π_i ∈ (0, 1] for each sample.
         metric_name : str, optional
@@ -125,31 +135,31 @@ class ASIMeanEstimator:
         Returns
         -------
         PredictionPoweredMeanInferenceResult
-            Contains the CLT-based confidence interval, the metric name, the estimator
-            name (``"ASIMeanEstimator"``), and the counts ``n_true`` (labeled samples) and
+            Contains a ``CLTConfidenceInterval``, metric name, estimator
+            name (``"ASIMeanEstimator"``), and counts ``n_true`` (labeled samples) and
             ``n_proxy`` (total samples).
 
         Raises
         ------
         ValueError
-            If any value in ``sampling_probabilities`` is not in (0, 1], i.e.
-            less than or equal to 0 or greater than 1.
+            - If ``y_true``, ``y_proxy``, and ``pi`` do not all have the same length.
+            - If any proxy value is NaN.
+            - If all proxy values are identical (zero variance).
+            - If any value in ``pi`` is not in (0, 1].
         """
-        y_data = self._preprocess(y_true, y_proxy, sampling_probabilities)
-        _lambda = self._compute_tuning_parameter(y_data, power_tuning)
-        rectified_labels = self._compute_rectified_labels(y_data, _lambda)
-        mean_estimate = np.mean(rectified_labels)
-        n = len(rectified_labels)
-        std_estimate = np.std(rectified_labels, ddof=1) / np.sqrt(n)
-
-        y_true_processed, _, xi, _ = y_data
+        y_true_labeled, y_proxy, xi, pi = self._preprocess(y_true, y_proxy, pi)
         n_true = int(xi.sum())
         n_proxy = len(y_proxy)
+
+        _lambda = self._compute_tuning_parameter(y_true_labeled, y_proxy, xi, pi, power_tuning)
+        rectified_labels = self._compute_rectified_labels(y_true_labeled, y_proxy, xi, pi, _lambda)
+        mean_estimate = np.mean(rectified_labels)
+        std_estimate = np.std(rectified_labels, ddof=1) / np.sqrt(n_proxy)
 
         confidence_interval = CLTConfidenceInterval(
             mean=mean_estimate, std=std_estimate, confidence_level=confidence_level
         )
-        effective_sample_size = compute_effective_sample_size(y_true_processed[xi == 1], confidence_interval.var)
+        effective_sample_size = compute_effective_sample_size(y_true_labeled[xi == 1], confidence_interval.var)
 
         return PredictionPoweredMeanInferenceResult(
             confidence_interval=confidence_interval,

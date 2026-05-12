@@ -2,7 +2,7 @@
 
 Samplers sit **upstream of the estimators**: they decide *which* samples to send for human annotation and compute the sampling probabilities $\pi_i$ required by some estimators that rely on Inverse Probability Weighting (IPW). Choosing samples strategically (rather than uniformly at random) can substantially reduce the annotation budget needed to reach a target confidence-interval width.
 
-A sampler takes a fully proxy-labelled dataset and a budget $b$, and computes two values per sample:
+A sampler takes a fully proxy-labeled dataset and a budget $b$, and computes two values per sample:
 
 | Value | Description |
 |---|---|
