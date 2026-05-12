@@ -45,7 +45,7 @@ def new_method_name(self, x: NewType) -> NewReturn:
 
 ## Acceptance criteria
 
-- [ ] [Specific deliverable, e.g. "All estimators expose compute_mean_estimate rather than a class-specific alias"]
+- [ ] [Specific deliverable, e.g. "All estimators expose estimate rather than a class-specific alias"]
 - [ ] [Another specific deliverable — what is observable once the refactor is complete]
 - [ ] [...]
 

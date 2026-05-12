@@ -26,6 +26,7 @@ Write as if explaining to a smart developer who just graduated: comfortable with
 ```python
 from typing import Optional, List, Dict, Tuple
 import numpy as np
+from numpy.typing import NDArray
 
 
 class ClassName:
@@ -49,14 +50,14 @@ class ClassName:
     def __init__(self, param: Type) -> None:
         self.param = param
 
-    def compute_mean_estimate(self, labeled: np.ndarray, proxy: np.ndarray) -> float:
+    def compute_mean_estimate(self, labeled: NDArray, proxy: NDArray) -> float:
         """One-line summary.
 
         Parameters
         ----------
-        labeled : np.ndarray
+        labeled : NDArray
             Description.
-        proxy : np.ndarray
+        proxy : NDArray
             Description.
 
         Returns
@@ -82,24 +83,40 @@ class ClassName:
 
 ## Functional tests
 
-[Include this section only when a mathematical equivalence exists — typically when the new feature is a generalisation of an existing one and the simpler case should be recoverable as a special case. Omit entirely otherwise.
+[Include this section to specify mathematical properties the new object must satisfy beyond basic code correctness. These can be equivalences, ordering guarantees, monotonicity properties, or any other theoretically grounded expectation. Omit entirely if no such property applies.
 
-For each equivalence, state it plainly and show the corresponding test structure.]
+For each property, state it plainly and show the corresponding test structure.]
 
-**[Name of the equivalence, e.g. "Single-stratum stratified PPI equals plain PPI"]**
+**[Name of the property, e.g. "Single-stratum stratified PPI equals plain PPI"]**
 
-[One sentence: "When all observations belong to a single stratum, StratifiedPPIMeanEstimator must return the same value as PPIMeanEstimator."]
+[One sentence stating the property: "When all observations belong to a single stratum, StratifiedPPIMeanEstimator must return the same value as PPIMeanEstimator."]
 
 ```python
 def test_single_stratum_equals_ppi():
-    labeled = np.array([1.0, 2.0])
-    proxy = np.array([1.1, 1.9, 2.1, 0.9])
+    y_true = np.array([1.0, 2.0, np.nan, np.nan])
+    y_proxy = np.array([1.1, 1.9, 2.1, 0.9])
     strata = np.array(["a", "a", "a", "a"])
 
-    result_stratified = StratifiedPPIMeanEstimator(...).compute_mean_estimate(labeled, proxy, strata)
-    result_ppi = PPIMeanEstimator(...).compute_mean_estimate(labeled, proxy)
+    result_stratified = StratifiedPPIMeanEstimator(...).compute_mean_estimate(y_true, y_proxy, strata)
+    result_ppi = PPIMeanEstimator(...).compute_mean_estimate(y_true, y_proxy)
 
     np.testing.assert_allclose(result_stratified, result_ppi, atol=1e-10)
+```
+
+**[Name of an ordering property, e.g. "Stratified PPI confidence interval is no wider than plain PPI"]**
+
+[One sentence: "For the same data, StratifiedPPIMeanEstimator must produce a confidence interval at least as tight as PPIMeanEstimator."]
+
+```python
+def test_stratified_ppi_tighter_than_ppi():
+    y_true = np.array([1.0, 2.0, np.nan, np.nan])
+    y_proxy = np.array([1.1, 1.9, 2.1, 0.9])
+    strata = np.array(["a", "a", "b", "b"])
+
+    ci_stratified = StratifiedPPIMeanEstimator(...).compute_mean_estimate(y_true, y_proxy, strata)
+    ci_ppi = PPIMeanEstimator(...).compute_mean_estimate(y_true, y_proxy)
+
+    assert ci_stratified.width <= ci_ppi.width
 ```
 
 ## Corner cases

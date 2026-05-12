@@ -20,6 +20,6 @@
 ## Acceptance criteria
 
 - [ ] [Specific and testable, e.g. "A PR that introduces a new public function without a docstring is blocked by CI"]
-- [ ] [Another specific deliverable, e.g. "Running `make pre-commit` on a notebook with outputs strips them before committing"]
+- [ ] [Another specific deliverable, e.g. "Running `make pre-commit` strips all notebooks from outputs before committing"]
 - [ ] [...]
 ```

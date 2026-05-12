@@ -65,7 +65,7 @@ Load the template for the ticket type from `references/`:
 | Documentation | `references/template-documentation.md` |
 | Repository | `references/template-repository.md` |
 
-Follow the template exactly. Acceptance criteria must be specific to this ticket. Never include items already covered by the team's PR template — the following are required on every PR and must not appear in ticket-specific criteria:
+Follow the template exactly. Acceptance criteria must be specific to this ticket. Never include items already covered by the team's PR template (`.github/PULL_REQUEST_TEMPLATE.md`) — the following are required on every PR and must not appear in ticket-specific criteria:
 
 - `make lint` passes
 - `make type-check` passes
@@ -77,30 +77,4 @@ Only write criteria that are unique to this particular ticket: a specific class 
 
 ---
 
-## GLIDE conventions — apply throughout all pseudocode
-
-These are non-negotiable. All pseudocode in the ticket must follow them so developers can copy-adapt without translation.
-
-**Typing** — `typing` module only. Never use PEP 604 / 585 syntax:
-```python
-# Wrong: int | None, list[str], dict[str, int]
-# Right: Optional[int], List[str], Dict[str, int]
-from typing import Dict, List, Optional, Tuple
-```
-
-**Return statements** — assign first, then return; never compute inside `return`:
-```python
-result = a * b + c
-return result
-# not: return a * b + c
-```
-
-**Arrays** — `np.hstack` / `np.vstack` over `np.concatenate`. NumPy vectorization over Python loops.
-
-**Names** — self-explanatory, no abbreviations (`effective_sample_size` not `ess`). Consistent across classes (`compute_mean_estimate` everywhere).
-
-**Docstrings** — NumPy format with `Parameters`, `Returns`, `Examples`. Doctests always import from public namespaces (`from glide.estimators import ...`).
-
-**Line length** — 120 characters.
-
-**Comments** — only when the *why* is non-obvious. No comments restating what the code does.
+All pseudocode must follow the conventions in `CLAUDE.md` (typing, return statements, arrays, naming, docstrings, comments) so developers can copy-adapt without translation.

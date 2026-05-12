@@ -105,6 +105,10 @@ Always import from `typing`: `from typing import Dict, List, Optional, Tuple`.
 
 Do not use needless type conversions like `float()` or `int()` unless required by the caller or for debugging purposes.
 
+### Comments
+
+Only add a comment when the *why* is non-obvious: a hidden constraint, a subtle invariant, a workaround for a specific bug, behavior that would surprise a reader. No comments restating what the code does.
+
 ### Docstrings
 
 - NumPy-style docstrings with paper references for all public API
