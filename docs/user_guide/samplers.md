@@ -1,15 +1,13 @@
 # Samplers
 
-Samplers sit **upstream of the estimators**: they decide *which* samples to send for human annotation and compute the sampling probabilities $\pi_i$ required by some estimators that rely on Inverse Probability Weighting (IPW). Choosing samples strategically (rather than uniformly at random) can substantially reduce the annotation budget needed to reach a target confidence-interval width.
+Samplers sit **upstream of the estimators**: they decide *which* samples to send for human annotation. The simplest approach, implemented by `UniformSampler`, draws a budget $b$ of observations uniformly without replacement from a pool of $n$ samples and returns a binary selection vector $\xi \in \{0,1\}^n$. It is the appropriate baseline when no auxiliary signal is available.
 
-A sampler takes a fully proxy-labeled dataset and a budget $b$, and computes two values per sample:
+When auxiliary signals are available, choosing samples strategically can substantially reduce the annotation budget needed to reach a target confidence-interval width. Other samplers (for example, `ActiveSampler`) go further: in addition to $\xi_i$, they compute a **drawing probability** $\pi_i$ for each sample, which allows downstream estimators to apply Inverse Probability Weighting (IPW) and correct for non-uniform sampling bias.
 
 | Value | Description |
 |---|---|
 | $\pi_i$ | Drawing probability used to select sample $i$ for annotation ($0 < \pi_i \leq 1$) |
 | $\xi_i$ | Bernoulli indicator: $1$ if the sample was selected, $0$ otherwise |
-
-These output values can be leveraged by estimators supporting inverse probability weighting (IPW) to correct for non-uniform sampling bias.
 
 ---
 

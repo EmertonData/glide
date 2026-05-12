@@ -3,7 +3,7 @@ import pytest
 
 from glide.confidence_intervals import CLTConfidenceInterval
 from glide.core.mean_inference_result import PredictionPoweredMeanInferenceResult
-from glide.estimators.stratified_ppi import StratifiedPPIMeanEstimator
+from glide.estimators import StratifiedPPIMeanEstimator
 
 # ── helpers ────────────────────────────────────────────────────────────────────
 

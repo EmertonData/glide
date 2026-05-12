@@ -78,9 +78,9 @@ class CostOptimalRandomSampler:
               annotation probability making sampling impossible.
         """
         if len(y_true) == 0:
-            raise ValueError("y_true must not be empty")
+            raise ValueError("'y_true' must not be empty")
         if len(y_true) != len(y_proxy):
-            raise ValueError(f"y_true and y_proxy must have the same length; got {len(y_true)} and {len(y_proxy)}.")
+            raise ValueError(f"'y_true' and y_proxy must have the same length; got {len(y_true)} and {len(y_proxy)}.")
         if np.any(np.isnan(y_true)) or np.any(np.isnan(y_proxy)):
             raise ValueError("Input contains NaN values")
         if np.all(y_true == y_proxy):
@@ -164,14 +164,14 @@ class CostOptimalRandomSampler:
         """
         if not hasattr(self, "_y_true_variance") or not hasattr(self, "_mean_squared_error"):
             raise RuntimeError("fit() must be called before sample()")
-        if not isinstance(n_samples, int) or n_samples <= 0:
-            raise ValueError(f"n_samples must be a strictly positive integer; got {n_samples!r}.")
+        if not isinstance(n_samples, (int, np.integer)) or n_samples <= 0:
+            raise ValueError(f"'n_samples' must be a strictly positive integer; got {n_samples!r}.")
         if y_true_cost <= 0.0:
-            raise ValueError(f"y_true_cost must be strictly positive; got {y_true_cost}.")
+            raise ValueError(f"'y_true_cost' must be strictly positive; got {y_true_cost}.")
         if y_proxy_cost <= 0.0:
-            raise ValueError(f"y_proxy_cost must be strictly positive; got {y_proxy_cost}.")
+            raise ValueError(f"'y_proxy_cost' must be strictly positive; got {y_proxy_cost}.")
         if budget <= 0:
-            raise ValueError(f"budget must be strictly positive; got {budget}.")
+            raise ValueError(f"'budget' must be strictly positive; got {budget}.")
 
         pi = self._compute_optimal_probability(y_true_cost, y_proxy_cost)
         cost_per_sample = y_true_cost * pi + y_proxy_cost
