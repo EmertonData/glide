@@ -11,7 +11,7 @@ import pytest
 
 from glide.estimators import PPIMeanEstimator, StratifiedPPIMeanEstimator
 from glide.samplers import StratifiedSampler
-from glide.simulators import generate_gaussian_dataset
+from glide.simulators import generate_gaussian_dataset, simulate_annotation
 
 # ── tests ──────────────────────────────────────────────────────────────────────
 
@@ -147,14 +147,12 @@ def test_neyman_allocation_yields_narrower_ci_than_proportional():
     # Helper to run pipeline for a given strategy
     def pipeline(strategy: Literal["proportional", "neyman"]):
         # Sample using stratified sampler
-        _, xi = StratifiedSampler().sample(
+        xi = StratifiedSampler().sample(
             y_proxy_full, groups_full, budget=budget, strategy=strategy, random_seed=random_seed
         )
 
         # Reconstruct PPI dataset: restore y_true only for sampled records
-        sampled_mask = xi == 1
-        y_true_ppi = np.full_like(y_true_full, np.nan)
-        y_true_ppi[sampled_mask] = y_true_full[sampled_mask]
+        y_true_ppi = simulate_annotation(y_true_full, xi)
 
         # Estimate using stratified PPI
         result = StratifiedPPIMeanEstimator().estimate(y_true_ppi, y_proxy_full, groups_full)

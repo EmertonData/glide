@@ -8,11 +8,13 @@
 | [`generate_stratified_binary_dataset`](simulators.md#glide.simulators.generate_stratified_binary_dataset) | Stratified binary-label dataset |
 | [`generate_binary_dataset_with_oracle_sampling`](simulators.md#glide.simulators.generate_binary_dataset_with_oracle_sampling) | Binary dataset with oracle sampling probabilities |
 | [`generate_gaussian_dataset`](simulators.md#glide.simulators.generate_gaussian_dataset) | Synthetic Gaussian dataset |
+| [`simulate_annotation`](simulators.md#glide.simulators.simulate_annotation) | Simulate annotation in the simulation lifecycle |
 
 ## Samplers
 
 | Class | Description |
 |-------|-------------|
+| [`UniformSampler`](samplers.md#glide.samplers.uniform.UniformSampler) | Uniform random sampling |
 | [`ActiveSampler`](samplers.md#glide.samplers.active.ActiveSampler) | Uncertainty-based active sampling |
 | [`StratifiedSampler`](samplers.md#glide.samplers.stratified.StratifiedSampler) | Stratified budget allocation with Neyman/proportional strategies |
 | [`CostOptimalRandomSampler`](samplers.md#glide.samplers.cost_optimal_random.CostOptimalRandomSampler) | Cost-optimal random sampling |

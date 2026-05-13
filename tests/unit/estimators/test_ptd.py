@@ -6,7 +6,7 @@ from numpy.typing import NDArray
 
 from glide.confidence_intervals import BootstrapConfidenceInterval
 from glide.core.mean_inference_result import PredictionPoweredMeanInferenceResult
-from glide.estimators.ptd import PTDMeanEstimator
+from glide.estimators import PTDMeanEstimator
 
 # ── fixtures ───────────────────────────────────────────────────────────────────
 

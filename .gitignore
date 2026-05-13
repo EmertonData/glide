@@ -25,6 +25,7 @@ docs/generated_examples/
 .mypy_cache
 .pytest_cache
 .cache
+**/.ipynb_checkpoints
 
 # Coverage
 .coverage

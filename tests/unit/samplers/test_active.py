@@ -2,7 +2,7 @@ import numpy as np
 import pytest
 from numpy.typing import NDArray
 
-from glide.samplers.active import ActiveSampler
+from glide.samplers import ActiveSampler
 
 
 @pytest.fixture

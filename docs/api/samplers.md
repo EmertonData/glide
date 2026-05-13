@@ -1,5 +1,9 @@
 # Samplers
 
+::: glide.samplers.uniform.UniformSampler
+
+---
+
 ::: glide.samplers.active.ActiveSampler
 
 ---
