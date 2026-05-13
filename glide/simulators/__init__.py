@@ -1,3 +1,4 @@
+from glide.simulators.annotation import simulate_annotation
 from glide.simulators.binary import generate_binary_dataset
 from glide.simulators.gaussian import generate_gaussian_dataset
 from glide.simulators.oracle_binary import generate_binary_dataset_with_oracle_sampling
@@ -8,4 +9,5 @@ __all__ = [
     "generate_binary_dataset_with_oracle_sampling",
     "generate_gaussian_dataset",
     "generate_stratified_binary_dataset",
+    "simulate_annotation",
 ]
