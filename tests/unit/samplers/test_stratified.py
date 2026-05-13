@@ -66,14 +66,10 @@ def test_proportional_allocation_proportional_to_N_h(sampler):
 # --- sample ---
 
 
-def test_sample_returns_valid_arrays(sampler, y_proxy, groups):
-    pi, xi = sampler.sample(y_proxy, groups, 4, random_seed=0)
-    assert isinstance(pi, np.ndarray)
+def test_sample_returns_valid_array(sampler, y_proxy, groups):
+    xi = sampler.sample(y_proxy, groups, 4, random_seed=0)
     assert isinstance(xi, np.ndarray)
-    assert len(pi) == len(y_proxy)
     assert len(xi) == len(y_proxy)
-    assert np.all(pi > 0)
-    assert np.all(pi <= 1)
     assert np.isin(xi, [0, 1]).all()
 
 
@@ -108,17 +104,24 @@ def test_sample_raises_on_zero_allocation(sampler, y_proxy, groups):
 
 
 def test_sample_default_strategy_is_neyman(sampler, y_proxy, groups):
-    default_pi, _ = sampler.sample(y_proxy, groups, 8)
-    neyman_pi, _ = sampler.sample(y_proxy, groups, 8, strategy="neyman")
+    default_xi = sampler.sample(y_proxy, groups, 8, random_seed=0)
+    neyman_xi = sampler.sample(y_proxy, groups, 8, strategy="neyman", random_seed=0)
 
-    np.testing.assert_array_equal(default_pi, neyman_pi)
+    np.testing.assert_array_equal(default_xi, neyman_xi)
+
+
+def test_sample_proportional_strategy(sampler, y_proxy, groups):
+    xi = sampler.sample(y_proxy, groups, 5, strategy="proportional", random_seed=0)
+
+    expected_xi = np.array([0, 1, 1, 1, 1, 0, 0, 1])
+    np.testing.assert_array_equal(xi, expected_xi)
 
 
 def test_sample_neyman_strategy(sampler, y_proxy, groups):
-    pi, _ = sampler.sample(y_proxy, groups, 8, strategy="neyman")
+    xi = sampler.sample(y_proxy, groups, 8, strategy="neyman", random_seed=0)
 
-    assert pi[0] == pytest.approx(0.25)
-    assert pi[4] == pytest.approx(1.0)
+    expected_xi = np.array([0, 0, 0, 1, 1, 1, 1, 1])
+    np.testing.assert_array_equal(xi, expected_xi)
 
 
 def test_sample_invalid_strategy_raises(sampler, y_proxy, groups):
@@ -127,7 +130,7 @@ def test_sample_invalid_strategy_raises(sampler, y_proxy, groups):
 
 
 def test_sample_is_reproducible(sampler, y_proxy, groups):
-    _, xi1 = sampler.sample(y_proxy, groups, 4, random_seed=42)
-    _, xi2 = sampler.sample(y_proxy, groups, 4, random_seed=42)
+    xi1 = sampler.sample(y_proxy, groups, 4, random_seed=42)
+    xi2 = sampler.sample(y_proxy, groups, 4, random_seed=42)
 
     np.testing.assert_array_equal(xi1, xi2)
