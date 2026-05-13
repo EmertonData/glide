@@ -10,6 +10,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### ✨ Added
 - `simulate_annotation` for simulating annotation in the simulation lifecycle
+- `UniformSampler` for uniform random sampling
 - Example for `IPWPTDMeanEstimator`
 - Section about IPWPTD in the user guide
 - `IPWPTDMeanEstimator` for inverse probability weighted PTD mean estimation
@@ -18,6 +19,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - `StratifiedPTDMeanEstimator` stratified extension of `PTDMeanEstimator`
 
 ### 🔄 Changed
+- `StratifiedSampler` now returns sampling indicators only
 - Refactored `glide.core.simulated_datasets` into dedicated `glide.simulators` module with separate files for each generator function
 - Replaced "semi-supervised" with "prediction-powered" everywhere in the docs and code
 

@@ -6,7 +6,7 @@ from numpy.typing import NDArray
 
 from glide.confidence_intervals import CLTConfidenceInterval
 from glide.core.mean_inference_result import PredictionPoweredMeanInferenceResult
-from glide.estimators.asi import ASIMeanEstimator
+from glide.estimators import ASIMeanEstimator
 
 # --- helpers ---
 

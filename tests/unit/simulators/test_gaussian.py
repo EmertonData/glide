@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 
-from glide.simulators.gaussian import generate_gaussian_dataset
+from glide.simulators import generate_gaussian_dataset
 
 
 def test_generate_gaussian_dataset_structure_and_counts():

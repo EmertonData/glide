@@ -18,13 +18,12 @@ def test_proportional_matches_uniform_equal_strata(sampler):
     sample_indices = np.tile(np.arange(n_per_stratum), n_strata)
     y_proxy = groups + sample_indices * 0.1
 
-    pi, _ = sampler.sample(y_proxy, groups, budget, strategy="proportional", random_seed=0)
+    xi = sampler.sample(y_proxy, groups, budget, strategy="proportional", random_seed=0)
 
-    # With equal-sized strata, proportional allocation gives uniform pi across all samples
-    total_size = len(y_proxy)
-    expected_pi = budget / total_size
-
-    np.testing.assert_allclose(pi, expected_pi)
+    # With equal-sized strata, proportional allocation gives each stratum the same number of annotations
+    expected_per_stratum = budget // n_strata
+    for stratum_id in np.unique(groups):
+        assert xi[groups == stratum_id].sum() == expected_per_stratum
 
 
 def test_sample_rounding_sums_to_budget(sampler):
@@ -32,15 +31,6 @@ def test_sample_rounding_sums_to_budget(sampler):
     groups = np.array(["s0", "s0", "s1", "s1", "s2", "s2", "s3", "s3", "s4", "s4"], dtype=object)
 
     for strategy in ["proportional", "neyman"]:
-        pi, _ = sampler.sample(y_proxy, groups, 7, strategy=strategy)
+        xi = sampler.sample(y_proxy, groups, 7, strategy=strategy, random_seed=0)
 
-        unique_groups, group_sizes = np.unique(groups, return_counts=True)
-
-        # Get first pi value for each unique group
-        group_pi = np.array([pi[groups == group][0] for group in unique_groups])
-
-        # Vectorized allocation calculation
-        allocations = np.minimum(group_pi * group_sizes, group_sizes)
-        total_allocation = np.sum(allocations)
-
-        assert total_allocation <= 7
+        assert xi.sum() <= 7
