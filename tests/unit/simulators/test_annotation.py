@@ -27,24 +27,27 @@ def test_simulate_annotation_y_true_oracle_contains_nan():
         simulate_annotation(y_true_oracle, xi)
 
 
-def test_simulate_annotation_xi_contains_nan():
+@pytest.mark.parametrize("bad_xi", [np.nan, 2])
+def test_simulate_annotation_xi_non_binary(bad_xi):
     y_true_oracle = np.array([0.0, 1.0])
-    xi = np.array([1.0, np.nan])
-    with pytest.raises(ValueError, match="xi contains NaN"):
+    xi = np.array([1.0, bad_xi])
+    with pytest.raises(ValueError, match="xi must only contain 0 and 1 values"):
         simulate_annotation(y_true_oracle, xi)
 
 
 def test_simulate_annotation_mixed_annotated_unannotated(y_true_oracle, xi):
     result = simulate_annotation(y_true_oracle, xi)
-    assert result.dtype == np.float64
-    np.testing.assert_array_equal(result[[0, 2]], y_true_oracle[[0, 2]])
-    assert np.all(np.isnan(result[[1, 3]]))
+    assert result.dtype == float
+    expected = np.array([0.0, np.nan, 1.0, np.nan])
+    np.testing.assert_array_equal(result, expected)
 
 
 def test_simulate_annotation_inputs_not_mutated(y_true_oracle, xi):
     simulate_annotation(y_true_oracle, xi)
-    np.testing.assert_array_equal(y_true_oracle, np.array([0.0, 1.0, 1.0, 0.0]))
-    np.testing.assert_array_equal(xi, np.array([1, 0, 1, 0]))
+    original_y_true_oracle = y_true_oracle.copy()
+    original_xi = xi.copy()
+    np.testing.assert_array_equal(y_true_oracle, original_y_true_oracle)
+    np.testing.assert_array_equal(xi, original_xi)
 
 
 def test_simulate_annotation_empty_arrays():

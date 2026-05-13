@@ -34,7 +34,7 @@ def simulate_annotation(
     ValueError
         If ``y_true_oracle`` contains NaN values.
     ValueError
-        If ``xi`` contains NaN values.
+        If ``xi`` contains values other than ``0`` and ``1``.
 
     Examples
     --------
@@ -49,8 +49,8 @@ def simulate_annotation(
         raise ValueError(f"y_true_oracle and xi must have the same length, got {len(y_true_oracle)} and {len(xi)}")
     if np.any(np.isnan(y_true_oracle)):
         raise ValueError("y_true_oracle contains NaN values")
-    if np.any(np.isnan(xi)):
-        raise ValueError("xi contains NaN values")
+    if not np.isin(xi, [0.0, 1.0]).all():
+        raise ValueError("xi must only contain 0 and 1 values")
 
     y_true = y_true_oracle.astype(float)
     y_true[xi == 0] = np.nan
