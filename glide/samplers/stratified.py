@@ -183,8 +183,10 @@ class StratifiedSampler:
         Raises
         ------
         ValueError
-            If strategy is unknown, if budget is not a strictly positive integer, or if budget exceeds
-            the number of samples in the input.
+            - If ``strategy`` is not a recognized allocation strategy.
+            - If ``budget`` is not a strictly positive integer.
+            - If ``budget`` is too low and results in zero allocations for some stratum.
+            - If ``budget`` exceeds the total number of samples in the input.
         """
         if (not isinstance(budget, (int, np.integer))) or isinstance(budget, bool) or budget <= 0:
             raise ValueError(f"'budget' must be a strictly positive integer; got {budget!r}.")
@@ -216,7 +218,7 @@ class StratifiedSampler:
         xi = np.zeros(len(y_proxy), dtype=int)
 
         for stratum_id in np.unique(groups):
-            stratum_indices = np.argwhere(groups == stratum_id)
+            stratum_indices = np.flatnonzero(groups == stratum_id)
             n_h = allocation[stratum_id]
             selected_samples = rng.choice(stratum_indices, size=n_h, replace=False)
             xi[selected_samples] = 1

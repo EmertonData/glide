@@ -111,9 +111,9 @@ def test_sample_default_strategy_is_neyman(sampler, y_proxy, groups):
 
 
 def test_sample_proportional_strategy(sampler, y_proxy, groups):
-    xi = sampler.sample(y_proxy, groups, 8, strategy="proportional", random_seed=0)
+    xi = sampler.sample(y_proxy, groups, 5, strategy="proportional", random_seed=0)
 
-    expected_xi = np.ones(8)
+    expected_xi = np.array([0, 1, 1, 1, 1, 0, 0, 1])
     np.testing.assert_array_equal(xi, expected_xi)
 
 
