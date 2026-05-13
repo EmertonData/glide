@@ -30,7 +30,6 @@ class BootstrapConfidenceInterval:
     [4.453, 5.354]
     """
 
-    bootstrap_estimates: NDArray
     mean: float = field(init=False, repr=False)
     var: float = field(init=False, repr=False)
     std: float = field(init=False, repr=False)
@@ -41,7 +40,6 @@ class BootstrapConfidenceInterval:
     width: float = field(init=False, repr=False)
 
     def __init__(self, bootstrap_estimates: NDArray, confidence_level: float = 0.95) -> None:
-        self.bootstrap_estimates = bootstrap_estimates
         self.mean = float(np.mean(bootstrap_estimates))
         self.var = float(np.var(bootstrap_estimates, ddof=1))
         self.std = float(np.sqrt(self.var))
