@@ -1,3 +1,4 @@
+import numpy as np
 from numpy.typing import NDArray
 
 
@@ -9,7 +10,7 @@ def simulate_annotation(
 
     Given a full oracle label array and a binary annotation indicator, returns
     a float array where labels are kept for annotated records (``xi == 1``) and
-    set to ``float("nan")`` for unannotated ones (``xi == 0``). The input arrays
+    set to ``np.nan`` for unannotated ones (``xi == 0``). The input arrays
     are not mutated.
 
     Parameters
@@ -24,7 +25,16 @@ def simulate_annotation(
     -------
     NDArray
         Float array of the same length as ``y_true_oracle``, with oracle values
-        where ``xi == 1`` and ``float("nan")`` where ``xi == 0``.
+        where ``xi == 1`` and ``np.nan`` where ``xi == 0``.
+
+    Raises
+    ------
+    ValueError
+        If ``y_true_oracle`` and ``xi`` have different lengths.
+    ValueError
+        If ``y_true_oracle`` contains NaN values.
+    ValueError
+        If ``xi`` contains NaN values.
 
     Examples
     --------
@@ -35,6 +45,13 @@ def simulate_annotation(
     >>> simulate_annotation(y_true_oracle, xi)
     array([ 0., nan,  1., nan])
     """
+    if len(y_true_oracle) != len(xi):
+        raise ValueError(f"y_true_oracle and xi must have the same length, got {len(y_true_oracle)} and {len(xi)}")
+    if np.any(np.isnan(y_true_oracle)):
+        raise ValueError("y_true_oracle contains NaN values")
+    if np.any(np.isnan(xi)):
+        raise ValueError("xi contains NaN values")
+
     y_true = y_true_oracle.astype(float)
-    y_true[xi == 0] = float("nan")
+    y_true[xi == 0] = np.nan
     return y_true
