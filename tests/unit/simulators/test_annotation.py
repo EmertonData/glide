@@ -42,14 +42,6 @@ def test_simulate_annotation_mixed_annotated_unannotated(y_true_oracle, xi):
     np.testing.assert_array_equal(result, expected)
 
 
-def test_simulate_annotation_inputs_not_mutated(y_true_oracle, xi):
-    simulate_annotation(y_true_oracle, xi)
-    original_y_true_oracle = y_true_oracle.copy()
-    original_xi = xi.copy()
-    np.testing.assert_array_equal(y_true_oracle, original_y_true_oracle)
-    np.testing.assert_array_equal(xi, original_xi)
-
-
 def test_simulate_annotation_empty_arrays():
     result = simulate_annotation(np.array([]), np.array([]))
     assert len(result) == 0

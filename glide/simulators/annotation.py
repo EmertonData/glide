@@ -9,7 +9,7 @@ def simulate_annotation(
     """Reveal oracle labels where annotated and mask the rest as NaN.
 
     Given a full oracle label array and a binary annotation indicator, returns
-    a float array where labels are kept for annotated records (``xi == 1``) and
+    an array where labels are kept for annotated records (``xi == 1``) and
     set to ``np.nan`` for unannotated ones (``xi == 0``). The input arrays
     are not mutated.
 
@@ -24,7 +24,7 @@ def simulate_annotation(
     Returns
     -------
     NDArray
-        Float array of the same length as ``y_true_oracle``, with oracle values
+        Array of the same length as ``y_true_oracle``, with oracle values
         where ``xi == 1`` and ``np.nan`` where ``xi == 0``.
 
     Raises
