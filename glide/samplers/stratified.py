@@ -37,11 +37,9 @@ class StratifiedSampler:
     >>> y_proxy = np.array([0.8, 0.9, 0.85, 0.88, 0.2, 0.3])
     >>> groups = np.array(["A", "A", "A", "A", "B", "B"], dtype=object)
     >>> sampler = StratifiedSampler()
-    >>> pi, xi = sampler.sample(y_proxy, groups, budget=2, random_seed=1)
-    >>> pi
-    array([0.25, 0.25, 0.25, 0.25, 0.5 , 0.5 ])
+    >>> xi = sampler.sample(y_proxy, groups, budget=2, random_seed=1)
     >>> xi
-    array([0, 1, 0, 1, 0, 0])
+    array([0, 1, 0, 0, 0, 1])
     """
 
     def _validate(
@@ -151,18 +149,14 @@ class StratifiedSampler:
         budget: int,
         strategy: Literal["proportional", "neyman"] = "neyman",
         random_seed: Optional[int] = None,
-    ) -> Tuple[NDArray, NDArray]:
+    ) -> NDArray:
         """Allocate annotation budget across strata and perform stratified sampling.
 
-        Computes per-stratum sample sizes using the specified allocation strategy and performs
-        Bernoulli sampling for each sample based on its stratum's allocation. Neyman allocation
-        (default) assigns more budget to strata with higher proxy variance, minimising asymptotic
-        variance of downstream estimators. Proportional allocation allocates budget proportionally
-        to stratum sizes and serves as a baseline.
-
-        Each sample receives a drawing probability π_i = n_h / stratum_size (capped at 1), and
-        is independently selected via a Bernoulli trial. The actual number of selected items is
-        a random variable with expectation ≤ budget.
+        Computes allocated annotation counts ``n_h`` for each stratum ``h`` using the
+        specified allocation strategy and selects exactly ``n_h`` samples from each stratum
+        without replacement. Neyman allocation (default) assigns more budget to strata with higher
+        proxy variance, minimising asymptotic variance of downstream estimators. Proportional
+        allocation allocates budget proportionally to stratum sizes and serves as a baseline.
 
         Parameters
         ----------
@@ -182,10 +176,9 @@ class StratifiedSampler:
 
         Returns
         -------
-        Tuple[NDArray, NDArray]
-            A tuple ``(pi, xi)`` where ``pi`` is an array of drawing probabilities
-            in ``(0, 1]`` and ``xi`` is an array of Bernoulli selection indicators
-            (1 if selected for annotation, 0 otherwise), both of shape ``(n_samples,)``.
+        NDArray
+            Selection indicators of shape ``(n_samples,)``: 1 if the sample was selected
+            for annotation, 0 otherwise.
 
         Raises
         ------
@@ -220,15 +213,12 @@ class StratifiedSampler:
 
         rng = np.random.default_rng(random_seed)
 
-        pi = np.zeros(len(y_proxy))
         xi = np.zeros(len(y_proxy), dtype=int)
 
         for stratum_id in np.unique(groups):
-            stratum_mask = groups == stratum_id
+            stratum_indices = np.argwhere(groups == stratum_id)
             n_h = allocation[stratum_id]
-            stratum_size = stratum_mask.sum()
-            pi_value = np.minimum(n_h / stratum_size, 1.0)
-            pi[stratum_mask] = pi_value
-            xi[stratum_mask] = rng.binomial(n=1, p=np.full(stratum_size, pi_value)).astype(float)
+            selected_samples = rng.choice(stratum_indices, size=n_h, replace=False)
+            xi[selected_samples] = 1
 
-        return pi, xi
+        return xi

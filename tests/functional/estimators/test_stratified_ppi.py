@@ -147,7 +147,7 @@ def test_neyman_allocation_yields_narrower_ci_than_proportional():
     # Helper to run pipeline for a given strategy
     def pipeline(strategy: Literal["proportional", "neyman"]):
         # Sample using stratified sampler
-        _, xi = StratifiedSampler().sample(
+        xi = StratifiedSampler().sample(
             y_proxy_full, groups_full, budget=budget, strategy=strategy, random_seed=random_seed
         )
 
