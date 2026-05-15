@@ -21,6 +21,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - `StratifiedPTDMeanEstimator` stratified extension of `PTDMeanEstimator`
 
 ### 🔄 Changed
+- "Which estimator to choose" decision tree updated with samplers
 - `StratifiedSampler` now returns sampling indicators only
 - Refactored `glide.core.simulated_datasets` into dedicated `glide.simulators` module with separate files for each generator function
 - Replaced "semi-supervised" with "prediction-powered" everywhere in the docs and code
