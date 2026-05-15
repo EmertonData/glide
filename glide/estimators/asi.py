@@ -1,3 +1,4 @@
+import warnings
 from typing import Tuple
 
 import numpy as np
@@ -53,12 +54,6 @@ class ASIMeanEstimator:
     ) -> Tuple[NDArray, NDArray, NDArray, NDArray]:
         if not (len(y_true_all) == len(y_proxy) == len(pi)):
             raise ValueError("y_true, y_proxy, and pi must all have the same length")
-        nonzero_mask = pi != 0
-
-        y_true_all = y_true_all[nonzero_mask]
-        y_proxy = y_proxy[nonzero_mask]
-        pi = pi[nonzero_mask]
-
         if np.min(pi) < 0 or np.max(pi) > 1:
             raise ValueError("Sampling probabilities should be in [0, 1]")
         if np.isnan(y_proxy).any():
@@ -69,6 +64,8 @@ class ASIMeanEstimator:
         y_true_non_nan_mask = ~np.isnan(y_true_all)
         xi = y_true_non_nan_mask.astype(float)
 
+        if np.any(y_true_non_nan_mask & (pi == 0)):
+            raise ValueError("Samples with non-zero probability of being labeled cannot be labeled")
         if np.any(~y_true_non_nan_mask & (pi == 1)):
             raise ValueError("Samples with probability one of being labeled must be labeled")
 
@@ -155,18 +152,37 @@ class ASIMeanEstimator:
             - If any value in ``pi`` is not in [0, 1].
         """
         y_true_labeled, y_proxy, xi, pi = self._preprocess(y_true, y_proxy, pi)
-        n_true = int(xi.sum())
-        n_proxy = len(y_proxy)
 
-        _lambda = self._compute_tuning_parameter(y_true_labeled, y_proxy, xi, pi, power_tuning)
-        rectified_labels = self._compute_rectified_labels(y_true_labeled, y_proxy, xi, pi, _lambda)
+        nonzero_pi_mask = pi > 0
+        if not np.all(nonzero_pi_mask):
+            warnings.warn(
+                "Some observations have pi=0. These will be excluded from the estimation.",
+                UserWarning,
+            )
+
+        y_true_labeled_nonzeropi = y_true_labeled[nonzero_pi_mask]
+        y_proxy_nonzeropi = y_proxy[nonzero_pi_mask]
+        xi_nonzeropi = xi[nonzero_pi_mask]
+        pi_nonzeropi = pi[nonzero_pi_mask]
+
+        n_true = int(xi_nonzeropi.sum())
+        n_proxy = int(nonzero_pi_mask.sum())
+
+        _lambda = self._compute_tuning_parameter(
+            y_true_labeled_nonzeropi, y_proxy_nonzeropi, xi_nonzeropi, pi_nonzeropi, power_tuning
+        )
+        rectified_labels = self._compute_rectified_labels(
+            y_true_labeled_nonzeropi, y_proxy_nonzeropi, xi_nonzeropi, pi_nonzeropi, _lambda
+        )
         mean_estimate = np.mean(rectified_labels)
         std_estimate = np.std(rectified_labels, ddof=1) / np.sqrt(n_proxy)
 
         confidence_interval = CLTConfidenceInterval(
             mean=mean_estimate, std=std_estimate, confidence_level=confidence_level
         )
-        effective_sample_size = compute_effective_sample_size(y_true_labeled[xi == 1], confidence_interval.var)
+        effective_sample_size = compute_effective_sample_size(
+            y_true_labeled_nonzeropi[xi_nonzeropi == 1], confidence_interval.var
+        )
 
         return PredictionPoweredMeanInferenceResult(
             confidence_interval=confidence_interval,

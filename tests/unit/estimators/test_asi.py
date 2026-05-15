@@ -41,25 +41,9 @@ def test_preprocess_valid_output(estimator, y_arrays):
     assert len(xi) == 4
     assert int(xi.sum()) == 2
     assert len(pi) == 4
-    assert np.all((pi > 0)) and np.all((pi <= 1))
+    assert np.all((pi >= 0)) and np.all((pi <= 1))
     assert np.isin(xi, [0.0, 1.0]).all()
     assert not np.any(np.isnan(y_true))
-
-
-def test_preprocess_ignores_zero_pi_entries(estimator, y_arrays):
-    y_true, y_proxy, _, _ = y_arrays
-    pi = np.array([1.0, 0.5, 0.0, 0.5])
-    y_true, y_proxy, xi, output_pi = estimator._preprocess(y_true, y_proxy, pi)
-
-    expected_y_true = np.array([3.0, 5.0, 0.0])
-    expected_y_proxy = np.array([2.0, 4.0, 7.0])
-    expected_xi = np.array([1.0, 1.0, 0.0])
-    expected_pi = np.array([1.0, 0.5, 0.5])
-
-    np.testing.assert_array_equal(y_true, expected_y_true)
-    np.testing.assert_array_equal(y_proxy, expected_y_proxy)
-    np.testing.assert_array_equal(output_pi, expected_pi)
-    np.testing.assert_array_equal(xi, expected_xi)
 
 
 def test_preprocess_raises_on_length_mismatch(estimator):
@@ -95,6 +79,14 @@ def test_preprocess_raises_on_constant_proxy(estimator):
         estimator._preprocess(y_true, y_proxy, pi)
 
 
+def test_preprocess_raises_on_labeled_samples_with_zero_pi(estimator):
+    y_true = np.array([1.0, 2.0, np.nan, np.nan])
+    y_proxy = np.array([0.9, 1.9, 0.8, 1.8])
+    pi = np.array([0.5, 0.0, 0.5, 0.5])
+    with pytest.raises(ValueError, match="Samples with non-zero probability of being labeled cannot be labeled"):
+        estimator._preprocess(y_true, y_proxy, pi)
+
+
 def test_preprocess_raises_on_unlabeled_samples_with_one_pi(estimator):
     y_true = np.array([1.0, np.nan, np.nan, np.nan])
     y_proxy = np.array([0.9, 1.9, 0.8, 1.8])
@@ -114,6 +106,7 @@ def test_compute_tuning_parameter_returns_one_when_power_tuning_false(estimator,
 
 def test_compute_tuning_parameter_known_values(estimator, y_arrays, y_true_processed):
     _, y_proxy, xi, pi = y_arrays
+
     lam = estimator._compute_tuning_parameter(y_true_processed, y_proxy, xi, pi, power_tuning=True)
     expected = 0.89
     assert lam == pytest.approx(expected, abs=0.01)
@@ -157,6 +150,14 @@ def test_estimate_custom_confidence_level(estimator, y_arrays):
     assert result.std == pytest.approx(expected_std, abs=0.01)
     assert result.confidence_interval.lower_bound == pytest.approx(expected_lower, abs=0.01)
     assert result.confidence_interval.upper_bound == pytest.approx(expected_upper, abs=0.01)
+
+
+def test_estimate_warns_on_zero_pi(estimator):
+    y_true = np.array([3.0, 5.0, np.nan, np.nan, np.nan])
+    y_proxy = np.array([2.0, 4.0, 5.0, 7.0, 9.0])
+    pi = np.array([0.5, 0.5, 0.5, 0.5, 0.0])
+    with pytest.warns(UserWarning, match="Some observations have pi=0"):
+        estimator.estimate(y_true, y_proxy, pi)
 
 
 # --- __str__ / __repr__ ---
