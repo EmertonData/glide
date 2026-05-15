@@ -127,20 +127,28 @@ def test_sample_budget_too_small_raises(fitted_sampler):
 def test_sample_valid_output(fitted_sampler):
     n_samples = 2
     pi, xi = fitted_sampler.sample(n_samples=n_samples, y_true_cost=10.0, y_proxy_cost=1.0, budget=5, random_seed=42)
-    assert pi == pytest.approx(0.045, abs=0.01)
-    np.testing.assert_array_equal(xi, np.array([0.0, 0.0]))
+
+    expected_pi = np.array([0.045, 0.045])
+    expected_xi = np.array([0.0, 0.0])
+
+    np.testing.assert_allclose(pi, expected_pi, atol=0.01)
+    np.testing.assert_array_equal(xi, expected_xi)
 
 
 def test_sample_n_affordable_less_than_n_samples(fitted_sampler):
     n_samples = 5
     pi, xi = fitted_sampler.sample(n_samples=n_samples, y_true_cost=20.0, y_proxy_cost=1.0, budget=5, random_seed=42)
-    assert pi == pytest.approx(0.032, abs=0.01)
-    np.testing.assert_array_equal(xi, np.array([0.0, np.nan, np.nan, 0.0, 1.0]))
+
+    expected_pi = np.array([0.032, 0.0, 0.0, 0.032, 0.032])
+    expected_xi = np.array([0.0, np.nan, np.nan, 0.0, 1.0])
+
+    np.testing.assert_allclose(pi, expected_pi, atol=0.01, equal_nan=True)
+    np.testing.assert_array_equal(xi, expected_xi)
 
 
 def test_sample_reproducibility(fitted_sampler):
     pi1, xi1 = fitted_sampler.sample(n_samples=2, y_true_cost=10.0, y_proxy_cost=1.0, budget=5, random_seed=42)
     pi2, xi2 = fitted_sampler.sample(n_samples=2, y_true_cost=10.0, y_proxy_cost=1.0, budget=5, random_seed=42)
 
-    assert pi1 == pi2
+    np.testing.assert_array_equal(pi1, pi2)
     np.testing.assert_array_equal(xi1, xi2)

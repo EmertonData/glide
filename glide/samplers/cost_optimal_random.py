@@ -34,7 +34,7 @@ class CostOptimalRandomSampler:
     ...     budget=2,
     ...     random_seed=42
     ... )
-    >>> pi # doctest: +ELLIPSIS
+    >>> pi[0]  # doctest: +ELLIPSIS
     0.045...
     >>> xi[0]  # doctest: +ELLIPSIS
     np.float64(0.0)
@@ -119,7 +119,7 @@ class CostOptimalRandomSampler:
         y_proxy_cost: float,
         budget: float,
         random_seed: Optional[Union[int, SeedSequence]] = None,
-    ) -> Tuple[float, NDArray]:
+    ) -> Tuple[NDArray, NDArray]:
         """Sample observations with cost-optimal allocation between raters.
 
         Derives the optimal probability of querying the expensive rater (ground truth)
@@ -148,8 +148,9 @@ class CostOptimalRandomSampler:
 
         Returns
         -------
-        Tuple[float, NDArray]
-            [0]: float, pi with the optimal probability of querying the expensive rater.
+        Tuple[NDArray, NDArray]
+            [0]: array of shape ``(n_samples,)``, pi with the optimal probability of querying the expensive rater
+            for selected samples, NaN for unselected samples.
             [1]: array of shape ``(n_samples,)``, xi with indicators for each sample:
             1 if both raters are queried, 0 if only proxy is used, NaN if sample is not selected.
 
@@ -173,8 +174,8 @@ class CostOptimalRandomSampler:
         if budget <= 0:
             raise ValueError(f"'budget' must be strictly positive; got {budget}.")
 
-        pi = self._compute_optimal_probability(y_true_cost, y_proxy_cost)
-        cost_per_sample = y_true_cost * pi + y_proxy_cost
+        pi_value = self._compute_optimal_probability(y_true_cost, y_proxy_cost)
+        cost_per_sample = y_true_cost * pi_value + y_proxy_cost
         n_affordable = int(np.floor(budget / cost_per_sample))
         if n_affordable < 1:
             raise ValueError(
@@ -183,9 +184,11 @@ class CostOptimalRandomSampler:
 
         rng = np.random.default_rng(random_seed)
         xi = np.full(n_samples, np.nan)
+        pi = np.zeros(n_samples)
         if n_affordable < n_samples:
             indices = np.sort(rng.choice(n_samples, size=n_affordable, replace=False))
         else:
             indices = np.arange(n_samples)
-        xi[indices] = rng.binomial(n=1, p=pi, size=len(indices)).astype(float)
+        xi[indices] = rng.binomial(n=1, p=pi_value, size=len(indices)).astype(float)
+        pi[indices] = pi_value
         return pi, xi
