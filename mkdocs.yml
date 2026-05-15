@@ -87,6 +87,7 @@ nav:
     - PPI: tutorials/ppi.ipynb
     - Stratified PPI: tutorials/stratified_ppi.ipynb
     - ASI: tutorials/asi.ipynb
+    - Cost-Optimal Sampling: tutorials/cost_optimal_random.ipynb
   - Examples:
     - generated_examples/index.md
   - Deep Dive:

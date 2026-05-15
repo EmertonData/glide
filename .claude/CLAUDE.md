@@ -123,6 +123,7 @@ Only add a comment when the *why* is non-obvious: a hidden constraint, a subtle 
 - Always add elements to the "Added" or "Changed" sections of `CHANGELOG.md` at the top of the existing list
 - Avoid using and escaping underscores in math mode in jupyter notebooks.
 - Avoid making excessive use of dashes like this — when writing documentation and notebooks. Prefer commas, colons and parentheses where possible.
+- In documentation and tutorials, always spell out "confidence interval" instead of using "CI", which is easily confused with "continuous integration".
 
 ### No Redundancy
 

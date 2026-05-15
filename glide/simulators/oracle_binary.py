@@ -13,37 +13,37 @@ def generate_binary_dataset_with_oracle_sampling(
 ) -> Tuple[NDArray, NDArray, NDArray]:
     """Generate a synthetic binary dataset with oracle sampling probabilities.
 
-    All n_total samples have ground-truth labels (y_true), proxy predictions (y_proxy),
-    and an oracle root mean square error (RMSE) derived from the analytical
-    proxy error. The RMSE values are non-uniform: samples where the proxy is less
-    reliable receive higher RMSE following the optimal sampling rule.
+    All n_total samples have ground-truth labels (y_true_oracle), proxy predictions (y_proxy),
+    and an oracle uncertainty score derived from the analytical
+    proxy error. The uncertainty values are non-uniform: samples where the proxy is less
+    reliable receive higher uncertainty following the optimal sampling rule.
 
     The sampling is based on a latent variable which determines the correlation
-    between y_true and y_proxy in each sample. This variable is sampled uniformly
+    between y_true_oracle and y_proxy in each sample. This variable is sampled uniformly
     around the given correlation value with limited spread within the interval of
     possible correlation levels given true_mean and proxy_mean. This way, the
-    correlation between y_true and y_proxy matches the target value on average.
+    correlation between y_true_oracle and y_proxy matches the target value on average.
 
     Parameters
     ----------
     n_total : int
         Total number of samples.
     true_mean : float
-        Expected mean of y_true. Must be in (0, 1).
+        Expected mean of y_true_oracle. Must be in (0, 1).
     proxy_mean : float
         Expected mean of y_proxy. Must be in (0, 1).
     correlation : float
-        Pearson correlation between y_true and y_proxy (marginal, across all samples).
+        Pearson correlation between y_true_oracle and y_proxy (marginal, across all samples).
     random_seed : int, optional
         Seed for reproducibility.
 
     Returns
     -------
     Tuple[NDArray, NDArray, NDArray]
-        [0]: array of shape ``(n_total,)``, y_true with the full ground-truth labels for all n_total
-        samples (no NaN); the caller is responsible for masking unlabeled rows
+        [0]: array of shape ``(n_total,)``, y_true_oracle with the full ground-truth labels for all n_total
+        samples (no NaN); use ``simulate_annotation`` to mask unlabeled rows
         [1]: array of shape ``(n_total,)``, y_proxy with proxy predictions
-        [2]: array of shape ``(n_total,)``, uncertainty with oracle RMSE per sample
+        [2]: array of shape ``(n_total,)``, uncertainty (oracle uncertainty score) per sample
 
     Raises
     ------
@@ -59,16 +59,16 @@ def generate_binary_dataset_with_oracle_sampling(
     -----
     **Step 1 — Global joint distribution**
 
-    For two binary variables with marginals ``p_t = P(y_true=1)`` and
+    For two binary variables with marginals ``p_t = P(y_true_oracle=1)`` and
     ``p_p = P(y_proxy=1)``, the Pearson correlation uniquely determines the
     joint distribution.  Let ``D = sqrt(p_t * p_p * (1-p_t) * (1-p_p))``
     (product of standard deviations).  Then:
 
     ```
-    p11 = P(y_true=1, y_proxy=1) = correlation * D + p_t * p_p
-    p00 = P(y_true=0, y_proxy=0) = 1 - p_t - p_p + p11
-    p01 = P(y_true=0, y_proxy=1) = p_p - p11
-    p10 = P(y_true=1, y_proxy=0) = p_t - p11
+    p11 = P(y_true_oracle=1, y_proxy=1) = correlation * D + p_t * p_p
+    p00 = P(y_true_oracle=0, y_proxy=0) = 1 - p_t - p_p + p11
+    p01 = P(y_true_oracle=0, y_proxy=1) = p_p - p11
+    p10 = P(y_true_oracle=1, y_proxy=0) = p_t - p11
     ```
 
     These four probabilities are fully determined by ``(p_t, p_p, correlation)``
@@ -101,8 +101,8 @@ def generate_binary_dataset_with_oracle_sampling(
     Because ``E[x] = 0`` for ``x ~ Uniform(-1, 1)``, the marginal
     correlation ``E[corr(X)] = correlation`` exactly, preserving the target
     value on average.  Samples with low ``x`` have lower conditional
-    correlation (proxy less reliable → higher oracle RMSE); samples with high
-    ``x`` have higher conditional correlation (proxy more reliable → lower RMSE).
+    correlation (proxy less reliable → higher uncertainty); samples with high
+    ``x`` have higher conditional correlation (proxy more reliable → lower uncertainty).
 
     ``correlation_spread`` is chosen as 90 % of the largest value that keeps
     all four per-sample probabilities strictly positive for every
@@ -119,7 +119,7 @@ def generate_binary_dataset_with_oracle_sampling(
     ```
     p11(x) = corr(x) * D + p_t * p_p          # varies with x
     error_prob(x) = p01(x) + p10(x)
-                    = p_t + p_p - 2 * p11(x)    # proxy ≠ y_true
+                    = p_t + p_p - 2 * p11(x)    # proxy ≠ y_true_oracle
     ```
 
     ``error_prob(x)`` is the per-sample proxy error probability, which
@@ -134,10 +134,10 @@ def generate_binary_dataset_with_oracle_sampling(
     ``u ~ Uniform(0,1)`` draw:
 
     ```
-    u < p00(x)                 → outcome 0 : (y_true=0, y_proxy=0)
-    u < p00(x)+p01(x)          → outcome 1 : (y_true=0, y_proxy=1)
-    u < p00(x)+p01(x)+p10(x)   → outcome 2 : (y_true=1, y_proxy=0)
-    else                       → outcome 3 : (y_true=1, y_proxy=1)
+    u < p00(x)                 → outcome 0 : (y_true_oracle=0, y_proxy=0)
+    u < p00(x)+p01(x)          → outcome 1 : (y_true_oracle=0, y_proxy=1)
+    u < p00(x)+p01(x)+p10(x)   → outcome 2 : (y_true_oracle=1, y_proxy=0)
+    else                       → outcome 3 : (y_true_oracle=1, y_proxy=1)
     ```
 
     The crucial simplification is that the second threshold collapses to the
@@ -153,26 +153,26 @@ def generate_binary_dataset_with_oracle_sampling(
     ```
 
     This means only two of the three thresholds require per-sample arrays.
-    The outcome integer encodes both labels: ``y_true = outcome // 2``,
+    The outcome integer encodes both labels: ``y_true_oracle = outcome // 2``,
     ``y_proxy = outcome % 2``.
 
-    **Step 5 — Oracle RMSE**
+    **Step 5 — Oracle uncertainty**
 
     The optimal sampling probability satisfies
-    ``RMSE = sqrt(E[(y_proxy - y_true)²]) = sqrt(error_prob(x))``.
+    ``uncertainty = sqrt(E[(y_proxy - y_true_oracle)²]) = sqrt(error_prob(x))``.
     These values are stored directly as ``uncertainty``.
 
     Examples
     --------
     >>> from glide.simulators import generate_binary_dataset_with_oracle_sampling
-    >>> y_true, y_proxy, uncertainty = generate_binary_dataset_with_oracle_sampling(n_total=4, random_seed=0)
-    >>> len(y_true)
+    >>> y_true_oracle, y_proxy, uncertainty = generate_binary_dataset_with_oracle_sampling(n_total=4, random_seed=0)
+    >>> len(y_true_oracle)
     4
     >>> len(y_proxy)
     4
     >>> len(uncertainty)
     4
-    >>> bool(np.all(np.isin(y_true, [0.0, 1.0])))
+    >>> bool(np.all(np.isin(y_true_oracle, [0.0, 1.0])))
     True
     >>> bool(np.all(np.isin(y_proxy, [0.0, 1.0])))
     True
@@ -234,10 +234,10 @@ def generate_binary_dataset_with_oracle_sampling(
             np.where(u < 1.0 - p11_x, 2, 3),
         ),
     )
-    y_true_arr = samples // 2
+    y_true_oracle_arr = samples // 2
     y_proxy_arr = samples % 2
 
-    # Oracle RMSE: sqrt(P(error | x_i))
+    # Oracle uncertainty: sqrt(P(error | x_i))
     uncertainty = np.sqrt(error_prob_x)
 
-    return y_true_arr.astype(float), y_proxy_arr.astype(float), uncertainty
+    return y_true_oracle_arr.astype(float), y_proxy_arr.astype(float), uncertainty
