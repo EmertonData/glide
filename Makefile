@@ -1,5 +1,8 @@
 .PHONY: tests
 
+UNIT_DIRS = tests/unit
+FUNCTIONAL_DIRS = tests/functional
+
 venv:
 	uv sync --all-groups
 
@@ -18,17 +21,22 @@ format:
 type-check:
 	uv run ty check
 	
-tests:
-	uv run pytest . -vsx
+unit-tests:
+	uv run pytest $(UNIT_DIRS) -vsx
+
+functional-tests:
+	uv run pytest $(FUNCTIONAL_DIRS) -vsx
+
+tests: unit-tests functional-tests
 
 coverage:
 	uv run pytest -vsx \
 		--cov-branch \
-		--cov=. \
+		--cov=glide \
 		--cov-report term-missing \
 		--cov-report html \
 		--cov-report xml \
-		.
+		tests/unit/
 
 _sync-doc:
 	uv sync --group doc
