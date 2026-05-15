@@ -78,3 +78,5 @@ Only write criteria that are unique to this particular ticket: a specific class 
 ---
 
 All pseudocode must follow the conventions in `CLAUDE.md` (typing, return statements, arrays, naming, docstrings, comments) so developers can copy-adapt without translation.
+
+Do not insert line breaks in the middle of a paragraph; only break between distinct paragraphs or sections or within code or docstrings.
