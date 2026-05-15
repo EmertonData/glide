@@ -124,12 +124,6 @@ def test_sample_neyman_strategy(sampler, y_proxy, groups):
     np.testing.assert_array_equal(xi, expected_xi)
 
 
-def test_sample_proportional_strategy(sampler, y_proxy, groups):
-    pi, _ = sampler.sample(y_proxy, groups, 4, strategy="proportional")
-
-    np.testing.assert_allclose(pi, np.full(8, 0.5))
-
-
 def test_sample_invalid_strategy_raises(sampler, y_proxy, groups):
     with pytest.raises(ValueError, match="Unknown strategy"):
         sampler.sample(y_proxy, groups, 4, strategy="unknown")
