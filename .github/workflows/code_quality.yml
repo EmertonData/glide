@@ -29,6 +29,9 @@ jobs:
       - name: Coverage
         run: make coverage
 
+      - name: Functional tests
+        run: make functional-tests
+
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v5.5.2
         with:

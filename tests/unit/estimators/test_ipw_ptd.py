@@ -146,6 +146,20 @@ def test_estimate_reproducibility(estimator, y_arrays):
     assert result_a.confidence_interval.upper_bound == result_b.confidence_interval.upper_bound
 
 
+def test_estimate_warns_on_zero_pi(estimator, y_arrays):
+    y_true, y_proxy, _ = y_arrays
+    pi = np.array([0.4, 0.6, 0.5, 0.0, 0.2, 0.8])
+    with pytest.warns(UserWarning, match="Some observations have pi=0"):
+        estimator.estimate(y_true, y_proxy, pi, n_bootstrap=5, random_seed=7)
+
+
+def test_estimate_warns_on_one_pi(estimator, y_arrays):
+    y_true, y_proxy, _ = y_arrays
+    pi = np.array([0.4, 0.6, 1.0, 0.5, 0.2, 0.8])
+    with pytest.warns(UserWarning, match="Some observations have pi=1"):
+        estimator.estimate(y_true, y_proxy, pi, n_bootstrap=5, random_seed=7)
+
+
 # ── __str__ / __repr__ ────────────────────────────────────────────────────────
 
 
