@@ -1,4 +1,4 @@
-.PHONY: tests unit-tests functional-tests
+.PHONY: tests
 
 UNIT_DIRS = tests/unit
 FUNCTIONAL_DIRS = tests/functional
