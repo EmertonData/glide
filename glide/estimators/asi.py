@@ -53,8 +53,14 @@ class ASIMeanEstimator:
     ) -> Tuple[NDArray, NDArray, NDArray, NDArray]:
         if not (len(y_true_all) == len(y_proxy) == len(pi)):
             raise ValueError("y_true, y_proxy, and pi must all have the same length")
-        if np.min(pi) <= 0 or np.max(pi) > 1:
-            raise ValueError("Sampling probabilities should be in (0, 1]")
+        nonzero_mask = pi != 0
+
+        y_true_all = y_true_all[nonzero_mask]
+        y_proxy = y_proxy[nonzero_mask]
+        pi = pi[nonzero_mask]
+
+        if np.min(pi) < 0 or np.max(pi) > 1:
+            raise ValueError("Sampling probabilities should be in [0, 1]")
         if np.isnan(y_proxy).any():
             raise ValueError("Input proxy values contain NaN")
         if len(np.unique(y_proxy)) == 1:
@@ -123,7 +129,8 @@ class ASIMeanEstimator:
             sample and must not contain NaN.
         pi : NDArray
             Array of shape ``(n_samples,)`` with the pre-determined sampling probability
-            π_i ∈ (0, 1] for each sample.
+            π_i ∈ [0, 1] for each sample. Entries with π_i = 0 are excluded from all
+            computations.
         metric_name : str, optional
             Human-readable label for the metric. Defaults to ``"Metric"``.
         confidence_level : float, optional
@@ -145,7 +152,7 @@ class ASIMeanEstimator:
             - If ``y_true``, ``y_proxy``, and ``pi`` do not all have the same length.
             - If any proxy value is NaN.
             - If all proxy values are identical (zero variance).
-            - If any value in ``pi`` is not in (0, 1].
+            - If any value in ``pi`` is not in [0, 1].
         """
         y_true_labeled, y_proxy, xi, pi = self._preprocess(y_true, y_proxy, pi)
         n_true = int(xi.sum())

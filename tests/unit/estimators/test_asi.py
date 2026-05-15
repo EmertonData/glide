@@ -46,6 +46,22 @@ def test_preprocess_valid_output(estimator, y_arrays):
     assert not np.any(np.isnan(y_true))
 
 
+def test_preprocess_ignores_zero_pi_entries(estimator, y_arrays):
+    y_true, y_proxy, _, _ = y_arrays
+    pi = np.array([1.0, 0.5, 0.0, 0.5])
+    y_true, y_proxy, xi, output_pi = estimator._preprocess(y_true, y_proxy, pi)
+
+    expected_y_true = np.array([3.0, 5.0, 0.0])
+    expected_y_proxy = np.array([2.0, 4.0, 7.0])
+    expected_xi = np.array([1.0, 1.0, 0.0])
+    expected_pi = np.array([1.0, 0.5, 0.5])
+
+    np.testing.assert_array_equal(y_true, expected_y_true)
+    np.testing.assert_array_equal(y_proxy, expected_y_proxy)
+    np.testing.assert_array_equal(output_pi, expected_pi)
+    np.testing.assert_array_equal(xi, expected_xi)
+
+
 def test_preprocess_raises_on_length_mismatch(estimator):
     y_true = np.array([1.0, np.nan])
     y_proxy = np.array([1.0, 1.0, 1.0])
@@ -54,12 +70,12 @@ def test_preprocess_raises_on_length_mismatch(estimator):
         estimator._preprocess(y_true, y_proxy, pi)
 
 
-@pytest.mark.parametrize("bad_pi", [0.0, -0.5, 2.0])
-def test_preprocess_raises_on_non_positive_pi(estimator, bad_pi):
+@pytest.mark.parametrize("bad_pi", [10, -0.5, 2.0])
+def test_preprocess_raises_on_bad_pi(estimator, bad_pi):
     y_true = np.array([1.0, np.nan])
     y_proxy = np.array([1.0, 2.0])
     pi = np.array([0.5, bad_pi])
-    with pytest.raises(ValueError, match="Sampling probabilities should be in \\(0, 1]"):
+    with pytest.raises(ValueError, match="Sampling probabilities should be in \\[0, 1]"):
         estimator._preprocess(y_true, y_proxy, pi)
 
 
