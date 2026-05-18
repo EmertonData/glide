@@ -3,8 +3,8 @@ import pytest
 from numpy.typing import NDArray
 
 from glide.confidence_intervals import CLTConfidenceInterval
-from glide.core.mean_inference_result import PredictionPoweredMeanInferenceResult
 from glide.estimators import PPIMeanEstimator
+from glide.mean_inference_results import PredictionPoweredMeanInferenceResult
 
 # ── helpers ────────────────────────────────────────────────────────────────────
 

@@ -1,5 +1,5 @@
 from glide.confidence_intervals import CLTConfidenceInterval
-from glide.core.mean_inference_result import PredictionPoweredMeanInferenceResult
+from glide.mean_inference_results import PredictionPoweredMeanInferenceResult
 
 # --- PredictionPoweredMeanInferenceResult ---
 
