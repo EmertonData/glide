@@ -174,8 +174,6 @@ class ASIMeanEstimator:
         rectified_labels = self._compute_rectified_labels(y_true_labeled, y_proxy_filtered, xi, pi_filtered, _lambda)
         mean_estimate = np.mean(rectified_labels)
         std_estimate = np.std(rectified_labels, ddof=1) / np.sqrt(n_proxy)
-        if np.isnan(std_estimate):
-            print(rectified_labels)
 
         confidence_interval = CLTConfidenceInterval(
             mean=mean_estimate, std=std_estimate, confidence_level=confidence_level
