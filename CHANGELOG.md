@@ -9,6 +9,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 ## [Next release]
 
 ### ✨ Added
+
+### 🔄 Changed
+
+### 🐛 Fixed
+
+### 💛 Contributors
+
+## [0.5.0] – 2026-05-18
+
+### ✨ Added
 - Tutorial for `CostOptimalRandomSampler`
 - IPW PTD scientific validation notebook
 - `simulate_annotation` for simulating annotation in the simulation lifecycle
@@ -30,6 +40,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - Handling of NaN values in `StratifiedClassicalMeanEstimator`
 
 ### 💛 Contributors
+Thank you to everyone who contributed to this release: @gmartinon-ed, @imerad, @mraki-ed, @vwoelffel-ed
 
 ---
 
