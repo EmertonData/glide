@@ -79,8 +79,8 @@ class IPWPTDMeanEstimator:
         n_unlabeled = len(y_true) - n_labeled
         if min(n_labeled, n_unlabeled) <= 1:
             raise ValueError("Too few labeled or unlabeled samples in dataset")
-        y_true_labeled = np.nan_to_num(y_true, nan=0)
-        return y_true_labeled, y_proxy, xi, pi
+        y_true_filled = np.nan_to_num(y_true, nan=0)
+        return y_true_filled, y_proxy, xi, pi
 
     def estimate(
         self,
@@ -143,7 +143,7 @@ class IPWPTDMeanEstimator:
             - If any unlabeled sample (NaN ``y_true``) has a labeling probability of 1.
             - If there are fewer than 2 labeled or fewer than 2 unlabeled samples.
         """
-        y_true_labeled, y_proxy, xi, pi = self._preprocess(y_true, y_proxy, pi)
+        y_true_filled, y_proxy, xi, pi = self._preprocess(y_true, y_proxy, pi)
         rng = np.random.default_rng(random_seed)
 
         non_zero_pi_mask = pi > 0
@@ -165,7 +165,7 @@ class IPWPTDMeanEstimator:
             labeled_ipw_weights = xi / pi
             unlabeled_ipw_weights = (1 - xi) / (1 - pi)
 
-        weighted_y_true_labeled = (y_true_labeled * labeled_ipw_weights)[non_zero_pi_mask]
+        weighted_y_true_filled = (y_true_filled * labeled_ipw_weights)[non_zero_pi_mask]
         weighted_y_proxy_labeled = (y_proxy * labeled_ipw_weights)[non_zero_pi_mask]
         weighted_y_proxy_unlabeled = (y_proxy * unlabeled_ipw_weights)[non_one_pi_mask]
 
@@ -174,7 +174,7 @@ class IPWPTDMeanEstimator:
         var_proxy_unlabeled = np.var(weighted_y_proxy_unlabeled, ddof=1) / effective_n_proxy_unlabeled
 
         bootstrap_y_true_means, bootstrap_y_proxy_labeled_means = _compute_bootstrap_labeled_means(
-            weighted_y_true_labeled, weighted_y_proxy_labeled, n_bootstrap, rng
+            weighted_y_true_filled, weighted_y_proxy_labeled, n_bootstrap, rng
         )
         lambda_ = _compute_tuning_parameter(
             bootstrap_y_true_means, bootstrap_y_proxy_labeled_means, var_proxy_unlabeled, power_tuning

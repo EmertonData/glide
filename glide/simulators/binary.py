@@ -152,14 +152,14 @@ def generate_binary_dataset(
     samples = rng.choice(4, p=probs, size=n_labeled)
     # extract the true and proxy values via integer division and modulo 2
     # we have 0 = (0, 0), 1 = (0, 1), 2 = (1, 0), 3 = (1, 1)
-    y_true_labeled = samples // 2
+    y_true_filled = samples // 2
     y_proxy_labeled = samples % 2
 
     # generate proxy values for unlabeled samples
     y_proxy_unlabeled = rng.choice(2, p=[1 - p_p, p_p], size=n_unlabeled)
 
     # Combine labeled and unlabeled: NaN for unlabeled y_true, all y_proxy values
-    y_true = np.hstack([y_true_labeled.astype(float), np.full(n_unlabeled, np.nan)])
+    y_true = np.hstack([y_true_filled.astype(float), np.full(n_unlabeled, np.nan)])
     y_proxy = np.hstack([y_proxy_labeled.astype(float), y_proxy_unlabeled.astype(float)])
 
     return y_true, y_proxy

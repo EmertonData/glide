@@ -122,17 +122,17 @@ class PPIMeanEstimator:
             - If all proxy values are identical (zero variance).
             - If there are fewer than 2 labeled or fewer than 2 unlabeled samples.
         """
-        y_true_labeled, y_proxy_labeled, y_proxy_unlabeled = self._preprocess(y_true, y_proxy)
-        n_labeled, n_unlabeled = len(y_true_labeled), len(y_proxy_unlabeled)
-        lambda_ = _compute_tuning_parameter(y_true_labeled, y_proxy_labeled, y_proxy_unlabeled, power_tuning)
-        mean = _compute_mean_estimate(y_true_labeled, y_proxy_labeled, y_proxy_unlabeled, lambda_)
-        std = _compute_std_estimate(y_true_labeled, y_proxy_labeled, y_proxy_unlabeled, lambda_)
+        y_true_filled, y_proxy_labeled, y_proxy_unlabeled = self._preprocess(y_true, y_proxy)
+        n_labeled, n_unlabeled = len(y_true_filled), len(y_proxy_unlabeled)
+        lambda_ = _compute_tuning_parameter(y_true_filled, y_proxy_labeled, y_proxy_unlabeled, power_tuning)
+        mean = _compute_mean_estimate(y_true_filled, y_proxy_labeled, y_proxy_unlabeled, lambda_)
+        std = _compute_std_estimate(y_true_filled, y_proxy_labeled, y_proxy_unlabeled, lambda_)
         confidence_interval = CLTConfidenceInterval(
             mean=mean,
             std=std,
             confidence_level=confidence_level,
         )
-        effective_sample_size = compute_effective_sample_size(y_true_labeled, confidence_interval.var)
+        effective_sample_size = compute_effective_sample_size(y_true_filled, confidence_interval.var)
         result = PredictionPoweredMeanInferenceResult(
             confidence_interval=confidence_interval,
             metric_name=metric_name,

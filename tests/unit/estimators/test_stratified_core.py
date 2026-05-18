@@ -13,8 +13,8 @@ def test_preprocess_returns_correct_shapes():
 
     strata = _preprocess(y_true, y_proxy, groups)
     assert len(strata) == 2
-    for y_true_labeled, y_proxy_labeled, y_proxy_unlabeled in strata:
-        assert len(y_true_labeled) == 2
+    for y_true_filled, y_proxy_labeled, y_proxy_unlabeled in strata:
+        assert len(y_true_filled) == 2
         assert len(y_proxy_labeled) == 2
         assert len(y_proxy_unlabeled) == 2
 

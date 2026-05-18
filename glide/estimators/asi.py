@@ -163,22 +163,22 @@ class ASIMeanEstimator:
         y_proxy_filtered = y_proxy[non_zero_pi_mask]
         pi_filtered = pi[non_zero_pi_mask]
 
-        y_true_labeled, y_proxy_filtered, xi, pi_filtered = self._preprocess(
+        y_true_filled, y_proxy_filtered, xi, pi_filtered = self._preprocess(
             y_true_filtered, y_proxy_filtered, pi_filtered
         )
 
         n_true = int(xi.sum())
         n_proxy = int(non_zero_pi_mask.sum())
 
-        _lambda = self._compute_tuning_parameter(y_true_labeled, y_proxy_filtered, xi, pi_filtered, power_tuning)
-        rectified_labels = self._compute_rectified_labels(y_true_labeled, y_proxy_filtered, xi, pi_filtered, _lambda)
+        _lambda = self._compute_tuning_parameter(y_true_filled, y_proxy_filtered, xi, pi_filtered, power_tuning)
+        rectified_labels = self._compute_rectified_labels(y_true_filled, y_proxy_filtered, xi, pi_filtered, _lambda)
         mean_estimate = np.mean(rectified_labels)
         std_estimate = np.std(rectified_labels, ddof=1) / np.sqrt(n_proxy)
 
         confidence_interval = CLTConfidenceInterval(
             mean=mean_estimate, std=std_estimate, confidence_level=confidence_level
         )
-        effective_sample_size = compute_effective_sample_size(y_true_labeled[xi == 1], confidence_interval.var)
+        effective_sample_size = compute_effective_sample_size(y_true_filled[xi == 1], confidence_interval.var)
 
         return PredictionPoweredMeanInferenceResult(
             confidence_interval=confidence_interval,
