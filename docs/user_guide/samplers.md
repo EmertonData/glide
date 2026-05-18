@@ -87,8 +87,8 @@ The `CostOptimalRandomSampler` addresses the following setting: two annotation s
 
 The sampler models two raters:
 
-- **Proxy rater ($G$)**: cheap, always queried, cost $c_g$ per sample. Returns noisy labels.
-- **Ground truth rater ($H$)**: expensive, cost $c_h$ per sample ($c_g < c_h$). Returns authoritative labels (e.g., a human annotator).
+- **Proxy rater ($\tilde{Y}$)**: cheap, always queried, cost $c_{\tilde{y}}$ per sample. Returns noisy labels.
+- **Ground truth rater ($Y$)**: expensive, cost $c_y$ per sample ($c_{\tilde{y}} < c_y$). Returns authoritative labels (e.g., a human annotator).
 
 The simplest annotation policy queries the ground truth rater at a **fixed probability $\pi$** for every sample, regardless of its characteristics. When $\pi$ is too large the cost is too high; when $\pi$ is too small the downstream estimation variance blows up. The `CostOptimalRandomSampler` finds the optimal balance.
 
@@ -96,38 +96,40 @@ The simplest annotation policy queries the ground truth rater at a **fixed proba
 
 The optimal probability minimises estimation error subject to the cost budget (see [[2](#ref-2), Proposition 1]). It depends on two quantities:
 
-- $\text{Var}(H)$: variance of the ground truth labels
-- $\text{MSE}(H, G) = \mathbb{E}[(H - G)^2]$: mean squared error of the proxy relative to the ground truth
+- $\text{Var}(Y)$: variance of the ground truth labels
+- $\text{MSE}(Y, \tilde{Y}) = \mathbb{E}[(Y - \tilde{Y})^2]$: mean squared error of the proxy relative to the ground truth
+
+Note that [[2](#ref-2)] uses the notations $H$ and $G$ for $Y$ and $\tilde{Y}$ respectively, adapted here to harmonize with the rest of the documentation.
 
 The optimal probability $\pi^*$ is then:
 
 $$
 \pi^* = \begin{cases}
-\sqrt{\dfrac{c_g}{c_h} \cdot \dfrac{\text{MSE}(H, G)}{\text{Var}(H) - \text{MSE}(H, G)}} & \text{if } \text{MSE}(H, G) < \dfrac{c_h}{c_h + c_g} \cdot \text{Var}(H) \\[0.5em]
+\sqrt{\dfrac{c_{\tilde{y}}}{c_y} \cdot \dfrac{\text{MSE}(Y, \tilde{Y})}{\text{Var}(Y) - \text{MSE}(Y, \tilde{Y})}} & \text{if } \text{MSE}(Y, \tilde{Y}) < \dfrac{c_y}{c_y + c_{\tilde{y}}} \cdot \text{Var}(Y) \\[0.5em]
 1 & \text{otherwise}
 \end{cases}
 $$
 
 **Interpretation:**
 
-- If the first case condition holds, the proxy is accurate enough that querying the ground truth rater on only a fraction $\pi^* < 1$ of samples is cost-efficient. The optimal rate varies inversely with both the ratio $\text{Var}(H) / \text{MSE}(H, G)$ and the cost ratio $c_h / c_g$: a more accurate proxy or a more expensive ground truth rater both lead to a lower $\pi^*$.
+- If the first case condition holds, the proxy is accurate enough that querying the ground truth rater on only a fraction $\pi^* < 1$ of samples is cost-efficient. The optimal rate varies inversely with both the ratio $\text{Var}(Y) / \text{MSE}(Y, \tilde{Y})$ and the cost ratio $c_y / c_{\tilde{y}}$: a more accurate proxy or a more expensive ground truth rater both lead to a lower $\pi^*$.
 - In the second case, the proxy is too unreliable and every sample must be sent to the expensive rater ($\pi^* = 1$).
 
 The intuition: if $H$ has high variance but $G$ closely tracks it, the estimator can primarily exploit the proxy's cheap, high-quality predictions, querying the ground truth rater at a low rate only to correct for residual bias.
 
 ### Burn-in phase
 
-To compute $\pi^*$, estimates of $\text{Var}(H)$ and $\text{MSE}(H, G)$ are needed. When no labeled data is available upfront, one can first annotate a number of initial samples unconditionally with ground truth ($\pi = 1$). This burn-in dataset is used to compute the required statistics. Once $\pi^*$ is determined, the subsequent data is annotated with this probability and can be used by downstream estimators that support inverse probability weighting.
+To compute $\pi^*$, estimates of $\text{Var}(Y)$ and $\text{MSE}(Y, \tilde{Y})$ are needed. When no labeled data is available upfront, one can first annotate a number of initial samples unconditionally with ground truth ($\pi = 1$). This burn-in dataset is used to compute the required statistics. Once $\pi^*$ is determined, the subsequent data is annotated with this probability and can be used by downstream estimators that support inverse probability weighting.
 
 ### Total cost and budget mapping
 
 Since the proxy is queried for every sample, the expected cost per sample is:
 
-$$\mathbb{E}[\text{Cost per sample}] = c_g + c_h \cdot \pi$$
+$$\mathbb{E}[\text{Cost per sample}] = c_{\tilde{y}} + c_y \cdot \pi$$
 
 Given a budget $b$ and optimal probability $\pi^*$, the maximum number of samples that can be processed is:
 
-$$T = \left\lfloor \frac{b}{c_g + c_h \cdot \pi^*} \right\rfloor$$
+$$T = \left\lfloor \frac{b}{c_{\tilde{y}} + c_y \cdot \pi^*} \right\rfloor$$
 
 ### Sampling procedure
 

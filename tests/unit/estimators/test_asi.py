@@ -41,7 +41,7 @@ def test_preprocess_valid_output(estimator, y_arrays):
     assert len(xi) == 4
     assert int(xi.sum()) == 2
     assert len(pi) == 4
-    assert np.all((pi > 0)) and np.all((pi <= 1))
+    assert np.all((pi >= 0)) and np.all((pi <= 1))
     assert np.isin(xi, [0.0, 1.0]).all()
     assert not np.any(np.isnan(y_true))
 
@@ -54,12 +54,12 @@ def test_preprocess_raises_on_length_mismatch(estimator):
         estimator._preprocess(y_true, y_proxy, pi)
 
 
-@pytest.mark.parametrize("bad_pi", [0.0, -0.5, 2.0])
-def test_preprocess_raises_on_non_positive_pi(estimator, bad_pi):
+@pytest.mark.parametrize("bad_pi", [-0.5, 2.0])
+def test_preprocess_raises_on_bad_pi(estimator, bad_pi):
     y_true = np.array([1.0, np.nan])
     y_proxy = np.array([1.0, 2.0])
     pi = np.array([0.5, bad_pi])
-    with pytest.raises(ValueError, match="Sampling probabilities should be in \\(0, 1]"):
+    with pytest.raises(ValueError, match="Sampling probabilities should be in \\[0, 1]"):
         estimator._preprocess(y_true, y_proxy, pi)
 
 
@@ -71,11 +71,19 @@ def test_preprocess_raises_on_nan_proxy(estimator):
         estimator._preprocess(y_true, y_proxy, pi)
 
 
-def test_preprocess_raises_on_constant_proxy(estimator):
+def test_preprocess_raises_on_zero_variance_rectifiers(estimator):
     y_true = np.array([1.0, np.nan])
-    y_proxy = np.array([1.0, 1.0])
+    y_proxy = np.array([0.0, 0.0])
     pi = np.array([0.5, 0.5])
-    with pytest.raises(ValueError, match="Input proxy values have zero variance"):
+    with pytest.raises(ValueError, match="Input values lead to rectifiers with zero variance"):
+        estimator._preprocess(y_true, y_proxy, pi)
+
+
+def test_preprocess_raises_on_labeled_samples_with_zero_pi(estimator):
+    y_true = np.array([1.0, 2.0, np.nan, np.nan])
+    y_proxy = np.array([0.9, 1.9, 0.8, 1.8])
+    pi = np.array([0.5, 0.0, 0.5, 0.5])
+    with pytest.raises(ValueError, match="Samples with non-zero probability of being labeled cannot be labeled"):
         estimator._preprocess(y_true, y_proxy, pi)
 
 
@@ -141,6 +149,14 @@ def test_estimate_custom_confidence_level(estimator, y_arrays):
     assert result.std == pytest.approx(expected_std, abs=0.01)
     assert result.confidence_interval.lower_bound == pytest.approx(expected_lower, abs=0.01)
     assert result.confidence_interval.upper_bound == pytest.approx(expected_upper, abs=0.01)
+
+
+def test_estimate_warns_on_zero_pi(estimator):
+    y_true = np.array([3.0, 5.0, np.nan, np.nan, np.nan])
+    y_proxy = np.array([2.0, 4.0, 5.0, 7.0, 9.0])
+    pi = np.array([0.5, 0.5, 0.5, 0.5, 0.0])
+    with pytest.warns(UserWarning, match="Some observations have pi=0"):
+        estimator.estimate(y_true, y_proxy, pi)
 
 
 # --- __str__ / __repr__ ---
