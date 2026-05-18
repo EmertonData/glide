@@ -58,8 +58,6 @@ class ASIMeanEstimator:
             raise ValueError("Sampling probabilities should be in [0, 1]")
         if np.isnan(y_proxy).any():
             raise ValueError("Input proxy values contain NaN")
-        if len(np.unique(y_proxy)) == 1:
-            raise ValueError("Input proxy values have zero variance")
 
         y_true_non_nan_mask = ~np.isnan(y_true_all)
         xi = y_true_non_nan_mask.astype(float)
@@ -68,6 +66,9 @@ class ASIMeanEstimator:
             raise ValueError("Samples with non-zero probability of being labeled cannot be labeled")
         if np.any(~y_true_non_nan_mask & (pi == 1)):
             raise ValueError("Samples with probability one of being labeled must be labeled")
+
+        if len(np.unique(y_proxy * (xi / pi - 1))) == 1:
+            raise ValueError("Input values lead to rectifiers with zero variance")
 
         y_true_clean = np.nan_to_num(y_true_all, nan=0)
         return y_true_clean, y_proxy, xi, pi
@@ -148,41 +149,38 @@ class ASIMeanEstimator:
         ValueError
             - If ``y_true``, ``y_proxy``, and ``pi`` do not all have the same length.
             - If any proxy value is NaN.
-            - If all proxy values are identical (zero variance).
+            - If the rectifiers ``y_proxy * (ξ_i / π_i - 1)`` have zero variance.
             - If any value in ``pi`` is not in [0, 1].
         """
-        y_true_labeled, y_proxy, xi, pi = self._preprocess(y_true, y_proxy, pi)
-
-        nonzero_pi_mask = pi > 0
-        if not np.all(nonzero_pi_mask):
+        non_zero_pi_mask = pi > 0
+        if not np.all(non_zero_pi_mask):
             warnings.warn(
                 "Some observations have pi=0. These will be excluded from the estimation.",
                 UserWarning,
             )
 
-        y_true_labeled_nonzeropi = y_true_labeled[nonzero_pi_mask]
-        y_proxy_nonzeropi = y_proxy[nonzero_pi_mask]
-        xi_nonzeropi = xi[nonzero_pi_mask]
-        pi_nonzeropi = pi[nonzero_pi_mask]
+        y_true_filtered = y_true[non_zero_pi_mask]
+        y_proxy_filtered = y_proxy[non_zero_pi_mask]
+        pi_filtered = pi[non_zero_pi_mask]
 
-        n_true = int(xi_nonzeropi.sum())
-        n_proxy = int(nonzero_pi_mask.sum())
+        y_true_labeled, y_proxy_filtered, xi, pi_filtered = self._preprocess(
+            y_true_filtered, y_proxy_filtered, pi_filtered
+        )
 
-        _lambda = self._compute_tuning_parameter(
-            y_true_labeled_nonzeropi, y_proxy_nonzeropi, xi_nonzeropi, pi_nonzeropi, power_tuning
-        )
-        rectified_labels = self._compute_rectified_labels(
-            y_true_labeled_nonzeropi, y_proxy_nonzeropi, xi_nonzeropi, pi_nonzeropi, _lambda
-        )
+        n_true = int(xi.sum())
+        n_proxy = int(non_zero_pi_mask.sum())
+
+        _lambda = self._compute_tuning_parameter(y_true_labeled, y_proxy_filtered, xi, pi_filtered, power_tuning)
+        rectified_labels = self._compute_rectified_labels(y_true_labeled, y_proxy_filtered, xi, pi_filtered, _lambda)
         mean_estimate = np.mean(rectified_labels)
         std_estimate = np.std(rectified_labels, ddof=1) / np.sqrt(n_proxy)
+        if np.isnan(std_estimate):
+            print(rectified_labels)
 
         confidence_interval = CLTConfidenceInterval(
             mean=mean_estimate, std=std_estimate, confidence_level=confidence_level
         )
-        effective_sample_size = compute_effective_sample_size(
-            y_true_labeled_nonzeropi[xi_nonzeropi == 1], confidence_interval.var
-        )
+        effective_sample_size = compute_effective_sample_size(y_true_labeled[xi == 1], confidence_interval.var)
 
         return PredictionPoweredMeanInferenceResult(
             confidence_interval=confidence_interval,

@@ -40,11 +40,8 @@ def simulate_annotation(
     >>> import numpy as np
     >>> from glide.simulators import simulate_annotation
     >>> y_true_oracle = np.array([0, 1, 1, 0])
-    >>> xi = np.array([1, 0, 1, 0])
+    >>> xi = np.array([1, 0, 1, np.nan])
     >>> simulate_annotation(y_true_oracle, xi)
-    array([ 0., nan,  1., nan])
-    >>> xi_with_nan = np.array([1, np.nan, 1, 0])
-    >>> simulate_annotation(y_true_oracle, xi_with_nan)
     array([ 0., nan,  1., nan])
     """
     if len(y_true_oracle) != len(xi):

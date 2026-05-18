@@ -174,8 +174,8 @@ class CostOptimalRandomSampler:
         if budget <= 0:
             raise ValueError(f"'budget' must be strictly positive; got {budget}.")
 
-        pi_value = self._compute_optimal_probability(y_true_cost, y_proxy_cost)
-        cost_per_sample = y_true_cost * pi_value + y_proxy_cost
+        pi_opt = self._compute_optimal_probability(y_true_cost, y_proxy_cost)
+        cost_per_sample = y_true_cost * pi_opt + y_proxy_cost
         n_affordable = int(np.floor(budget / cost_per_sample))
         if n_affordable < 1:
             raise ValueError(
@@ -189,6 +189,6 @@ class CostOptimalRandomSampler:
             indices = np.sort(rng.choice(n_samples, size=n_affordable, replace=False))
         else:
             indices = np.arange(n_samples)
-        xi[indices] = rng.binomial(n=1, p=pi_value, size=len(indices)).astype(float)
-        pi[indices] = pi_value
+        xi[indices] = rng.binomial(n=1, p=pi_opt, size=len(indices)).astype(float)
+        pi[indices] = pi_opt
         return pi, xi

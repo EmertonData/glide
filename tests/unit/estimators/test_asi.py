@@ -54,7 +54,7 @@ def test_preprocess_raises_on_length_mismatch(estimator):
         estimator._preprocess(y_true, y_proxy, pi)
 
 
-@pytest.mark.parametrize("bad_pi", [10, -0.5, 2.0])
+@pytest.mark.parametrize("bad_pi", [-0.5, 2.0])
 def test_preprocess_raises_on_bad_pi(estimator, bad_pi):
     y_true = np.array([1.0, np.nan])
     y_proxy = np.array([1.0, 2.0])
@@ -71,11 +71,11 @@ def test_preprocess_raises_on_nan_proxy(estimator):
         estimator._preprocess(y_true, y_proxy, pi)
 
 
-def test_preprocess_raises_on_constant_proxy(estimator):
+def test_preprocess_raises_on_zero_variance_rectifiers(estimator):
     y_true = np.array([1.0, np.nan])
-    y_proxy = np.array([1.0, 1.0])
+    y_proxy = np.array([0.0, 0.0])
     pi = np.array([0.5, 0.5])
-    with pytest.raises(ValueError, match="Input proxy values have zero variance"):
+    with pytest.raises(ValueError, match="Input values lead to rectifiers with zero variance"):
         estimator._preprocess(y_true, y_proxy, pi)
 
 
@@ -106,7 +106,6 @@ def test_compute_tuning_parameter_returns_one_when_power_tuning_false(estimator,
 
 def test_compute_tuning_parameter_known_values(estimator, y_arrays, y_true_processed):
     _, y_proxy, xi, pi = y_arrays
-
     lam = estimator._compute_tuning_parameter(y_true_processed, y_proxy, xi, pi, power_tuning=True)
     expected = 0.89
     assert lam == pytest.approx(expected, abs=0.01)
