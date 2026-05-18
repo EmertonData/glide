@@ -101,6 +101,8 @@ Use `typing` module generics — never use PEP 604 / PEP 585 built-in aliases:
 
 Always import from `typing`: `from typing import Dict, List, Optional, Tuple`.
 
+Never use `object` or `Any` as type annotations, use precise types or protocols instead.
+
 ### Type Conversions
 
 Do not use needless type conversions like `float()` or `int()` unless required by the caller or for debugging purposes.
@@ -111,7 +113,7 @@ Only add a comment when the *why* is non-obvious: a hidden constraint, a subtle 
 
 ### Docstrings
 
-- NumPy-style docstrings with paper references for all public API
+- NumPy-style docstrings for all public API; paper references go exclusively in the `References` section. Never mention papers inline in parameter descriptions, summaries, or notes
 - Public API docstrings must include an `Examples` section with runnable doctests
 - In doctests, always import from the public package namespaces: `from glide.estimators import ...`, `from glide.samplers import ...`, `from glide.simulators import ...` — never from submodules directly.
 - **No docstrings for test functions or private methods** — test code is self-documenting via clear variable names and assertion structure; private methods are internal only.
