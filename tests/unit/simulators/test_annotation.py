@@ -6,12 +6,12 @@ from glide.simulators import simulate_annotation
 
 @pytest.fixture
 def y_true_oracle():
-    return np.array([0.0, 1.0, 1.0, 0.0])
+    return np.array([0.0, 1.0, 1.0, 0.0, 0.0])
 
 
 @pytest.fixture
 def xi():
-    return np.array([1, 0, 1, 0])
+    return np.array([1, 0, 1, 0, np.nan])
 
 
 def test_simulate_annotation_length_mismatch(y_true_oracle):
@@ -27,18 +27,18 @@ def test_simulate_annotation_y_true_oracle_contains_nan():
         simulate_annotation(y_true_oracle, xi)
 
 
-@pytest.mark.parametrize("bad_xi", [np.nan, 2])
+@pytest.mark.parametrize("bad_xi", [-0.5, 2])
 def test_simulate_annotation_xi_non_binary(bad_xi):
     y_true_oracle = np.array([0.0, 1.0])
     xi = np.array([1.0, bad_xi])
-    with pytest.raises(ValueError, match="xi must only contain 0 and 1 values"):
+    with pytest.raises(ValueError, match="xi must only contain 0, 1, and np.nan values"):
         simulate_annotation(y_true_oracle, xi)
 
 
-def test_simulate_annotation_mixed_annotated_unannotated(y_true_oracle, xi):
+def test_simulate_annotation_mixed_0_1_nan(y_true_oracle, xi):
     result = simulate_annotation(y_true_oracle, xi)
     assert result.dtype == float
-    expected = np.array([0.0, np.nan, 1.0, np.nan])
+    expected = np.array([0.0, np.nan, 1.0, np.nan, np.nan])
     np.testing.assert_array_equal(result, expected)
 
 

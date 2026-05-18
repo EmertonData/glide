@@ -1,3 +1,4 @@
+import warnings
 from typing import Tuple
 
 import numpy as np
@@ -53,18 +54,21 @@ class ASIMeanEstimator:
     ) -> Tuple[NDArray, NDArray, NDArray, NDArray]:
         if not (len(y_true_all) == len(y_proxy) == len(pi)):
             raise ValueError("y_true, y_proxy, and pi must all have the same length")
-        if np.min(pi) <= 0 or np.max(pi) > 1:
-            raise ValueError("Sampling probabilities should be in (0, 1]")
+        if np.min(pi) < 0 or np.max(pi) > 1:
+            raise ValueError("Sampling probabilities should be in [0, 1]")
         if np.isnan(y_proxy).any():
             raise ValueError("Input proxy values contain NaN")
-        if len(np.unique(y_proxy)) == 1:
-            raise ValueError("Input proxy values have zero variance")
 
         y_true_non_nan_mask = ~np.isnan(y_true_all)
         xi = y_true_non_nan_mask.astype(float)
 
+        if np.any(y_true_non_nan_mask & (pi == 0)):
+            raise ValueError("Samples with non-zero probability of being labeled cannot be labeled")
         if np.any(~y_true_non_nan_mask & (pi == 1)):
             raise ValueError("Samples with probability one of being labeled must be labeled")
+
+        if len(np.unique(y_proxy * (xi / pi - 1))) == 1:
+            raise ValueError("Input values lead to rectifiers with zero variance")
 
         y_true_clean = np.nan_to_num(y_true_all, nan=0)
         return y_true_clean, y_proxy, xi, pi
@@ -123,7 +127,8 @@ class ASIMeanEstimator:
             sample and must not contain NaN.
         pi : NDArray
             Array of shape ``(n_samples,)`` with the pre-determined sampling probability
-            π_i ∈ (0, 1] for each sample.
+            π_i ∈ [0, 1] for each sample. Entries with π_i = 0 are excluded from all
+            computations.
         metric_name : str, optional
             Human-readable label for the metric. Defaults to ``"Metric"``.
         confidence_level : float, optional
@@ -144,15 +149,29 @@ class ASIMeanEstimator:
         ValueError
             - If ``y_true``, ``y_proxy``, and ``pi`` do not all have the same length.
             - If any proxy value is NaN.
-            - If all proxy values are identical (zero variance).
-            - If any value in ``pi`` is not in (0, 1].
+            - If the rectifiers ``y_proxy * (ξ_i / π_i - 1)`` have zero variance.
+            - If any value in ``pi`` is not in [0, 1].
         """
-        y_true_labeled, y_proxy, xi, pi = self._preprocess(y_true, y_proxy, pi)
-        n_true = int(xi.sum())
-        n_proxy = len(y_proxy)
+        non_zero_pi_mask = pi > 0
+        if not np.all(non_zero_pi_mask):
+            warnings.warn(
+                "Some observations have pi=0. These will be excluded from the estimation.",
+                UserWarning,
+            )
 
-        _lambda = self._compute_tuning_parameter(y_true_labeled, y_proxy, xi, pi, power_tuning)
-        rectified_labels = self._compute_rectified_labels(y_true_labeled, y_proxy, xi, pi, _lambda)
+        y_true_filtered = y_true[non_zero_pi_mask]
+        y_proxy_filtered = y_proxy[non_zero_pi_mask]
+        pi_filtered = pi[non_zero_pi_mask]
+
+        y_true_labeled, y_proxy_filtered, xi, pi_filtered = self._preprocess(
+            y_true_filtered, y_proxy_filtered, pi_filtered
+        )
+
+        n_true = int(xi.sum())
+        n_proxy = int(non_zero_pi_mask.sum())
+
+        _lambda = self._compute_tuning_parameter(y_true_labeled, y_proxy_filtered, xi, pi_filtered, power_tuning)
+        rectified_labels = self._compute_rectified_labels(y_true_labeled, y_proxy_filtered, xi, pi_filtered, _lambda)
         mean_estimate = np.mean(rectified_labels)
         std_estimate = np.std(rectified_labels, ddof=1) / np.sqrt(n_proxy)
 
