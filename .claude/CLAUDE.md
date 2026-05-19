@@ -69,6 +69,7 @@ Every PR must satisfy all of the following before merge:
 - Use `pytest.approx(value, abs=0.01)` when comparing scalar floats in tests
 - Use `np.testing.assert_allclose` when comparing arrays of floats in tests
 - Use `np.testing.assert_array_equal` when comparing arrays of strings or categories in tests
+- No comments within unit test functions. Encode non-obvious derivations as named variables in the test body instead
 
 ## Code Conventions
 

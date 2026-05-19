@@ -34,11 +34,11 @@ class CostOptimalRandomSampler:
     ...     budget=2,
     ...     random_seed=42
     ... )
-    >>> pi[0]  # doctest: +ELLIPSIS
+    >>> float(pi[0])  # doctest: +ELLIPSIS
     0.045...
-    >>> xi[0]  # doctest: +ELLIPSIS
+    >>> xi[0]
     np.float64(0.0)
-    >>> np.isnan(xi[1])  # doctest: +ELLIPSIS
+    >>> np.isnan(xi[1])
     np.True_
     """
 
@@ -156,8 +156,9 @@ class CostOptimalRandomSampler:
 
         Raises
         ------
+        RuntimeError
+            If ``fit()`` has not been called before ``sample()``.
         ValueError
-            - If fit() has not been called yet.
             - If ``n_samples`` is not a strictly positive integer.
             - If ``y_true_cost`` or ``y_proxy_cost`` is not strictly positive.
             - If ``budget`` is not strictly positive.
