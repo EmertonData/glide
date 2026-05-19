@@ -69,7 +69,7 @@ Thank you to everyone who contributed to this release: @gmartinon-ed, @imerad, @
 - CI for notebooks execution
 
 ### 💛 Contributors
-Thank you to everyone who contributed to this release: @gmartinon-ed, @imerad, @mraki-ed, @vwoelffel-ed
+Thank you to everyone who contributed to this release: @gmartinon-ed, @imerad, @mraki-ed
 
 ---
 
