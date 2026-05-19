@@ -108,7 +108,7 @@ def test_find_optimal_threshold_known_output(fitted_sampler, uncertainties):
 
 
 def test_sample_raises_if_fit_not_called(sampler, uncertainties):
-    with pytest.raises(ValueError, match="fit\\(\\)"):
+    with pytest.raises(RuntimeError, match="Call fit\\(\\) before sample\\(\\)"):
         sampler.sample(uncertainties, y_true_cost=10.0, y_proxy_cost=1.0, budget=5, random_seed=42)
 
 

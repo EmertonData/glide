@@ -1,6 +1,7 @@
-from typing import Tuple
+from typing import Optional, Tuple, Union
 
 import numpy as np
+from numpy.random.bit_generator import SeedSequence
 from numpy.typing import NDArray
 
 
@@ -145,7 +146,7 @@ class CostOptimalSampler:
     ) -> float:
         sqrt_u_values = np.sqrt(uncertainties)
         candidates = np.unique(sqrt_u_values)
-        # τ must be strictly positive; the breakpoints where the policy changes character
+        # the breakpoints where the policy changes character
         # are the distinct values of sqrt(u_i).
         objectives = [self._compute_objective(tau, uncertainties, y_true_cost, y_proxy_cost) for tau in candidates]
         optimal_tau = candidates[np.argmin(objectives)]
@@ -157,7 +158,7 @@ class CostOptimalSampler:
         y_true_cost: float,
         y_proxy_cost: float,
         budget: int,
-        random_seed: int,
+        random_seed: Optional[Union[int, SeedSequence]] = None,
     ) -> Tuple[NDArray, NDArray]:
         """Draw samples and annotation indicators under the cost optimal policy.
 
@@ -177,8 +178,9 @@ class CostOptimalSampler:
             Cost of one cheap-proxy annotation. Must be strictly positive.
         budget : int
             Total annotation budget. Must be strictly positive.
-        random_seed : int
-            Seed for ``numpy.random.default_rng``. Mandatory for reproducibility.
+        random_seed : int or SeedSequence or None, optional
+            Random seed passed to ``numpy.random.default_rng`` for reproducibility.
+            Pass ``None`` (the default) to use a non-deterministic seed.
 
         Returns
         -------
@@ -191,14 +193,17 @@ class CostOptimalSampler:
 
         Raises
         ------
+        RuntimeError
+            If ``fit()`` has not been called before ``sample()``.
         ValueError
-            If ``fit()`` has not been called, if any cost or budget argument is
-            non-positive, if any uncertainty value is NaN or non-positive, or if
-            the budget is too small to afford a single sample.
+            - If ``y_true_cost`` or ``y_proxy_cost`` is not strictly positive.
+            - If ``budget`` is not strictly positive.
+            - If any uncertainty value is NaN or non-positive.
+            - If ``budget`` is too small to afford a single sample.
 
         """
         if not hasattr(self, "_y_true_variance"):
-            raise ValueError("Call fit() before sample().")
+            raise RuntimeError("Call fit() before sample().")
         if y_true_cost <= 0.0:
             raise ValueError(f"'y_true_cost' must be strictly positive; got {y_true_cost}.")
         if y_proxy_cost <= 0.0:
@@ -212,7 +217,7 @@ class CostOptimalSampler:
         pi_all = self._compute_per_sample_probabilities(tau_star, gamma_star, uncertainties)
 
         cumulative_costs = np.cumsum(y_true_cost * pi_all + y_proxy_cost)
-        T = np.searchsorted(cumulative_costs, budget, side="left")
+        T = np.searchsorted(cumulative_costs, budget, side="right")
         if T < 1:
             raise ValueError(f"Budget {budget} is too small to afford a single sample with the given inputs.")
 

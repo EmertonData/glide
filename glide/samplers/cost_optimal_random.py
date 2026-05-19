@@ -156,8 +156,9 @@ class CostOptimalRandomSampler:
 
         Raises
         ------
+        RuntimeError
+            If ``fit()`` has not been called before ``sample()``.
         ValueError
-            - If fit() has not been called yet.
             - If ``n_samples`` is not a strictly positive integer.
             - If ``y_true_cost`` or ``y_proxy_cost`` is not strictly positive.
             - If ``budget`` is not strictly positive.
