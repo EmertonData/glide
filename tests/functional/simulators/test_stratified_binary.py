@@ -29,7 +29,7 @@ def test_generate_stratified_binary_dataset_empirical_means_and_correlation_per_
 
         # Extract labeled subset
         labeled_mask = ~np.isnan(y_true_stratum)
-        y_true_labeled = y_true_stratum[labeled_mask]
+        y_true_filtered = y_true_stratum[labeled_mask]
         y_proxy_labeled = y_proxy_stratum[labeled_mask]
 
         # Expected values per stratum
@@ -44,5 +44,5 @@ def test_generate_stratified_binary_dataset_empirical_means_and_correlation_per_
         assert empirical_proxy_mean == pytest.approx(expected_proxy_mean, abs=0.03)
 
         # Check correlation
-        empirical_corr = np.corrcoef(y_true_labeled, y_proxy_labeled)[0, 1]
+        empirical_corr = np.corrcoef(y_true_filtered, y_proxy_labeled)[0, 1]
         assert empirical_corr == pytest.approx(expected_corr, abs=0.05)
