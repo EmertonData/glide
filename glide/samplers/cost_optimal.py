@@ -1,4 +1,3 @@
-import math
 from typing import Tuple
 
 import numpy as np
@@ -37,13 +36,25 @@ class CostOptimalSampler:
     True
     """
 
-    def _validate_fit_inputs(self, y_true: NDArray) -> None:
+    def _validate_y_true(self, y_true: NDArray) -> None:
         if len(y_true) == 0:
             raise ValueError("'y_true' must be non-empty.")
         if np.any(np.isnan(y_true)):
             raise ValueError("'y_true' contains NaN values. The burn-in dataset must be fully labeled.")
         if np.min(y_true) == np.max(y_true):
             raise ValueError("'y_true' label values have zero variance.")
+
+    def _validate_uncertainties(self, uncertainties: NDArray) -> None:
+        if np.any(np.isnan(uncertainties)):
+            raise ValueError(
+                "All uncertainty values must be finite; got a NaN value. "
+                "A NaN conditional MSE estimate cannot be used to compute sampling probabilities."
+            )
+        if np.any(uncertainties <= 0.0):
+            raise ValueError(
+                "All uncertainty values must be strictly positive; got a non-positive value. "
+                "A record with zero conditional MSE would never be annotated by H."
+            )
 
     def fit(self, y_true: NDArray) -> "CostOptimalSampler":
         """Estimate Var(H) from a fully-labeled burn-in dataset.
@@ -73,10 +84,10 @@ class CostOptimalSampler:
         >>> import numpy as np
         >>> from glide.samplers import CostOptimalSampler
         >>> sampler = CostOptimalSampler().fit(np.array([1.0, 2.0, 3.0]))
-        >>> float(sampler._y_true_variance)
+        >>> sampler._y_true_variance
         1.0
         """
-        self._validate_fit_inputs(y_true)
+        self._validate_y_true(y_true)
         self._y_true_variance = np.var(y_true, ddof=1)
         return self
 
@@ -93,7 +104,7 @@ class CostOptimalSampler:
         e_u_below = np.mean(uncertainties * ~above_mask)
         denominator = max(self._y_true_variance - e_u_below, 0.0)
         if denominator > 0.0:
-            gamma_uncapped = float(np.sqrt((cost_ratio + prob_above) / denominator))
+            gamma_uncapped = np.sqrt((cost_ratio + prob_above) / denominator)
         else:
             gamma_uncapped = float("inf")
         gamma = min(gamma_uncapped, 1.0 / tau)
@@ -120,12 +131,9 @@ class CostOptimalSampler:
         pi_values = self._compute_per_record_probabilities(tau, gamma, uncertainties)
         mean_pi = np.mean(pi_values)
         cost_term = y_true_cost * mean_pi + y_proxy_cost
-        # For records where pi = 0 (i.e. u = 0), the product u * (pi^{-1} - 1) = 0 regardless
-        # of pi^{-1}; replacing pi with 1 in the denominator preserves this zero contribution.
-        safe_pi = np.where(pi_values > 0.0, pi_values, 1.0)
-        error_term = self._y_true_variance + np.mean(uncertainties * (1.0 / safe_pi - 1.0))
+        error_term = self._y_true_variance + np.mean(uncertainties * (1.0 / pi_values - 1.0))
         objective = cost_term * error_term
-        return float(objective)
+        return objective
 
     def _find_optimal_threshold(
         self,
@@ -136,10 +144,9 @@ class CostOptimalSampler:
         sqrt_u_values = np.sqrt(uncertainties)
         candidates = np.unique(sqrt_u_values)
         # τ must be strictly positive; the breakpoints where the policy changes character
-        # are the distinct positive values of sqrt(u_i).
-        candidates = candidates[candidates > 0.0]
+        # are the distinct values of sqrt(u_i).
         objectives = [self._compute_objective(tau, uncertainties, y_true_cost, y_proxy_cost) for tau in candidates]
-        optimal_tau = float(candidates[int(np.argmin(objectives))])
+        optimal_tau = candidates[np.argmin(objectives)]
         return optimal_tau
 
     def sample(
@@ -163,7 +170,7 @@ class CostOptimalSampler:
         uncertainties : NDArray
             1D float array of shape ``(N,)`` containing the pre-computed conditional
             MSE estimate ``u(x_i) = E[(H - G)² | X = x_i]`` for each record.
-            All values must be non-negative and not all zero.
+            All values must be strictly positive.
         y_true_cost : float
             Cost of one expensive-rater annotation. Must be strictly positive.
         y_proxy_cost : float
@@ -186,9 +193,8 @@ class CostOptimalSampler:
         ------
         ValueError
             If ``fit()`` has not been called, if any cost or budget argument is
-            non-positive, if ``uncertainties`` contains NaN or negative values,
-            if all uncertainty values are zero, or if the budget is too small to
-            afford a single record.
+            non-positive, if any uncertainty value is NaN or non-positive, or if
+            the budget is too small to afford a single record.
 
         Examples
         --------
@@ -199,9 +205,9 @@ class CostOptimalSampler:
         >>> sampler = CostOptimalSampler().fit(y_true)
         >>> pi, xi = sampler.sample(uncertainties, y_true_cost=10.0, y_proxy_cost=1.0, budget=5, random_seed=0)
         >>> (pi == 0.0).sum() == np.isnan(xi).sum()
-        True
+        np.True_
         >>> np.all(~np.isnan(xi[pi > 0]))
-        True
+        np.True_
         """
         if not hasattr(self, "_y_true_variance"):
             raise ValueError("Call fit() before sample().")
@@ -211,34 +217,25 @@ class CostOptimalSampler:
             raise ValueError(f"'y_proxy_cost' must be strictly positive; got {y_proxy_cost}.")
         if budget <= 0:
             raise ValueError(f"'budget' must be strictly positive; got {budget}.")
-        if np.any(np.isnan(uncertainties)):
-            raise ValueError("'uncertainties' contains NaN values.")
-        if np.any(uncertainties < 0.0):
-            raise ValueError("'uncertainties' contains negative values.")
-        if np.all(uncertainties == 0.0):
-            raise ValueError("All values in 'uncertainties' are zero.")
+        self._validate_uncertainties(uncertainties)
 
         tau_star = self._find_optimal_threshold(uncertainties, y_true_cost, y_proxy_cost)
         gamma_star = self._compute_gamma(tau_star, uncertainties, y_true_cost, y_proxy_cost)
         pi_all = self._compute_per_record_probabilities(tau_star, gamma_star, uncertainties)
 
-        cost_per_record = y_true_cost * np.mean(pi_all) + y_proxy_cost
-        T = math.floor(budget / cost_per_record)
+        cumulative_costs = np.cumsum(y_true_cost * pi_all + y_proxy_cost)
+        T = np.searchsorted(cumulative_costs, budget, side="left")
         if T < 1:
-            raise ValueError(
-                f"Budget {budget} is too small to afford a single record at cost_per_record={cost_per_record:.4f}."
-            )
+            raise ValueError(f"Budget {budget} is too small to afford a single record with the given inputs.")
 
         N = len(uncertainties)
+        T = min(T, N)
+
         rng = np.random.default_rng(random_seed)
-        if T < N:
-            indices = np.sort(rng.choice(N, size=T, replace=False))
-        else:
-            indices = np.arange(N)
 
         pi = np.zeros(N)
         xi = np.full(N, np.nan)
-        pi[indices] = pi_all[indices]
-        xi[indices] = rng.binomial(n=1, p=pi_all[indices], size=len(indices)).astype(float)
+        pi[:T] = pi_all[:T]
+        xi[:T] = rng.binomial(n=1, p=pi_all[:T], size=T).astype(float)
 
         return pi, xi
