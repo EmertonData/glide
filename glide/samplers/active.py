@@ -29,15 +29,9 @@ class ActiveSampler:
 
     def _validate(self, uncertainties: NDArray) -> None:
         if np.any(np.isnan(uncertainties)):
-            raise ValueError(
-                "All uncertainty values must be finite; got a NaN value. "
-                "A NaN uncertainty score cannot be used to compute sampling probabilities."
-            )
+            raise ValueError("All uncertainty values must be finite; got a NaN value.")
         if np.any(uncertainties <= 0.0):
-            raise ValueError(
-                "All uncertainty values must be strictly positive; got a non-positive value. "
-                "An observation with zero or negative uncertainty would never be selected."
-            )
+            raise ValueError("All uncertainty values must be strictly positive; got a non-positive value.")
 
     def sample(
         self,

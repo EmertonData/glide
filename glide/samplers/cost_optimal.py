@@ -12,17 +12,19 @@ class CostOptimalSampler:
     Implements a cost-optimal active annotation policy. Each sample is assigned
     an annotation probability proportional to how unreliable the proxy label is
     expected to be for that sample, as measured by the caller-supplied per-sample
-    uncertainty scores. Samples with high expected proxy error are annotated more
-    often; samples where the proxy is reliable are annotated less often. This
-    concentrates the annotation budget where it matters most.
+    uncertainty scores. Samples with high expected proxy error are more likely to
+    be annotated; samples where the proxy is reliable are less likely to be
+    annotated. This concentrates the annotation budget where it matters most.
 
-    The caller pre-computes per-sample uncertainty scores and passes them as a
-    1D array to ``sample()``. This class does not learn those scores internally.
+    The caller provides per-sample uncertainty scores and passes them as a
+    1D array to ``sample()``. These are treated as oracle mean square error
+    estimates. This class does not learn those scores internally.
 
     References
     ----------
-    Angelopoulos, A. N., Eisenstein, J., Berant, J., Agarwal, A., and Fisch, A.
-    (2025). Cost-Optimal Active AI Model Evaluation. arXiv:2506.07949, §2.3.
+    Angelopoulos, Anastasios N., Jacob Eisenstein, Jonathan Berant, Alekh
+    Agarwal, and Adam Fisch. "Cost-optimal active ai model evaluation." arXiv
+    preprint arXiv:2506.07949 (2025).
 
     Examples
     --------
@@ -56,28 +58,21 @@ class CostOptimalSampler:
 
     def _validate_uncertainties(self, uncertainties: NDArray) -> None:
         if np.any(np.isnan(uncertainties)):
-            raise ValueError(
-                "All uncertainty values must be finite; got a NaN value. "
-                "A NaN conditional MSE estimate cannot be used to compute sampling probabilities."
-            )
+            raise ValueError("All uncertainty values must be finite; got a NaN value.")
         if np.any(uncertainties <= 0.0):
-            raise ValueError(
-                "All uncertainty values must be strictly positive; got a non-positive value. "
-                "A sample with zero conditional MSE would never be annotated by H."
-            )
+            raise ValueError("All uncertainty values must be strictly positive; got a non-positive value.")
 
     def fit(self, y_true: NDArray) -> "CostOptimalSampler":
         """Estimate the true label variance from a burn-in dataset.
 
         The true label variance is computed ahead of active sampling so that
         ``sample()`` can derive the cost-optimal annotation probabilities.
-        The caller must preserve these arrays for downstream estimation via
-        inverse-variance weighting with the active-phase estimates.
 
         Parameters
         ----------
         y_true : NDArray
-            1D float array of expensive-rater labels from the burn-in phase. No NaN.
+            1D float array of true labels from the burn-in phase. Must not
+            contain NaN values.
 
         Returns
         -------
@@ -160,12 +155,13 @@ class CostOptimalSampler:
         budget: int,
         random_seed: Optional[Union[int, SeedSequence]] = None,
     ) -> Tuple[NDArray, NDArray]:
-        """Draw samples and annotation indicators under the cost optimal policy.
+        """Compute sampling probabilities and draw annotation indicators under the cost
+        optimal policy.
 
         Per-sample annotation probabilities are derived from the supplied uncertainty
-        scores and the true label variance estimated by ``fit()``. When the budget is
-        tight, samples beyond a certain index in the input array are excluded from
-        sampling entirely and receive a probability of zero.
+        scores (mean squared errors) and the true label variance estimated by ``fit()``.
+        When the budget is tight, samples beyond a certain index in the input array are
+        excluded from sampling and receive a probability of zero.
 
         Parameters
         ----------
@@ -173,9 +169,9 @@ class CostOptimalSampler:
             1D float array of shape ``(n_samples,)`` containing the pre-computed per-sample
             expected squared error of the proxy label. All values must be strictly positive.
         y_true_cost : float
-            Cost of one expensive-rater annotation. Must be strictly positive.
+            Cost of one true label. Must be strictly positive.
         y_proxy_cost : float
-            Cost of one cheap-proxy annotation. Must be strictly positive.
+            Cost of one proxy label. Must be strictly positive.
         budget : int
             Total annotation budget. Must be strictly positive.
         random_seed : int or SeedSequence or None, optional
@@ -188,7 +184,7 @@ class CostOptimalSampler:
             [0]: array of shape ``(n_samples,)``, ``pi`` with per-sample annotation probabilities
             for selected samples and ``0.0`` for unselected samples.
             [1]: array of shape ``(n_samples,)``, ``xi`` with Bernoulli indicators:
-            ``1.0`` if the expensive rater was queried, ``0.0`` if only the proxy
+            ``1.0`` if the true label was requested, ``0.0`` if only the proxy
             was used, ``NaN`` if the sample was not selected.
 
         Raises

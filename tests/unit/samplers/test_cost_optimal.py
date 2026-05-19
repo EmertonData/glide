@@ -166,8 +166,8 @@ def test_sample_known_output_truncated_samples(fitted_sampler, uncertainties):
 
 
 def test_sample_reproducibility(fitted_sampler, uncertainties):
-    pi1, xi1 = fitted_sampler.sample(uncertainties, y_true_cost=10.0, y_proxy_cost=1.0, budget=10, random_seed=42)
-    pi2, xi2 = fitted_sampler.sample(uncertainties, y_true_cost=10.0, y_proxy_cost=1.0, budget=10, random_seed=42)
+    pi1, xi1 = fitted_sampler.sample(uncertainties, y_true_cost=1.0, y_proxy_cost=0.01, budget=1.5, random_seed=42)
+    pi2, xi2 = fitted_sampler.sample(uncertainties, y_true_cost=1.0, y_proxy_cost=0.01, budget=1.5, random_seed=42)
 
     np.testing.assert_array_equal(pi1, pi2)
     np.testing.assert_array_equal(xi1, xi2)
