@@ -2,8 +2,8 @@ import numpy as np
 import pytest
 from numpy.typing import NDArray
 
-from glide.core.mean_inference_result import ClassicalMeanInferenceResult
 from glide.estimators import IPWClassicalMeanEstimator
+from glide.mean_inference_results import ClassicalMeanInferenceResult
 
 
 @pytest.fixture

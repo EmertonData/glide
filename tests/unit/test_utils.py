@@ -1,6 +1,6 @@
 import numpy as np
 
-from glide.core.utils import compute_effective_sample_size
+from glide.utils import compute_effective_sample_size
 
 
 def test_compute_effective_sample_size_manual():

@@ -3,11 +3,11 @@ import json
 import pytest
 
 from glide.confidence_intervals import CLTConfidenceInterval
-from glide.core.mean_inference_result import (
+from glide.io import to_json
+from glide.mean_inference_results import (
     ClassicalMeanInferenceResult,
     PredictionPoweredMeanInferenceResult,
 )
-from glide.io import to_json
 
 CI = CLTConfidenceInterval(mean=0.7, std=0.05, confidence_level=0.95)
 RESULT = PredictionPoweredMeanInferenceResult(

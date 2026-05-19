@@ -2,14 +2,14 @@ import numpy as np
 from numpy.typing import NDArray
 
 from glide.confidence_intervals import CLTConfidenceInterval
-from glide.core.mean_inference_result import PredictionPoweredMeanInferenceResult
-from glide.core.utils import compute_effective_sample_size
 from glide.estimators.ppi_core import (
     _compute_mean_estimate,
     _compute_std_estimate,
     _compute_tuning_parameter,
 )
 from glide.estimators.stratified_core import _preprocess
+from glide.mean_inference_results import PredictionPoweredMeanInferenceResult
+from glide.utils import compute_effective_sample_size
 
 
 class StratifiedPPIMeanEstimator:

@@ -1,7 +1,7 @@
 import json
 from dataclasses import asdict
 
-from glide.core.mean_inference_result import MeanInferenceResult
+from glide.mean_inference_results import MeanInferenceResult
 
 
 def to_json(result: MeanInferenceResult) -> str:
@@ -20,7 +20,7 @@ def to_json(result: MeanInferenceResult) -> str:
     Examples
     --------
     >>> from glide.io import to_json
-    >>> from glide.core.mean_inference_result import MeanInferenceResult
+    >>> from glide.mean_inference_results import MeanInferenceResult
     >>> from glide.confidence_intervals import CLTConfidenceInterval
     >>> confidence_interval = CLTConfidenceInterval(mean=0, std=1)
     >>> inference_result = MeanInferenceResult(confidence_interval=confidence_interval, \

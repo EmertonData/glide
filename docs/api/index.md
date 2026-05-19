@@ -51,8 +51,8 @@
 
 | Class | Description |
 |-------|-------------|
-| [`ClassicalMeanInferenceResult`](mean_inference_results.md#glide.core.mean_inference_result.classical.ClassicalMeanInferenceResult) | Result object from classical estimators |
-| [`PredictionPoweredMeanInferenceResult`](mean_inference_results.md#glide.core.mean_inference_result.prediction_powered.PredictionPoweredMeanInferenceResult) | Result object from prediction-powered estimators |
+| [`ClassicalMeanInferenceResult`](mean_inference_results.md#glide.mean_inference_results.classical.ClassicalMeanInferenceResult) | Result object from classical estimators |
+| [`PredictionPoweredMeanInferenceResult`](mean_inference_results.md#glide.mean_inference_results.prediction_powered.PredictionPoweredMeanInferenceResult) | Result object from prediction-powered estimators |
 
 ## I/O
 

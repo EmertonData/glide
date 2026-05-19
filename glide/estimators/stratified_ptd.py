@@ -4,14 +4,14 @@ import numpy as np
 from numpy.typing import NDArray
 
 from glide.confidence_intervals import BootstrapConfidenceInterval
-from glide.core.mean_inference_result import PredictionPoweredMeanInferenceResult
-from glide.core.utils import compute_effective_sample_size
 from glide.estimators.ptd_core import (
     _compute_bootstrap_labeled_means,
     _compute_bootstrap_mean_estimates,
     _compute_tuning_parameter,
 )
 from glide.estimators.stratified_core import _preprocess
+from glide.mean_inference_results import PredictionPoweredMeanInferenceResult
+from glide.utils import compute_effective_sample_size
 
 
 class StratifiedPTDMeanEstimator:
