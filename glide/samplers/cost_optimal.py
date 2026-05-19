@@ -141,8 +141,6 @@ class CostOptimalSampler:
     ) -> float:
         sqrt_u_values = np.sqrt(uncertainties)
         candidates = np.unique(sqrt_u_values)
-        # the breakpoints where the policy changes character
-        # are the distinct values of sqrt(u_i).
         objectives = [self._compute_objective(tau, uncertainties, y_true_cost, y_proxy_cost) for tau in candidates]
         optimal_tau = candidates[np.argmin(objectives)]
         return optimal_tau
@@ -152,7 +150,7 @@ class CostOptimalSampler:
         uncertainties: NDArray,
         y_true_cost: float,
         y_proxy_cost: float,
-        budget: int,
+        budget: float,
         random_seed: Optional[Union[int, SeedSequence]] = None,
     ) -> Tuple[NDArray, NDArray]:
         """Compute sampling probabilities and draw annotation indicators under the cost
@@ -172,8 +170,8 @@ class CostOptimalSampler:
             Cost of one true label. Must be strictly positive.
         y_proxy_cost : float
             Cost of one proxy label. Must be strictly positive.
-        budget : int
-            Total annotation budget. Must be strictly positive.
+        budget : float
+            Total annotation budget in cost units. Must be strictly positive.
         random_seed : int or SeedSequence or None, optional
             Random seed passed to ``numpy.random.default_rng`` for reproducibility.
             Pass ``None`` (the default) to use a non-deterministic seed.
