@@ -29,11 +29,11 @@ def y_arrays() -> Tuple[NDArray, NDArray, NDArray]:
 
 def test_preprocess_valid_output(estimator, y_arrays):
     y_true_all, y_proxy_all, pi_all = y_arrays
-    y_true_clean, y_proxy, xi, pi = estimator._preprocess(y_true_all, y_proxy_all, pi_all)
-    assert len(y_true_clean) == 6
+    y_true_filled, y_proxy, xi, pi = estimator._preprocess(y_true_all, y_proxy_all, pi_all)
+    assert len(y_true_filled) == 6
     assert len(y_proxy) == 6
     assert len(pi) == 6
-    assert np.sum(np.isnan(y_true_clean)) == 0
+    assert np.sum(np.isnan(y_true_filled)) == 0
     assert len(xi) == 6
     assert np.isin(xi, [0.0, 1.0]).all()
     assert np.sum(xi) == 3

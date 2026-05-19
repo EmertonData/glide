@@ -70,8 +70,8 @@ class ASIMeanEstimator:
         if len(np.unique(y_proxy * (xi / pi - 1))) == 1:
             raise ValueError("Input values lead to rectifiers with zero variance")
 
-        y_true_clean = np.nan_to_num(y_true_all, nan=0)
-        return y_true_clean, y_proxy, xi, pi
+        y_true_filled = np.nan_to_num(y_true_all, nan=0)
+        return y_true_filled, y_proxy, xi, pi
 
     def _compute_tuning_parameter(
         self,

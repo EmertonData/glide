@@ -30,9 +30,9 @@ def _preprocess(
         if min(n_labeled, n_unlabeled) <= 1:
             raise ValueError(f"Too few labeled or unlabeled samples in stratum '{stratum_id}'")
 
-        y_true_filled = stratum_y_true[labeled_mask]
+        y_true_filtered = stratum_y_true[labeled_mask]
         y_proxy_labeled = stratum_y_proxy[labeled_mask]
         y_proxy_unlabeled = stratum_y_proxy[~labeled_mask]
-        strata.append((y_true_filled, y_proxy_labeled, y_proxy_unlabeled))
+        strata.append((y_true_filtered, y_proxy_labeled, y_proxy_unlabeled))
 
     return strata
