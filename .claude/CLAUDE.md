@@ -56,7 +56,7 @@ Every PR must satisfy all of the following before merge:
 - Tests live in `tests/unit/` and `tests/functional/`
 - `tests/unit/` mirrors the `glide/` folder structure exactly (e.g., `glide/core/foo.py` → `tests/unit/core/test_foo.py`)
 - pytest runs with `--import-mode=importlib --doctest-modules`, so module docstrings are also tested
-- Every new feature needs: doctests in the docstring + unit tests + analytical verification where relevant (assert against a value derivable from the formula by hand, not just from running the code — e.g., `CLTConfidenceInterval(mean=0, std=1, confidence_level=0.95)` → bounds `±1.96`, or StratifiedPPI with one stratum must equal PPI)
+- Every new feature needs: doctests in the docstring + unit tests + analytical verification where relevant (assert against hardcoded expected values, not values computed inline by the test itself — e.g., `CLTConfidenceInterval(mean=0, std=1, confidence_level=0.95)` → bounds `±1.96`, or StratifiedPPI with one stratum must equal PPI)
 - 100% coverage is enforced
 - Test names: `test_<name_of_tested_function>` with optional descriptive suffixes (e.g., `test_generate_binary_dataset_invalid_correlation`)
 - Each distinct scenario (input combination, edge case, or error condition) gets its own test function — do not write two test functions that exercise the exact same code path with equivalent inputs
@@ -143,8 +143,8 @@ Only add a comment when the *why* is non-obvious: a hidden constraint, a subtle 
 These three document types have distinct purposes and must not bleed into each other.
 
 - **Tutorials** show how to use the public API. They must not expose private attributes or methods, must not be math-heavy (that belongs in the user guide), and must tell a coherent end-to-end story. If a tutorial section feels like it is documenting the implementation rather than teaching usage, move it or cut it.
-- **Deep dives / validation notebooks** are for scientific validation. Figures must appear at the right point in the narrative. Monte Carlo simulations must follow a clean structure: one function per workflow, then a single orchestration loop — not one large function per workflow with repeated internal loops.
-- **User guides** explain the theory. All math must be referenced to the paper; notation must be consistent with what is already in the guide.
+- **Deep dives / validation notebooks** are for scientific validation. They test the statistical validity of one or more workflows, where each workflow covers a full pipeline: data generation, annotation, then estimation. Results are stochastic and depend on a random seed. Monte Carlo simulations must use a single external loop over seeds, calling each workflow once per iteration. Note that workflows do not fully isolate from each other: data generation is typically shared across them. Figures must appear at the right point in the narrative.
+- **User guides** document the mathematical foundations of each implemented method (sampling or estimation). For each method, lay out the mathematical setting: expected inputs, computed quantities, and their main properties, taking inspiration from pre-existing sections in the guide. When a reference paper exists, formulas must be consistent with it; notation may diverge from the paper when needed to preserve consistency across the guide as a whole. Never reference the implementation directly: no pseudocode, no mentions of class or method names.
 
 #### Scientific consistency in notebooks
 
