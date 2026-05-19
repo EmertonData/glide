@@ -129,14 +129,14 @@ class PTDMeanEstimator:
             - If all proxy values are identical (zero variance).
             - If there are fewer than 2 labeled or fewer than 2 unlabeled samples.
         """
-        y_true_labeled, y_proxy_labeled, y_proxy_unlabeled = self._preprocess(y_true, y_proxy)
-        n_labeled, n_unlabeled = len(y_true_labeled), len(y_proxy_unlabeled)
+        y_true_filtered, y_proxy_labeled, y_proxy_unlabeled = self._preprocess(y_true, y_proxy)
+        n_labeled, n_unlabeled = len(y_true_filtered), len(y_proxy_unlabeled)
         rng = np.random.default_rng(random_seed)
 
         mean_proxy_unlabeled = np.mean(y_proxy_unlabeled)
         var_proxy_unlabeled = np.var(y_proxy_unlabeled, ddof=1) / n_unlabeled
         bootstrap_y_true_means, bootstrap_y_proxy_labeled_means = _compute_bootstrap_labeled_means(
-            y_true_labeled, y_proxy_labeled, n_bootstrap, rng
+            y_true_filtered, y_proxy_labeled, n_bootstrap, rng
         )
         lambda_ = _compute_tuning_parameter(
             bootstrap_y_true_means, bootstrap_y_proxy_labeled_means, var_proxy_unlabeled, power_tuning
@@ -154,7 +154,7 @@ class PTDMeanEstimator:
             bootstrap_estimates=bootstrap_mean_estimates,
             confidence_level=confidence_level,
         )
-        effective_sample_size = compute_effective_sample_size(y_true_labeled, confidence_interval.var)
+        effective_sample_size = compute_effective_sample_size(y_true_filtered, confidence_interval.var)
         result = PredictionPoweredMeanInferenceResult(
             confidence_interval=confidence_interval,
             metric_name=metric_name,

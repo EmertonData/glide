@@ -123,13 +123,13 @@ class StratifiedPPIMeanEstimator:
         weighted_var = 0.0
         total_size = len(y_true)
 
-        for y_true_labeled, y_proxy_labeled, y_proxy_unlabeled in strata:
-            stratum_size = len(y_true_labeled) + len(y_proxy_unlabeled)
+        for y_true_filtered, y_proxy_labeled, y_proxy_unlabeled in strata:
+            stratum_size = len(y_true_filtered) + len(y_proxy_unlabeled)
             w_k = stratum_size / total_size
 
-            lambda_k = _compute_tuning_parameter(y_true_labeled, y_proxy_labeled, y_proxy_unlabeled, power_tuning)
-            mean_k = _compute_mean_estimate(y_true_labeled, y_proxy_labeled, y_proxy_unlabeled, lambda_k)
-            std_k = _compute_std_estimate(y_true_labeled, y_proxy_labeled, y_proxy_unlabeled, lambda_k)
+            lambda_k = _compute_tuning_parameter(y_true_filtered, y_proxy_labeled, y_proxy_unlabeled, power_tuning)
+            mean_k = _compute_mean_estimate(y_true_filtered, y_proxy_labeled, y_proxy_unlabeled, lambda_k)
+            std_k = _compute_std_estimate(y_true_filtered, y_proxy_labeled, y_proxy_unlabeled, lambda_k)
 
             weighted_mean += w_k * mean_k
             weighted_var += w_k**2 * std_k**2
