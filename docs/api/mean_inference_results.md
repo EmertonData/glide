@@ -1,11 +1,11 @@
 # Inference Results
 
-::: glide.core.mean_inference_result.base
+::: glide.mean_inference_results.base
 
 ---
 
-::: glide.core.mean_inference_result.classical
+::: glide.mean_inference_results.classical
 
 ---
 
-::: glide.core.mean_inference_result.prediction_powered
+::: glide.mean_inference_results.prediction_powered

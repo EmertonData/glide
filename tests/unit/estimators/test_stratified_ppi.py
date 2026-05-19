@@ -2,8 +2,8 @@ import numpy as np
 import pytest
 
 from glide.confidence_intervals import CLTConfidenceInterval
-from glide.core.mean_inference_result import PredictionPoweredMeanInferenceResult
 from glide.estimators import StratifiedPPIMeanEstimator
+from glide.mean_inference_results import PredictionPoweredMeanInferenceResult
 
 # ── helpers ────────────────────────────────────────────────────────────────────
 

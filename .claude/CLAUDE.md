@@ -33,7 +33,9 @@ The package has multiple layers:
 
 **`glide/samplers/`** — Sampler object implementations for various strategies.
 
-**`glide/core/`** — Internal building blocks: data structures, result dataclasses, test data generators, and shared utilities.
+**`glide/mean_inference_results/`** — Result dataclasses returned by estimators (e.g. `MeanInferenceResult`).
+
+**`glide/utils.py`** — Shared internal helpers (e.g. `compute_effective_sample_size`).
 
 **`glide/io/`** — Serialisation helpers.
 
@@ -55,7 +57,7 @@ Every PR must satisfy all of the following before merge:
 ## Testing Requirements
 
 - Tests live in `tests/unit/` and `tests/functional/`
-- `tests/unit/` mirrors the `glide/` folder structure exactly (e.g., `glide/core/foo.py` → `tests/unit/core/test_foo.py`)
+- `tests/unit/` mirrors the `glide/` folder structure exactly (e.g., `glide/estimators/foo.py` → `tests/unit/estimators/test_foo.py`)
 - pytest runs with `--import-mode=importlib --doctest-modules`, so module docstrings are also tested
 - Every new feature needs: doctests in the docstring + unit tests + analytical verification (compare against known closed-form results)
 - 100% coverage is enforced

@@ -45,7 +45,8 @@ Read enough of GLIDE to answer:
 
 Start here:
 - `glide/estimators/` — for new estimators; read one or two for naming and structure patterns
-- `glide/core/` — shared data structures and utilities
+- `glide/mean_inference_results/` — result dataclasses returned by estimators
+- `glide/utils.py` — shared internal helpers
 - `glide/confidence_intervals/` — if confidence interval computation is involved
 - `glide/samplers/` — if a sampling strategy is involved
 - The files the user pointed to — for refactoring and repository tickets

@@ -2,7 +2,7 @@ import numpy as np
 from numpy.typing import NDArray
 
 from glide.confidence_intervals import CLTConfidenceInterval
-from glide.core.mean_inference_result import ClassicalMeanInferenceResult
+from glide.mean_inference_results import ClassicalMeanInferenceResult
 
 
 class ClassicalMeanEstimator:

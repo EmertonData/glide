@@ -82,11 +82,11 @@ glide/
 │   ├── base.py
 │   ├── ...
 │
-├── core/                   # Shared building blocks (not part of the public API)
-│   ├── utils.py                  # General-purpose helpers
-│   └── mean_inference_result/    # Result types returned by estimators
-│       ├── base.py
-│       ├── ...
+├── mean_inference_results/ # Result types returned by estimators
+│   ├── base.py
+│   ├── ...
+│
+├── utils.py                # General-purpose helpers
 │
 └── io/                     # Serialisation helpers (e.g., to_json)
     └── export.py
@@ -113,7 +113,7 @@ New estimators and samplers should be backed by a scientific publication. Please
 1. **Identify** the inputs, outputs, and any tunable hyperparameters.
 2. **Implement** the estimator class:
    - If your estimator belongs to an existing family, add it to the corresponding file (e.g. PPI-based methods go in `glide/estimators/ppi.py`). Otherwise, create `glide/estimators/<name>.py`.
-   - `estimate(array1, array2, ...)` runs the method and returns an inference result object. Reuse one from `glide/core` (e.g. a `MeanInferenceResult` subclass) or add a new one there.
+   - `estimate(array1, array2, ...)` runs the method and returns an inference result object. Reuse one from `glide/mean_inference_results` (e.g. a `MeanInferenceResult` subclass) or add a new one there.
    - If your estimator has hyperparameters, these should be optional parameters of `estimate()` with default values.
 3. **Export** the new class from `glide/estimators/__init__.py`.
 4. **Write unit tests** in `tests/unit/estimators/test_<name>.py`. Cover at minimum:
