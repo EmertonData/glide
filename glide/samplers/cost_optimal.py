@@ -7,12 +7,12 @@ from numpy.typing import NDArray
 
 class CostOptimalSampler:
     """Sampler that draws elements with optimal probabilities based on uncertainty
-    scores and annotation costs.
+    scores and annotation costs on a limited budget.
 
     Implements a cost-optimal active annotation policy. Each sample is assigned
     an annotation probability proportional to how unreliable the proxy label is
     expected to be for that sample, as measured by the caller-supplied per-sample
-    uncertainty scores. Records with high expected proxy error are annotated more
+    uncertainty scores. Samples with high expected proxy error are annotated more
     often; samples where the proxy is reliable are annotated less often. This
     concentrates the annotation budget where it matters most.
 
