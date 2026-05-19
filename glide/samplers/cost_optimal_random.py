@@ -34,11 +34,11 @@ class CostOptimalRandomSampler:
     ...     budget=2,
     ...     random_seed=42
     ... )
-    >>> pi[0]  # doctest: +ELLIPSIS
+    >>> float(pi[0])  # doctest: +ELLIPSIS
     0.045...
-    >>> xi[0]  # doctest: +ELLIPSIS
+    >>> xi[0]
     np.float64(0.0)
-    >>> np.isnan(xi[1])  # doctest: +ELLIPSIS
+    >>> np.isnan(xi[1])
     np.True_
     """
 

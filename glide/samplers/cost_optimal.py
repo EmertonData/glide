@@ -7,16 +7,15 @@ from numpy.typing import NDArray
 class CostOptimalSampler:
     """Sampler that draws elements with probabilities proportional to uncertainty scores.
 
-    Implements the cost-optimal active annotation policy (Proposition 2). Unlike the
-    random policy that assigns the same annotation probability to every record,
-    this sampler assigns a per-record annotation probability that scales with the
-    conditional mean squared error ``u(x) = E[(H - G)² | X = x]``. Records where
-    the cheap proxy G is likely to be wrong receive a higher probability of being
-    annotated by the expensive rater H; records where G is reliable are sampled
-    less often. This concentrates the annotation budget where it matters most.
+    Implements a cost-optimal active annotation policy. Each sample is assigned
+    an annotation probability proportional to how unreliable the proxy label is
+    expected to be for that sample, as measured by the caller-supplied per-sample
+    uncertainty scores. Records with high expected proxy error are annotated more
+    often; samples where the proxy is reliable are annotated less often. This
+    concentrates the annotation budget where it matters most.
 
-    The caller pre-computes per-record conditional error estimates and passes them
-    as a 1D array to ``sample()``. This class does not learn ``u(x)`` internally.
+    The caller pre-computes per-sample uncertainty scores and passes them as a
+    1D array to ``sample()``. This class does not learn those scores internally.
 
     References
     ----------
@@ -53,14 +52,14 @@ class CostOptimalSampler:
         if np.any(uncertainties <= 0.0):
             raise ValueError(
                 "All uncertainty values must be strictly positive; got a non-positive value. "
-                "A record with zero conditional MSE would never be annotated by H."
+                "A sample with zero conditional MSE would never be annotated by H."
             )
 
     def fit(self, y_true: NDArray) -> "CostOptimalSampler":
-        """Estimate Var(H) from a fully-labeled burn-in dataset.
+        """Estimate the true label variance from a burn-in dataset.
 
-        Corresponds to Policy A2 from Angelopoulos et al. (2025): the burn-in
-        records are annotated unconditionally (π = 1) to bootstrap the sampler.
+        The true label variance is computed ahead of active sampling so that
+        ``sample()`` can derive the cost-optimal annotation probabilities.
         The caller must preserve these arrays for downstream estimation via
         inverse-variance weighting with the active-phase estimates.
 
@@ -77,7 +76,7 @@ class CostOptimalSampler:
         Raises
         ------
         ValueError
-            If ``y_true`` is empty, contains NaN, or ``Var(H) == 0`` (all labels are identical).
+            If ``y_true`` is empty, contains NaN, or all labels are identical (zero true label variance).
 
         Examples
         --------
@@ -85,7 +84,7 @@ class CostOptimalSampler:
         >>> from glide.samplers import CostOptimalSampler
         >>> sampler = CostOptimalSampler().fit(np.array([1.0, 2.0, 3.0]))
         >>> sampler._y_true_variance
-        1.0
+        np.float64(1.0)
         """
         self._validate_y_true(y_true)
         self._y_true_variance = np.var(y_true, ddof=1)
@@ -110,7 +109,7 @@ class CostOptimalSampler:
         gamma = min(gamma_uncapped, 1.0 / tau)
         return gamma
 
-    def _compute_per_record_probabilities(
+    def _compute_per_sample_probabilities(
         self,
         tau: float,
         gamma: float,
@@ -128,7 +127,7 @@ class CostOptimalSampler:
         y_proxy_cost: float,
     ) -> float:
         gamma = self._compute_gamma(tau, uncertainties, y_true_cost, y_proxy_cost)
-        pi_values = self._compute_per_record_probabilities(tau, gamma, uncertainties)
+        pi_values = self._compute_per_sample_probabilities(tau, gamma, uncertainties)
         mean_pi = np.mean(pi_values)
         cost_term = y_true_cost * mean_pi + y_proxy_cost
         error_term = self._y_true_variance + np.mean(uncertainties * (1.0 / pi_values - 1.0))
@@ -157,20 +156,18 @@ class CostOptimalSampler:
         budget: int,
         random_seed: int,
     ) -> Tuple[NDArray, NDArray]:
-        """Sample records and draw annotation indicators under the active policy.
+        """Draw samples and annotation indicators under the cost optimal policy.
 
-        Applies the cost-optimal active annotation policy (Proposition 2). The
-        optimal clipping threshold τ* is found by a grid search over the empirical
-        distribution of ``uncertainties`` values. Per-record probabilities
-        ``π_i = π_clip(x_i; τ*)`` are then used to determine how many records can
-        be afforded within ``budget`` and to draw Bernoulli annotation indicators.
+        Per-sample annotation probabilities are derived from the supplied uncertainty
+        scores and the true label variance estimated by ``fit()``. When the budget is
+        tight, samples beyond a certain index in the input array are excluded from
+        sampling entirely and receive a probability of zero.
 
         Parameters
         ----------
         uncertainties : NDArray
-            1D float array of shape ``(N,)`` containing the pre-computed conditional
-            MSE estimate ``u(x_i) = E[(H - G)² | X = x_i]`` for each record.
-            All values must be strictly positive.
+            1D float array of shape ``(n_samples,)`` containing the pre-computed per-sample
+            expected squared error of the proxy label. All values must be strictly positive.
         y_true_cost : float
             Cost of one expensive-rater annotation. Must be strictly positive.
         y_proxy_cost : float
@@ -183,18 +180,18 @@ class CostOptimalSampler:
         Returns
         -------
         Tuple[NDArray, NDArray]
-            [0]: array of shape ``(N,)``, ``pi`` with per-record annotation probabilities
-            for selected records and ``0.0`` for unselected records.
-            [1]: array of shape ``(N,)``, ``xi`` with Bernoulli indicators:
+            [0]: array of shape ``(n_samples,)``, ``pi`` with per-sample annotation probabilities
+            for selected samples and ``0.0`` for unselected samples.
+            [1]: array of shape ``(n_samples,)``, ``xi`` with Bernoulli indicators:
             ``1.0`` if the expensive rater was queried, ``0.0`` if only the proxy
-            was used, ``NaN`` if the record was not selected.
+            was used, ``NaN`` if the sample was not selected.
 
         Raises
         ------
         ValueError
             If ``fit()`` has not been called, if any cost or budget argument is
             non-positive, if any uncertainty value is NaN or non-positive, or if
-            the budget is too small to afford a single record.
+            the budget is too small to afford a single sample.
 
         Examples
         --------
@@ -203,10 +200,18 @@ class CostOptimalSampler:
         >>> y_true = np.array([1.0, 2.0, 3.0, 4.0])
         >>> uncertainties = np.array([0.1, 0.4, 0.1, 0.4])
         >>> sampler = CostOptimalSampler().fit(y_true)
-        >>> pi, xi = sampler.sample(uncertainties, y_true_cost=10.0, y_proxy_cost=1.0, budget=5, random_seed=0)
-        >>> (pi == 0.0).sum() == np.isnan(xi).sum()
-        np.True_
-        >>> np.all(~np.isnan(xi[pi > 0]))
+        >>> pi, xi = sampler.sample(
+        ...     uncertainties,
+        ...     y_true_cost=10.0,
+        ...     y_proxy_cost=1.0,
+        ...     budget=5,
+        ...     random_seed=0
+        ... )
+        >>> float(pi[0])  # doctest: +ELLIPSIS
+        0.084...
+        >>> xi[0]
+        np.float64(0.0)
+        >>> np.isnan(xi[-1])
         np.True_
         """
         if not hasattr(self, "_y_true_variance"):
@@ -221,20 +226,20 @@ class CostOptimalSampler:
 
         tau_star = self._find_optimal_threshold(uncertainties, y_true_cost, y_proxy_cost)
         gamma_star = self._compute_gamma(tau_star, uncertainties, y_true_cost, y_proxy_cost)
-        pi_all = self._compute_per_record_probabilities(tau_star, gamma_star, uncertainties)
+        pi_all = self._compute_per_sample_probabilities(tau_star, gamma_star, uncertainties)
 
         cumulative_costs = np.cumsum(y_true_cost * pi_all + y_proxy_cost)
         T = np.searchsorted(cumulative_costs, budget, side="left")
         if T < 1:
-            raise ValueError(f"Budget {budget} is too small to afford a single record with the given inputs.")
+            raise ValueError(f"Budget {budget} is too small to afford a single sample with the given inputs.")
 
-        N = len(uncertainties)
-        T = min(T, N)
+        n_samples = len(uncertainties)
+        T = min(T, n_samples)
 
         rng = np.random.default_rng(random_seed)
 
-        pi = np.zeros(N)
-        xi = np.full(N, np.nan)
+        pi = np.zeros(n_samples)
+        xi = np.full(n_samples, np.nan)
         pi[:T] = pi_all[:T]
         xi[:T] = rng.binomial(n=1, p=pi_all[:T], size=T).astype(float)
 

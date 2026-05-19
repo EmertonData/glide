@@ -1,6 +1,6 @@
 .PHONY: tests
 
-UNIT_DIRS = tests/unit
+UNIT_DIRS = glide tests/unit
 FUNCTIONAL_DIRS = tests/functional
 
 venv:
@@ -36,7 +36,7 @@ coverage:
 		--cov-report term-missing \
 		--cov-report html \
 		--cov-report xml \
-		tests/unit/
+		$(UNIT_DIRS)
 
 _sync-doc:
 	uv sync --group doc
