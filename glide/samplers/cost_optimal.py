@@ -5,7 +5,8 @@ from numpy.typing import NDArray
 
 
 class CostOptimalSampler:
-    """Sampler that draws elements with probabilities proportional to uncertainty scores.
+    """Sampler that draws elements with optimal probabilities based on uncertainty
+    scores and annotation costs.
 
     Implements a cost-optimal active annotation policy. Each sample is assigned
     an annotation probability proportional to how unreliable the proxy label is
@@ -28,11 +29,20 @@ class CostOptimalSampler:
     >>> from glide.samplers import CostOptimalSampler
     >>> y_true = np.array([1.0, 2.0, 3.0, 4.0])
     >>> uncertainties = np.array([0.1, 0.4, 0.1, 0.4])
-    >>> sampler = CostOptimalSampler()
-    >>> _ = sampler.fit(y_true)
-    >>> pi, xi = sampler.sample(uncertainties, y_true_cost=10.0, y_proxy_cost=1.0, budget=5, random_seed=0)
-    >>> pi.shape == xi.shape == uncertainties.shape
-    True
+    >>> sampler = CostOptimalSampler().fit(y_true)
+    >>> pi, xi = sampler.sample(
+    ...     uncertainties,
+    ...     y_true_cost=10.0,
+    ...     y_proxy_cost=1.0,
+    ...     budget=5,
+    ...     random_seed=0
+    ... )
+    >>> float(pi[0])  # doctest: +ELLIPSIS
+    0.084...
+    >>> xi[0]
+    np.float64(0.0)
+    >>> np.isnan(xi[-1])
+    np.True_
     """
 
     def _validate_y_true(self, y_true: NDArray) -> None:
@@ -78,13 +88,6 @@ class CostOptimalSampler:
         ValueError
             If ``y_true`` is empty, contains NaN, or all labels are identical (zero true label variance).
 
-        Examples
-        --------
-        >>> import numpy as np
-        >>> from glide.samplers import CostOptimalSampler
-        >>> sampler = CostOptimalSampler().fit(np.array([1.0, 2.0, 3.0]))
-        >>> sampler._y_true_variance
-        np.float64(1.0)
         """
         self._validate_y_true(y_true)
         self._y_true_variance = np.var(y_true, ddof=1)
@@ -193,26 +196,6 @@ class CostOptimalSampler:
             non-positive, if any uncertainty value is NaN or non-positive, or if
             the budget is too small to afford a single sample.
 
-        Examples
-        --------
-        >>> import numpy as np
-        >>> from glide.samplers import CostOptimalSampler
-        >>> y_true = np.array([1.0, 2.0, 3.0, 4.0])
-        >>> uncertainties = np.array([0.1, 0.4, 0.1, 0.4])
-        >>> sampler = CostOptimalSampler().fit(y_true)
-        >>> pi, xi = sampler.sample(
-        ...     uncertainties,
-        ...     y_true_cost=10.0,
-        ...     y_proxy_cost=1.0,
-        ...     budget=5,
-        ...     random_seed=0
-        ... )
-        >>> float(pi[0])  # doctest: +ELLIPSIS
-        0.084...
-        >>> xi[0]
-        np.float64(0.0)
-        >>> np.isnan(xi[-1])
-        np.True_
         """
         if not hasattr(self, "_y_true_variance"):
             raise ValueError("Call fit() before sample().")
