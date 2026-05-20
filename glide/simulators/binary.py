@@ -29,9 +29,8 @@ def generate_binary_dataset(
     Returns
     -------
     Tuple[NDArray, NDArray]
-        [0]: array of shape ``(n_total,)``, y_true with ground-truth labels for all samples
-             (no NaN).
-        [1]: array of shape ``(n_total,)``, y_proxy with all values present.
+        [0]: array of shape ``(n_total,)``, y_true containing ground-truth labels.
+        [1]: array of shape ``(n_total,)``, y_proxy containing proxy labels.
 
     Raises
     ------
@@ -99,10 +98,14 @@ def generate_binary_dataset(
     >>> import numpy as np
     >>> from glide.simulators import generate_binary_dataset
     >>> y_true, y_proxy = generate_binary_dataset(n_total=8, random_seed=42)
-    >>> int(np.sum(~np.isnan(y_true)))
+    >>> len(y_true)
     8
-    >>> int(np.sum(~np.isnan(y_proxy)))
+    >>> len(y_proxy)
     8
+    >>> bool(np.all(np.isin(y_true, [0.0, 1.0])))
+    True
+    >>> bool(np.all(np.isin(y_proxy, [0.0, 1.0])))
+    True
     """
     if not (0 < true_mean < 1):
         raise ValueError(f"true_mean must be in (0, 1), got {true_mean}")

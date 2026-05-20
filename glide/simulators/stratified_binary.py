@@ -39,9 +39,8 @@ def generate_stratified_binary_dataset(
     Returns
     -------
     Tuple[NDArray, NDArray, NDArray]
-        [0]: array of shape ``(sum(n_total),)``, y_true with ground-truth labels for all
-             samples (no NaN).
-        [1]: array of shape ``(sum(n_total),)``, y_proxy with all values present.
+        [0]: array of shape ``(sum(n_total),)``, y_true containing ground-truth labels.
+        [1]: array of shape ``(sum(n_total),)``, y_proxy containing proxy labels.
         [2]: array of shape ``(sum(n_total),)``, integer stratum identifiers.
 
     Raises
@@ -68,8 +67,12 @@ def generate_stratified_binary_dataset(
     14
     >>> len(groups)
     14
-    >>> int(np.sum(~np.isnan(y_true)))
+    >>> len(y_proxy)
     14
+    >>> bool(np.all(np.isin(y_true, [0.0, 1.0])))
+    True
+    >>> bool(np.all(np.isin(y_proxy, [0.0, 1.0])))
+    True
     """
     num_strata = len(n_total)
     if num_strata < 1:

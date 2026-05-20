@@ -18,8 +18,6 @@ def test_generate_stratified_binary_dataset_structure_and_counts():
     assert len(y_true) == 6
     assert len(y_proxy) == 6
     assert len(groups) == 6
-    assert not np.any(np.isnan(y_true))
-    assert not np.any(np.isnan(y_proxy))
     np.testing.assert_array_equal(groups, [0, 0, 0, 1, 1, 1])
     np.testing.assert_allclose(y_true, [1.0, 0.0, 1.0, 1.0, 1.0, 1.0])
     np.testing.assert_allclose(y_proxy, [1.0, 0.0, 1.0, 1.0, 0.0, 1.0])

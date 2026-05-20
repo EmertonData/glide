@@ -10,8 +10,6 @@ def test_generate_binary_dataset_structure_and_counts():
     assert isinstance(y_proxy, np.ndarray)
     assert len(y_true) == 3
     assert len(y_proxy) == 3
-    assert not np.any(np.isnan(y_true))
-    assert not np.any(np.isnan(y_proxy))
 
 
 def test_generate_binary_dataset_invalid_true_mean_raises():
