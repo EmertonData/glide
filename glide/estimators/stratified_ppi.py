@@ -26,7 +26,7 @@ class StratifiedPPIMeanEstimator:
 
     References
     ----------
-    Fisch, Adam, Joshua Maynez, R. Hofer, Bhuwan Dhingra, Amir Globerson, and
+    Fisch, Adam, Joshua Maynez, R. Alex Hofer, Bhuwan Dhingra, Amir Globerson, and
     William W. Cohen. "Stratified prediction-powered inference for effective hybrid
     evaluation of language models." Advances in Neural Information Processing
     Systems 37 (2024): 111489-111514.

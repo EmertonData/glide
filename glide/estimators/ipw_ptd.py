@@ -28,8 +28,9 @@ class IPWPTDMeanEstimator:
 
     References
     ----------
-    Kluger, Daniel M., et al. "Prediction-Powered Inference with Imputed
-    Covariates and Nonuniform Sampling." arXiv:2501.18577 (2025).
+    Kluger, Dan M., Kerri Lu, Tijana Zrnic, Sherrie Wang, and Stephen Bates.
+    "Prediction-powered inference with imputed covariates and nonuniform sampling."
+    arXiv preprint arXiv:2501.18577 (2025).
 
     Examples
     --------
