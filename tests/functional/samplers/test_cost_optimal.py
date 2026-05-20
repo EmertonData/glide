@@ -10,9 +10,7 @@ def test_cost_optimal_matches_random_sampler_for_uniform_uncertainties():
     uniform_uncertainties = np.full(n_samples, 0.01)
     y_true_cost = 10.0
     y_proxy_cost = 1.0
-    budget = 1_000_000
-    # Large budget prevents truncation, both samplers select all samples and
-    # make the same rng.binomial call — pi and xi should be identical.
+    budget = 500
 
     random_seed = 0
 

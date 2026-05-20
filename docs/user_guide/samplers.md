@@ -135,7 +135,7 @@ $$T = \left\lfloor \frac{b}{c_{\tilde{y}} + c_y \cdot \pi^*} \right\rfloor$$
 
 The annotation process proceeds in two stages. First, the sampler determines which samples to process, depending on how $T$ compares to the dataset size $N$:
 
-- If $T < N$: then $T$ samples are drawn uniformly at random without replacement from the dataset.
+- If $T < N$: the first $T$ samples are selected from the dataset.
 - If $T \geq N$: all $N$ samples are used.
 
 Second, each selected sample is independently sent to the expensive rater with probability $\pi^*$:

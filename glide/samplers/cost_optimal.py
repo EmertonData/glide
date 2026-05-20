@@ -13,7 +13,7 @@ class CostOptimalSampler:
     an annotation probability proportional to how unreliable the proxy label is
     expected to be for that sample, as measured by the caller-supplied per-sample
     uncertainty scores. Samples with high expected proxy error are more likely to
-    be annotated; samples where the proxy is reliable are less likely to be
+    be annotated whereas those with low expected proxy error are less likely to be
     annotated. This concentrates the annotation budget where it matters most.
 
     The caller provides per-sample uncertainty scores and passes them as a
@@ -161,6 +161,11 @@ class CostOptimalSampler:
         When the budget is tight, samples beyond a certain index in the input array are
         excluded from sampling and receive a probability of zero.
 
+        The two returned arrays are intended for use with IPW-based downstream estimators. ``pi``
+        holds the per-sample probability of querying the expensive rater. ``xi`` holds the
+        annotation indicators for selected samples, with NaN marking unselected samples that
+        should be discarded before running an estimator.
+
         Parameters
         ----------
         uncertainties : NDArray
@@ -211,18 +216,18 @@ class CostOptimalSampler:
         pi_all = self._compute_per_sample_probabilities(tau_star, gamma_star, uncertainties)
 
         cumulative_costs = np.cumsum(y_true_cost * pi_all + y_proxy_cost)
-        T = np.searchsorted(cumulative_costs, budget, side="right")
-        if T < 1:
+        n_affordable = np.searchsorted(cumulative_costs, budget, side="right")
+        if n_affordable < 1:
             raise ValueError(f"Budget {budget} is too small to afford a single sample with the given inputs.")
 
         n_samples = len(uncertainties)
-        T = min(T, n_samples)
+        cutoff = min(n_affordable, n_samples)
 
         rng = np.random.default_rng(random_seed)
 
         pi = np.zeros(n_samples)
         xi = np.full(n_samples, np.nan)
-        pi[:T] = pi_all[:T]
-        xi[:T] = rng.binomial(n=1, p=pi_all[:T], size=T).astype(float)
+        pi[:cutoff] = pi_all[:cutoff]
+        xi[:cutoff] = rng.binomial(n=1, p=pi_all[:cutoff], size=cutoff).astype(float)
 
         return pi, xi

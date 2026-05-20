@@ -130,6 +130,11 @@ def test_sample_invalid_budget(fitted_sampler, uncertainties, budget):
         fitted_sampler.sample(uncertainties, y_true_cost=10.0, y_proxy_cost=1.0, budget=budget, random_seed=42)
 
 
+def test_sample_budget_too_small_raises(fitted_sampler, uncertainties):
+    with pytest.raises(ValueError, match="Budget .* is too small"):
+        fitted_sampler.sample(uncertainties, y_true_cost=10.0, y_proxy_cost=1.0, budget=1, random_seed=42)
+
+
 def test_sample_raises_on_nan_uncertainties(fitted_sampler):
     with pytest.raises(ValueError, match="NaN"):
         fitted_sampler.sample(np.array([0.1, np.nan]), y_true_cost=10.0, y_proxy_cost=1.0, budget=5, random_seed=42)
@@ -138,11 +143,6 @@ def test_sample_raises_on_nan_uncertainties(fitted_sampler):
 def test_sample_raises_on_non_positive_uncertainties(fitted_sampler):
     with pytest.raises(ValueError, match="non-positive value"):
         fitted_sampler.sample(np.array([0.1, 0.0]), y_true_cost=10.0, y_proxy_cost=1.0, budget=5, random_seed=42)
-
-
-def test_sample_budget_too_small_raises(fitted_sampler, uncertainties):
-    with pytest.raises(ValueError, match="Budget .* is too small"):
-        fitted_sampler.sample(uncertainties, y_true_cost=10.0, y_proxy_cost=1.0, budget=1, random_seed=42)
 
 
 def test_sample_known_output(fitted_sampler, uncertainties):

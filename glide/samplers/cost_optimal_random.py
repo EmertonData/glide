@@ -126,11 +126,16 @@ class CostOptimalRandomSampler:
         based on relative costs and proxy quality. Determines the maximum number of samples
         that can be afforded within the budget, then selects those samples for annotation.
 
-        If the budget can afford fewer samples than n_samples, samples are drawn uniformly
-        at random without replacement. Otherwise, all n_samples are selected.
+        If the budget can afford fewer than n_samples, only the first affordable number of
+        samples are selected. Otherwise, all n_samples are selected.
 
         For each selected sample, an independent Bernoulli draw with the optimal probability
         determines whether the expensive rater is also queried (1) or only the proxy is used (0).
+
+        The two returned arrays are intended for use with IPW-based downstream estimators. ``pi``
+        holds the per-sample probability of querying the expensive rater, set to zero for unselected
+        samples. ``xi`` holds the annotation indicators for selected samples, with NaN marking
+        unselected samples that should be discarded before running an estimator.
 
         Parameters
         ----------
@@ -186,10 +191,8 @@ class CostOptimalRandomSampler:
         rng = np.random.default_rng(random_seed)
         xi = np.full(n_samples, np.nan)
         pi = np.zeros(n_samples)
-        if n_affordable < n_samples:
-            indices = np.sort(rng.choice(n_samples, size=n_affordable, replace=False))
-        else:
-            indices = np.arange(n_samples)
-        xi[indices] = rng.binomial(n=1, p=pi_opt, size=len(indices)).astype(float)
-        pi[indices] = pi_opt
+        cutoff = min(n_affordable, n_samples)
+
+        xi[:cutoff] = rng.binomial(n=1, p=pi_opt, size=cutoff).astype(float)
+        pi[:cutoff] = pi_opt
         return pi, xi
