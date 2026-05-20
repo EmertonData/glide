@@ -21,11 +21,14 @@ class ASIMeanEstimator:
 
     References
     ----------
-    Zrnic, Tijana, and Emmanuel Candès. "Active statistical inference."
-    arXiv:2403.03208 (2024). https://arxiv.org/abs/2403.03208
+    Zrnic, Tijana, and Emmanuel J. Candès. "Active statistical inference." In Proceedings
+    of the 41st International Conference on Machine Learning, pp. 62993-63010. 2024.
 
-    Gligoric, Kristina, et al. "Confidence-driven inference."
-    arXiv:2408.15204 (2024). https://arxiv.org/abs/2408.15204
+    Gligorić, Kristina, Tijana Zrnic, Cinoo Lee, Emmanuel Candes, and Dan Jurafsky.
+    "Can unconfident llm annotations be used for confident conclusions?." In Proceedings
+    of the 2025 Conference of the Nations of the Americas Chapter of the Association for
+    Computational Linguistics: Human Language Technologies (Volume 1: Long Papers),
+    pp. 3514-3533. 2025.
 
     Examples
     --------
