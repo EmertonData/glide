@@ -165,7 +165,7 @@ The guiding intuition is that a sample where the proxy is likely to err should b
 
 $$\pi_i \propto \sqrt{u_i}$$
 
-with two refinements. First, a proportionality constant $\gamma^*$ scales the probabilities and is chosen to optimise the precision of the downstream estimators. Second, a threshold $\tau > 0$ acts as a risk tolerance: if the uncertainty $\sqrt{u_i}$ exceeds $\tau$, the proxy is considered too unreliable to trust and the sample is always sent to the ground truth rater ($\pi_i = 1$).
+with two refinements. First, a proportionality constant $\gamma^*$ scales the probabilities and is chosen to optimise the precision of downstream estimators. Second, a threshold $\tau > 0$ acts as a risk tolerance: if the uncertainty $\sqrt{u_i}$ exceeds $\tau$, the proxy is considered too unreliable to trust and the sample is always sent to the ground truth rater ($\pi_i = 1$).
 
 Formally, the cost-optimal per-sample annotation probability takes the form (see [[2](#ref-2), Proposition 2]):
 
