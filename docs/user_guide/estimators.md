@@ -408,16 +408,16 @@ When the proxy is informative (high covariance with ground-truth), $\hat{\lambda
 
 ## References
 
-<a id="ref-1"></a>[1] <a id="ref-1-link" href="https://www.science.org/doi/10.1126/science.adi6000">Angelopoulos, Anastasios N., Stephen Bates, Clara Fannjiang, Michael I. Jordan, and Tijana Zrnic. "Prediction-powered inference." *Science* 382, no. 6671 (2023): 669–674</a>.
+<a id="ref-1"></a>[1] <a id="ref-1-link" href="https://www.science.org/doi/10.1126/science.adi6000">Angelopoulos, Anastasios N., Stephen Bates, Clara Fannjiang, Michael I. Jordan, and Tijana Zrnic. "Prediction-powered inference." Science 382, no. 6671 (2023): 669-674.</a>.
 
-<a id="ref-2"></a>[2] <a id="ref-2-link" href="https://arxiv.org/abs/2311.01453">Angelopoulos, Anastasios N., John C. Duchi, and Tijana Zrnic. "PPI++: Efficient prediction-powered inference." *arXiv preprint arXiv:2311.01453* (2023)</a>.
+<a id="ref-2"></a>[2] <a id="ref-2-link" href="https://arxiv.org/abs/2311.01453">Angelopoulos, Anastasios N., John C. Duchi, and Tijana Zrnic. "PPI++: Efficient prediction-powered inference." arXiv preprint arXiv:2311.01453 (2023).</a>.
 
-<a id="ref-3"></a>[3] <a id="ref-3-link" href="https://proceedings.mlr.press/v235/zrnic24a.html">Zrnic, Tijana, and Emmanuel J. Candès. "Active statistical inference." Proceedings of the 41st International Conference on Machine Learning. 2024</a>.
+<a id="ref-3"></a>[3] <a id="ref-3-link" href="https://proceedings.mlr.press/v235/zrnic24a.html">Zrnic, Tijana, and Emmanuel J. Candès. "Active statistical inference." In Proceedings of the 41st International Conference on Machine Learning, pp. 62993-63010. 2024.</a>.
 
-<a id="ref-4"></a>[4] <a id="ref-4-link" href="https://aclanthology.org/2025.naacl-long.179.pdf">Gligorić, Kristina, Tijana Zrnic, Cinoo Lee, Emmanuel Candes, and Dan Jurafsky. "Can unconfident llm annotations be used for confident conclusions?." NAACL 2025: Human Language Technologies (Volume 1: Long Papers), pp. 3514-3533. 2025.</a>.
+<a id="ref-4"></a>[4] <a id="ref-4-link" href="https://aclanthology.org/2025.naacl-long.179.pdf">Gligorić, Kristina, Tijana Zrnic, Cinoo Lee, Emmanuel Candes, and Dan Jurafsky. "Can unconfident llm annotations be used for confident conclusions?." In Proceedings of the 2025 Conference of the Nations of the Americas Chapter of the Association for Computational Linguistics: Human Language Technologies (Volume 1: Long Papers), pp. 3514-3533. 2025.</a>.
 
-<a id="ref-5"></a>[5] <a id="ref-5-link" href="https://arxiv.org/abs/2406.04291">Fisch, Adam, Joshua Maynez, R. Hofer, Bhuwan Dhingra, Amir Globerson, and William W. Cohen. "Stratified prediction-powered inference for effective hybrid evaluation of language models." *Advances in Neural Information Processing Systems* 37 (2024): 111489–111514.</a>.
+<a id="ref-5"></a>[5] <a id="ref-5-link" href="https://proceedings.neurips.cc/paper_files/paper/2024/file/c9fcd02e6445c7dfbad6986abee53d0d-Paper-Conference.pdf">Fisch, Adam, Joshua Maynez, R. Alex Hofer, Bhuwan Dhingra, Amir Globerson, and William W. Cohen. "Stratified prediction-powered inference for effective hybrid evaluation of language models." Advances in Neural Information Processing Systems 37 (2024): 111489-111514.</a>.
 
-<a id="ref-6"></a>[6] <a id="ref-6-link" href="https://www.ecva.net/papers/eccv_2024/papers_ECCV/papers/12117.pdf">Fogliato, Riccardo, Pratik Patil, Mathew Monfort, and Pietro Perona. "A framework for efficient model evaluation through stratification, sampling, and estimation." *European Conference on Computer Vision*, pp. 140–158. Springer Nature Switzerland, 2024.</a>.
+<a id="ref-6"></a>[6] <a id="ref-6-link" href="https://www.ecva.net/papers/eccv_2024/papers_ECCV/papers/12117.pdf">Fogliato, Riccardo, Pratik Patil, Mathew Monfort, and Pietro Perona. "A framework for efficient model evaluation through stratification, sampling, and estimation." In European Conference on Computer Vision, pp. 140-158. Cham: Springer Nature Switzerland, 2024.</a>.
 
-<a id="ref-7"></a>[7] <a id="ref-7-link" href="https://arxiv.org/abs/2501.18577">Kluger, Dan M., Kerri Lu, Tijana Zrnic, Sherrie Wang, and Stephen Bates. "Prediction-powered inference with imputed covariates and nonuniform sampling." *arXiv preprint arXiv:2501.18577* (2025).</a>.
+<a id="ref-7"></a>[7] <a id="ref-7-link" href="https://arxiv.org/abs/2501.18577">Kluger, Dan M., Kerri Lu, Tijana Zrnic, Sherrie Wang, and Stephen Bates. "Prediction-powered inference with imputed covariates and nonuniform sampling." arXiv preprint arXiv:2501.18577 (2025).</a>.

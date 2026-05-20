@@ -14,6 +14,17 @@ class ActiveSampler:
     uncertainty score, then independently selected via a Bernoulli trial. This
     concentrates the annotation budget on the most uncertain observations.
 
+    References
+    ----------
+    Zrnic, Tijana, and Emmanuel J. Candès. "Active statistical inference." In Proceedings
+    of the 41st International Conference on Machine Learning, pp. 62993-63010. 2024.
+
+    Gligorić, Kristina, Tijana Zrnic, Cinoo Lee, Emmanuel Candes, and Dan Jurafsky.
+    "Can unconfident llm annotations be used for confident conclusions?." In Proceedings
+    of the 2025 Conference of the Nations of the Americas Chapter of the Association for
+    Computational Linguistics: Human Language Technologies (Volume 1: Long Papers),
+    pp. 3514-3533. 2025.
+
     Examples
     --------
     >>> import numpy as np

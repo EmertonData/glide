@@ -24,11 +24,10 @@ class PPIMeanEstimator:
 
     References
     ----------
-    Angelopoulos, Anastasios N., Stephen Bates, Clara Fannjiang, Michael I. Jordan,
-    and Tijana Zrnic. "Prediction-powered inference." Science 382, no. 6671 (2023):
-    669-674.
+    Angelopoulos, Anastasios N., Stephen Bates, Clara Fannjiang, Michael I. Jordan, and Tijana
+    Zrnic. "Prediction-powered inference." Science 382, no. 6671 (2023): 669-674.
 
-    Angelopoulos, Anastasios N., John C. Duchi, and Tijana Zrnic. "Ppi++: Efficient
+    Angelopoulos, Anastasios N., John C. Duchi, and Tijana Zrnic. "PPI++: Efficient
     prediction-powered inference." arXiv preprint arXiv:2311.01453 (2023).
 
     Examples
