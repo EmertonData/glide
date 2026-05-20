@@ -1,3 +1,4 @@
+from math import floor
 from typing import Optional
 
 import numpy as np
@@ -9,9 +10,9 @@ from glide.estimators.ptd_core import (
     _compute_bootstrap_mean_estimates,
     _compute_tuning_parameter,
 )
+from glide.estimators.stratified_classical import StratifiedClassicalMeanEstimator
 from glide.estimators.stratified_core import _preprocess
 from glide.mean_inference_results import PredictionPoweredMeanInferenceResult
-from glide.utils import compute_effective_sample_size
 
 
 class StratifiedPTDMeanEstimator:
@@ -49,7 +50,7 @@ class StratifiedPTDMeanEstimator:
     Estimator : StratifiedPTDMeanEstimator
     n_true: 4
     n_proxy: 8
-    Effective Sample Size: 22
+    Effective Sample Size: 33
     """
 
     def estimate(
@@ -128,7 +129,6 @@ class StratifiedPTDMeanEstimator:
         rng = np.random.default_rng(random_seed)
 
         weighted_bootstrap_estimates = np.zeros(n_bootstrap)
-        y_true_parts = []
 
         for y_true_filtered, y_proxy_labeled, y_proxy_unlabeled in strata:
             stratum_n_labeled, stratum_n_unlabeled = len(y_true_filtered), len(y_proxy_unlabeled)
@@ -154,19 +154,19 @@ class StratifiedPTDMeanEstimator:
             )
 
             weighted_bootstrap_estimates += w_k * bootstrap_estimates_k
-            y_true_parts.append(y_true_filtered)
 
         confidence_interval = BootstrapConfidenceInterval(
             bootstrap_estimates=weighted_bootstrap_estimates,
             confidence_level=confidence_level,
         )
-        y_true_all = np.hstack(y_true_parts)
-        effective_sample_size = compute_effective_sample_size(y_true_all, confidence_interval.var)
+        classical_confidence_interval = StratifiedClassicalMeanEstimator().estimate(y_true, groups).confidence_interval
+        n_labeled = int(np.sum(~np.isnan(y_true)))
+        effective_sample_size = floor(n_labeled * classical_confidence_interval.std**2 / confidence_interval.var)
         result = PredictionPoweredMeanInferenceResult(
             confidence_interval=confidence_interval,
             metric_name=metric_name,
             estimator_name=self.__class__.__name__,
-            n_true=len(y_true_all),
+            n_true=n_labeled,
             n_proxy=total_size,
             effective_sample_size=effective_sample_size,
         )

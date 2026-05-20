@@ -1,16 +1,17 @@
+from math import floor
 from typing import Tuple
 
 import numpy as np
 from numpy.typing import NDArray
 
 from glide.confidence_intervals import CLTConfidenceInterval
+from glide.estimators.classical import ClassicalMeanEstimator
 from glide.estimators.ppi_core import (
     _compute_mean_estimate,
     _compute_std_estimate,
     _compute_tuning_parameter,
 )
 from glide.mean_inference_results import PredictionPoweredMeanInferenceResult
-from glide.utils import compute_effective_sample_size
 
 
 class PPIMeanEstimator:
@@ -131,7 +132,8 @@ class PPIMeanEstimator:
             std=std,
             confidence_level=confidence_level,
         )
-        effective_sample_size = compute_effective_sample_size(y_true_filtered, confidence_interval.var)
+        classical_confidence_interval = ClassicalMeanEstimator().estimate(y_true_filtered).confidence_interval
+        effective_sample_size = floor(n_labeled * classical_confidence_interval.std**2 / confidence_interval.var)
         result = PredictionPoweredMeanInferenceResult(
             confidence_interval=confidence_interval,
             metric_name=metric_name,

@@ -1,3 +1,5 @@
+from math import floor
+
 import numpy as np
 from numpy.typing import NDArray
 
@@ -7,9 +9,9 @@ from glide.estimators.ppi_core import (
     _compute_std_estimate,
     _compute_tuning_parameter,
 )
+from glide.estimators.stratified_classical import StratifiedClassicalMeanEstimator
 from glide.estimators.stratified_core import _preprocess
 from glide.mean_inference_results import PredictionPoweredMeanInferenceResult
-from glide.utils import compute_effective_sample_size
 
 
 class StratifiedPPIMeanEstimator:
@@ -52,7 +54,7 @@ class StratifiedPPIMeanEstimator:
     Estimator : StratifiedPPIMeanEstimator
     n_true: 4
     n_proxy: 8
-    Effective Sample Size: 95
+    Effective Sample Size: 14
     """
 
     def estimate(
@@ -135,14 +137,15 @@ class StratifiedPPIMeanEstimator:
             weighted_var += w_k**2 * std_k**2
 
         std = np.sqrt(weighted_var)
-        n_true = np.sum(~np.isnan(y_true))
+        n_true = int(np.sum(~np.isnan(y_true)))
 
         confidence_interval = CLTConfidenceInterval(
             mean=weighted_mean,
             std=std,
             confidence_level=confidence_level,
         )
-        effective_sample_size = compute_effective_sample_size(y_true, confidence_interval.var)
+        classical_confidence_interval = StratifiedClassicalMeanEstimator().estimate(y_true, groups).confidence_interval
+        effective_sample_size = floor(n_true * classical_confidence_interval.std**2 / confidence_interval.var)
         result = PredictionPoweredMeanInferenceResult(
             confidence_interval=confidence_interval,
             metric_name=metric_name,

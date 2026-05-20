@@ -13,6 +13,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 ### 🔄 Changed
 
 ### 🐛 Fixed
+- Fixed effective sample size computation to use the correct classical baseline for each sampling design
+- `IPWClassicalMeanEstimator` now accepts `pi = 0` entries and filters them internally instead of raising `ValueError`
 
 ### 💛 Contributors
 

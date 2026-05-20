@@ -1,17 +1,18 @@
 import warnings
+from math import floor
 from typing import Optional, Tuple
 
 import numpy as np
 from numpy.typing import NDArray
 
 from glide.confidence_intervals import BootstrapConfidenceInterval
+from glide.estimators.ipw_classical import IPWClassicalMeanEstimator
 from glide.estimators.ptd_core import (
     _compute_bootstrap_labeled_means,
     _compute_bootstrap_mean_estimates,
     _compute_tuning_parameter,
 )
 from glide.mean_inference_results import PredictionPoweredMeanInferenceResult
-from glide.utils import compute_effective_sample_size
 
 
 class IPWPTDMeanEstimator:
@@ -48,7 +49,7 @@ class IPWPTDMeanEstimator:
     Estimator : IPWPTDMeanEstimator
     n_true: 2
     n_proxy: 4
-    Effective Sample Size: 6
+    Effective Sample Size: 18
     """
 
     def _preprocess(
@@ -195,7 +196,9 @@ class IPWPTDMeanEstimator:
             bootstrap_estimates=bootstrap_mean_estimates,
             confidence_level=confidence_level,
         )
-        effective_sample_size = compute_effective_sample_size(y_true[xi == 1], confidence_interval.var)
+        classical_confidence_interval = IPWClassicalMeanEstimator().estimate(y_true, pi).confidence_interval
+        n_valid = int(np.sum(non_zero_pi_mask))
+        effective_sample_size = floor(n_valid * classical_confidence_interval.std**2 / confidence_interval.var)
         result = PredictionPoweredMeanInferenceResult(
             confidence_interval=confidence_interval,
             metric_name=metric_name,

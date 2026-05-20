@@ -46,8 +46,9 @@ class IPWClassicalMeanEstimator:
         y : NDArray
             1-D array of observations, may contain unobserved NaN values.
         sampling_probability : NDArray
-            1-D array of pre-determined sampling probabilities π_i ∈ (0, 1],
+            1-D array of pre-determined sampling probabilities π_i ∈ [0, 1],
             one per observation. Must have the same length as ``y``.
+            Entries with π_i = 0 are excluded from the computation.
         metric_name : str, optional
             Human-readable label for the metric. Defaults to ``"Metric"``.
         confidence_level : float, optional
@@ -63,15 +64,17 @@ class IPWClassicalMeanEstimator:
         Raises
         ------
         ValueError
-            If any value in ``sampling_probability`` is not in (0, 1], i.e.
-            less than or equal to 0 or greater than 1.
+            If any value in ``sampling_probability`` is outside of [0, 1].
         """
-        if np.min(sampling_probability) <= 0 or np.max(sampling_probability) > 1:
-            raise ValueError("Sampling probabilities should be in (0, 1]")
+        if np.min(sampling_probability) < 0 or np.max(sampling_probability) > 1:
+            raise ValueError("Sampling probabilities should be in [0, 1]")
 
-        n_labeled = np.sum(~np.isnan(y))
-        total_size = len(y)
-        ipw_weighted_values = np.nan_to_num(y, nan=0) / sampling_probability
+        valid_mask = sampling_probability > 0
+        y_valid = y[valid_mask]
+        pi_valid = sampling_probability[valid_mask]
+        n_labeled = int(np.sum(~np.isnan(y_valid)))
+        total_size = int(np.sum(valid_mask))
+        ipw_weighted_values = np.nan_to_num(y_valid, nan=0) / pi_valid
 
         mean = np.mean(ipw_weighted_values)
         std = np.std(ipw_weighted_values, ddof=1) / np.sqrt(total_size)
