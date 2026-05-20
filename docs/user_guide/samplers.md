@@ -142,26 +142,26 @@ Second, each selected sample is independently sent to the expensive rater with p
 
 $$\xi_i \sim \mathrm{Bernoulli}(\pi^*), \quad i = 1, \ldots, \min(T, N)$$
 
-where $\xi_i = 1$ means the sample additionally receives ground truth annotation and $\xi_i = 0$ means only the proxy annotation is used. All selected samples share the same drawing probability $\pi_i = \pi^*$.
+where $\xi_i = 1$ means the sample additionally receives ground truth annotation and $\xi_i = 0$ means only the proxy annotation is used. All selected samples share the same drawing probability $\pi_i = \pi^*$. Unselected samples receive $\pi_i = 0$ and no indicator $\xi_i$ (absent value encoded as $\mathrm{NaN}$).
 
 ---
 
 ## Cost Optimal Sampler
 
-The `CostOptimalSampler` operates in the same two-rater setting as the `CostOptimalRandomSampler`, but replaces the **uniform annotation probability** with a **per-sample probability** that depends on how unreliable the proxy label is expected to be for each individual sample. Samples where the proxy is likely to err are annotated more frequently; samples where the proxy is reliable are annotated at a lower rate. This concentrates the annotation budget where it reduces variance the most.
+The `CostOptimalSampler` generalizes the `CostOptimalRandomSampler`. Two annotation sources are available: one **cheap but error-prone** (the proxy rater) and one **expensive but highly reliable** (the ground truth rater). A budget limit is imposed, potentially limiting the number of samples that can be annotated. Rather than querying the ground truth rater at a **fixed probability** for every sample, the `CostOptimalSampler` computes an **active policy**: a per-sample annotation probability that depends on how unreliable the proxy label is expected to be for that sample. Samples where the proxy is likely to err are annotated more frequently; samples where the proxy is reliable are annotated at a lower rate. This concentrates the annotation budget where it reduces variance the most.
 
-The rater model is identical to the random variant:
+The sampler models two raters:
 
 - **Proxy rater ($\tilde{Y}$)**: cheap, always queried, cost $c_{\tilde{y}}$ per sample. Returns noisy labels.
 - **Ground truth rater ($Y$)**: expensive, cost $c_y$ per sample ($c_{\tilde{y}} < c_y$). Returns authoritative labels.
 
-Each sample $i$ additionally has a **per-sample uncertainty score** $u_i > 0$, a caller-supplied estimate of $\mathbb{E}[(Y_i - \tilde{Y}_i)^2 \mid X_i]$, the expected squared error of the proxy for that sample. These scores are not learned internally.
+The goal is to estimate the average $\theta := \mathbb{E}[Y]$. Each sample $i$ is associated with an input $X_i$ and has a **per-sample uncertainty score** $u_i > 0$, a supplied estimate of $U_i := \mathbb{E}[(Y_i - \tilde{Y}_i)^2 \mid X_i]$, the expected squared error of the proxy for that sample. These scores are not learned internally.
 
 ### Optimal active annotation policy
 
 For a given threshold $\tau > 0$, the cost-optimal per-sample annotation probability takes the form (see [[2](#ref-2), Proposition 2]):
 
-$$\pi_i(\tau) = \begin{cases} \gamma^*(\tau)\,\sqrt{u_i} & \text{if } \sqrt{u_i} \leq \tau \\ 1 & \text{if } \sqrt{u_i} > \tau \end{cases}$$
+$$\pi_i = \pi(\tau, X_i) = \begin{cases} \gamma^*(\tau)\,\sqrt{u_i} & \text{if } \sqrt{u_i} \leq \tau \\ 1 & \text{otherwise} \end{cases}$$
 
 where the scale factor $\gamma^*(\tau)$ is:
 
@@ -171,19 +171,20 @@ Samples above the threshold are always sent to the ground truth rater ($\pi_i = 
 
 The optimal threshold $\tau^*$ minimises the product of expected per-sample cost and per-sample estimation error:
 
-$$\tau^* = \underset{\tau}{\operatorname{argmin}}\;\Bigl(c_y\,\mathbb{E}[\pi_i(\tau)] + c_{\tilde{y}}\Bigr)\cdot\Bigl(\mathrm{Var}(Y) + \mathbb{E}\!\left[U \cdot \!\left(\frac{1}{\pi_i(\tau)} - 1\right)\right]\Bigr)$$
-
-The policy changes character only at the breakpoints $\tau \in \{\sqrt{u_i}\}$, so the minimisation is performed by exhaustive search over those distinct values.
+$$\tau^* = \underset{\tau}{\operatorname{argmin}}\;\Bigl(c_y\,\mathbb{E}[\pi(\tau, X)] + c_{\tilde{y}}\Bigr)\cdot\Bigl(\mathrm{Var}(Y) + \mathbb{E}\!\left[U \cdot \!\left(\frac{1}{\pi(\tau, X)} - 1\right)\right]\Bigr)$$
 
 **Interpretation:**
 
 - Samples with small uncertainty ($\sqrt{u_i} \ll \tau^*$) have a reliable proxy: the ground truth rater is queried at a low rate, proportional to $\sqrt{u_i}$.
 - Samples with large uncertainty ($\sqrt{u_i} > \tau^*$) have a proxy too unreliable to trust: the ground truth rater is always queried ($\pi_i = 1$).
-- Compared to the `CostOptimalRandomSampler`, the active policy can achieve lower estimation variance for the same budget by exploiting heterogeneity in proxy quality across samples.
+
+Compared to the `CostOptimalRandomSampler`, the active policy can achieve lower estimation variance for the same budget by exploiting heterogeneity in proxy quality across samples.
+
+Note also that when all uncertainty scores are equal ($u_i = u$ for all $i$), the `CostOptimalSampler` recovers the same constant labelling probability $\pi^*$ computed in the `CostOptimalRandomSampler`.
 
 ### Burn-in phase
 
-The policy requires $\mathrm{Var}(Y)$. As with the random variant, this is estimated from a **burn-in dataset**: a set of samples annotated unconditionally by the ground truth rater before the active policy is applied. The burn-in labels are used to compute this variance estimate, after which the active policy governs subsequent annotation.
+In order to compute the optimal policy, the ground truth label variance $\mathrm{Var}(Y)$ needs to be known. This is estimated from a **burn-in dataset**: a set of samples annotated unconditionally by the ground truth rater before the active policy is applied. The burn-in labels are used to compute this variance estimate, after which the active policy governs subsequent annotation.
 
 ### Budget and sample selection
 
@@ -203,7 +204,7 @@ For each selected sample $i \leq T$, the ground truth annotation is independentl
 
 $$\xi_i \sim \mathrm{Bernoulli}(\pi_i), \quad i = 1, \ldots, T$$
 
-where $\xi_i = 1$ means the sample is sent to the ground truth rater and $\xi_i = 0$ means only the proxy label is used. Unselected samples ($i > T$) receive $\pi_i = 0$ and $\xi_i = \mathrm{NaN}$, indicating they were not part of the sampling pool.
+where $\xi_i = 1$ means the sample is sent to the ground truth rater and $\xi_i = 0$ means only the proxy label is used. Unselected samples receive no indicator $\xi_i$ (absent value encoded as $\mathrm{NaN}$).
 
 ---
 
