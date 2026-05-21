@@ -5,35 +5,32 @@ from numpy.typing import NDArray
 
 
 def generate_binary_dataset(
-    n_labeled: int,
-    n_unlabeled: int,
+    n_total: int,
     true_mean: float = 0.7,
     proxy_mean: float = 0.6,
     correlation: float = 0.8,
     random_seed: Optional[Union[int, np.random.SeedSequence]] = None,
 ) -> Tuple[NDArray, NDArray]:
-    """Generate a synthetic binary-label dataset for evaluation.
+    """Generate a synthetic binary-label oracle dataset.
 
     Parameters
     ----------
-    n_labeled : int
-        Number of samples with both true and proxy labels (the labeled subset).
-    n_unlabeled : int
-        Number of samples with proxy labels only (the unlabeled subset).
+    n_total : int
+        Total number of samples. All samples have both true and proxy labels.
     true_mean : float
         Expected mean value of the true labels.
     proxy_mean : float
         Expected mean value of the proxy labels.
     correlation : float
-        Pearson correlation between true and proxy on the labeled subset.
+        Pearson correlation between true and proxy labels.
     random_seed : int or np.random.SeedSequence, optional
         Seed for reproducibility.
 
     Returns
     -------
     Tuple[NDArray, NDArray]
-        [0]: array of shape ``(n_labeled+n_unlabeled,)``, y_true with labeled values and NaN for unlabeled rows
-        [1]: array of shape ``(n_labeled+n_unlabeled,)``, y_proxy with all values present
+        [0]: array of shape ``(n_total,)``, y_true containing ground-truth labels.
+        [1]: array of shape ``(n_total,)``, y_proxy containing proxy labels.
 
     Raises
     ------
@@ -83,20 +80,14 @@ def generate_binary_dataset(
 
     The four outcomes ``(y_true=0, y_proxy=0)``, ``(y_true=0, y_proxy=1)``,
     ``(y_true=1, y_proxy=0)``, ``(y_true=1, y_proxy=1)`` are encoded as
-    integers 0–3 with probabilities ``[p00, p01, p10, p11]``.  The ``n_labeled``
-    labeled pairs are drawn in one call via ``numpy.random.Generator.choice``.
+    integers 0–3 with probabilities ``[p00, p01, p10, p11]``.  All ``n_total``
+    pairs are drawn in one call via ``numpy.random.Generator.choice``.
 
     **Step 3 — Decoding labels from integers**
 
     The integer encoding satisfies ``y_true = outcome // 2`` and
     ``y_proxy = outcome % 2``, so both labels are recovered with cheap
     integer arithmetic.
-
-    **Step 4 — Unlabeled proxy sampling**
-
-    The ``n_unlabeled`` unlabeled samples have only ``y_proxy`` values, sampled
-    independently from ``Bernoulli(p_p)`` (marginal proxy distribution), with
-    no dependence on ``y_true``.
 
     References
     ----------
@@ -106,13 +97,15 @@ def generate_binary_dataset(
     --------
     >>> import numpy as np
     >>> from glide.simulators import generate_binary_dataset
-    >>> y_true, y_proxy = generate_binary_dataset(n_labeled=3, n_unlabeled=5, random_seed=42)
+    >>> y_true, y_proxy = generate_binary_dataset(n_total=8, random_seed=42)
     >>> len(y_true)
     8
-    >>> int(np.sum(~np.isnan(y_true)))
-    3
-    >>> int(np.sum(~np.isnan(y_proxy)))
+    >>> len(y_proxy)
     8
+    >>> bool(np.all(np.isin(y_true, [0.0, 1.0])))
+    True
+    >>> bool(np.all(np.isin(y_proxy, [0.0, 1.0])))
+    True
     """
     if not (0 < true_mean < 1):
         raise ValueError(f"true_mean must be in (0, 1), got {true_mean}")
@@ -149,17 +142,10 @@ def generate_binary_dataset(
     probs = [p00, p01, p10, p11]
 
     # generate the outcome pairs as integers between 0 and 3 inclusive
-    samples = rng.choice(4, p=probs, size=n_labeled)
+    samples = rng.choice(4, p=probs, size=n_total)
     # extract the true and proxy values via integer division and modulo 2
     # we have 0 = (0, 0), 1 = (0, 1), 2 = (1, 0), 3 = (1, 1)
-    y_true_filtered = samples // 2
-    y_proxy_labeled = samples % 2
-
-    # generate proxy values for unlabeled samples
-    y_proxy_unlabeled = rng.choice(2, p=[1 - p_p, p_p], size=n_unlabeled)
-
-    # Combine labeled and unlabeled: NaN for unlabeled y_true, all y_proxy values
-    y_true = np.hstack([y_true_filtered.astype(float), np.full(n_unlabeled, np.nan)])
-    y_proxy = np.hstack([y_proxy_labeled.astype(float), y_proxy_unlabeled.astype(float)])
+    y_true = (samples // 2).astype(float)
+    y_proxy = (samples % 2).astype(float)
 
     return y_true, y_proxy
