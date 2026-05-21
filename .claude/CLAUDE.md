@@ -21,7 +21,7 @@ make functional-tests # Run functional tests only
 make coverage      # Coverage report on unit tests only (100% required; functional tests are excluded)
 make pre-commit    # Run pre-commit hooks via prek (not the standard pre-commit CLI)
 make test-notebooks # Test all Jupyter notebooks
-make doc            # Serve documentation locally with MkDocs
+make doc            # Build and serve documentation locally with MkDocs
 ```
 
 Run a single test file: `uv run pytest tests/unit/test_foo.py -vsx`
@@ -47,7 +47,7 @@ The package has multiple layers:
 ## Testing Requirements
 
 - Tests live in `tests/unit/` and `tests/functional/`
-- Both directories mirror the `glide/` folder structure exactly (e.g., `glide/estimators/foo.py` → `tests/unit/estimators/test_foo.py`); `tests/functional/` covers `estimators/`, `samplers/`, and `simulators/`
+- Both directories mirror the `glide/` folder structure exactly (e.g., `glide/estimators/foo.py` → `tests/unit/estimators/test_foo.py`); `tests/functional/` contains tests verifying statistical properties of estimators, samplers and simulators
 - pytest runs with `--import-mode=importlib --doctest-modules`, so module docstrings are also tested
 - Every new feature needs: doctests in the docstring + unit tests + analytical verification where relevant (assert against hardcoded expected values, not values computed inline by the test itself — e.g., `CLTConfidenceInterval(mean=0, std=1, confidence_level=0.95)` → bounds `±1.96`, or StratifiedPPI with one stratum must equal PPI)
 - 100% coverage is enforced
