@@ -123,6 +123,11 @@ def test_sample_negative_y_proxy_cost(fitted_sampler, uncertainties):
         fitted_sampler.sample(uncertainties, y_true_cost=10.0, y_proxy_cost=-1, budget=5, random_seed=42)
 
 
+def test_sample_constant_uncertainties_and_zero_y_proxy_cost(fitted_sampler):
+    with pytest.raises(ValueError, match="All uncertainty values are equal and 'y_proxy_cost' is zero."):
+        fitted_sampler.sample(np.ones(2), y_true_cost=10.0, y_proxy_cost=0.0, budget=5, random_seed=42)
+
+
 @pytest.mark.parametrize("budget", [0, -1])
 def test_sample_invalid_budget(fitted_sampler, uncertainties, budget):
     with pytest.raises(ValueError, match="'budget' must be strictly positive"):

@@ -198,6 +198,7 @@ class CostOptimalSampler:
             - If ``y_true_cost`` is not strictly positive or ``y_proxy_cost`` is negative.
             - If ``budget`` is not strictly positive.
             - If any uncertainty value is NaN or non-positive.
+            - If all uncertainty values are equal and ``y_proxy_cost`` is zero.
             - If ``budget`` is too small to afford a single sample.
 
         """
@@ -207,6 +208,8 @@ class CostOptimalSampler:
             raise ValueError(f"'y_true_cost' must be strictly positive; got {y_true_cost}.")
         if y_proxy_cost < 0.0:
             raise ValueError(f"'y_proxy_cost' must be non-negative; got {y_proxy_cost}.")
+        if y_proxy_cost == 0.0 and (np.max(uncertainties) - np.min(uncertainties) == 0):
+            raise ValueError("All uncertainty values are equal and 'y_proxy_cost' is zero.")
         if budget <= 0:
             raise ValueError(f"'budget' must be strictly positive; got {budget}.")
         self._validate_uncertainties(uncertainties)
