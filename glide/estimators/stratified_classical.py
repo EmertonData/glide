@@ -1,3 +1,5 @@
+from typing import Optional
+
 import numpy as np
 from numpy.typing import NDArray
 
@@ -35,17 +37,20 @@ class StratifiedClassicalMeanEstimator:
         groups: NDArray,
         metric_name: str = "Metric",
         confidence_level: float = 0.95,
+        stratum_weights: Optional[NDArray] = None,
     ) -> ClassicalMeanInferenceResult:
         """Estimate the population mean using stratified classical inference.
 
         Splits observations by ``groups``, computes a classical sample-mean
-        estimate within each stratum, and combines them with
-        population-proportional weights:
+        estimate within each stratum, and combines them with stratum weights:
 
             theta = sum_k  w_k * theta_k
             sigma2 = sum_k  w_k^2 * sigma2_k
 
-        where ``w_k = n_k / n`` is the fraction of samples in stratum *k*.
+        where ``w_k`` is the weight of stratum *k*. By default ``w_k`` is the
+        labeled fraction ``n_labeled_k / n_labeled``; pass ``stratum_weights``
+        to use a different weighting (e.g. total-proportional weights when
+        used as a baseline for ESS computation).
 
         It is assumed that ``w_k`` reflects the true weight of stratum *k* for
         all *k*.
@@ -62,13 +67,17 @@ class StratifiedClassicalMeanEstimator:
         confidence_level : float, optional
             Target coverage for the confidence interval, e.g. ``0.95``
             for a 95 % CI. Defaults to ``0.95``.
+        stratum_weights : NDArray, optional
+            Stratum weights in the same order as ``np.unique(groups)``.
+            When provided, these override the labeled-sample proportions.
+            Defaults to ``None`` (infer weights from labeled counts).
 
         Returns
         -------
         ClassicalMeanInferenceResult
             Contains the CLT-based confidence interval, the metric name,
             the estimator name (``"StratifiedClassicalMeanEstimator"``), and
-            ``n`` (total number of samples).
+            ``n`` (total number of labeled samples).
 
         Raises
         ------
@@ -76,12 +85,12 @@ class StratifiedClassicalMeanEstimator:
             If any stratum contains fewer than 2 non-NaN values.
         """
         not_nan_mask = ~np.isnan(y)
-        total_size = np.sum(not_nan_mask)
+        n_labeled = np.sum(not_nan_mask)
         weighted_mean = 0.0
         weighted_var = 0.0
 
         unique_strata = np.unique(groups)
-        for stratum_id in unique_strata:
+        for i, stratum_id in enumerate(unique_strata):
             stratum_mask = groups == stratum_id
             y_stratum = y[stratum_mask & not_nan_mask]
             if len(y_stratum) < 2:
@@ -90,10 +99,10 @@ class StratifiedClassicalMeanEstimator:
                     f"got {len(y_stratum)} in stratum {stratum_id}."
                 )
 
-            stratum_size = len(y_stratum)
-            w_k = stratum_size / total_size
+            n_labeled_k = len(y_stratum)
+            w_k = stratum_weights[i] if stratum_weights is not None else n_labeled_k / n_labeled
             mean_k = np.mean(y_stratum)
-            var_k = np.var(y_stratum, ddof=1) / stratum_size
+            var_k = np.var(y_stratum, ddof=1) / n_labeled_k
             weighted_mean += w_k * mean_k
             weighted_var += w_k**2 * var_k
 
@@ -107,6 +116,6 @@ class StratifiedClassicalMeanEstimator:
             confidence_interval=ci,
             metric_name=metric_name,
             estimator_name=self.__class__.__name__,
-            n=total_size,
+            n=n_labeled,
         )
         return result
