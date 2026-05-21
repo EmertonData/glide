@@ -142,7 +142,77 @@ Second, each selected sample is independently sent to the expensive rater with p
 
 $$\xi_i \sim \mathrm{Bernoulli}(\pi^*), \quad i = 1, \ldots, \min(T, N)$$
 
-where $\xi_i = 1$ means the sample additionally receives ground truth annotation and $\xi_i = 0$ means only the proxy annotation is used. All selected samples share the same drawing probability $\pi_i = \pi^*$.
+where $\xi_i = 1$ means the sample additionally receives ground truth annotation and $\xi_i = 0$ means only the proxy annotation is used. All selected samples share the same drawing probability $\pi_i = \pi^*$. Unselected samples receive $\pi_i = 0$ and no indicator $\xi_i$ (absent value encoded as $\mathrm{NaN}$).
+
+---
+
+## Cost Optimal Sampler
+
+The `CostOptimalSampler` generalizes the `CostOptimalRandomSampler`. Two annotation sources are available: one **cheap but error-prone** (the proxy rater) and one **expensive but highly reliable** (the ground truth rater). A budget limit is imposed, potentially limiting the number of samples that can be annotated. Rather than querying the ground truth rater at a **fixed probability** for every sample, the `CostOptimalSampler` computes an **active policy**: a per-sample annotation probability that depends on how unreliable the proxy label is expected to be for that sample. Samples where the proxy is likely to err are annotated more frequently; samples where the proxy is reliable are annotated at a lower rate. This concentrates the annotation budget where it reduces variance the most.
+
+The sampler models two raters:
+
+- **Proxy rater ($\tilde{Y}$)**: cheap, always queried, cost $c_{\tilde{y}}$ per sample. Returns noisy labels.
+- **Ground truth rater ($Y$)**: expensive, cost $c_y$ per sample ($c_{\tilde{y}} < c_y$). Returns authoritative labels.
+
+Each sample $i$ is associated with an input $X_i$ and has a **per-sample uncertainty score** $u_i > 0$, a supplied estimate of $U_i := \mathbb{E}[(Y_i - \tilde{Y}_i)^2 \mid X_i]$, the expected squared error of the proxy for that sample. 
+
+The goal is to query optimal amounts of proxy and ground truth ratings within the budget limit allowing to estimate the average $\mathbb{E}[Y]$ with the smallest possible variance.
+
+### Optimal active annotation policy
+
+The guiding intuition is that a sample where the proxy is likely to err should be sent to the ground truth rater more often than one where the proxy is reliable. A natural measure of proxy unreliability for sample $i$ is $\sqrt{u_i}$, the square root of the expected squared proxy error $u_i$. Note that $u_i$ is a squared quantity, comparable to a variance, while $\sqrt{u_i}$ is the effective uncertainty measure, analogous to a standard deviation. The cost-optimal policy sets the annotation probability proportional to this uncertainty:
+
+$$\pi_i \propto \sqrt{u_i}$$
+
+with two refinements. First, a proportionality constant $\gamma^*$ scales the probabilities and is chosen to optimise the precision of downstream estimators. Second, a threshold $\tau > 0$ acts as a risk tolerance: if the uncertainty $\sqrt{u_i}$ exceeds $\tau$, the proxy is considered too unreliable to trust and the sample is always sent to the ground truth rater ($\pi_i = 1$).
+
+Formally, the cost-optimal per-sample annotation probability takes the form (see [[2](#ref-2), Proposition 2]):
+
+$$\pi_i = \pi(\tau, X_i) = \begin{cases} \gamma^*(\tau)\,\sqrt{u_i} & \text{if } \sqrt{u_i} \leq \tau \\ 1 & \text{otherwise} \end{cases}$$
+
+- Samples with small uncertainty ($\sqrt{u_i} \leq \tau^*$) have a reliable proxy: the ground truth rater is queried at a low rate, proportional to $\sqrt{u_i}$.
+- Samples with large uncertainty ($\sqrt{u_i} > \tau^*$) have a proxy too unreliable to trust: the ground truth rater is always queried ($\pi_i = 1$).
+
+The scale factor $\gamma^*(\tau)$ is:
+
+$$\gamma^*(\tau) = \min\!\left(\sqrt{\dfrac{c_{\tilde{y}}/c_y + \Pr(U > \tau^2)}{\mathrm{Var}(Y) - \mathbb{E}[U \cdot \mathbf{1}_{U \leq \tau^2}]}},\;\dfrac{1}{\tau}\right)$$
+
+The optimal threshold $\tau^*$ minimises the product of expected per-sample cost and per-sample estimation error:
+
+$$\tau^* = \underset{\tau}{\operatorname{argmin}}\;\Bigl(c_y\,\mathbb{E}[\pi(\tau, X)] + c_{\tilde{y}}\Bigr)\cdot\Bigl(\mathrm{Var}(Y) + \mathbb{E}\!\left[U \cdot \!\left(\frac{1}{\pi(\tau, X)} - 1\right)\right]\Bigr)$$
+
+The second term in the product can be shown to reflect the variance of an estimator of $\theta := \mathbb{E}[Y]$ (see [[3](#ref-3), Equation (2)]). Since this estimator would be unbiased, this also corresponds to its mean squared error.
+
+Once $\tau^*$ is computed, the optimal annotation probabilities are obtained by plugging $\gamma^*(\tau^*)$ into $\pi_i$ for all $i$.
+
+Compared to the `CostOptimalRandomSampler`, the active policy can achieve lower estimation variance for the same budget by exploiting heterogeneity in proxy quality across samples.
+
+Note also that when all uncertainty scores are equal ($u_i = u$ for all $i$), the `CostOptimalSampler` recovers the same constant labelling probability $\pi^*$ computed in the `CostOptimalRandomSampler`.
+
+### Burn-in phase
+
+In order to compute the optimal policy, the ground truth label variance $\mathrm{Var}(Y)$ needs to be known. This is estimated from a **burn-in dataset**: a set of samples annotated unconditionally by the ground truth rater before the active policy is applied. The burn-in labels are used to compute this variance estimate, after which the active policy governs subsequent annotation.
+
+### Budget and sample selection
+
+The expected cost of processing sample $i$ under the active policy is:
+
+$$\mathbb{E}[\text{cost}_i] = c_y \cdot \pi_i + c_{\tilde{y}}$$
+
+Because each sample has its own annotation probability, the number of affordable samples is determined by adding their expected costs until the budget $b$ is saturated. Indeed, it is not always possible to use all samples due to the annotation costs $c_{y}$ and $c_{\tilde{y}}$ even though the latter is generally small.
+
+$$T = \max\!\left\{t \,:\, \sum_{i=1}^{t} \bigl(c_y\,\pi_i + c_{\tilde{y}}\bigr) \leq b\right\}$$
+
+A hard cutoff is applied: samples beyond index $T$ receive $\pi_i = 0$ and are excluded from sampling.
+
+### Sampling procedure
+
+For each selected sample $i \leq T$, the ground truth annotation is independently requested with probability $\pi_i$:
+
+$$\xi_i \sim \mathrm{Bernoulli}(\pi_i), \quad i = 1, \ldots, T$$
+
+where $\xi_i = 1$ means the sample is sent to the ground truth rater and $\xi_i = 0$ means only the proxy label is used. Unselected samples receive no indicator $\xi_i$ (absent value encoded as $\mathrm{NaN}$).
 
 ---
 
@@ -151,3 +221,5 @@ where $\xi_i = 1$ means the sample additionally receives ground truth annotation
 <a id="ref-1"></a>[1] <a id="ref-1-link" href="https://www.ecva.net/papers/eccv_2024/papers_ECCV/papers/12117.pdf">Fogliato, Riccardo, Pratik Patil, Mathew Monfort, and Pietro Perona. "A framework for efficient model evaluation through stratification, sampling, and estimation." In European Conference on Computer Vision, pp. 140-158. Cham: Springer Nature Switzerland, 2024.</a>.
 
 <a id="ref-2"></a>[2] <a id="ref-2-link" href="https://arxiv.org/abs/2506.07949">Angelopoulos, Anastasios N., Jacob Eisenstein, Jonathan Berant, Alekh Agarwal, and Adam Fisch. "Cost-optimal active ai model evaluation." arXiv preprint arXiv:2506.07949 (2025).</a>
+
+<a id="ref-3"></a>[3] <a id="ref-3-link" href="https://proceedings.mlr.press/v235/zrnic24a.html">Zrnic, Tijana, and Emmanuel J. Candès. "Active statistical inference." Proceedings of the 41st International Conference on Machine Learning. 2024</a>.
