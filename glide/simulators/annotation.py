@@ -9,15 +9,15 @@ def simulate_annotation(
     """Reveal oracle labels where annotated and mask the rest as NaN.
 
     Given a full oracle label array and an annotation indicator, returns an array where labels
-    are kept for annotated records (``xi == 1``) and set to ``np.nan`` for unannotated ones
+    are kept for annotated elements (``xi == 1``) and set to ``np.nan`` for unannotated ones
     (``xi == 0`` or ``xi == np.nan``). The input arrays are not mutated.
 
     Parameters
     ----------
     y_true_oracle : NDArray
-        Full oracle ground-truth labels for all records.
+        Full oracle ground-truth labels for all elements.
     xi : NDArray
-        Annotation indicator of the same length. A value of ``1`` means the record was sent
+        Annotation indicator of the same length. A value of ``1`` means the element was sent
         to a human annotator; ``0`` or ``np.nan`` means it was not.
 
     Returns
