@@ -98,10 +98,6 @@ def test_repr_equals_str(estimator, y_true, y_proxy, groups):
 
 
 def test_estimate_ess_uses_stratified_baseline(estimator, groups):
-    # Group A: labeled [1.0, 9.0] — high variance (32.0)
-    # Group B: labeled [5.0, 6.0] — low variance (0.5)
-    # The stratified classical variance differs from the naive uniform variance,
-    # so the stratified ESS must diverge from the old formula floor(var_all / ci.var).
     y_true = np.array([1.0, 9.0, np.nan, np.nan, 5.0, 6.0, np.nan, np.nan])
     y_proxy = np.array([1.5, 8.5, 5.0, 7.0, 4.9, 6.1, 5.2, 6.1])
 
