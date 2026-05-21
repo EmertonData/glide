@@ -13,8 +13,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - `docs/deep_dive/scientific_validation.md` shared methodology page defining coverage validity, confidence interval width, and effective sample size
 - `CostOptimalSampler` for uncertainty-based cost-optimal annotation strategy
 
-
-
 ### 🔄 Changed
 - All deep-dive validation notebooks now import shared utilities from `glide.scientific_validation` instead of defining them inline
 - Deep-dive validation notebooks reference `scientific_validation.md` for concept definitions instead of repeating them
