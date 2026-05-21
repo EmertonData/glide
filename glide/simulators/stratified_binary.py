@@ -39,9 +39,11 @@ def generate_stratified_binary_dataset(
     Returns
     -------
     Tuple[NDArray, NDArray, NDArray]
-        [0]: array of shape ``(sum(n_total),)``, y_true containing ground-truth labels.
-        [1]: array of shape ``(sum(n_total),)``, y_proxy containing proxy labels.
-        [2]: array of shape ``(sum(n_total),)``, integer stratum identifiers.
+        Let ``N = sum(n_total)`` be the total number of samples across all strata.
+
+        [0]: array of shape ``(N,)``, y_true containing ground-truth labels.
+        [1]: array of shape ``(N,)``, y_proxy containing proxy labels.
+        [2]: array of shape ``(N,)``, integer stratum identifiers.
 
     Raises
     ------
