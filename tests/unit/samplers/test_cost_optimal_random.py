@@ -67,6 +67,16 @@ def test_fit_raises_on_zero_mse(sampler):
         sampler.fit(y_true=np.array([1.0, 2.0]), y_proxy=np.array([1.0, 2.0]))
 
 
+def test_fit_known_outputs(sampler, y_true, y_proxy):
+    sampler.fit(y_true, y_proxy)
+
+    expected_variance = 0.5
+    expected_mse = 0.01
+
+    assert sampler._y_true_variance == pytest.approx(expected_variance, abs=0.001)
+    assert sampler._mean_squared_error == pytest.approx(expected_mse, abs=0.001)
+
+
 # --- _compute_optimal_probability ---
 
 
@@ -124,7 +134,7 @@ def test_sample_budget_too_small_raises(fitted_sampler):
         fitted_sampler.sample(n_samples=2, y_true_cost=100.0, y_proxy_cost=1.0, budget=1, random_seed=42)
 
 
-def test_sample_valid_output(fitted_sampler):
+def test_sample_known_output(fitted_sampler):
     n_samples = 2
     pi, xi = fitted_sampler.sample(n_samples=n_samples, y_true_cost=10.0, y_proxy_cost=1.0, budget=5, random_seed=42)
 
@@ -135,12 +145,12 @@ def test_sample_valid_output(fitted_sampler):
     np.testing.assert_array_equal(xi, expected_xi)
 
 
-def test_sample_n_affordable_less_than_n_samples(fitted_sampler):
+def test_sample_known_output_truncated_samples(fitted_sampler):
     n_samples = 5
     pi, xi = fitted_sampler.sample(n_samples=n_samples, y_true_cost=20.0, y_proxy_cost=1.0, budget=5, random_seed=42)
 
-    expected_pi = np.array([0.032, 0.0, 0.0, 0.032, 0.032])
-    expected_xi = np.array([0.0, np.nan, np.nan, 0.0, 1.0])
+    expected_pi = np.array([0.032, 0.032, 0.032, 0.0, 0.0])
+    expected_xi = np.array([0.0, 0.0, 0.0, np.nan, np.nan])
 
     np.testing.assert_allclose(pi, expected_pi, atol=0.01, equal_nan=True)
     np.testing.assert_array_equal(xi, expected_xi)

@@ -13,3 +13,7 @@
 ---
 
 ::: glide.samplers.cost_optimal_random.CostOptimalRandomSampler
+
+---
+
+::: glide.samplers.cost_optimal.CostOptimalSampler
