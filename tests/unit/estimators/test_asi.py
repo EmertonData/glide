@@ -1,3 +1,4 @@
+from math import floor
 from typing import Tuple
 
 import numpy as np
@@ -182,3 +183,17 @@ def test_repr_equals_str(estimator, y_arrays):
     y_true, y_proxy, _, pi = y_arrays
     result = estimator.estimate(y_true, y_proxy, pi, metric_name="perf")
     assert repr(result) == str(result)
+
+
+def test_estimate_ess_uses_ipw_baseline(estimator):
+    # Non-uniform pi makes the IPW classical variance differ from the naive uniform
+    # variance, so the IPW ESS must diverge from the old formula floor(var / ci.var).
+    y_true = np.array([1.0, 9.0, np.nan, np.nan])
+    y_proxy = np.array([1.5, 8.5, 5.0, 7.0])
+    pi = np.array([0.2, 0.8, 0.5, 0.5])
+
+    result = estimator.estimate(y_true, y_proxy, pi)
+
+    naive_ess = floor(np.var(y_true[~np.isnan(y_true)], ddof=1) / result.confidence_interval.var)
+
+    assert result.effective_sample_size != naive_ess
