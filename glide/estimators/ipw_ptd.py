@@ -197,8 +197,8 @@ class IPWPTDMeanEstimator:
             confidence_level=confidence_level,
         )
         classical_confidence_interval = IPWClassicalMeanEstimator().estimate(y_true, pi).confidence_interval
-        n_valid = int(np.sum(non_zero_pi_mask))
-        effective_sample_size = floor(n_valid * classical_confidence_interval.std**2 / confidence_interval.var)
+        n_non_zero_pi = int(np.sum(non_zero_pi_mask))
+        effective_sample_size = floor(n_non_zero_pi * classical_confidence_interval.std**2 / confidence_interval.var)
         result = PredictionPoweredMeanInferenceResult(
             confidence_interval=confidence_interval,
             metric_name=metric_name,

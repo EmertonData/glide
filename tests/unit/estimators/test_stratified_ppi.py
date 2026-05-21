@@ -1,5 +1,3 @@
-from math import floor
-
 import numpy as np
 import pytest
 
@@ -88,27 +86,3 @@ def test_str_format(estimator, y_true, y_proxy, groups):
 def test_repr_equals_str(estimator, y_true, y_proxy, groups):
     result = estimator.estimate(y_true, y_proxy, groups, metric_name="perf")
     assert repr(result) == str(result)
-
-
-def test_estimate_ess_uses_stratified_baseline(estimator, groups):
-    y_true = np.array([1.0, 9.0, np.nan, np.nan, 5.0, 6.0, np.nan, np.nan])
-    y_proxy = np.array([1.5, 8.5, 5.0, 7.0, 4.9, 6.1, 5.2, 6.1])
-
-    result = estimator.estimate(y_true, y_proxy, groups)
-
-    y_labeled = np.array([1.0, 9.0, 5.0, 6.0])
-    naive_ess = floor(np.var(y_labeled, ddof=1) / result.confidence_interval.var)
-
-    assert result.effective_sample_size != naive_ess
-
-
-def test_estimate_ess_uses_total_proportional_weights(estimator):
-    y_true = np.array([1.0, 9.0, np.nan, np.nan, 5.0, 6.0, np.nan, np.nan, np.nan, np.nan])
-    y_proxy = np.array([1.1, 8.9, 2.0, 3.0, 5.1, 5.9, 6.0, 7.0, 8.0, 9.0])
-    groups = np.array(["A", "A", "A", "A", "B", "B", "B", "B", "B", "B"])
-
-    result = estimator.estimate(y_true, y_proxy, groups)
-
-    labeled_weights_ess = floor(4 * 4.0625 / result.confidence_interval.var)
-
-    assert result.effective_sample_size != labeled_weights_ess

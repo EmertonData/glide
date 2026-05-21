@@ -63,6 +63,13 @@ def test_estimate_custom_confidence_level(estimator, y, groups):
     assert result.confidence_interval.upper_bound == pytest.approx(expected_upper, abs=0.001)
 
 
+def test_estimate_with_stratum_weights(estimator, y, groups):
+    result = estimator.estimate(y, groups, stratum_weights=np.array([0.8, 0.2]))
+
+    assert result.confidence_interval.mean == pytest.approx(2.8)
+    assert result.std == pytest.approx(np.sqrt(0.68), abs=1e-6)
+
+
 def test_estimate_ignores_nans(estimator, y, groups):
     y_with_nans = np.hstack([y, np.full(2, np.nan)])
     groups_with_nans = np.hstack([groups, np.array(["A", "B"])])
@@ -98,10 +105,3 @@ def test_str_format(estimator, y, groups):
 def test_repr_equals_str(estimator, y, groups):
     result = estimator.estimate(y, groups, metric_name="perf")
     assert repr(result) == str(result)
-
-
-def test_estimate_with_stratum_weights(estimator, y, groups):
-    result = estimator.estimate(y, groups, stratum_weights=np.array([0.8, 0.2]))
-
-    assert result.confidence_interval.mean == pytest.approx(2.8)
-    assert result.std == pytest.approx(np.sqrt(0.68), abs=1e-6)

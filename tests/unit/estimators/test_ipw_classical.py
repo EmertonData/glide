@@ -50,23 +50,24 @@ def test_estimate_custom_confidence_level(estimator, y, sampling_probability):
 
 
 @pytest.mark.parametrize("bad_pi", [2.0, -0.5])
-def test_estimate_raises_on_out_of_range_sampling_probability(estimator, y, bad_pi):
+def test_estimate_raises_on_bad_pi(estimator, y, bad_pi):
     pi = np.array([0.5, 0.5, 0.5, bad_pi])
     with pytest.raises(ValueError, match="Sampling probabilities should be in \\[0, 1\\]"):
         estimator.estimate(y, pi)
 
 
-def test_estimate_zero_pi_excluded(estimator, y, sampling_probability):
-    pi_with_zero = np.array([0.5, 0.5, 0.5, 0.0])
-    result_with_zero = estimator.estimate(y, pi_with_zero)
-    result_valid = estimator.estimate(y[:-1], sampling_probability[:-1])
-    assert result_with_zero.confidence_interval.mean == pytest.approx(result_valid.confidence_interval.mean, abs=0.001)
-    assert result_with_zero.confidence_interval.lower_bound == pytest.approx(
-        result_valid.confidence_interval.lower_bound, abs=0.001
-    )
-    assert result_with_zero.confidence_interval.upper_bound == pytest.approx(
-        result_valid.confidence_interval.upper_bound, abs=0.001
-    )
+def test_preprocess_raises_on_labeled_samples_with_zero_pi(estimator):
+    y = np.array([1.0, 2.0, np.nan, np.nan])
+    pi = np.array([0.5, 0.0, 0.5, 0.5])
+    with pytest.raises(ValueError, match="Samples with non-zero probability of being labeled cannot be labeled"):
+        estimator._preprocess(y, pi)
+
+
+def test_estimate_warns_on_zero_pi(estimator):
+    y = np.array([1.0, 2.0, np.nan, np.nan, np.nan])
+    pi = np.array([0.5, 0.5, 0.5, 0.5, 0.0])
+    with pytest.warns(UserWarning, match="Some observations have pi=0"):
+        estimator.estimate(y, pi)
 
 
 # --- __str__ / __repr__ ---

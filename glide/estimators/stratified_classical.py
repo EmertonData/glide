@@ -48,9 +48,8 @@ class StratifiedClassicalMeanEstimator:
             sigma2 = sum_k  w_k^2 * sigma2_k
 
         where ``w_k`` is the weight of stratum *k*. By default ``w_k`` is the
-        labeled fraction ``n_labeled_k / n_labeled``; pass ``stratum_weights``
-        to use a different weighting (e.g. total-proportional weights when
-        used as a baseline for ESS computation).
+        sample fraction ``n_samples_k / n_samples``; pass ``stratum_weights``
+        to use a different weighting.
 
         It is assumed that ``w_k`` reflects the true weight of stratum *k* for
         all *k*.
@@ -68,16 +67,16 @@ class StratifiedClassicalMeanEstimator:
             Target coverage for the confidence interval, e.g. ``0.95``
             for a 95 % CI. Defaults to ``0.95``.
         stratum_weights : NDArray, optional
-            Stratum weights in the same order as ``np.unique(groups)``.
-            When provided, these override the labeled-sample proportions.
-            Defaults to ``None`` (infer weights from labeled counts).
+            Stratum weights in sorted stratum order. When provided, these
+            override the sample-count proportions. Defaults to ``None``
+            (infer weights from sample counts).
 
         Returns
         -------
         ClassicalMeanInferenceResult
             Contains the CLT-based confidence interval, the metric name,
             the estimator name (``"StratifiedClassicalMeanEstimator"``), and
-            ``n`` (total number of labeled samples).
+            ``n`` (total number of samples).
 
         Raises
         ------
@@ -85,7 +84,7 @@ class StratifiedClassicalMeanEstimator:
             If any stratum contains fewer than 2 non-NaN values.
         """
         not_nan_mask = ~np.isnan(y)
-        n_labeled = np.sum(not_nan_mask)
+        n_samples = np.sum(not_nan_mask)
         weighted_mean = 0.0
         weighted_var = 0.0
 
@@ -99,10 +98,10 @@ class StratifiedClassicalMeanEstimator:
                     f"got {len(y_stratum)} in stratum {stratum_id}."
                 )
 
-            n_labeled_k = len(y_stratum)
-            w_k = stratum_weights[i] if stratum_weights is not None else n_labeled_k / n_labeled
+            n_samples_k = len(y_stratum)
+            w_k = stratum_weights[i] if stratum_weights is not None else n_samples_k / n_samples
             mean_k = np.mean(y_stratum)
-            var_k = np.var(y_stratum, ddof=1) / n_labeled_k
+            var_k = np.var(y_stratum, ddof=1) / n_samples_k
             weighted_mean += w_k * mean_k
             weighted_var += w_k**2 * var_k
 
@@ -116,6 +115,6 @@ class StratifiedClassicalMeanEstimator:
             confidence_interval=ci,
             metric_name=metric_name,
             estimator_name=self.__class__.__name__,
-            n=n_labeled,
+            n=n_samples,
         )
         return result
