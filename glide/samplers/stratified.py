@@ -25,10 +25,10 @@ class StratifiedSampler:
 
     References
     ----------
-    Fogliato, Riccardo, Pratik Patil, Mathew Monfort, and Pietro Perona.
-    "A framework for efficient model evaluation through stratification, sampling,
-    and estimation." In European Conference on Computer Vision, pp. 140-158.
-    Cham: Springer Nature Switzerland, 2024. https://arxiv.org/abs/2406.07320
+    Fogliato, Riccardo, Pratik Patil, Mathew Monfort, and Pietro Perona. "A framework
+    for efficient model evaluation through stratification, sampling, and estimation."
+    In European Conference on Computer Vision, pp. 140-158. Cham: Springer Nature
+    Switzerland, 2024.
 
     Examples
     --------
