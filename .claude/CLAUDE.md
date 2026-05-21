@@ -15,11 +15,13 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 make venv          # Create virtual environment (uv sync --all-groups)
 make lint          # Ruff linting
 make type-check    # Type checking with ty
-make tests         # Run tests: uv run pytest . -vsx
-make coverage      # Full coverage report (100% required)
-make pre-commit    # Run pre-commit hooks (ruff + nbstripout + ty)
+make tests         # Run all tests (unit + functional)
+make unit-tests    # Run unit tests only
+make functional-tests # Run functional tests only
+make coverage      # Coverage report on unit tests only — functional tests excluded (100% required)
+make pre-commit    # Run pre-commit hooks via prek (not the standard pre-commit CLI)
 make test-notebooks # Test all Jupyter notebooks
-make doc            # Build documentation with MkDocs (uv run mkdocs build)
+make doc            # Serve documentation locally with MkDocs
 ```
 
 Run a single test file: `uv run pytest tests/unit/test_foo.py -vsx`
@@ -41,17 +43,6 @@ The package has multiple layers:
 **`glide/simulators/`** — Synthetic dataset generators and annotation simulators for testing and validation.
 
 **`glide/io/`** — Serialisation helpers.
-
-## Definition of Done
-
-Every PR must satisfy all of the following before merge:
-
-- [ ] `make lint` passes
-- [ ] `make type-check` passes
-- [ ] 100% coverage on unit tests (`make coverage`)
-- [ ] NumPy-style docstrings on all public API
-- [ ] `make doc` builds without warnings, new docstrings rendered in API section
-- [ ] API reference section updated if user-facing
 
 ## Testing Requirements
 
