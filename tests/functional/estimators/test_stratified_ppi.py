@@ -139,7 +139,7 @@ def test_neyman_allocation_yields_narrower_ci_than_proportional():
         random_seed=random_seed,
     )
 
-    # Build full population: both strata, all records labeled
+    # Build full population: both strata, all samples labeled
     y_true_full = np.hstack([y_true_a, y_true_b])
     y_proxy_full = np.hstack([y_proxy_a, y_proxy_b])
     groups_full = np.hstack([np.full(len(y_true_a), "A"), np.full(len(y_true_b), "B")])
@@ -151,7 +151,7 @@ def test_neyman_allocation_yields_narrower_ci_than_proportional():
             y_proxy_full, groups_full, budget=budget, strategy=strategy, random_seed=random_seed
         )
 
-        # Reconstruct PPI dataset: restore y_true only for sampled records
+        # Reconstruct PPI dataset: restore y_true only for sampled elements
         y_true_ppi = simulate_annotation(y_true_full, xi)
 
         # Estimate using stratified PPI
