@@ -157,7 +157,7 @@ class PTDMeanEstimator:
             confidence_level=confidence_level,
         )
         classical_confidence_interval = ClassicalMeanEstimator().estimate(y_true_filtered).confidence_interval
-        effective_sample_size = floor(n_labeled * classical_confidence_interval.std**2 / confidence_interval.var)
+        effective_sample_size = floor(n_labeled * classical_confidence_interval.var / confidence_interval.var)
         result = PredictionPoweredMeanInferenceResult(
             confidence_interval=confidence_interval,
             metric_name=metric_name,

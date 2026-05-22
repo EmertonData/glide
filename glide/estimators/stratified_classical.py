@@ -99,7 +99,10 @@ class StratifiedClassicalMeanEstimator:
                 )
 
             n_samples_k = len(y_stratum)
-            w_k = stratum_weights[i] if stratum_weights is not None else n_samples_k / n_samples
+            if stratum_weights is not None:
+                w_k = stratum_weights[i]
+            else:
+                w_k = n_samples_k / n_samples
             mean_k = np.mean(y_stratum)
             var_k = np.var(y_stratum, ddof=1) / n_samples_k
             weighted_mean += w_k * mean_k
