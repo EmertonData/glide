@@ -17,9 +17,9 @@ Coverage validity is the minimum requirement for a confidence interval to be use
 Coverage is estimated empirically using the following protocol. For a fixed experimental setting and a target confidence level $1 - \alpha$:
 
 1. Repeat $N_{\text{seeds}}$ times, each with a different random seed:
-   a. Generate a fresh dataset.
-   b. Compute a confidence interval $C_\alpha^{(s)}$ for each estimation method.
-   c. Record a binary hit $\mathbf{1}[\theta^* \in C_\alpha^{(s)}]$.
+    - Generate a fresh dataset.
+    - Compute a confidence interval $C_\alpha^{(s)}$ for each estimation method.
+    - Record a binary hit $\mathbf{1}[\theta^* \in C_\alpha^{(s)}]$.
 2. Estimate the empirical coverage as the mean of the hit indicators:
 
 $$\hat{p} = \frac{1}{N_{\text{seeds}}} \sum_{s=1}^{N_{\text{seeds}}} \mathbf{1}\left[\theta^* \in C_\alpha^{(s)}\right]$$

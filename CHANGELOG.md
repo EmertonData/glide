@@ -9,13 +9,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 ## [Next release]
 
 ### ✨ Added
-- `glide.scientific_validation` module with `run_monte_carlo`, `compute_hits`, and `coverage_with_errbar` shared utilities for Monte Carlo validation
-- `docs/deep_dive/scientific_validation.md` shared methodology page defining coverage validity, confidence interval width, and effective sample size
+- `glide.scientific_validation` module for shared Monte Carlo validation utilities
+- `scientific_validation.md` deep-dive page covering shared validation methodology
 - `CostOptimalSampler` for uncertainty-based cost-optimal annotation strategy
 
 ### 🔄 Changed
-- All deep-dive validation notebooks now import shared utilities from `glide.scientific_validation` instead of defining them inline
-- Deep-dive validation notebooks reference `scientific_validation.md` for concept definitions instead of repeating them
+- Deep-dive validation notebooks use shared utilities from `glide.scientific_validation`
 
 ### 🐛 Fixed
 
