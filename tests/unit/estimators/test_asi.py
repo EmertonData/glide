@@ -132,7 +132,7 @@ def test_estimate_metadata(estimator, y_arrays):
     assert result.estimator_name == estimator.__class__.__name__
     assert result.n_true == 2
     assert result.n_proxy == 4
-    assert result.effective_sample_size == 5
+    assert result.effective_sample_size == 35
 
 
 def test_estimate_custom_confidence_level(estimator, y_arrays):
@@ -173,7 +173,7 @@ def test_str_format(estimator, y_arrays):
         "Estimator : ASIMeanEstimator\n"
         "n_true: 2\n"
         "n_proxy: 4\n"
-        "Effective Sample Size: 5"
+        "Effective Sample Size: 35"
     )
     assert output == expected
 

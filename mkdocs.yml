@@ -54,14 +54,6 @@ plugins:
   - mkdocs-jupyter:
       include_source: true
       execute: true
-  - gallery:
-      examples_dirs:
-        - docs/examples
-      gallery_dirs:
-        - docs/generated_examples
-      within_subsection_order: FileNameSortKey
-      plot_gallery: true
-      run_stale_examples: true
 
 markdown_extensions:
   - attr_list
@@ -89,8 +81,6 @@ nav:
     - ASI: tutorials/asi.ipynb
     - Cost-Optimal Random Sampling: tutorials/cost_optimal_random.ipynb
     - Cost-Optimal Sampling: tutorials/cost_optimal.ipynb
-  - Examples:
-    - generated_examples/index.md
   - Deep Dive:
     - PPI Validation: deep_dive/ppi_validation.ipynb
     - Stratified PPI Validation: deep_dive/stratified_ppi_validation.ipynb

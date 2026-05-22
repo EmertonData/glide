@@ -21,7 +21,41 @@ def sampling_probability() -> NDArray:
     return np.array([0.5, 0.5, 0.5, 0.5])
 
 
+# --- preprocessing ---
+
+
+def test_preprocess_valid_output(estimator):
+    y = np.array([1.0, 2.0, np.nan, np.nan])
+    sampling_probability = np.array([0.5, 0.5, 0.0, 0.5])
+    y_out, pi_out = estimator._preprocess(y, sampling_probability)
+    assert len(y_out) == 3
+    assert len(pi_out) == 3
+    assert np.all((pi_out > 0) & (pi_out <= 1))
+    np.testing.assert_array_equal(y_out, np.array([1.0, 2.0, np.nan]))
+
+
+@pytest.mark.parametrize("bad_pi", [2.0, -0.5])
+def test_preprocess_raises_on_bad_pi(estimator, y, bad_pi):
+    pi = np.array([0.5, 0.5, 0.5, bad_pi])
+    with pytest.raises(ValueError, match="Sampling probabilities should be in \\[0, 1\\]"):
+        estimator._preprocess(y, pi)
+
+
+def test_preprocess_raises_on_labeled_samples_with_zero_pi(estimator):
+    y = np.array([1.0, 2.0, np.nan, np.nan])
+    pi = np.array([0.5, 0.0, 0.5, 0.5])
+    with pytest.raises(ValueError, match="Samples with non-zero probability of being labeled cannot be labeled"):
+        estimator._preprocess(y, pi)
+
+
 # --- estimate ---
+
+
+def test_estimate_warns_on_zero_pi(estimator):
+    y = np.array([1.0, 2.0, np.nan, np.nan, np.nan])
+    pi = np.array([0.5, 0.5, 0.5, 0.5, 0.0])
+    with pytest.warns(UserWarning, match="Some observations have pi=0"):
+        estimator.estimate(y, pi)
 
 
 def test_estimate_is_valid_inference_result(estimator, y, sampling_probability):
@@ -47,13 +81,6 @@ def test_estimate_custom_confidence_level(estimator, y, sampling_probability):
     assert result.std == pytest.approx(1.915, abs=0.001)
     assert result.confidence_interval.lower_bound == pytest.approx(0.243, abs=0.001)
     assert result.confidence_interval.upper_bound == pytest.approx(5.756, abs=0.001)
-
-
-@pytest.mark.parametrize("bad_pi", [2.0, -0.5])
-def test_estimate_raises_on_non_positive_sampling_probability(estimator, y, bad_pi):
-    pi = np.array([0.5, 0.5, 0.5, bad_pi])
-    with pytest.raises(ValueError, match="Sampling probabilities should be in \\(0, 1]"):
-        estimator.estimate(y, pi)
 
 
 # --- __str__ / __repr__ ---
