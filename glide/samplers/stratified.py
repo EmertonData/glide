@@ -208,7 +208,7 @@ class StratifiedSampler:
         else:
             raise ValueError(f"Unknown strategy '{strategy}'. Expected 'proportional' or 'neyman'.")
 
-        # Validate that all strata received non-zero allocation
+        # Validate that all strata received compatible allocations with downstream estimators
         for stratum_id, n_h in allocation.items():
             if n_h < 2:
                 raise ValueError(
