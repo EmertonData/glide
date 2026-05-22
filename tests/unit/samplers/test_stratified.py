@@ -11,7 +11,7 @@ def sampler() -> StratifiedSampler:
 
 @pytest.fixture
 def y_proxy() -> np.ndarray:
-    return np.array([0.60, 0.45, 0.50, 0.55, 0.67, 0.33, 0.0, 1.0])
+    return np.array([0.60, 0.1, 0.50, 0.55, 0.67, 0.33, 0.0, 0.7])
 
 
 @pytest.fixture
@@ -34,13 +34,13 @@ def test_validate_raises_on_stratum_size_too_small(sampler):
     y_proxy = np.array([0.5, 0.6, 0.7])
     groups = np.array(["A", "A", "B"], dtype=object)
 
-    with pytest.raises(ValueError, match="fewer than 2"):
+    with pytest.raises(ValueError, match="fewer than 4"):
         sampler._validate(y_proxy, groups)
 
 
 def test_validate_raises_on_zero_variance_proxy_in_stratum(sampler):
-    y_proxy = np.array([0.0, 0.0, 1.0, 1.0])
-    groups = np.array(["A", "A", "B", "B"], dtype=object)
+    y_proxy = np.array([0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 1.0, 1.0])
+    groups = np.array(["A", "A", "A", "A", "B", "B", "B", "B"], dtype=object)
 
     with pytest.raises(ValueError, match="has zero variance in proxy"):
         sampler._validate(y_proxy, groups)
@@ -99,28 +99,33 @@ def test_sample_budget_exceeds_dataset_length(sampler, y_proxy, groups):
 
 
 def test_sample_raises_on_zero_allocation(sampler, y_proxy, groups):
-    with pytest.raises(ValueError, match="zero allocation"):
+    with pytest.raises(ValueError, match="fewer than two allocations"):
         sampler.sample(y_proxy, groups, 2)
 
 
+def test_sample_raises_on_over_allocation(sampler, y_proxy, groups):
+    with pytest.raises(ValueError, match="has been over-allocated"):
+        sampler.sample(y_proxy, groups, 7)
+
+
 def test_sample_default_strategy_is_neyman(sampler, y_proxy, groups):
-    default_xi = sampler.sample(y_proxy, groups, 8, random_seed=0)
-    neyman_xi = sampler.sample(y_proxy, groups, 8, strategy="neyman", random_seed=0)
+    default_xi = sampler.sample(y_proxy, groups, 4, random_seed=0)
+    neyman_xi = sampler.sample(y_proxy, groups, 4, strategy="neyman", random_seed=0)
 
     np.testing.assert_array_equal(default_xi, neyman_xi)
 
 
 def test_sample_proportional_strategy(sampler, y_proxy, groups):
-    xi = sampler.sample(y_proxy, groups, 5, strategy="proportional", random_seed=0)
+    xi = sampler.sample(y_proxy, groups, 4, strategy="proportional", random_seed=0)
 
-    expected_xi = np.array([0, 1, 1, 1, 1, 0, 0, 1])
+    expected_xi = np.array([0, 0, 1, 1, 1, 1, 0, 0])
     np.testing.assert_array_equal(xi, expected_xi)
 
 
 def test_sample_neyman_strategy(sampler, y_proxy, groups):
-    xi = sampler.sample(y_proxy, groups, 8, strategy="neyman", random_seed=0)
+    xi = sampler.sample(y_proxy, groups, 4, strategy="neyman", random_seed=0)
 
-    expected_xi = np.array([0, 0, 0, 1, 1, 1, 1, 1])
+    expected_xi = np.array([0, 0, 1, 1, 1, 1, 0, 0])
     np.testing.assert_array_equal(xi, expected_xi)
 
 
