@@ -61,7 +61,7 @@
 |----------|-------------|
 | [`run_monte_carlo`](scientific_validation.md#glide.scientific_validation.run_monte_carlo) | Monte Carlo driver for coverage and efficiency validation |
 | [`compute_hits`](scientific_validation.md#glide.scientific_validation.compute_hits) | Per-seed hit indicators for coverage computation |
-| [`coverage_with_errbar`](scientific_validation.md#glide.scientific_validation.coverage_with_errbar) | Empirical coverage and confidence interval |
+| [`coverage_with_error_bar`](scientific_validation.md#glide.scientific_validation.coverage_with_error_bar) | Empirical coverage and confidence interval |
 
 ## I/O
 

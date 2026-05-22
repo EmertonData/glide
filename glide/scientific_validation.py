@@ -9,7 +9,7 @@ from glide.estimators import ClassicalMeanEstimator
 def run_monte_carlo(
     methods: List[str],
     confidence_levels: NDArray,
-    generate_estimates: Callable[[int], Dict],
+    run_seed: Callable[[int], Dict],
     n_seeds: int = 500,
 ) -> Dict:
     """Run a Monte Carlo simulation over independent seeds.
@@ -20,7 +20,7 @@ def run_monte_carlo(
         Names of the estimation methods to compare.
     confidence_levels : NDArray
         Confidence levels at which to evaluate interval bounds.
-    generate_estimates : Callable[[int], Dict]
+    run_seed : Callable[[int], Dict]
         Function that takes a seed integer and returns a dict mapping each method
         name to ``{"mean": float, "std": float, "confidence_interval": <result>}``.
         May also include ``"effective_sample_size": float`` for any method.
@@ -32,8 +32,8 @@ def run_monte_carlo(
     Dict
         Nested dict mapping each method name to
         ``{"means": NDArray, "stds": NDArray, "lower_bounds": {level: NDArray},
-        "upper_bounds": {level: NDArray}, "effective_sample_size": NDArray}``.
-        ``effective_sample_size`` is ``NaN`` for seeds or methods that did not
+        "upper_bounds": {level: NDArray}, "effective_sample_sizes": NDArray}``.
+        ``effective_sample_sizes`` is ``NaN`` for seeds or methods that did not
         include it.
 
     Examples
@@ -41,14 +41,20 @@ def run_monte_carlo(
     >>> import numpy as np
     >>> from glide.scientific_validation import run_monte_carlo
     >>> from glide.estimators import ClassicalMeanEstimator
-    >>> def generate_estimates(seed):
+    >>> def run_seed(seed):
     ...     y = np.array([0.0, 1.0])
     ...     result = ClassicalMeanEstimator().estimate(y, confidence_level=0.9)
     ...     return {"M": {"mean": result.mean, "std": result.std, "confidence_interval": result.confidence_interval}}
-    >>> stats = run_monte_carlo(["M"], np.array([0.9]), generate_estimates, n_seeds=2)
-    >>> stats["M"]["means"].shape
-    (2,)
+    >>> stats = run_monte_carlo(["M"], np.array([0.9]), run_seed, n_seeds=2)
+    >>> stats["M"]["means"]
+    array([0.5, 0.5])
     """
+    if n_seeds <= 0:
+        raise ValueError(f"'n_seeds' must be > 0; got {n_seeds!r}.")
+    if not methods:
+        raise ValueError("'methods' must be non-empty.")
+    if not np.all((confidence_levels > 0) & (confidence_levels < 1)):
+        raise ValueError(f"All 'confidence_levels' must be in (0, 1); got {confidence_levels!r}.")
     means = {method: np.zeros(n_seeds) for method in methods}
     stds = {method: np.zeros(n_seeds) for method in methods}
     lower_bounds = {method: {level: np.zeros(n_seeds) for level in confidence_levels} for method in methods}
@@ -56,12 +62,12 @@ def run_monte_carlo(
     effective_sample_sizes = {method: np.full(n_seeds, np.nan) for method in methods}
 
     for seed in range(n_seeds):
-        estimates = generate_estimates(seed)
+        estimates = run_seed(seed)
         for method in methods:
             means[method][seed] = estimates[method]["mean"]
             stds[method][seed] = estimates[method]["std"]
+            confidence_interval = estimates[method]["confidence_interval"]
             for level in confidence_levels:
-                confidence_interval = estimates[method]["confidence_interval"]
                 confidence_interval.confidence_level = level
                 lower_bounds[method][level][seed] = confidence_interval.lower_bound
                 upper_bounds[method][level][seed] = confidence_interval.upper_bound
@@ -74,7 +80,7 @@ def run_monte_carlo(
             "stds": stds[method],
             "lower_bounds": lower_bounds[method],
             "upper_bounds": upper_bounds[method],
-            "effective_sample_size": effective_sample_sizes[method],
+            "effective_sample_sizes": effective_sample_sizes[method],
         }
         for method in methods
     }
@@ -85,7 +91,6 @@ def compute_hits(
     stats: Dict,
     confidence_level: float,
     true_mean: float,
-    methods: List[str],
 ) -> Dict[str, NDArray]:
     """Return per-seed hit indicators for each method at a given confidence level.
 
@@ -100,8 +105,6 @@ def compute_hits(
         The confidence level at which to evaluate coverage.
     true_mean : float
         The ground-truth value that the intervals should cover.
-    methods : List[str]
-        Names of the estimation methods to evaluate.
 
     Returns
     -------
@@ -114,24 +117,32 @@ def compute_hits(
     >>> import numpy as np
     >>> from glide.scientific_validation import run_monte_carlo, compute_hits
     >>> from glide.estimators import ClassicalMeanEstimator
-    >>> def generate_estimates(seed):
+    >>> def run_seed(seed):
     ...     y = np.array([0.0, 1.0])
     ...     result = ClassicalMeanEstimator().estimate(y, confidence_level=0.9)
     ...     return {"M": {"mean": result.mean, "std": result.std, "confidence_interval": result.confidence_interval}}
-    >>> stats = run_monte_carlo(["M"], np.array([0.9]), generate_estimates, n_seeds=2)
-    >>> hits = compute_hits(stats, confidence_level=0.9, true_mean=0.5, methods=["M"])
-    >>> hits["M"].shape
-    (2,)
+    >>> stats = run_monte_carlo(["M"], np.array([0.9]), run_seed, n_seeds=2)
+    >>> hits = compute_hits(stats, confidence_level=0.9, true_mean=0.5)
+    >>> hits["M"]
+    array([1., 1.])
     """
+    if not 0 < confidence_level < 1:
+        raise ValueError(f"'confidence_level' must be in (0, 1); got {confidence_level!r}.")
     hits = {}
-    for method in methods:
+    for method in stats:
+        if confidence_level not in stats[method]["lower_bounds"]:
+            available_levels = sorted(stats[method]["lower_bounds"].keys())
+            raise ValueError(
+                f"'confidence_level' {confidence_level!r} was not passed to run_monte_carlo; "
+                f"available levels are {available_levels!r}."
+            )
         lower = stats[method]["lower_bounds"][confidence_level]
         upper = stats[method]["upper_bounds"][confidence_level]
         hits[method] = np.asarray((lower <= true_mean) & (true_mean <= upper), dtype=float)
     return hits
 
 
-def coverage_with_errbar(
+def coverage_with_error_bar(
     hits: NDArray,
     confidence_level: float,
 ) -> Tuple[float, float, float]:
@@ -156,12 +167,16 @@ def coverage_with_errbar(
     Examples
     --------
     >>> import numpy as np
-    >>> from glide.scientific_validation import coverage_with_errbar
+    >>> from glide.scientific_validation import coverage_with_error_bar
     >>> hits = np.array([1.0, 1.0, 0.0, 1.0])
-    >>> mean_cov, lower, upper = coverage_with_errbar(hits, confidence_level=0.95)
-    >>> bool(lower < mean_cov < upper)
-    True
+    >>> mean_cov, lower, upper = coverage_with_error_bar(hits, confidence_level=0.95)
+    >>> float(mean_cov)
+    0.75
     """
+    if len(hits) == 0:
+        raise ValueError("'hits' must be non-empty.")
+    if not 0 < confidence_level < 1:
+        raise ValueError(f"'confidence_level' must be in (0, 1); got {confidence_level!r}.")
     estimator = ClassicalMeanEstimator()
     result = estimator.estimate(hits, confidence_level=confidence_level)
     coverage = result.mean
