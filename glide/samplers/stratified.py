@@ -34,12 +34,12 @@ class StratifiedSampler:
     --------
     >>> import numpy as np
     >>> from glide.samplers import StratifiedSampler
-    >>> y_proxy = np.array([0.8, 0.9, 0.85, 0.88, 0.2, 0.3])
-    >>> groups = np.array(["A", "A", "A", "A", "B", "B"], dtype=object)
+    >>> y_proxy = np.array([0.8, 0.9, 0.85, 0.88, 2.4 , 2.5 , 2.45, 2.48])
+    >>> groups = np.array(["A", "A", "A", "A", "B", "B", "B", "B"], dtype=object)
     >>> sampler = StratifiedSampler()
-    >>> xi = sampler.sample(y_proxy, groups, budget=2, random_seed=1)
+    >>> xi = sampler.sample(y_proxy, groups, budget=4, random_seed=1)
     >>> xi
-    array([0, 1, 0, 0, 0, 1])
+    array([0, 1, 1, 0, 1, 0, 1, 0])
     """
 
     def _validate(
@@ -54,8 +54,11 @@ class StratifiedSampler:
         for stratum_id in unique_strata:
             stratum_mask = groups == stratum_id
             stratum_size = stratum_mask.sum()
-            if stratum_size < 2:
-                raise ValueError(f"Stratum '{stratum_id}' has fewer than 2 samples; std(ddof=1) requires ≥2.")
+            if stratum_size < 4:
+                raise ValueError(
+                    f"Stratum '{stratum_id}' has fewer than 4 samples; stratified sampling "
+                    "must yield at least 2 labeled and 2 unlabeled samples per stratum."
+                )
             stratum_y_proxy = y_proxy[stratum_mask]
             if len(np.unique(stratum_y_proxy)) < 2:
                 raise ValueError(f"Stratum '{stratum_id}' has zero variance in proxy values")
@@ -205,12 +208,20 @@ class StratifiedSampler:
         else:
             raise ValueError(f"Unknown strategy '{strategy}'. Expected 'proportional' or 'neyman'.")
 
-        # Validate that all strata received non-zero allocation
+        # Validate that all strata received compatible allocations with downstream estimators
         for stratum_id, n_h in allocation.items():
-            if n_h == 0:
+            if n_h < 2:
                 raise ValueError(
-                    f"Stratum '{stratum_id}' has zero allocation. All strata must receive at least "
-                    f"one annotation slot. Consider increasing the budget or reducing the number of strata."
+                    f"Stratum '{stratum_id}' has fewer than two allocations. All strata must receive at least "
+                    f"two annotation slots. Consider increasing the budget or using bigger strata."
+                )
+
+            stratum_mask = groups == stratum_id
+            stratum_size = stratum_mask.sum()
+
+            if n_h > stratum_size - 2:
+                raise ValueError(
+                    f"Stratum '{stratum_id}' has been over-allocated. Consider using proportinal sampling."
                 )
 
         rng = np.random.default_rng(random_seed)
