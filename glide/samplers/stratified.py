@@ -57,7 +57,7 @@ class StratifiedSampler:
             if stratum_size < 4:
                 raise ValueError(
                     f"Stratum '{stratum_id}' has fewer than 4 samples; stratified sampling "
-                    "must yield at least 2 labeled and unlabeled samples per stratum."
+                    "must yield at least 2 labeled and 2 unlabeled samples per stratum."
                 )
             stratum_y_proxy = y_proxy[stratum_mask]
             if len(np.unique(stratum_y_proxy)) < 2:
@@ -213,7 +213,7 @@ class StratifiedSampler:
             if n_h < 2:
                 raise ValueError(
                     f"Stratum '{stratum_id}' has fewer than two allocations. All strata must receive at least "
-                    f"two annotation slots. Consider increasing the budget or reducing the number of strata."
+                    f"two annotation slots. Consider increasing the budget or using bigger strata."
                 )
 
             stratum_mask = groups == stratum_id
