@@ -35,19 +35,19 @@ class ASIMeanEstimator:
     --------
     >>> import numpy as np
     >>> from glide.estimators import ASIMeanEstimator
-    >>> y_true = np.array([5.0, 6.0, np.nan, np.nan])
-    >>> y_proxy = np.array([4.9, 6.1, 5.2, 6.1])
-    >>> pi = np.array([0.5, 0.7, 0.6, 0.2])
+    >>> y_true = np.array([0.0, 1.0, np.nan, np.nan])
+    >>> y_proxy = np.array([0.1, 0.9, 0.5, 0.5])
+    >>> pi = np.array([0.8, 0.8, 0.8, 0.8])
     >>> estimator = ASIMeanEstimator()
     >>> result = estimator.estimate(y_true, y_proxy, pi)
     >>> print(result)
     Metric: Metric
-    Point Estimate: 5.563
-    Confidence Interval (95%): [5.084, 6.042]
+    Point Estimate: 0.548
+    Confidence Interval (95%): [0.138, 0.958]
     Estimator : ASIMeanEstimator
     n_true: 2
     n_proxy: 4
-    Effective Sample Size: 243
+    Effective Sample Size: 4
     """
 
     def _preprocess(
