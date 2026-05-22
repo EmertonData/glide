@@ -14,7 +14,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 ### 🔄 Changed
 
 ### 🐛 Fixed
-- `StratifiedSampler` outputs incompatible with downstream estimators
+- Invalid inputs/outputs in `StratifiedSampler` with no raised errors
 
 ### 💛 Contributors
 
