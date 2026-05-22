@@ -86,11 +86,11 @@ class IPWClassicalMeanEstimator:
             )
         y_non_zero_pi, pi_non_zero = self._preprocess(y, sampling_probability)
         n_labeled = int(np.sum(~np.isnan(y_non_zero_pi)))
-        total_size = len(y_non_zero_pi)
+        n_samples = len(y_non_zero_pi)
         ipw_weighted_values = np.nan_to_num(y_non_zero_pi, nan=0) / pi_non_zero
 
         mean = np.mean(ipw_weighted_values)
-        std = np.std(ipw_weighted_values, ddof=1) / np.sqrt(total_size)
+        std = np.std(ipw_weighted_values, ddof=1) / np.sqrt(n_samples)
         ci = CLTConfidenceInterval(mean=mean, std=std, confidence_level=confidence_level)
         result = ClassicalMeanInferenceResult(
             confidence_interval=ci,

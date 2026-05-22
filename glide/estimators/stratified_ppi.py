@@ -123,11 +123,11 @@ class StratifiedPPIMeanEstimator:
 
         weighted_mean = 0.0
         weighted_var = 0.0
-        total_size = len(y_true)
+        n_samples = len(y_true)
 
         for y_true_filtered, y_proxy_labeled, y_proxy_unlabeled in strata:
             stratum_size = len(y_true_filtered) + len(y_proxy_unlabeled)
-            w_k = stratum_size / total_size
+            w_k = stratum_size / n_samples
 
             lambda_k = _compute_tuning_parameter(y_true_filtered, y_proxy_labeled, y_proxy_unlabeled, power_tuning)
             mean_k = _compute_mean_estimate(y_true_filtered, y_proxy_labeled, y_proxy_unlabeled, lambda_k)
@@ -145,7 +145,7 @@ class StratifiedPPIMeanEstimator:
             confidence_level=confidence_level,
         )
         _, stratum_counts = np.unique(groups, return_counts=True)
-        stratum_weights = stratum_counts / total_size
+        stratum_weights = stratum_counts / n_samples
         classical_confidence_interval = (
             StratifiedClassicalMeanEstimator()
             .estimate(y_true, groups, stratum_weights=stratum_weights)
@@ -157,7 +157,7 @@ class StratifiedPPIMeanEstimator:
             metric_name=metric_name,
             estimator_name=self.__class__.__name__,
             n_true=n_true,
-            n_proxy=total_size,
+            n_proxy=n_samples,
             effective_sample_size=effective_sample_size,
         )
         return result
