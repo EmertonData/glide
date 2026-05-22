@@ -32,6 +32,13 @@ def test_generate_binary_dataset_with_oracle_sampling_impossible_correlation_rai
         generate_binary_dataset_with_oracle_sampling(n_total=10, true_mean=0.7, proxy_mean=0.6, correlation=0.95)
 
 
+def test_generate_binary_dataset_with_oracle_sampling_default_return_is_rmse():
+    _, _, uncertainty_default = generate_binary_dataset_with_oracle_sampling(n_total=10, random_seed=0)
+    _, _, uncertainty_rmse = generate_binary_dataset_with_oracle_sampling(n_total=10, return_mse=False, random_seed=0)
+
+    np.testing.assert_array_equal(uncertainty_default, uncertainty_rmse)
+
+
 def test_generate_binary_dataset_with_oracle_sampling_reproducibility():
     y_true_oracle1, y_proxy1, uncertainty1 = generate_binary_dataset_with_oracle_sampling(n_total=10, random_seed=7)
     y_true_oracle2, y_proxy2, uncertainty2 = generate_binary_dataset_with_oracle_sampling(n_total=10, random_seed=7)
