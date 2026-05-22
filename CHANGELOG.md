@@ -15,6 +15,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - Binary dataset generators now take `n_total` instead of `n_labeled` + `n_unlabeled`, and return fully populated oracle arrays.
 
 ### 🐛 Fixed
+- Invalid inputs/outputs in `StratifiedSampler` with no raised errors
 
 ### 💛 Contributors
 
