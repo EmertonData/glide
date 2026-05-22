@@ -64,9 +64,9 @@ class ClassicalMeanEstimator:
             If ``y`` contains fewer than 2 non-NaN values.
         """
         y_clean = self._preprocess(y)
-        total_size = len(y_clean)
+        n_samples = len(y_clean)
         mean = np.mean(y_clean)
-        std = np.std(y_clean, ddof=1) / np.sqrt(total_size)
+        std = np.std(y_clean, ddof=1) / np.sqrt(n_samples)
         ci = CLTConfidenceInterval(
             mean=mean,
             std=std,
@@ -76,6 +76,6 @@ class ClassicalMeanEstimator:
             confidence_interval=ci,
             metric_name=metric_name,
             estimator_name=self.__class__.__name__,
-            n=total_size,
+            n=n_samples,
         )
         return result

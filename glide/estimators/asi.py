@@ -1,12 +1,13 @@
 import warnings
+from math import floor
 from typing import Tuple
 
 import numpy as np
 from numpy.typing import NDArray
 
 from glide.confidence_intervals import CLTConfidenceInterval
+from glide.estimators.ipw_classical import IPWClassicalMeanEstimator
 from glide.mean_inference_results import PredictionPoweredMeanInferenceResult
-from glide.utils import compute_effective_sample_size
 
 
 class ASIMeanEstimator:
@@ -34,19 +35,19 @@ class ASIMeanEstimator:
     --------
     >>> import numpy as np
     >>> from glide.estimators import ASIMeanEstimator
-    >>> y_true = np.array([5.0, 6.0, np.nan, np.nan])
-    >>> y_proxy = np.array([4.9, 6.1, 5.2, 6.1])
-    >>> pi = np.array([0.5, 0.7, 0.6, 0.2])
+    >>> y_true = np.array([0.0, 1.0, np.nan, np.nan])
+    >>> y_proxy = np.array([0.1, 0.9, 0.5, 0.5])
+    >>> pi = np.array([0.8, 0.8, 0.8, 0.8])
     >>> estimator = ASIMeanEstimator()
     >>> result = estimator.estimate(y_true, y_proxy, pi)
     >>> print(result)
     Metric: Metric
-    Point Estimate: 5.563
-    Confidence Interval (95%): [5.084, 6.042]
+    Point Estimate: 0.548
+    Confidence Interval (95%): [0.138, 0.958]
     Estimator : ASIMeanEstimator
     n_true: 2
     n_proxy: 4
-    Effective Sample Size: 8
+    Effective Sample Size: 4
     """
 
     def _preprocess(
@@ -181,7 +182,8 @@ class ASIMeanEstimator:
         confidence_interval = CLTConfidenceInterval(
             mean=mean_estimate, std=std_estimate, confidence_level=confidence_level
         )
-        effective_sample_size = compute_effective_sample_size(y_true_filled[xi == 1], confidence_interval.var)
+        classical_confidence_interval = IPWClassicalMeanEstimator().estimate(y_true, pi).confidence_interval
+        effective_sample_size = floor(n_true * classical_confidence_interval.var / confidence_interval.var)
 
         return PredictionPoweredMeanInferenceResult(
             confidence_interval=confidence_interval,
