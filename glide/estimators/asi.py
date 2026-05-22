@@ -47,7 +47,7 @@ class ASIMeanEstimator:
     Estimator : ASIMeanEstimator
     n_true: 2
     n_proxy: 4
-    Effective Sample Size: 486
+    Effective Sample Size: 243
     """
 
     def _preprocess(
@@ -183,7 +183,7 @@ class ASIMeanEstimator:
             mean=mean_estimate, std=std_estimate, confidence_level=confidence_level
         )
         classical_confidence_interval = IPWClassicalMeanEstimator().estimate(y_true, pi).confidence_interval
-        effective_sample_size = floor(n_proxy * classical_confidence_interval.std**2 / confidence_interval.var)
+        effective_sample_size = floor(n_true * classical_confidence_interval.var / confidence_interval.var)
 
         return PredictionPoweredMeanInferenceResult(
             confidence_interval=confidence_interval,

@@ -36,10 +36,17 @@ class IPWClassicalMeanEstimator:
     """
 
     def _preprocess(self, y: NDArray, sampling_probability: NDArray) -> Tuple[NDArray, NDArray]:
+        if np.min(sampling_probability) < 0 or np.max(sampling_probability) > 1:
+            raise ValueError("Sampling probabilities should be in [0, 1]")
         non_nan_mask = ~np.isnan(y)
         if np.any(non_nan_mask & (sampling_probability == 0)):
             raise ValueError("Samples with non-zero probability of being labeled cannot be labeled")
         non_zero_pi_mask = sampling_probability > 0
+        if not np.all(non_zero_pi_mask):
+            warnings.warn(
+                "Some observations have pi=0. These will be excluded from the estimation.",
+                UserWarning,
+            )
         return y[non_zero_pi_mask], sampling_probability[non_zero_pi_mask]
 
     def estimate(
@@ -77,14 +84,6 @@ class IPWClassicalMeanEstimator:
             If any value in ``sampling_probability`` is outside of [0, 1].
             If any labeled observation (non-NaN ``y``) has ``sampling_probability`` equal to 0.
         """
-        if np.min(sampling_probability) < 0 or np.max(sampling_probability) > 1:
-            raise ValueError("Sampling probabilities should be in [0, 1]")
-        non_zero_pi_mask = sampling_probability > 0
-        if not np.all(non_zero_pi_mask):
-            warnings.warn(
-                "Some observations have pi=0. These will be excluded from the estimation.",
-                UserWarning,
-            )
         y_non_zero_pi, pi_non_zero_pi = self._preprocess(y, sampling_probability)
         n_labeled = int(np.sum(~np.isnan(y_non_zero_pi)))
         total_size = len(y_non_zero_pi)
