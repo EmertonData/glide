@@ -47,7 +47,7 @@ def test_estimate_metadata(estimator, y_true, y_proxy, groups):
     assert result.estimator_name == estimator.__class__.__name__
     assert result.n_true == 4
     assert result.n_proxy == 8
-    assert result.effective_sample_size == 5
+    assert result.effective_sample_size == 7
 
 
 def test_estimate_custom_confidence_level(estimator, y_true, y_proxy, groups):
@@ -78,7 +78,7 @@ def test_str_format(estimator, y_true, y_proxy, groups):
         "Estimator : StratifiedPPIMeanEstimator\n"
         "n_true: 4\n"
         "n_proxy: 8\n"
-        "Effective Sample Size: 5"
+        "Effective Sample Size: 7"
     )
     assert output == expected
 

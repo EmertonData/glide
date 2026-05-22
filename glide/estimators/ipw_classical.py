@@ -1,3 +1,6 @@
+import warnings
+from typing import Tuple
+
 import numpy as np
 from numpy.typing import NDArray
 
@@ -32,6 +35,15 @@ class IPWClassicalMeanEstimator:
     n: 3
     """
 
+    def _preprocess(self, y: NDArray, sampling_probability: NDArray) -> Tuple[NDArray, NDArray]:
+        if np.min(sampling_probability) < 0 or np.max(sampling_probability) > 1:
+            raise ValueError("Sampling probabilities should be in [0, 1]")
+        non_nan_mask = ~np.isnan(y)
+        if np.any(non_nan_mask & (sampling_probability == 0)):
+            raise ValueError("Samples with non-zero probability of being labeled cannot be labeled")
+        non_zero_pi_mask = sampling_probability > 0
+        return y[non_zero_pi_mask], sampling_probability[non_zero_pi_mask]
+
     def estimate(
         self,
         y: NDArray,
@@ -46,8 +58,9 @@ class IPWClassicalMeanEstimator:
         y : NDArray
             1-D array of observations, may contain unobserved NaN values.
         sampling_probability : NDArray
-            1-D array of pre-determined sampling probabilities π_i ∈ (0, 1],
+            1-D array of pre-determined sampling probabilities π_i ∈ [0, 1],
             one per observation. Must have the same length as ``y``.
+            Entries with π_i = 0 are excluded from the computation.
         metric_name : str, optional
             Human-readable label for the metric. Defaults to ``"Metric"``.
         confidence_level : float, optional
@@ -63,18 +76,21 @@ class IPWClassicalMeanEstimator:
         Raises
         ------
         ValueError
-            If any value in ``sampling_probability`` is not in (0, 1], i.e.
-            less than or equal to 0 or greater than 1.
+            If any value in ``sampling_probability`` is outside of [0, 1].
+            If any labeled observation (non-NaN ``y``) has ``sampling_probability`` equal to 0.
         """
-        if np.min(sampling_probability) <= 0 or np.max(sampling_probability) > 1:
-            raise ValueError("Sampling probabilities should be in (0, 1]")
-
-        n_labeled = np.sum(~np.isnan(y))
-        total_size = len(y)
-        ipw_weighted_values = np.nan_to_num(y, nan=0) / sampling_probability
+        if not np.all(sampling_probability > 0):
+            warnings.warn(
+                "Some observations have pi=0. These will be excluded from the estimation.",
+                UserWarning,
+            )
+        y_non_zero_pi, pi_non_zero = self._preprocess(y, sampling_probability)
+        n_labeled = int(np.sum(~np.isnan(y_non_zero_pi)))
+        n_samples = len(y_non_zero_pi)
+        ipw_weighted_values = np.nan_to_num(y_non_zero_pi, nan=0) / pi_non_zero
 
         mean = np.mean(ipw_weighted_values)
-        std = np.std(ipw_weighted_values, ddof=1) / np.sqrt(total_size)
+        std = np.std(ipw_weighted_values, ddof=1) / np.sqrt(n_samples)
         ci = CLTConfidenceInterval(mean=mean, std=std, confidence_level=confidence_level)
         result = ClassicalMeanInferenceResult(
             confidence_interval=ci,

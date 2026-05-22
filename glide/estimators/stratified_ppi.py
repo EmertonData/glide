@@ -1,3 +1,5 @@
+from math import floor
+
 import numpy as np
 from numpy.typing import NDArray
 
@@ -7,9 +9,9 @@ from glide.estimators.ppi_core import (
     _compute_std_estimate,
     _compute_tuning_parameter,
 )
+from glide.estimators.stratified_classical import StratifiedClassicalMeanEstimator
 from glide.estimators.stratified_core import _preprocess
 from glide.mean_inference_results import PredictionPoweredMeanInferenceResult
-from glide.utils import compute_effective_sample_size
 
 
 class StratifiedPPIMeanEstimator:
@@ -52,7 +54,7 @@ class StratifiedPPIMeanEstimator:
     Estimator : StratifiedPPIMeanEstimator
     n_true: 4
     n_proxy: 8
-    Effective Sample Size: 95
+    Effective Sample Size: 14
     """
 
     def estimate(
@@ -121,11 +123,11 @@ class StratifiedPPIMeanEstimator:
 
         weighted_mean = 0.0
         weighted_var = 0.0
-        total_size = len(y_true)
+        n_samples = len(y_true)
 
         for y_true_filtered, y_proxy_labeled, y_proxy_unlabeled in strata:
             stratum_size = len(y_true_filtered) + len(y_proxy_unlabeled)
-            w_k = stratum_size / total_size
+            w_k = stratum_size / n_samples
 
             lambda_k = _compute_tuning_parameter(y_true_filtered, y_proxy_labeled, y_proxy_unlabeled, power_tuning)
             mean_k = _compute_mean_estimate(y_true_filtered, y_proxy_labeled, y_proxy_unlabeled, lambda_k)
@@ -135,20 +137,27 @@ class StratifiedPPIMeanEstimator:
             weighted_var += w_k**2 * std_k**2
 
         std = np.sqrt(weighted_var)
-        n_true = np.sum(~np.isnan(y_true))
+        n_true = int(np.sum(~np.isnan(y_true)))
 
         confidence_interval = CLTConfidenceInterval(
             mean=weighted_mean,
             std=std,
             confidence_level=confidence_level,
         )
-        effective_sample_size = compute_effective_sample_size(y_true, confidence_interval.var)
+        _, stratum_counts = np.unique(groups, return_counts=True)
+        stratum_weights = stratum_counts / n_samples
+        classical_confidence_interval = (
+            StratifiedClassicalMeanEstimator()
+            .estimate(y_true, groups, stratum_weights=stratum_weights)
+            .confidence_interval
+        )
+        effective_sample_size = floor(n_true * classical_confidence_interval.var / confidence_interval.var)
         result = PredictionPoweredMeanInferenceResult(
             confidence_interval=confidence_interval,
             metric_name=metric_name,
             estimator_name=self.__class__.__name__,
             n_true=n_true,
-            n_proxy=total_size,
+            n_proxy=n_samples,
             effective_sample_size=effective_sample_size,
         )
         return result
