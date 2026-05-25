@@ -12,7 +12,7 @@ def run_monte_carlo(
     run_seed: Callable[[int], Dict],
     n_seeds: int = 500,
 ) -> Dict:
-    """Run a Monte Carlo simulation over independent seeds.
+    """Run ``run_seed`` for ``n_seeds`` independent seeds and collect all outputs into a single dictionary.
 
     Parameters
     ----------
@@ -35,6 +35,15 @@ def run_monte_carlo(
         "upper_bounds": {level: NDArray}, "effective_sample_sizes": NDArray}``.
         ``effective_sample_sizes`` is ``NaN`` for seeds or methods that did not
         include it.
+
+    Raises
+    ------
+    ValueError
+        If ``n_seeds`` is not positive.
+    ValueError
+        If ``methods`` is empty.
+    ValueError
+        If any value in ``confidence_levels`` is not in ``(0, 1)``.
 
     Examples
     --------
@@ -92,10 +101,11 @@ def compute_hits(
     confidence_level: float,
     true_mean: float,
 ) -> Dict[str, NDArray]:
-    """Return per-seed hit indicators for each method at a given confidence level.
+    """Compute per-seed hit indicators from the output of :func:`run_monte_carlo`.
 
-    A hit is 1 when the confidence interval for that seed contains ``true_mean``,
-    and 0 otherwise.
+    For each method and each seed, a hit indicator records whether the confidence
+    interval at ``confidence_level`` contains ``true_mean`` (hit = 1) or does not
+    (hit = 0), allowing empirical coverage to be measured across seeds.
 
     Parameters
     ----------
@@ -111,6 +121,14 @@ def compute_hits(
     Dict[str, NDArray]
         Dict mapping each method name to a float array of shape ``(n_seeds,)``
         with values in ``{0.0, 1.0}``.
+
+    Raises
+    ------
+    ValueError
+        If ``confidence_level`` is not in ``(0, 1)``.
+    ValueError
+        If ``confidence_level`` was not passed to :func:`run_monte_carlo` and
+        is therefore not available in ``stats``.
 
     Examples
     --------
@@ -163,6 +181,13 @@ def coverage_with_error_bar(
     -------
     Tuple[float, float, float]
         ``(mean_coverage, lower_bound, upper_bound)``.
+
+    Raises
+    ------
+    ValueError
+        If ``hits`` is empty.
+    ValueError
+        If ``confidence_level`` is not in ``(0, 1)``.
 
     Examples
     --------
