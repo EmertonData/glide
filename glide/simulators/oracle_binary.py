@@ -10,7 +10,6 @@ def generate_binary_dataset_with_oracle_sampling(
     proxy_mean: float = 0.6,
     correlation: float = 0.8,
     random_seed: Optional[int] = None,
-    return_mse: Optional[bool] = False,
 ) -> Tuple[NDArray, NDArray, NDArray]:
     """Generate a synthetic binary dataset with oracle sampling probabilities.
 
@@ -37,8 +36,6 @@ def generate_binary_dataset_with_oracle_sampling(
         Pearson correlation between y_true_oracle and y_proxy (marginal, across all samples).
     random_seed : int, optional
         Seed for reproducibility.
-    return_mse : bool, optional
-        If True, the third return value is the per-sample MSE instead of the RMSE. Default is False.
 
     Returns
     -------
@@ -163,7 +160,7 @@ def generate_binary_dataset_with_oracle_sampling(
 
     The optimal sampling probability satisfies
     ``uncertainty = sqrt(E[(y_proxy - y_true_oracle)²]) = sqrt(error_prob(x))``.
-    When ``return_mse=True``, the squared value ``error_prob(x)`` is returned instead.
+    These values are stored directly as ``uncertainty``.
 
     Examples
     --------
@@ -240,7 +237,7 @@ def generate_binary_dataset_with_oracle_sampling(
     y_true_oracle_arr = samples // 2
     y_proxy_arr = samples % 2
 
-    # Oracle uncertainty: sqrt(P(error | x_i)), or P(error | x_i) if return_mse is True
-    uncertainty = error_prob_x if return_mse else np.sqrt(error_prob_x)
+    # Oracle uncertainty: sqrt(P(error | x_i))
+    uncertainty = np.sqrt(error_prob_x)
 
     return y_true_oracle_arr.astype(float), y_proxy_arr.astype(float), uncertainty
