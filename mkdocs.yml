@@ -79,7 +79,8 @@ nav:
     - PPI: tutorials/ppi.ipynb
     - Stratified PPI: tutorials/stratified_ppi.ipynb
     - ASI: tutorials/asi.ipynb
-    - Cost-Optimal Sampling: tutorials/cost_optimal_random.ipynb
+    - Cost-Optimal Random Sampling: tutorials/cost_optimal_random.ipynb
+    - Cost-Optimal Sampling: tutorials/cost_optimal.ipynb
   - Deep Dive:
     - PPI Validation: deep_dive/ppi_validation.ipynb
     - Stratified PPI Validation: deep_dive/stratified_ppi_validation.ipynb

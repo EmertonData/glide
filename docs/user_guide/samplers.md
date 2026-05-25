@@ -196,7 +196,7 @@ In order to compute the optimal policy, the ground truth label variance $\mathrm
 
 ### Budget and sample selection
 
-The expected cost of processing sample $i$ under the active policy is:
+The proxy label is queried for every selected sample, while the ground truth label is queried with probability $\pi_i$. The expected cost of processing sample $i$ under the active policy is therefore:
 
 $$\mathbb{E}[\text{cost}_i] = c_y \cdot \pi_i + c_{\tilde{y}}$$
 
@@ -208,11 +208,11 @@ A hard cutoff is applied: samples beyond index $T$ receive $\pi_i = 0$ and are e
 
 ### Sampling procedure
 
-For each selected sample $i \leq T$, the ground truth annotation is independently requested with probability $\pi_i$:
+All selected samples $i \leq T$ are queried for their proxy label. Additionally, for each selected sample, the ground truth annotation is independently requested with probability $\pi_i$:
 
 $$\xi_i \sim \mathrm{Bernoulli}(\pi_i), \quad i = 1, \ldots, T$$
 
-where $\xi_i = 1$ means the sample is sent to the ground truth rater and $\xi_i = 0$ means only the proxy label is used. Unselected samples receive no indicator $\xi_i$ (absent value encoded as $\mathrm{NaN}$).
+where $\xi_i = 1$ means the sample additionally receives ground truth annotation and $\xi_i = 0$ means only the proxy label is used. Unselected samples receive no indicator $\xi_i$ (absent value encoded as $\mathrm{NaN}$).
 
 ---
 
