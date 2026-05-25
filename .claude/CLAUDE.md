@@ -15,11 +15,13 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 make venv          # Create virtual environment (uv sync --all-groups)
 make lint          # Ruff linting
 make type-check    # Type checking with ty
-make tests         # Run tests: uv run pytest . -vsx
-make coverage      # Full coverage report (100% required)
-make pre-commit    # Run pre-commit hooks (ruff + nbstripout + ty)
+make tests         # Run all tests (unit + functional)
+make unit-tests    # Run unit tests only
+make functional-tests # Run functional tests only
+make coverage      # Coverage report on unit tests only (100% required; functional tests are excluded)
+make pre-commit    # Run pre-commit hooks via prek (not the standard pre-commit CLI)
 make test-notebooks # Test all Jupyter notebooks
-make doc            # Build documentation with MkDocs (uv run mkdocs build)
+make doc            # Build and serve documentation locally with MkDocs
 ```
 
 Run a single test file: `uv run pytest tests/unit/test_foo.py -vsx`
@@ -28,7 +30,7 @@ Run a single test file: `uv run pytest tests/unit/test_foo.py -vsx`
 
 The package has multiple layers:
 
-**`glide/estimators/`** — Public API. Statistical estimators (classical, prediction-powered, stratified variants).
+**`glide/estimators/`** — Public API. Statistical estimators (classical, PPI, ASI, IPW, PTD, and their stratified variants).
 
 **`glide/confidence_intervals/`** — Confidence interval implementations depending on statistical methods.
 
@@ -42,21 +44,10 @@ The package has multiple layers:
 
 **`glide/io/`** — Serialisation helpers.
 
-## Definition of Done
-
-Every PR must satisfy all of the following before merge:
-
-- [ ] `make lint` passes
-- [ ] `make type-check` passes
-- [ ] 100% coverage on unit tests (`make coverage`)
-- [ ] NumPy-style docstrings on all public API
-- [ ] `make doc` builds without warnings, new docstrings rendered in API section
-- [ ] API reference section updated if user-facing
-
 ## Testing Requirements
 
 - Tests live in `tests/unit/` and `tests/functional/`
-- `tests/unit/` mirrors the `glide/` folder structure exactly (e.g., `glide/estimators/foo.py` → `tests/unit/estimators/test_foo.py`)
+- Both directories mirror the `glide/` folder structure exactly (e.g., `glide/estimators/foo.py` → `tests/unit/estimators/test_foo.py`); `tests/functional/` contains tests verifying statistical properties of estimators, samplers and simulators
 - pytest runs with `--import-mode=importlib --doctest-modules`, so module docstrings are also tested
 - Every new feature needs: doctests in the docstring + unit tests + analytical verification where relevant (assert against hardcoded expected values, not values computed inline by the test itself — e.g., `CLTConfidenceInterval(mean=0, std=1, confidence_level=0.95)` → bounds `±1.96`, or StratifiedPPI with one stratum must equal PPI)
 - 100% coverage is enforced
@@ -64,7 +55,7 @@ Every PR must satisfy all of the following before merge:
 - Each distinct scenario (input combination, edge case, or error condition) gets its own test function — do not write two test functions that exercise the exact same code path with equivalent inputs
 - Use the smallest arrays possibles (typically 2 elements, rarely more than 10); tests must be lightning fast
 - Use fixtures to factorize pervasive test elements (shared arrays, estimator instances, etc.)
-- Existing test files are the canonical reference for structure and patterns — follow `test_ppi.py`, `tests/unit/simulators/test_binary.py`, etc. when writing new test files
+- Existing test files are the canonical reference for structure and patterns — follow `tests/unit/estimators/test_ppi.py`, `tests/unit/simulators/test_binary.py`, etc. when writing new test files
 - Use `pytest.approx(value, abs=<tol>)` when comparing scalar floats in tests — tolerance should be as small as possible given the precision of the expected value
 - Use `np.testing.assert_allclose` when comparing arrays of floats in tests
 - Use `np.testing.assert_array_equal` when comparing arrays of strings or categories in tests
@@ -137,6 +128,7 @@ Only add a comment when the *why* is non-obvious: a hidden constraint, a subtle 
 - MkDocs with mkdocstrings; docs must build without warnings
 - Update `CHANGELOG.md` for any user-facing changes (Keep a Changelog format, SemVer)
 - Always add elements to the "Added" or "Changed" sections of `CHANGELOG.md` at the top of the existing list
+- Keep the `CHANGELOG.md` user-friendly and concise
 - Avoid using and escaping underscores in math mode in jupyter notebooks.
 - Avoid making excessive use of dashes like this — when writing documentation and notebooks. Prefer commas, colons and parentheses where possible.
 - In documentation and tutorials, always spell out "confidence interval" instead of using "CI", which is easily confused with "continuous integration".

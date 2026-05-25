@@ -27,10 +27,10 @@ def test_proportional_matches_uniform_equal_strata(sampler):
 
 
 def test_sample_rounding_sums_to_budget(sampler):
-    y_proxy = np.array([0.0, 0.1, 1.0, 1.1, 2.0, 2.1, 3.0, 3.1, 4.0, 4.1])
-    groups = np.array(["s0", "s0", "s1", "s1", "s2", "s2", "s3", "s3", "s4", "s4"], dtype=object)
+    y_proxy = np.array([0.0, 0.1, 1.0, 1.1, 2.0, 2.1, 3.0, 3.1, 4.0, 4.1] * 2)
+    groups = np.array(["s0", "s0", "s1", "s1", "s2", "s2", "s3", "s3", "s4", "s4"] * 2, dtype=object)
 
     for strategy in ["proportional", "neyman"]:
-        xi = sampler.sample(y_proxy, groups, 7, strategy=strategy, random_seed=0)
+        xi = sampler.sample(y_proxy, groups, 10, strategy=strategy, random_seed=0)
 
-        assert xi.sum() <= 7
+        assert xi.sum() <= 10
