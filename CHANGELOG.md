@@ -9,7 +9,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 ## [Next release]
 
 ### ✨ Added
-- `glide.scientific_validation` module for shared Monte Carlo validation utilities
 - `scientific_validation.md` deep-dive page covering shared validation methodology
 - `CostOptimalSampler` for uncertainty-based cost-optimal annotation strategy
 

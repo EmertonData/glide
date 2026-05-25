@@ -56,7 +56,7 @@ def test_run_monte_carlo_raises_on_empty_methods(confidence_levels, run_seed):
         run_monte_carlo([], confidence_levels, run_seed, n_seeds=2)
 
 
-@pytest.mark.parametrize("invalid_confidence_level", [-1, 0, 1, 2])
+@pytest.mark.parametrize("invalid_confidence_level", [-0.5, 0, 1, 2])
 def test_run_monte_carlo_raises_on_invalid_confidence_level(methods, run_seed, invalid_confidence_level):
     with pytest.raises(ValueError, match="confidence_levels"):
         run_monte_carlo(methods, np.array([0.2, 0.5, 0.8, invalid_confidence_level]), run_seed, n_seeds=2)
@@ -84,6 +84,7 @@ def test_compute_hits_raises_on_invalid_confidence_level(stats, invalid_confiden
 
 
 def test_compute_hits_raises_on_missing_confidence_level(stats):
+    # 0.8 was not passed to run_monte_carlo (fixture uses [0.9]), so it is absent from stats
     with pytest.raises(ValueError, match="confidence_level"):
         compute_hits(stats, confidence_level=0.8, true_mean=0.5)
 
@@ -101,7 +102,7 @@ def test_coverage_with_error_bar_raises_on_empty_hits():
         coverage_with_error_bar(np.array([]), confidence_level=0.95)
 
 
-@pytest.mark.parametrize("invalid_confidence_level", [-1, 0, 1, 2])
+@pytest.mark.parametrize("invalid_confidence_level", [-0.5, 0, 1, 2])
 def test_coverage_with_error_bar_raises_on_invalid_confidence_level(invalid_confidence_level):
     with pytest.raises(ValueError, match="confidence_level"):
         coverage_with_error_bar(np.array([1.0, 0.0]), confidence_level=invalid_confidence_level)
