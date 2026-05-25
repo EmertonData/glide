@@ -50,4 +50,8 @@ $$\text{ESS} = n_{\text{true}} \times \left(\frac{\bar{w}_{\text{True only}}}{\b
 
 where $\bar{w}_{\text{True only}}$ and $\bar{w}_{\text{method}}$ are the mean widths over Monte Carlo seeds and $n_{\text{true}}$ is the number of true labels used.
 
+
+When the correlation is zero, ESS $\approx N_{\text{labeled}}$ (no gain). As the correlation approaches $1$, ESS grows. PTD can be equivalent to having a much larger labeled set of samples.
+
+
 When the proxy is uninformative, ESS $\approx n_{\text{true}}$ (no gain). As proxy quality improves, ESS grows above $n_{\text{true}}$, meaning the method extracts as much statistical information as a larger labeled dataset would.
