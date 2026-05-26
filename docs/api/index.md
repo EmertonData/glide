@@ -55,6 +55,14 @@
 | [`ClassicalMeanInferenceResult`](mean_inference_results.md#glide.mean_inference_results.classical.ClassicalMeanInferenceResult) | Result object from classical estimators |
 | [`PredictionPoweredMeanInferenceResult`](mean_inference_results.md#glide.mean_inference_results.prediction_powered.PredictionPoweredMeanInferenceResult) | Result object from prediction-powered estimators |
 
+## Scientific Validation
+
+| Function | Description |
+|----------|-------------|
+| [`run_monte_carlo`](scientific_validation.md#glide.scientific_validation.run_monte_carlo) | Monte Carlo driver for coverage and efficiency validation |
+| [`compute_hits`](scientific_validation.md#glide.scientific_validation.compute_hits) | Per-seed hit indicators for coverage computation |
+| [`coverage_with_error_bar`](scientific_validation.md#glide.scientific_validation.coverage_with_error_bar) | Empirical coverage and confidence interval |
+
 ## I/O
 
 | Module | Description |
