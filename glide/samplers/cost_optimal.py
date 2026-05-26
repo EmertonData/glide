@@ -155,7 +155,7 @@ class CostOptimalSampler:
         optimal policy.
 
         Per-sample annotation probabilities are derived from the supplied uncertainty
-        scores (mean squared errors) and the true label variance estimated by ``fit()``.
+        scores (root mean squared errors) and the true label variance estimated by ``fit()``.
         When the budget is tight, samples beyond a certain index in the input array are
         excluded from sampling and receive a probability of zero.
 
