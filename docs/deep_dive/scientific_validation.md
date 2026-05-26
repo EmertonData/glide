@@ -42,16 +42,16 @@ Coverage validity is the minimum requirement for a confidence interval to be use
 Coverage is estimated empirically using the following protocol. For a fixed experimental setting and a target confidence level $1 - \alpha$:
 
 1. For each repetition $s = 1, \dots, N$, using a different random seed:
-    - Generate a fresh dataset.
+    - Simulate a fresh dataset.
     - Compute a confidence interval $C_{1-\alpha}^{(s)}$ for each estimation method.
-    - Record a binary hit $\mathbf{1}_{\{\theta^* \in C_{1-\alpha}^{(s)}\}}$.
+    - Record a binary hit $\mathbf{1}(\theta^* \in C_{1-\alpha}^{(s)})$.
 2. Estimate the empirical coverage as the mean of the hit indicators:
 
-    $$\hat{p} = \frac{1}{N} \sum_{s=1}^{N} \mathbf{1}_{\left\{\theta^* \in C_{1-\alpha}^{(s)}\right\}}$$
+    $$\hat{p} = \frac{1}{N} \sum_{s=1}^{N} \mathbf{1}\left(\theta^* \in C_{1-\alpha}^{(s)}\right)$$
 
-3. Compute a CLT-based confidence interval on $\hat{p}$ at the 90% confidence level using the standard deviation of the binary hit indicators.
+3. Compute a CLT-based confidence interval on $\hat{p}$ at the chosen confidence level (e.g., 90%) using the standard deviation of the binary hit indicators.
 
-An estimator passes the coverage check if $1 - \alpha$ falls within or below the confidence interval on $\hat{p}$, meaning the data are consistent with true coverage meeting the nominal level.
+An estimator passes the coverage check if $1 - \alpha$ falls within or below the confidence interval on $\hat{p}$, meaning the data are consistent with true coverage meeting the nominal level. Note that $\hat{p}$ is itself a random variable: even a correctly calibrated method can fail the check by chance. A large number of seeds $N$ reduces the variance of $\hat{p}$ and makes such false failures unlikely.
 
 ---
 

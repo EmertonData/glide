@@ -1,4 +1,4 @@
-from typing import Callable, Dict, List, Tuple
+from typing import Any, Callable, Dict, Tuple
 
 import numpy as np
 from numpy.typing import NDArray
@@ -7,21 +7,20 @@ from glide.estimators import ClassicalMeanEstimator
 
 
 def run_monte_carlo(
-    methods: List[str],
     confidence_levels: NDArray,
-    run_seed: Callable[[int], Dict],
+    run_seed: Callable[[int], Dict[str, Any]],
     n_seeds: int = 500,
-) -> Dict:
+) -> Dict[str, Any]:
     """Run ``run_seed`` for ``n_seeds`` independent seeds and collect all outputs into a single dictionary.
+
+    The method names are inferred from the keys of the dict returned by ``run_seed``.
 
     Parameters
     ----------
-    methods : List[str]
-        Names of the estimation methods to compare.
     confidence_levels : NDArray
         Confidence levels at which to evaluate interval bounds.
-    run_seed : Callable[[int], Dict]
-        Function that takes a seed integer and returns a dict mapping each method
+    run_seed : Callable[[int], Dict[str, Any]]
+        Function that takes a seed integer and returns a non-empty dict mapping each method
         name to ``{"mean": float, "std": float, "confidence_interval": <result>}``.
         May also include ``"effective_sample_size": float`` for any method.
     n_seeds : int, optional
@@ -29,7 +28,7 @@ def run_monte_carlo(
 
     Returns
     -------
-    Dict
+    Dict[str, Any]
         Nested dict mapping each method name to
         ``{"means": NDArray, "stds": NDArray, "lower_bounds": {level: NDArray},
         "upper_bounds": {level: NDArray}, "effective_sample_sizes": NDArray}``.
@@ -41,7 +40,7 @@ def run_monte_carlo(
     ValueError
         If ``n_seeds`` is not positive.
     ValueError
-        If ``methods`` is empty.
+        If ``run_seed`` returns an empty dict.
     ValueError
         If any value in ``confidence_levels`` is not in ``(0, 1)``.
 
@@ -54,16 +53,18 @@ def run_monte_carlo(
     ...     y = np.array([0.0, 1.0])
     ...     result = ClassicalMeanEstimator().estimate(y, confidence_level=0.9)
     ...     return {"M": {"mean": result.mean, "std": result.std, "confidence_interval": result.confidence_interval}}
-    >>> stats = run_monte_carlo(["M"], np.array([0.9]), run_seed, n_seeds=2)
+    >>> stats = run_monte_carlo(np.array([0.9]), run_seed, n_seeds=2)
     >>> stats["M"]["means"]
     array([0.5, 0.5])
     """
     if n_seeds <= 0:
         raise ValueError(f"'n_seeds' must be > 0; got {n_seeds!r}.")
-    if not methods:
-        raise ValueError("'methods' must be non-empty.")
     if not np.all((confidence_levels > 0) & (confidence_levels < 1)):
         raise ValueError(f"All 'confidence_levels' must be in (0, 1); got {confidence_levels!r}.")
+    first_estimates = run_seed(0)
+    methods = list(first_estimates.keys())
+    if not methods:
+        raise ValueError("'run_seed' must return a non-empty dict.")
     means = {method: np.zeros(n_seeds) for method in methods}
     stds = {method: np.zeros(n_seeds) for method in methods}
     lower_bounds = {method: {level: np.zeros(n_seeds) for level in confidence_levels} for method in methods}
@@ -71,7 +72,7 @@ def run_monte_carlo(
     effective_sample_sizes = {method: np.full(n_seeds, np.nan) for method in methods}
 
     for seed in range(n_seeds):
-        estimates = run_seed(seed)
+        estimates = first_estimates if seed == 0 else run_seed(seed)
         for method in methods:
             means[method][seed] = estimates[method]["mean"]
             stds[method][seed] = estimates[method]["std"]
@@ -97,7 +98,7 @@ def run_monte_carlo(
 
 
 def compute_hits(
-    stats: Dict,
+    stats: Dict[str, Dict[str, Any]],
     confidence_level: float,
     true_mean: float,
 ) -> Dict[str, NDArray]:
@@ -109,7 +110,7 @@ def compute_hits(
 
     Parameters
     ----------
-    stats : Dict
+    stats : Dict[str, Dict[str, Any]]
         Output of :func:`run_monte_carlo`.
     confidence_level : float
         The confidence level at which to evaluate coverage.
@@ -133,13 +134,8 @@ def compute_hits(
     Examples
     --------
     >>> import numpy as np
-    >>> from glide.scientific_validation import run_monte_carlo, compute_hits
-    >>> from glide.estimators import ClassicalMeanEstimator
-    >>> def run_seed(seed):
-    ...     y = np.array([0.0, 1.0])
-    ...     result = ClassicalMeanEstimator().estimate(y, confidence_level=0.9)
-    ...     return {"M": {"mean": result.mean, "std": result.std, "confidence_interval": result.confidence_interval}}
-    >>> stats = run_monte_carlo(["M"], np.array([0.9]), run_seed, n_seeds=2)
+    >>> from glide.scientific_validation import compute_hits
+    >>> stats = {"M": {"lower_bounds": {0.9: np.array([0.3, 0.3])}, "upper_bounds": {0.9: np.array([0.7, 0.7])}}}
     >>> hits = compute_hits(stats, confidence_level=0.9, true_mean=0.5)
     >>> hits["M"]
     array([1., 1.])
@@ -168,7 +164,7 @@ def coverage_with_error_bar(
 
     Uses :class:`~glide.estimators.ClassicalMeanEstimator` on the binary hit array,
     which gives a valid confidence interval on the coverage rate via the normal
-    approximation.
+    approximation (Wald's interval).
 
     Parameters
     ----------
@@ -197,6 +193,10 @@ def coverage_with_error_bar(
     >>> mean_cov, lower, upper = coverage_with_error_bar(hits, confidence_level=0.95)
     >>> float(mean_cov)
     0.75
+    >>> round(float(lower), 4)
+    0.26
+    >>> round(float(upper), 4)
+    1.24
     """
     if len(hits) == 0:
         raise ValueError("'hits' must be non-empty.")
