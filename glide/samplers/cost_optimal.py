@@ -17,7 +17,7 @@ class CostOptimalSampler:
     annotated. This concentrates the annotation budget where it matters most.
 
     The caller provides per-sample uncertainty scores and passes them as a
-    1D array to ``sample()``. These are treated as oracle mean square error
+    1D array to ``sample()``. These are treated as oracle root mean square error
     estimates. This class does not learn those scores internally.
 
     References
@@ -41,7 +41,7 @@ class CostOptimalSampler:
     ...     random_seed=0
     ... )
     >>> float(pi[0])  # doctest: +ELLIPSIS
-    0.084...
+    0.025...
     >>> xi[0]
     np.float64(0.0)
     >>> np.isnan(xi[-1])
@@ -97,9 +97,9 @@ class CostOptimalSampler:
         y_proxy_cost: float,
     ) -> float:
         cost_ratio = y_proxy_cost / y_true_cost
-        above_mask = uncertainties > tau**2
+        above_mask = uncertainties > tau
         prob_above = np.mean(above_mask)
-        e_u_below = np.mean(uncertainties * ~above_mask)
+        e_u_below = np.mean(uncertainties**2 * ~above_mask)
         denominator = max(self._y_true_variance - e_u_below, 0.0)
         if denominator > 0.0:
             gamma_uncapped = np.sqrt((cost_ratio + prob_above) / denominator)
@@ -114,8 +114,7 @@ class CostOptimalSampler:
         gamma: float,
         uncertainties: NDArray,
     ) -> NDArray:
-        sqrt_u = np.sqrt(uncertainties)
-        probabilities = np.where(sqrt_u > tau, 1.0, gamma * sqrt_u)
+        probabilities = np.where(uncertainties > tau, 1.0, gamma * uncertainties)
         return probabilities
 
     def _compute_objective(
@@ -129,7 +128,7 @@ class CostOptimalSampler:
         pi_values = self._compute_per_sample_probabilities(tau, gamma, uncertainties)
         mean_pi = np.mean(pi_values)
         cost_term = y_true_cost * mean_pi + y_proxy_cost
-        error_term = self._y_true_variance + np.mean(uncertainties * (1.0 / pi_values - 1.0))
+        error_term = self._y_true_variance + np.mean(uncertainties**2 * (1.0 / pi_values - 1.0))
         objective = cost_term * error_term
         return objective
 
@@ -139,8 +138,7 @@ class CostOptimalSampler:
         y_true_cost: float,
         y_proxy_cost: float,
     ) -> float:
-        sqrt_u_values = np.sqrt(uncertainties)
-        candidates = np.unique(sqrt_u_values)
+        candidates = np.unique(uncertainties)
         objectives = [self._compute_objective(tau, uncertainties, y_true_cost, y_proxy_cost) for tau in candidates]
         optimal_tau = candidates[np.argmin(objectives)]
         return optimal_tau
@@ -170,7 +168,7 @@ class CostOptimalSampler:
         ----------
         uncertainties : NDArray
             1D float array of shape ``(n_samples,)`` containing the pre-computed per-sample
-            expected squared error of the proxy label. All values must be strictly positive.
+            root mean squared error of the proxy label. All values must be strictly positive.
         y_true_cost : float
             Cost of one true label. Must be strictly positive.
         y_proxy_cost : float
