@@ -82,6 +82,7 @@ nav:
     - Cost-Optimal Random Sampling: tutorials/cost_optimal_random.ipynb
     - Cost-Optimal Sampling: tutorials/cost_optimal.ipynb
   - Deep Dive:
+    - Scientific Validation Methodology: deep_dive/scientific_validation.md
     - PPI Validation: deep_dive/ppi_validation.ipynb
     - Stratified PPI Validation: deep_dive/stratified_ppi_validation.ipynb
     - ASI Validation: deep_dive/asi_validation.ipynb
@@ -97,5 +98,6 @@ nav:
     - Estimators: api/estimators.md
     - Confidence Intervals: api/confidence_intervals.md
     - Inference Results: api/mean_inference_results.md
+    - Scientific Validation: api/scientific_validation.md
     - I/O: api/io.md
 
