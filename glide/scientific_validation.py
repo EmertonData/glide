@@ -135,10 +135,10 @@ def compute_hits(
     --------
     >>> import numpy as np
     >>> from glide.scientific_validation import compute_hits
-    >>> stats = {"M": {"lower_bounds": {0.9: np.array([0.3, 0.3])}, "upper_bounds": {0.9: np.array([0.7, 0.7])}}}
+    >>> stats = {"M": {"lower_bounds": {0.9: np.array([0.3, 0.6])}, "upper_bounds": {0.9: np.array([0.7, 0.8])}}}
     >>> hits = compute_hits(stats, confidence_level=0.9, true_mean=0.5)
     >>> hits["M"]
-    array([1., 1.])
+    array([1., 0.])
     """
     if not 0 < confidence_level < 1:
         raise ValueError(f"'confidence_level' must be in (0, 1); got {confidence_level!r}.")
@@ -189,14 +189,14 @@ def coverage_with_error_bar(
     --------
     >>> import numpy as np
     >>> from glide.scientific_validation import coverage_with_error_bar
-    >>> hits = np.array([1.0, 1.0, 0.0, 1.0])
+    >>> hits = np.hstack([np.ones(15), np.zeros(5)])
     >>> mean_cov, lower, upper = coverage_with_error_bar(hits, confidence_level=0.95)
     >>> float(mean_cov)
     0.75
     >>> round(float(lower), 4)
-    0.26
+    0.5553
     >>> round(float(upper), 4)
-    1.24
+    0.9447
     """
     if len(hits) == 0:
         raise ValueError("'hits' must be non-empty.")
