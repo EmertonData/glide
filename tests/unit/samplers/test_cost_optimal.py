@@ -60,16 +60,16 @@ def test_fit_known_variance(sampler):
 
 
 def test_compute_gamma_known_output(fitted_sampler, uncertainties):
-    tau = np.sqrt(0.4)
+    tau = 0.4
     gamma = fitted_sampler._compute_gamma(tau, uncertainties, y_true_cost=10.0, y_proxy_cost=1.0)
-    expected_gamma = 0.6325
+    expected_gamma = 0.4909
     assert gamma == pytest.approx(expected_gamma, abs=0.001)
 
 
 def test_compute_gamma_known_output_small_variance(fitted_sampler_small_variance, uncertainties):
-    tau = np.sqrt(0.4)
+    tau = 0.4
     gamma = fitted_sampler_small_variance._compute_gamma(tau, uncertainties, y_true_cost=10.0, y_proxy_cost=1.0)
-    expected_gamma = 1.5811
+    expected_gamma = 2.5
     assert gamma == pytest.approx(expected_gamma, abs=0.001)
 
 
@@ -77,11 +77,11 @@ def test_compute_gamma_known_output_small_variance(fitted_sampler_small_variance
 
 
 def test_compute_per_sample_probabilities_known_output(fitted_sampler, uncertainties):
-    tau = np.sqrt(0.4)
-    gamma = np.sqrt(0.4)
+    tau = 0.4
+    gamma = 0.4909
     probs = fitted_sampler._compute_per_sample_probabilities(tau, gamma, uncertainties)
 
-    expected_probs = np.array([0.2, 0.4])
+    expected_probs = np.array([0.049, 0.197])
     np.testing.assert_allclose(probs, expected_probs, atol=0.001)
 
 
@@ -89,9 +89,9 @@ def test_compute_per_sample_probabilities_known_output(fitted_sampler, uncertain
 
 
 def test_compute_objective_known_output(fitted_sampler, uncertainties):
-    tau = np.sqrt(0.4)
+    tau = 0.4
     objective = fitted_sampler._compute_objective(tau, uncertainties, y_true_cost=10.0, y_proxy_cost=1.0)
-    expected_value = 4.0
+    expected_value = 2.058
     assert objective == pytest.approx(expected_value, abs=0.001)
 
 
@@ -100,7 +100,7 @@ def test_compute_objective_known_output(fitted_sampler, uncertainties):
 
 def test_find_optimal_threshold_known_output(fitted_sampler, uncertainties):
     tau_star = fitted_sampler._find_optimal_threshold(uncertainties, y_true_cost=10.0, y_proxy_cost=1.0)
-    expected_tau_star = 0.6325
+    expected_tau_star = 0.4
     assert tau_star == pytest.approx(expected_tau_star, abs=0.001)
 
 
@@ -152,19 +152,19 @@ def test_sample_raises_on_non_positive_uncertainties(fitted_sampler):
 def test_sample_known_output(fitted_sampler, uncertainties):
     pi, xi = fitted_sampler.sample(uncertainties, y_true_cost=10.0, y_proxy_cost=1.0, budget=10, random_seed=42)
 
-    expected_pi = np.array([0.2, 0.4])
+    expected_pi = np.array([0.049, 0.197])
     expected_xi = np.array([0.0, 0.0])
 
-    np.testing.assert_allclose(pi, expected_pi, atol=0.01)
+    np.testing.assert_allclose(pi, expected_pi, atol=0.001)
     np.testing.assert_array_equal(xi, expected_xi)
 
 
 def test_sample_known_output_truncated_samples(fitted_sampler, uncertainties):
-    pi, xi = fitted_sampler.sample(uncertainties, y_true_cost=10.0, y_proxy_cost=1.0, budget=5, random_seed=42)
+    pi, xi = fitted_sampler.sample(uncertainties, y_true_cost=10.0, y_proxy_cost=1.0, budget=2, random_seed=42)
 
-    expected_pi = np.array([0.2, 0.0])
+    expected_pi = np.array([0.049, 0.0])
 
-    np.testing.assert_allclose(pi, expected_pi, atol=0.01)
+    np.testing.assert_allclose(pi, expected_pi, atol=0.001)
     assert xi[0] == 0.0
     assert np.isnan(xi[1])
 
