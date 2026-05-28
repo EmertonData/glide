@@ -855,7 +855,7 @@ doc = [
     { name = "datasets", specifier = ">=4.8.5" },
     { name = "matplotlib", specifier = ">=3.10.8" },
     { name = "mkdocs", specifier = ">=1.6.1" },
-    { name = "mkdocs-jupyter", specifier = ">=0.25.1" },
+    { name = "mkdocs-jupyter", specifier = ">=0.26.3" },
     { name = "mkdocs-material", specifier = ">=9.7.4" },
     { name = "mkdocstrings", extras = ["python"], specifier = ">=1.0.3" },
     { name = "scikit-learn", specifier = ">=1.8.0" },
