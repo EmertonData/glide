@@ -4,7 +4,12 @@ import numpy as np
 from numpy.random.bit_generator import SeedSequence
 from numpy.typing import NDArray
 
-from glide.core.validation import _validate_budget, _validate_budget_bound, _validate_uncertainties
+from glide.core.validation import (
+    _validate_budget_bound,
+    _validate_is_integer,
+    _validate_strictly_positive,
+    _validate_uncertainties,
+)
 
 
 class ActiveSampler:
@@ -86,7 +91,8 @@ class ActiveSampler:
             exceeds ``len(uncertainties)``, or if any uncertainty value is NaN,
             zero, or negative.
         """
-        _validate_budget(budget)
+        _validate_is_integer(budget, "budget")
+        _validate_strictly_positive(budget, "budget")
         _validate_budget_bound(budget, len(uncertainties))
         _validate_uncertainties(uncertainties)
         rng = np.random.default_rng(random_seed)

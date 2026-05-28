@@ -38,7 +38,7 @@ def fitted_sampler_high_MSE(sampler) -> CostOptimalRandomSampler:
 
 
 def test_fit_raises_on_empty_y_true(sampler):
-    with pytest.raises(ValueError, match=r"'y_true' must not be empty"):
+    with pytest.raises(ValueError, match="non-empty"):
         sampler.fit(y_true=np.array([]), y_proxy=np.array([1.0]))
 
 
@@ -58,7 +58,7 @@ def test_fit_raises_on_nan_in_y_proxy(sampler):
 
 
 def test_fit_raises_on_constant_y_true(sampler):
-    with pytest.raises(ValueError, match="'y_true' values are constant"):
+    with pytest.raises(ValueError, match="label values are constant"):
         sampler.fit(y_true=np.array([1.0, 1.0]), y_proxy=np.array([1.1, 1.1]))
 
 
@@ -107,7 +107,7 @@ def test_sample_raises_if_fit_not_called(sampler):
 
 @pytest.mark.parametrize("n_samples", [0, -1, 1.5])
 def test_sample_invalid_n_samples(fitted_sampler, n_samples):
-    with pytest.raises(ValueError, match=r"'n_samples' must be a strictly positive integer"):
+    with pytest.raises(ValueError, match=r"'n_samples' must be"):
         fitted_sampler.sample(n_samples=n_samples, y_true_cost=10.0, y_proxy_cost=1.0, budget=5, random_seed=42)
 
 

@@ -47,9 +47,15 @@ def test_preprocess_delegates_to_validation(estimator):
     y = np.array([1.0, np.nan])
     pi = np.array([0.5, 0.5])
 
-    with patch.object(ipw_classical_module, "_validate_probabilities") as mock_sampling_probs:
+    with (
+        patch.object(ipw_classical_module, "_validate_probabilities") as mock_sampling_probs,
+        patch.object(ipw_classical_module, "_validate_label_prob_consistency") as mock_label_prob_consistency,
+    ):
         estimator._preprocess(y, pi)
         mock_sampling_probs.assert_called_once_with(pi)
+        y_not_nan = ~np.isnan(y)
+        np.testing.assert_array_equal(mock_label_prob_consistency.call_args[0][0], y_not_nan)
+        np.testing.assert_array_equal(mock_label_prob_consistency.call_args[0][1], pi)
 
 
 # --- estimate ---

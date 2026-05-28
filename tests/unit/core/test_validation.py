@@ -5,12 +5,14 @@ from numpy.typing import NDArray
 from glide.core.validation import (
     _get_non_zero_mask,
     _is_constant,
-    _validate_budget,
     _validate_budget_bound,
+    _validate_burn_in_y_true,
     _validate_equal_lengths,
+    _validate_has_no_nan,
     _validate_label_prob_consistency,
     _validate_probabilities,
     _validate_sample_sizes,
+    _validate_strictly_positive,
     _validate_uncertainties,
     _validate_y_proxy,
     _validate_y_true,
@@ -38,6 +40,18 @@ def test_is_constant_true():
 
 def test_is_constant_false():
     assert not _is_constant(np.array([1.0, 2.0]))
+
+
+# --- _validate_has_no_nan ---
+
+
+def test_validate_has_no_nan_valid():
+    _validate_has_no_nan(np.array([1.0, 2.0]), "x")
+
+
+def test_validate_has_no_nan_raises():
+    with pytest.raises(ValueError, match="'x' contains NaN values"):
+        _validate_has_no_nan(np.array([1.0, float("nan")]), "x")
 
 
 # --- _get_non_zero_mask ---
@@ -167,17 +181,39 @@ def test_validate_equal_lengths_three_arrays():
         )
 
 
-# --- _validate_budget ---
+# --- _validate_burn_in_y_true ---
 
 
-def test_validate_budget_valid():
-    _validate_budget(3)
+def test_validate_burn_in_y_true_valid():
+    _validate_burn_in_y_true(np.array([1.0, 2.0]))
 
 
-@pytest.mark.parametrize("bad_budget", [0, -1, 1.5, True])
-def test_validate_budget_invalid(bad_budget):
-    with pytest.raises(ValueError, match="budget"):
-        _validate_budget(bad_budget)
+def test_validate_burn_in_y_true_empty():
+    with pytest.raises(ValueError, match="non-empty"):
+        _validate_burn_in_y_true(np.array([]))
+
+
+def test_validate_burn_in_y_true_nan():
+    with pytest.raises(ValueError, match="NaN"):
+        _validate_burn_in_y_true(np.array([1.0, float("nan")]))
+
+
+def test_validate_burn_in_y_true_constant():
+    with pytest.raises(ValueError, match="label values are constant"):
+        _validate_burn_in_y_true(np.array([1.0, 1.0]))
+
+
+# --- _validate_strictly_positive ---
+
+
+def test_validate_strictly_positive_valid():
+    _validate_strictly_positive(1.0, "x")
+
+
+@pytest.mark.parametrize("bad_value", [0.0, -1.0])
+def test_validate_strictly_positive_invalid(bad_value):
+    with pytest.raises(ValueError, match="must be strictly positive"):
+        _validate_strictly_positive(bad_value, "x")
 
 
 # --- _validate_budget_bound ---

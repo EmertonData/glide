@@ -4,6 +4,15 @@ import numpy as np
 from numpy.random.bit_generator import SeedSequence
 from numpy.typing import NDArray
 
+from glide.core.validation import (
+    _is_constant,
+    _validate_burn_in_y_true,
+    _validate_equal_lengths,
+    _validate_has_no_nan,
+    _validate_is_integer,
+    _validate_strictly_positive,
+)
+
 
 class CostOptimalRandomSampler:
     """Sampler implementing cost-optimal random annotation.
@@ -77,16 +86,11 @@ class CostOptimalRandomSampler:
               (proxy labels match ground truth perfectly). This would lead to zero
               annotation probability making sampling impossible.
         """
-        if len(y_true) == 0:
-            raise ValueError("'y_true' must not be empty.")
-        if len(y_true) != len(y_proxy):
-            raise ValueError(f"'y_true' and 'y_proxy' must have the same length; got {len(y_true)} and {len(y_proxy)}.")
-        if np.any(np.isnan(y_true)) or np.any(np.isnan(y_proxy)):
-            raise ValueError("'y_true' or 'y_proxy' contains NaN values.")
-        if np.all(y_true == y_proxy):
+        _validate_burn_in_y_true(y_true)
+        _validate_equal_lengths(y_true, y_proxy, names=["y_true", "y_proxy"])
+        _validate_has_no_nan(y_proxy, "y_proxy")
+        if _is_constant(y_true - y_proxy):
             raise ValueError("'y_proxy' has zero mean squared error with 'y_true'.")
-        if len(np.unique(y_true)) < 2:
-            raise ValueError("'y_true' values are constant.")
 
         y_true_variance = np.var(y_true, ddof=1)
         mean_squared_error = np.mean((y_true - y_proxy) ** 2)
@@ -171,14 +175,11 @@ class CostOptimalRandomSampler:
         """
         if not hasattr(self, "_y_true_variance") or not hasattr(self, "_mean_squared_error"):
             raise RuntimeError("Call fit() before sample().")
-        if not isinstance(n_samples, (int, np.integer)) or n_samples <= 0:
-            raise ValueError(f"'n_samples' must be a strictly positive integer; got {n_samples!r}.")
-        if y_true_cost <= 0.0:
-            raise ValueError(f"'y_true_cost' must be strictly positive; got {y_true_cost}.")
-        if y_proxy_cost <= 0.0:
-            raise ValueError(f"'y_proxy_cost' must be strictly positive; got {y_proxy_cost}.")
-        if budget <= 0:
-            raise ValueError(f"'budget' must be strictly positive; got {budget}.")
+        _validate_is_integer(n_samples, "n_samples")
+        _validate_strictly_positive(n_samples, "n_samples")
+        _validate_strictly_positive(y_true_cost, "y_true_cost")
+        _validate_strictly_positive(y_proxy_cost, "y_proxy_cost")
+        _validate_strictly_positive(budget, "budget")
 
         pi_opt = self._compute_optimal_probability(y_true_cost, y_proxy_cost)
         cost_per_sample = y_true_cost * pi_opt + y_proxy_cost

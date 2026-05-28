@@ -4,6 +4,13 @@ import numpy as np
 from numpy.random.bit_generator import SeedSequence
 from numpy.typing import NDArray
 
+from glide.core.validation import (
+    _is_constant,
+    _validate_burn_in_y_true,
+    _validate_strictly_positive,
+    _validate_uncertainties,
+)
+
 
 class CostOptimalSampler:
     """Sampler that draws elements with optimal probabilities based on uncertainty
@@ -48,20 +55,6 @@ class CostOptimalSampler:
     np.True_
     """
 
-    def _validate_y_true(self, y_true: NDArray) -> None:
-        if len(y_true) == 0:
-            raise ValueError("'y_true' must be non-empty.")
-        if np.any(np.isnan(y_true)):
-            raise ValueError("'y_true' contains NaN values. The burn-in dataset must be fully labeled.")
-        if np.min(y_true) == np.max(y_true):
-            raise ValueError("'y_true' label values are constant.")
-
-    def _validate_uncertainties(self, uncertainties: NDArray) -> None:
-        if np.any(np.isnan(uncertainties)):
-            raise ValueError("'uncertainties' must all be finite; got a NaN value.")
-        if np.any(uncertainties <= 0.0):
-            raise ValueError("'uncertainties' must all be strictly positive; got a non-positive value.")
-
     def fit(self, y_true: NDArray) -> "CostOptimalSampler":
         """Estimate the true label variance from a burn-in dataset.
 
@@ -85,7 +78,7 @@ class CostOptimalSampler:
             If ``y_true`` is empty, contains NaN, or all labels are identical (zero true label variance).
 
         """
-        self._validate_y_true(y_true)
+        _validate_burn_in_y_true(y_true)
         self._y_true_variance = np.var(y_true, ddof=1)
         return self
 
@@ -204,15 +197,13 @@ class CostOptimalSampler:
         """
         if not hasattr(self, "_y_true_variance"):
             raise RuntimeError("Call fit() before sample().")
-        if y_true_cost <= 0.0:
-            raise ValueError(f"'y_true_cost' must be strictly positive; got {y_true_cost}.")
+        _validate_strictly_positive(y_true_cost, "y_true_cost")
         if y_proxy_cost < 0.0:
             raise ValueError(f"'y_proxy_cost' must be non-negative; got {y_proxy_cost}.")
-        if y_proxy_cost == 0.0 and (np.max(uncertainties) - np.min(uncertainties) == 0):
+        if y_proxy_cost == 0.0 and _is_constant(uncertainties):
             raise ValueError("All uncertainty values are equal and 'y_proxy_cost' is zero.")
-        if budget <= 0:
-            raise ValueError(f"'budget' must be strictly positive; got {budget}.")
-        self._validate_uncertainties(uncertainties)
+        _validate_strictly_positive(budget, "budget")
+        _validate_uncertainties(uncertainties)
 
         tau_star = self._find_optimal_threshold(uncertainties, y_true_cost, y_proxy_cost)
         gamma_star = self._compute_gamma(tau_star, uncertainties, y_true_cost, y_proxy_cost)

@@ -3,7 +3,12 @@ from typing import Dict, Hashable, Literal, Optional, Tuple
 import numpy as np
 from numpy.typing import NDArray
 
-from glide.core.validation import _validate_budget, _validate_budget_bound, _validate_y_proxy
+from glide.core.validation import (
+    _validate_budget_bound,
+    _validate_is_integer,
+    _validate_strictly_positive,
+    _validate_y_proxy,
+)
 
 
 class StratifiedSampler:
@@ -50,7 +55,8 @@ class StratifiedSampler:
         groups: NDArray,
         budget: int,
     ) -> Tuple[NDArray, NDArray]:
-        _validate_budget(budget)
+        _validate_is_integer(budget, "budget")
+        _validate_strictly_positive(budget, "budget")
         _validate_budget_bound(budget, len(y_proxy))
         _validate_y_proxy(y_proxy)
         for stratum_id in np.unique(groups):
