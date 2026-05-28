@@ -47,9 +47,9 @@ In PPI, each sample has two associated values:
 
 ### Mean estimation
 
-**PPI++** [[2](#ref-2)] is an extension of the original PPI [[1](#ref-1)] that introduces a weight $\lambda \in [0, 1]$ on the proxy labels. The mean estimate is:
+**PPI++** [[2](#ref-2)] is an extension of the original PPI [[1](#ref-1)] that introduces a weight $\lambda \in [0, 1]$ on the proxy labels. Denoting $\tilde{Y}^{\bullet}$ and $\tilde{Y}^{\circ}$ the labeled and unlabeled proxies respectively, the mean estimate is:
 
-$$\hat{\theta}_{\lambda} = \frac{1}{n} \sum_{j=1}^{n} Y_j + \lambda \left[\frac{1}{N} \sum_{i=1}^{N} \tilde{Y}_i - \frac{1}{n} \sum_{j=1}^{n} \tilde{Y}_j\right]$$
+$$\hat{\theta}_{\lambda} = \frac{1}{n} \sum_{j=1}^{n} Y_j + \lambda \left[\frac{1}{N} \sum_{i=1}^{N} \tilde{Y}_i^{\circ} - \frac{1}{n} \sum_{j=1}^{n} \tilde{Y}_j^{\bullet}\right]$$
 
 This combines two components:
 
@@ -58,7 +58,7 @@ This combines two components:
 
 At $\lambda = 1$, this recovers the original PPI estimator, which can equivalently be written as:
 
-$$\hat{\theta} = \underbrace{\frac{1}{N} \sum_{i=1}^{N} \tilde{Y}_i}_{\text{Biased estimate}} + \underbrace{\frac{1}{n} \sum_{j=1}^{n} \left(Y_j - \tilde{Y}_j\right)}_{\text{Bias rectifier}}$$
+$$\hat{\theta} = \underbrace{\frac{1}{N} \sum_{i=1}^{N} \tilde{Y}_i^{\circ}}_{\text{Biased estimate}} + \underbrace{\frac{1}{n} \sum_{j=1}^{n} \left(Y_j - \tilde{Y}_j^{\bullet}\right)}_{\text{Bias rectifier}}$$
 
 The parameter $\lambda$ allows modulating the contribution of the proxy labels based on how informative they are. We will see that it can be set to an optimal value below.
 
@@ -82,7 +82,7 @@ where $z_{1-\alpha/2}$ is the standard normal quantile (e.g. $z_{0.975} = 1.96$ 
 
 The $\lambda$ parameter needs to be chosen wisely. If left at $\lambda = 1,$ low-quality proxy labels with weak or negative covariance to human labels could *degrade* the estimation by inducing larger confidence intervals compared to using human labels only ($\lambda = 0$). PPI++ derives a closed-form plug-in estimator for the $\lambda$ that minimises the CI width:
 
-$$\hat{\lambda} = \frac{\widehat{\text{Cov}}_n(Y,\, \tilde{Y})}{\left(1 + \tfrac{n}{N}\right)\widehat{\text{Var}}_{n+N}(\tilde{Y})}$$
+$$\hat{\lambda} = \frac{\widehat{\text{Cov}}_n(Y,\, \tilde{Y}^{\bullet})}{\left(1 + \tfrac{n}{N}\right)\widehat{\text{Var}}_{n+N}(\tilde{Y})}$$
 
 where:
 

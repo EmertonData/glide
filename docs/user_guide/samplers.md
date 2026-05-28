@@ -155,32 +155,32 @@ The sampler models two raters:
 - **Proxy rater ($\tilde{Y}$)**: cheap, always queried, cost $c_{\tilde{y}}$ per sample. Returns noisy labels.
 - **Ground truth rater ($Y$)**: expensive, cost $c_y$ per sample ($c_{\tilde{y}} < c_y$). Returns authoritative labels.
 
-Each sample $i$ is associated with an input $X_i$ and has a **per-sample uncertainty score** $u_i > 0$, a supplied estimate of $U_i := \mathbb{E}[(Y_i - \tilde{Y}_i)^2 \mid X_i]$, the expected squared error of the proxy for that sample. 
+Each sample $i$ is associated with an input $X_i$ and has a **per-sample uncertainty score** $u_i > 0$, a supplied estimate of $U_i := \sqrt{\mathbb{E}[(Y_i - \tilde{Y}_i)^2 \mid X_i]}$, the root mean squared error of the proxy for that sample. Note that the reference paper [[2](#ref-2)] defines the uncertainty score as the mean squared error; GLIDE uses RMSE instead, so that uncertainty scores are in the same units as the labels.
 
 The goal is to query optimal amounts of proxy and ground truth ratings within the budget limit allowing to estimate the average $\mathbb{E}[Y]$ with the smallest possible variance.
 
 ### Optimal active annotation policy
 
-The guiding intuition is that a sample where the proxy is likely to err should be sent to the ground truth rater more often than one where the proxy is reliable. A natural measure of proxy unreliability for sample $i$ is $\sqrt{u_i}$, the square root of the expected squared proxy error $u_i$. Note that $u_i$ is a squared quantity, comparable to a variance, while $\sqrt{u_i}$ is the effective uncertainty measure, analogous to a standard deviation. The cost-optimal policy sets the annotation probability proportional to this uncertainty:
+The guiding intuition is that a sample where the proxy is likely to err should be sent to the ground truth rater more often than one where the proxy is reliable. The per-sample uncertainty score $u_i$ directly measures proxy unreliability, comparable to a standard deviation. The cost-optimal policy sets the annotation probability proportional to this uncertainty:
 
-$$\pi_i \propto \sqrt{u_i}$$
+$$\pi_i \propto u_i$$
 
-with two refinements. First, a proportionality constant $\gamma^*$ scales the probabilities and is chosen to optimise the precision of downstream estimators. Second, a threshold $\tau > 0$ acts as a risk tolerance: if the uncertainty $\sqrt{u_i}$ exceeds $\tau$, the proxy is considered too unreliable to trust and the sample is always sent to the ground truth rater ($\pi_i = 1$).
+with two refinements. First, a proportionality constant $\gamma^*$ scales the probabilities and is chosen to optimise the precision of downstream estimators. Second, a threshold $\tau > 0$ acts as a risk tolerance: if the uncertainty $u_i$ exceeds $\tau$, the proxy is considered too unreliable to trust and the sample is always sent to the ground truth rater ($\pi_i = 1$).
 
 Formally, the cost-optimal per-sample annotation probability takes the form (see [[2](#ref-2), Proposition 2]):
 
-$$\pi_i = \pi(\tau, X_i) = \begin{cases} \gamma^*(\tau)\,\sqrt{u_i} & \text{if } \sqrt{u_i} \leq \tau \\ 1 & \text{otherwise} \end{cases}$$
+$$\pi_i = \pi(\tau, X_i) = \begin{cases} \gamma^*(\tau)\,u_i & \text{if } u_i \leq \tau \\ 1 & \text{otherwise} \end{cases}$$
 
-- Samples with small uncertainty ($\sqrt{u_i} \leq \tau^*$) have a reliable proxy: the ground truth rater is queried at a low rate, proportional to $\sqrt{u_i}$.
-- Samples with large uncertainty ($\sqrt{u_i} > \tau^*$) have a proxy too unreliable to trust: the ground truth rater is always queried ($\pi_i = 1$).
+- Samples with small uncertainty ($u_i \leq \tau^*$) have a reliable proxy: the ground truth rater is queried at a low rate, proportional to $u_i$.
+- Samples with large uncertainty ($u_i > \tau^*$) have a proxy too unreliable to trust: the ground truth rater is always queried ($\pi_i = 1$).
 
 The scale factor $\gamma^*(\tau)$ is:
 
-$$\gamma^*(\tau) = \min\!\left(\sqrt{\dfrac{c_{\tilde{y}}/c_y + \Pr(U > \tau^2)}{\mathrm{Var}(Y) - \mathbb{E}[U \cdot \mathbf{1}_{U \leq \tau^2}]}},\;\dfrac{1}{\tau}\right)$$
+$$\gamma^*(\tau) = \min\!\left(\sqrt{\dfrac{c_{\tilde{y}}/c_y + \Pr(U > \tau)}{\mathrm{Var}(Y) - \mathbb{E}[U^2 \cdot \mathbf{1}_{U \leq \tau}]}},\;\dfrac{1}{\tau}\right)$$
 
 The optimal threshold $\tau^*$ minimises the product of expected per-sample cost and per-sample estimation error:
 
-$$\tau^* = \underset{\tau}{\operatorname{argmin}}\;\Bigl(c_y\,\mathbb{E}[\pi(\tau, X)] + c_{\tilde{y}}\Bigr)\cdot\Bigl(\mathrm{Var}(Y) + \mathbb{E}\!\left[U \cdot \!\left(\frac{1}{\pi(\tau, X)} - 1\right)\right]\Bigr)$$
+$$\tau^* = \underset{\tau}{\operatorname{argmin}}\;\Bigl(c_y\,\mathbb{E}[\pi(\tau, X)] + c_{\tilde{y}}\Bigr)\cdot\Bigl(\mathrm{Var}(Y) + \mathbb{E}\!\left[U^2 \cdot \!\left(\frac{1}{\pi(\tau, X)} - 1\right)\right]\Bigr)$$
 
 The second term in the product can be shown to reflect the variance of an estimator of $\theta := \mathbb{E}[Y]$ (see [[3](#ref-3), Equation (2)]). Since this estimator would be unbiased, this also corresponds to its mean squared error.
 
