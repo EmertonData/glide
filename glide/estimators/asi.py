@@ -1,4 +1,3 @@
-import warnings
 from math import floor
 from typing import Tuple
 
@@ -7,6 +6,7 @@ from numpy.typing import NDArray
 
 from glide.confidence_intervals import CLTConfidenceInterval
 from glide.core.validation import (
+    _get_non_zero_pi_mask,
     _validate_equal_lengths,
     _validate_non_constant,
     _validate_pi_consistency,
@@ -66,12 +66,10 @@ class ASIMeanEstimator:
         _validate_equal_lengths(y_true_all, y_proxy, pi, names=["y_true", "y_proxy", "pi"])
         _validate_sampling_probabilities(pi)
 
-        non_zero_pi_mask = pi > 0
-        if not np.all(non_zero_pi_mask):
-            warnings.warn(
-                "Some observations have pi=0. These will be excluded from the estimation.",
-                UserWarning,
-            )
+        non_zero_pi_mask = _get_non_zero_pi_mask(
+            pi,
+            "Some observations have pi=0. These will be excluded from the estimation.",
+        )
         y_true_all = y_true_all[non_zero_pi_mask]
         y_proxy = y_proxy[non_zero_pi_mask]
         pi = pi[non_zero_pi_mask]

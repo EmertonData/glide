@@ -7,6 +7,7 @@ from numpy.typing import NDArray
 
 from glide.confidence_intervals import BootstrapConfidenceInterval
 from glide.core.validation import (
+    _get_non_zero_pi_mask,
     _validate_equal_lengths,
     _validate_pi_consistency,
     _validate_sample_sizes,
@@ -144,14 +145,12 @@ class IPWPTDMeanEstimator:
         y_true_filled, y_proxy, xi, pi = self._preprocess(y_true, y_proxy, pi)
         rng = np.random.default_rng(random_seed)
 
-        non_zero_pi_mask = pi > 0
+        non_zero_pi_mask = _get_non_zero_pi_mask(
+            pi,
+            "Some observations have pi=0. These will be excluded from the estimation as per the original paper.",
+        )
         non_one_pi_mask = pi < 1
 
-        if not np.all(non_zero_pi_mask):
-            warnings.warn(
-                "Some observations have pi=0. These will be excluded from the estimation as per the original paper.",
-                UserWarning,
-            )
         if not np.all(non_one_pi_mask):
             warnings.warn(
                 "Some observations have pi=1. These will be excluded from the estimation as per the original paper.",

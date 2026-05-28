@@ -1,3 +1,4 @@
+import warnings
 from typing import Hashable, List, Optional
 
 import numpy as np
@@ -6,6 +7,13 @@ from numpy.typing import NDArray
 
 def _is_constant(array: NDArray) -> bool:
     return np.max(array) == np.min(array)
+
+
+def _get_non_zero_pi_mask(pi: NDArray, warning_message: str) -> NDArray:
+    non_zero_pi_mask = pi > 0
+    if not np.all(non_zero_pi_mask):
+        warnings.warn(warning_message, UserWarning)
+    return non_zero_pi_mask
 
 
 def _validate_y_proxy(y_proxy: NDArray, stratum_id: Optional[Hashable] = None) -> None:
