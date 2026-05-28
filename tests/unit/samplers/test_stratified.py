@@ -106,7 +106,7 @@ def test_sample_neyman_strategy(sampler, y_proxy, groups):
 
 
 def test_sample_invalid_strategy_raises(sampler, y_proxy, groups):
-    with pytest.raises(ValueError, match="Unknown strategy"):
+    with pytest.raises(ValueError, match="'strategy' must be"):
         sampler.sample(y_proxy, groups, 4, strategy="unknown")
 
 

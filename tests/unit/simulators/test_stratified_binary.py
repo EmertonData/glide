@@ -26,7 +26,7 @@ def test_generate_stratified_binary_dataset_structure_and_counts():
 
 
 def test_generate_stratified_binary_dataset_empty_strata_raises():
-    with pytest.raises(ValueError, match=r"Number of strata must be at least 1, got 0"):
+    with pytest.raises(ValueError, match=r"'n_total' must have at least 1 element"):
         generate_stratified_binary_dataset(n_total=[], true_mean=[], proxy_mean=[], correlation=[])
 
 

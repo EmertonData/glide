@@ -64,12 +64,12 @@ def test_validate_y_proxy_valid():
 
 
 def test_validate_y_proxy_nan():
-    with pytest.raises(ValueError, match="Input proxy values contain NaN"):
+    with pytest.raises(ValueError, match="'y_proxy' contains NaN"):
         _validate_y_proxy(np.array([1.0, float("nan")]))
 
 
 def test_validate_y_proxy_constant():
-    with pytest.raises(ValueError, match="Input proxy values are constant"):
+    with pytest.raises(ValueError, match="'y_proxy' values are constant"):
         _validate_y_proxy(np.array([1.0, 1.0]))
 
 
@@ -78,7 +78,7 @@ def test_validate_y_proxy_stratum_valid():
 
 
 def test_validate_y_proxy_stratum_constant():
-    with pytest.raises(ValueError, match="Input proxy values are constant in stratum 'A'"):
+    with pytest.raises(ValueError, match="'y_proxy' values are constant in stratum 'A'"):
         _validate_y_proxy(np.array([1.0, 1.0]), stratum_id="A")
 
 
@@ -90,7 +90,7 @@ def test_validate_y_true_valid():
 
 
 def test_validate_y_true_constant():
-    with pytest.raises(ValueError, match="Labeled y_true values are constant"):
+    with pytest.raises(ValueError, match="'y_true' labeled values are constant"):
         _validate_y_true(np.array([1.0, 1.0, np.nan]))
 
 
@@ -120,7 +120,7 @@ def test_validate_probabilities_valid():
 
 @pytest.mark.parametrize("bad_pi", [-0.5, 1.5])
 def test_validate_probabilities_out_of_range(bad_pi):
-    with pytest.raises(ValueError, match="Sampling probabilities should be in"):
+    with pytest.raises(ValueError, match="Sampling probabilities must be in"):
         _validate_probabilities(np.array([0.5, bad_pi]))
 
 
@@ -132,7 +132,7 @@ def test_validate_label_prob_consistency_valid(pi_consistency_mask):
 
 
 def test_validate_label_prob_consistency_labeled_with_zero_pi(pi_consistency_mask):
-    with pytest.raises(ValueError, match="non-zero probability of being labeled cannot be labeled"):
+    with pytest.raises(ValueError, match="zero probability of being labeled cannot be labeled"):
         _validate_label_prob_consistency(pi_consistency_mask, np.array([0.0, 0.5]))
 
 
@@ -149,7 +149,7 @@ def test_validate_equal_lengths_valid():
 
 
 def test_validate_equal_lengths_two_arrays():
-    with pytest.raises(ValueError, match="y_true and y_proxy must have the same length"):
+    with pytest.raises(ValueError, match="'y_true' and 'y_proxy' must have the same length"):
         _validate_equal_lengths(
             np.array([1.0, 2.0, 3.0]),
             np.array([1.0, 2.0]),
@@ -158,7 +158,7 @@ def test_validate_equal_lengths_two_arrays():
 
 
 def test_validate_equal_lengths_three_arrays():
-    with pytest.raises(ValueError, match="y_true, y_proxy, and groups must have the same length"):
+    with pytest.raises(ValueError, match="'y_true', 'y_proxy', and 'groups' must have the same length"):
         _validate_equal_lengths(
             np.array([1.0, 2.0]),
             np.array([1.0, 2.0]),

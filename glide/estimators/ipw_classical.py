@@ -4,7 +4,7 @@ import numpy as np
 from numpy.typing import NDArray
 
 from glide.confidence_intervals import CLTConfidenceInterval
-from glide.core.validation import _get_non_zero_mask, _validate_probabilities
+from glide.core.validation import _get_non_zero_mask, _validate_label_prob_consistency, _validate_probabilities
 from glide.mean_inference_results import ClassicalMeanInferenceResult
 
 
@@ -41,6 +41,8 @@ class IPWClassicalMeanEstimator:
             sampling_probability,
             "Some observations have pi=0. These will be excluded from the estimation.",
         )
+        y_not_nan = ~np.isnan(y)
+        _validate_label_prob_consistency(y_not_nan, sampling_probability)
         return y[non_zero_mask], sampling_probability[non_zero_mask]
 
     def estimate(

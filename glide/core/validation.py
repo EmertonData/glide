@@ -17,55 +17,49 @@ def _get_non_zero_mask(values: NDArray, warning_message: Optional[str] = None) -
 
 
 def _validate_y_proxy(y_proxy: NDArray, stratum_id: Optional[Hashable] = None) -> None:
+
     if np.isnan(y_proxy).any():
-        raise ValueError("Input proxy values contain NaN")
+        raise ValueError("'y_proxy' contains NaN values.")
     if _is_constant(y_proxy):
-        if stratum_id is None:
-            raise ValueError("Input proxy values are constant")
-        raise ValueError(f"Input proxy values are constant in stratum '{stratum_id}'")
+        stratum_part = f" in stratum '{stratum_id}'" if stratum_id is not None else ""
+        raise ValueError(f"'y_proxy' values are constant{stratum_part}.")
 
 
 def _validate_y_true(y_true: NDArray) -> None:
     labeled = y_true[~np.isnan(y_true)]
     if _is_constant(labeled):
-        raise ValueError("Labeled y_true values are constant")
+        raise ValueError("'y_true' labeled values are constant.")
 
 
 def _validate_uncertainties(uncertainties: NDArray) -> None:
     if np.any(np.isnan(uncertainties)):
-        raise ValueError(
-            "All uncertainty values must be finite; got a NaN value. "
-            "A NaN uncertainty score cannot be used to compute sampling probabilities."
-        )
+        raise ValueError("'uncertainties' must all be finite; got a NaN value.")
     if np.any(uncertainties <= 0.0):
-        raise ValueError(
-            "All uncertainty values must be strictly positive; got a non-positive value. "
-            "An observation with zero or negative uncertainty would never be selected."
-        )
+        raise ValueError("'uncertainties' must all be strictly positive; got a non-positive value.")
 
 
 def _validate_probabilities(values: NDArray) -> None:
     if np.min(values) < 0 or np.max(values) > 1:
-        raise ValueError("Sampling probabilities should be in [0, 1]")
+        raise ValueError("Sampling probabilities must be in [0, 1].")
 
 
 def _validate_label_prob_consistency(labeled_mask: NDArray, pi: NDArray) -> None:
     if np.any(labeled_mask & (pi == 0)):
-        raise ValueError("Samples with non-zero probability of being labeled cannot be labeled")
+        raise ValueError("Samples with zero probability of being labeled cannot be labeled.")
     if np.any(~labeled_mask & (pi == 1)):
-        raise ValueError("Samples with probability one of being labeled must be labeled")
+        raise ValueError("Samples with probability one of being labeled must be labeled.")
 
 
 def _validate_equal_lengths(*arrays: NDArray, names: List[str]) -> None:
     lengths = [len(a) for a in arrays]
     if len(set(lengths)) > 1:
         if len(names) == 2:
-            names_str = f"{names[0]} and {names[1]}"
+            names_str = f"'{names[0]}' and '{names[1]}'"
             lengths_str = f"{lengths[0]} and {lengths[1]}"
         else:
-            names_str = ", ".join(names[:-1]) + f", and {names[-1]}"
+            names_str = ", ".join(f"'{n}'" for n in names[:-1]) + f", and '{names[-1]}'"
             lengths_str = ", ".join(str(length) for length in lengths[:-1]) + f", and {lengths[-1]}"
-        raise ValueError(f"{names_str} must have the same length, got {lengths_str}")
+        raise ValueError(f"{names_str} must have the same length; got {lengths_str}.")
 
 
 def _validate_budget(budget: int) -> None:
@@ -87,6 +81,5 @@ def _validate_sample_sizes(
     n_labeled = labeled_mask.sum()
     n_unlabeled = (~labeled_mask).sum()
     if min(n_labeled, n_unlabeled) <= 1:
-        if stratum_id is None:
-            raise ValueError("Too few labeled or unlabeled samples in dataset")
-        raise ValueError(f"Too few labeled or unlabeled samples in stratum '{stratum_id}'")
+        stratum_part = f"stratum '{stratum_id}'" if stratum_id is not None else "dataset"
+        raise ValueError(f"Too few labeled or unlabeled samples in {stratum_part}.")

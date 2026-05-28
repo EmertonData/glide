@@ -51,7 +51,7 @@ class CLTConfidenceInterval:
     @confidence_level.setter
     def confidence_level(self, value: float) -> None:
         if not 0 < value < 1:
-            raise ValueError(f"confidence_level must be in (0, 1), got {value}")
+            raise ValueError(f"'confidence_level' must be in (0, 1); got {value!r}.")
         self._confidence_level = value
         alpha_over_two = (1 - value) / 2
         z_score = norm.ppf(1 - alpha_over_two)
@@ -94,6 +94,6 @@ class CLTConfidenceInterval:
         elif alternative == "smaller":
             p_value = norm.cdf(z_stat)
         else:
-            raise ValueError(f"alternative must be 'two-sided', 'larger', or 'smaller', got '{alternative}'")
+            raise ValueError(f"'alternative' must be 'two-sided', 'larger', or 'smaller'; got {alternative!r}.")
         df = float("inf")
         return z_stat, p_value, df

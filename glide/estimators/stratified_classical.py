@@ -94,8 +94,8 @@ class StratifiedClassicalMeanEstimator:
             y_stratum = y[stratum_mask & not_nan_mask]
             if len(y_stratum) < 2:
                 raise ValueError(
-                    "At least 2 non-NaN values are required in each stratum, "
-                    f"got {len(y_stratum)} in stratum {stratum_id}."
+                    f"'y' must have at least 2 non-NaN values per stratum; "
+                    f"got {len(y_stratum)} in stratum '{stratum_id}'."
                 )
 
             n_samples_k = len(y_stratum)

@@ -48,22 +48,22 @@ def test_fit_raises_on_length_mismatch(sampler):
 
 
 def test_fit_raises_on_nan_in_y_true(sampler):
-    with pytest.raises(ValueError, match="Input contains NaN values"):
+    with pytest.raises(ValueError, match="contains NaN values"):
         sampler.fit(y_true=np.array([1.0, np.nan]), y_proxy=np.array([1.1, 1.9]))
 
 
 def test_fit_raises_on_nan_in_y_proxy(sampler):
-    with pytest.raises(ValueError, match="Input contains NaN values"):
+    with pytest.raises(ValueError, match="contains NaN values"):
         sampler.fit(y_true=np.array([1.0, 2.0]), y_proxy=np.array([1.1, np.nan]))
 
 
-def test_fit_raises_on_zero_variance_y_true(sampler):
-    with pytest.raises(ValueError, match="Input ground-truth values have zero variance"):
+def test_fit_raises_on_constant_y_true(sampler):
+    with pytest.raises(ValueError, match="'y_true' values are constant"):
         sampler.fit(y_true=np.array([1.0, 1.0]), y_proxy=np.array([1.1, 1.1]))
 
 
 def test_fit_raises_on_zero_mse(sampler):
-    with pytest.raises(ValueError, match="Proxy values have zero MSE with ground-truths"):
+    with pytest.raises(ValueError, match="'y_proxy' has zero mean squared error"):
         sampler.fit(y_true=np.array([1.0, 2.0]), y_proxy=np.array([1.0, 2.0]))
 
 
@@ -101,7 +101,7 @@ def test_compute_optimal_probability_pi_known_value(fitted_sampler):
 
 
 def test_sample_raises_if_fit_not_called(sampler):
-    with pytest.raises(RuntimeError, match="fit\\(\\) must be called before sample"):
+    with pytest.raises(RuntimeError, match="Call fit\\(\\) before sample"):
         sampler.sample(n_samples=2, y_true_cost=10.0, y_proxy_cost=1.0, budget=5, random_seed=42)
 
 
@@ -130,7 +130,7 @@ def test_sample_invalid_budget(fitted_sampler, budget):
 
 
 def test_sample_budget_too_small_raises(fitted_sampler):
-    with pytest.raises(ValueError, match="Budget .* is too small"):
+    with pytest.raises(ValueError, match="'budget' is too small"):
         fitted_sampler.sample(n_samples=2, y_true_cost=100.0, y_proxy_cost=1.0, budget=1, random_seed=42)
 
 

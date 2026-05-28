@@ -23,7 +23,7 @@ def test_simulate_annotation_length_mismatch(y_true_oracle):
 def test_simulate_annotation_y_true_oracle_contains_nan():
     y_true_oracle = np.array([0.0, np.nan])
     xi = np.array([1, 0])
-    with pytest.raises(ValueError, match="y_true_oracle contains NaN"):
+    with pytest.raises(ValueError, match="'y_true_oracle' contains NaN"):
         simulate_annotation(y_true_oracle, xi)
 
 
@@ -31,7 +31,7 @@ def test_simulate_annotation_y_true_oracle_contains_nan():
 def test_simulate_annotation_xi_non_binary(bad_xi):
     y_true_oracle = np.array([0.0, 1.0])
     xi = np.array([1.0, bad_xi])
-    with pytest.raises(ValueError, match="xi must only contain 0, 1, and np.nan values"):
+    with pytest.raises(ValueError, match="'xi' must only contain 0, 1"):
         simulate_annotation(y_true_oracle, xi)
 
 

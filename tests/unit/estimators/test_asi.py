@@ -77,6 +77,14 @@ def test_preprocess_delegates_to_validation(estimator):
         np.testing.assert_array_equal(mock_pi_consistency.call_args[0][1], pi)
 
 
+def test_preprocess_raises_on_constant_rectifiers(estimator):
+    y_true = np.array([1.0, 0.2, 0.3])
+    y_proxy = np.array([0.0, 0.0, 0.1])
+    pi = np.ones(3)
+    with pytest.raises(ValueError, match="'y_proxy' values lead to constant rectifiers"):
+        estimator._preprocess(y_true, y_proxy, pi)
+
+
 # --- _compute_tuning_parameter ---
 
 

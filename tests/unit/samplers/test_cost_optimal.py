@@ -46,7 +46,7 @@ def test_fit_raises_on_nan_in_y_true(sampler):
 
 
 def test_fit_raises_on_zero_variance_y_true(sampler):
-    with pytest.raises(ValueError, match="zero variance"):
+    with pytest.raises(ValueError, match="constant"):
         sampler.fit(np.array([1.0, 1.0]))
 
 
@@ -135,7 +135,7 @@ def test_sample_invalid_budget(fitted_sampler, uncertainties, budget):
 
 
 def test_sample_budget_too_small_raises(fitted_sampler, uncertainties):
-    with pytest.raises(ValueError, match="Budget .* is too small"):
+    with pytest.raises(ValueError, match="'budget' is too small"):
         fitted_sampler.sample(uncertainties, y_true_cost=10.0, y_proxy_cost=1.0, budget=1, random_seed=42)
 
 

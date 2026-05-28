@@ -191,7 +191,7 @@ class StratifiedSampler:
         elif strategy == "neyman":
             allocation = self._neyman_allocation(y_proxy, groups, budget)
         else:
-            raise ValueError(f"Unknown strategy '{strategy}'. Expected 'proportional' or 'neyman'.")
+            raise ValueError(f"'strategy' must be 'proportional' or 'neyman'; got {strategy!r}.")
 
         for stratum_id, n_h in allocation.items():
             if n_h < 2:
@@ -205,7 +205,7 @@ class StratifiedSampler:
 
             if n_h > stratum_size - 2:
                 raise ValueError(
-                    f"Stratum '{stratum_id}' has been over-allocated. Consider using proportinal sampling."
+                    f"Stratum '{stratum_id}' has been over-allocated. Consider using proportional sampling."
                 )
 
         rng = np.random.default_rng(random_seed)

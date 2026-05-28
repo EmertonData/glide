@@ -82,7 +82,7 @@ class ASIMeanEstimator:
         _validate_label_prob_consistency(y_true_non_nan_mask, pi)
 
         if _is_constant(y_proxy * (xi / pi - 1)):
-            raise ValueError("Input proxy values lead to constant rectifiers")
+            raise ValueError("'y_proxy' values lead to constant rectifiers.")
 
         y_true_filled = np.nan_to_num(y_true_all, nan=0)
         return y_true_filled, y_proxy, xi, pi
@@ -163,7 +163,7 @@ class ASIMeanEstimator:
         ValueError
             - If ``y_true``, ``y_proxy``, and ``pi`` do not all have the same length.
             - If any proxy value is NaN.
-            - If the rectifiers ``y_proxy * (ξ_i / π_i - 1)`` have zero variance.
+            - If the rectifiers ``y_proxy * (ξ_i / π_i - 1)`` are constant.
             - If any value in ``pi`` is not in [0, 1].
         """
         y_true_filled, y_proxy_filtered, xi, pi_filtered = self._preprocess(y_true, y_proxy, pi)

@@ -54,13 +54,13 @@ class CostOptimalSampler:
         if np.any(np.isnan(y_true)):
             raise ValueError("'y_true' contains NaN values. The burn-in dataset must be fully labeled.")
         if np.min(y_true) == np.max(y_true):
-            raise ValueError("'y_true' label values have zero variance.")
+            raise ValueError("'y_true' label values are constant.")
 
     def _validate_uncertainties(self, uncertainties: NDArray) -> None:
         if np.any(np.isnan(uncertainties)):
-            raise ValueError("All uncertainty values must be finite; got a NaN value.")
+            raise ValueError("'uncertainties' must all be finite; got a NaN value.")
         if np.any(uncertainties <= 0.0):
-            raise ValueError("All uncertainty values must be strictly positive; got a non-positive value.")
+            raise ValueError("'uncertainties' must all be strictly positive; got a non-positive value.")
 
     def fit(self, y_true: NDArray) -> "CostOptimalSampler":
         """Estimate the true label variance from a burn-in dataset.
@@ -221,7 +221,7 @@ class CostOptimalSampler:
         cumulative_costs = np.cumsum(y_true_cost * pi_all + y_proxy_cost)
         n_affordable = np.searchsorted(cumulative_costs, budget, side="right")
         if n_affordable < 1:
-            raise ValueError(f"Budget {budget} is too small to afford a single sample with the given inputs.")
+            raise ValueError(f"'budget' is too small to afford a single sample; got {budget}.")
 
         n_samples = len(uncertainties)
         cutoff = min(n_affordable, n_samples)

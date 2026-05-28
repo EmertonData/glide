@@ -45,12 +45,12 @@ def simulate_annotation(
     array([ 0., nan,  1., nan])
     """
     if len(y_true_oracle) != len(xi):
-        raise ValueError(f"y_true_oracle and xi must have the same length, got {len(y_true_oracle)} and {len(xi)}")
+        raise ValueError(f"'y_true_oracle' and 'xi' must have the same length; got {len(y_true_oracle)} and {len(xi)}.")
     if np.any(np.isnan(y_true_oracle)):
-        raise ValueError("y_true_oracle contains NaN values")
+        raise ValueError("'y_true_oracle' contains NaN values.")
     xi_float = xi.astype(float)
     if not (np.isnan(xi_float) | np.isin(xi_float, [0.0, 1.0])).all():
-        raise ValueError("xi must only contain 0, 1, and np.nan values")
+        raise ValueError("'xi' must only contain 0, 1, and np.nan values.")
 
     y_true = y_true_oracle.astype(float)
     y_true[xi_float != 1] = np.nan
