@@ -9,11 +9,11 @@ def _is_constant(array: NDArray) -> bool:
     return np.max(array) == np.min(array)
 
 
-def _get_non_zero_pi_mask(pi: NDArray, warning_message: str) -> NDArray:
-    non_zero_pi_mask = pi > 0
-    if not np.all(non_zero_pi_mask):
+def _get_non_zero_mask(values: NDArray, warning_message: Optional[str] = None) -> NDArray:
+    non_zero_mask = values > 0
+    if warning_message is not None and np.any(~non_zero_mask):
         warnings.warn(warning_message, UserWarning)
-    return non_zero_pi_mask
+    return non_zero_mask
 
 
 def _validate_y_proxy(y_proxy: NDArray, stratum_id: Optional[Hashable] = None) -> None:
@@ -21,14 +21,14 @@ def _validate_y_proxy(y_proxy: NDArray, stratum_id: Optional[Hashable] = None) -
         raise ValueError("Input proxy values contain NaN")
     if _is_constant(y_proxy):
         if stratum_id is None:
-            raise ValueError("Input proxy values have zero variance")
-        raise ValueError(f"Input proxy values have zero variance in stratum '{stratum_id}'")
+            raise ValueError("Input proxy values are constant")
+        raise ValueError(f"Input proxy values are constant in stratum '{stratum_id}'")
 
 
 def _validate_y_true(y_true: NDArray) -> None:
     labeled = y_true[~np.isnan(y_true)]
     if _is_constant(labeled):
-        raise ValueError("Labeled y_true values have zero variance")
+        raise ValueError("Labeled y_true values are constant")
 
 
 def _validate_uncertainties(uncertainties: NDArray) -> None:
@@ -44,17 +44,12 @@ def _validate_uncertainties(uncertainties: NDArray) -> None:
         )
 
 
-def _validate_non_constant(values: NDArray) -> None:
-    if _is_constant(values):
-        raise ValueError("Input values lead to rectifiers with zero variance")
-
-
-def _validate_sampling_probabilities(pi: NDArray) -> None:
-    if np.min(pi) < 0 or np.max(pi) > 1:
+def _validate_probabilities(values: NDArray) -> None:
+    if np.min(values) < 0 or np.max(values) > 1:
         raise ValueError("Sampling probabilities should be in [0, 1]")
 
 
-def _validate_pi_consistency(labeled_mask: NDArray, pi: NDArray) -> None:
+def _validate_label_prob_consistency(labeled_mask: NDArray, pi: NDArray) -> None:
     if np.any(labeled_mask & (pi == 0)):
         raise ValueError("Samples with non-zero probability of being labeled cannot be labeled")
     if np.any(~labeled_mask & (pi == 1)):
@@ -73,13 +68,15 @@ def _validate_equal_lengths(*arrays: NDArray, names: List[str]) -> None:
         raise ValueError(f"{names_str} must have the same length, got {lengths_str}")
 
 
-def _validate_budget(budget: int, max_size: int) -> None:
+def _validate_budget(budget: int) -> None:
     if (not isinstance(budget, (int, np.integer))) or isinstance(budget, bool) or budget <= 0:
         raise ValueError(f"'budget' must be a strictly positive integer; got {budget!r}.")
-    if budget > max_size:
+
+
+def _validate_budget_bound(budget: int, n_max: int) -> None:
+    if budget > n_max:
         raise ValueError(
-            f"'budget' must not exceed the number of samples; "
-            f"got budget={budget} but the dataset has {max_size} elements."
+            f"'budget' must not exceed the number of samples; got budget={budget} but the dataset has {n_max} elements."
         )
 
 

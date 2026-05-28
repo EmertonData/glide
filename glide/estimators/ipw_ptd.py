@@ -7,11 +7,11 @@ from numpy.typing import NDArray
 
 from glide.confidence_intervals import BootstrapConfidenceInterval
 from glide.core.validation import (
-    _get_non_zero_pi_mask,
+    _get_non_zero_mask,
     _validate_equal_lengths,
-    _validate_pi_consistency,
+    _validate_label_prob_consistency,
+    _validate_probabilities,
     _validate_sample_sizes,
-    _validate_sampling_probabilities,
     _validate_y_proxy,
     _validate_y_true,
 )
@@ -68,14 +68,14 @@ class IPWPTDMeanEstimator:
         pi: NDArray,
     ) -> Tuple[NDArray, NDArray, NDArray, NDArray]:
         _validate_equal_lengths(y_true, y_proxy, pi, names=["y_true", "y_proxy", "pi"])
-        _validate_sampling_probabilities(pi)
+        _validate_probabilities(pi)
         _validate_y_proxy(y_proxy)
         _validate_y_true(y_true)
 
         y_true_non_nan_mask = ~np.isnan(y_true)
         xi = y_true_non_nan_mask.astype(float)
 
-        _validate_pi_consistency(y_true_non_nan_mask, pi)
+        _validate_label_prob_consistency(y_true_non_nan_mask, pi)
 
         _validate_sample_sizes(y_true_non_nan_mask)
         y_true_filled = np.nan_to_num(y_true, nan=0)
@@ -145,13 +145,13 @@ class IPWPTDMeanEstimator:
         y_true_filled, y_proxy, xi, pi = self._preprocess(y_true, y_proxy, pi)
         rng = np.random.default_rng(random_seed)
 
-        non_zero_pi_mask = _get_non_zero_pi_mask(
+        non_zero_mask = _get_non_zero_mask(
             pi,
             "Some observations have pi=0. These will be excluded from the estimation as per the original paper.",
         )
         non_one_pi_mask = pi < 1
 
-        if not np.all(non_one_pi_mask):
+        if np.any(~non_one_pi_mask):
             warnings.warn(
                 "Some observations have pi=1. These will be excluded from the estimation as per the original paper.",
                 UserWarning,
@@ -162,8 +162,8 @@ class IPWPTDMeanEstimator:
             labeled_ipw_weights = xi / pi
             unlabeled_ipw_weights = (1 - xi) / (1 - pi)
 
-        weighted_y_true_filled = (y_true_filled * labeled_ipw_weights)[non_zero_pi_mask]
-        weighted_y_proxy_labeled = (y_proxy * labeled_ipw_weights)[non_zero_pi_mask]
+        weighted_y_true_filled = (y_true_filled * labeled_ipw_weights)[non_zero_mask]
+        weighted_y_proxy_labeled = (y_proxy * labeled_ipw_weights)[non_zero_mask]
         weighted_y_proxy_unlabeled = (y_proxy * unlabeled_ipw_weights)[non_one_pi_mask]
 
         mean_proxy_unlabeled = np.mean(weighted_y_proxy_unlabeled)

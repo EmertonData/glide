@@ -57,9 +57,11 @@ def test_sample_is_reproducible(sampler, uncertainties):
 def test_sample_delegates_to_validation(sampler, uncertainties):
     with (
         patch.object(active_module, "_validate_budget") as mock_budget,
+        patch.object(active_module, "_validate_budget_bound") as mock_budget_bound,
         patch.object(active_module, "_validate_uncertainties") as mock_uncertainties,
     ):
         sampler.sample(uncertainties, budget=5, random_seed=0)
 
-        mock_budget.assert_called_once_with(5, len(uncertainties))
+        mock_budget.assert_called_once_with(5)
+        mock_budget_bound.assert_called_once_with(5, len(uncertainties))
         mock_uncertainties.assert_called_once_with(uncertainties)

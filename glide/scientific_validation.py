@@ -59,7 +59,7 @@ def run_monte_carlo(
     """
     if n_seeds <= 0:
         raise ValueError(f"'n_seeds' must be > 0; got {n_seeds!r}.")
-    if not np.all((confidence_levels > 0) & (confidence_levels < 1)):
+    if np.any(~((confidence_levels > 0) & (confidence_levels < 1))):
         raise ValueError(f"All 'confidence_levels' must be in (0, 1); got {confidence_levels!r}.")
     first_estimates = run_seed(0)
     methods = list(first_estimates.keys())

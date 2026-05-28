@@ -120,9 +120,11 @@ def test_sample_is_reproducible(sampler, y_proxy, groups):
 def test_sample_delegates_to_validation(sampler, y_proxy, groups):
     with (
         patch.object(stratified_module, "_validate_budget") as mock_budget,
+        patch.object(stratified_module, "_validate_budget_bound") as mock_budget_bound,
         patch.object(stratified_module, "_validate_y_proxy") as mock_y_proxy,
     ):
         sampler.sample(y_proxy, groups, 4, random_seed=0)
 
-        mock_budget.assert_called_once_with(4, len(y_proxy))
+        mock_budget.assert_called_once_with(4)
+        mock_budget_bound.assert_called_once_with(4, len(y_proxy))
         assert mock_y_proxy.call_count == 3

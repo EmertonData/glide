@@ -48,10 +48,10 @@ def test_preprocess_delegates_to_validation(estimator):
 
     with (
         patch.object(ipw_ptd_module, "_validate_equal_lengths") as mock_equal_lengths,
-        patch.object(ipw_ptd_module, "_validate_sampling_probabilities") as mock_sampling_probs,
+        patch.object(ipw_ptd_module, "_validate_probabilities") as mock_sampling_probs,
         patch.object(ipw_ptd_module, "_validate_y_proxy") as mock_y_proxy,
         patch.object(ipw_ptd_module, "_validate_y_true") as mock_y_true,
-        patch.object(ipw_ptd_module, "_validate_pi_consistency") as mock_pi_consistency,
+        patch.object(ipw_ptd_module, "_validate_label_prob_consistency") as mock_pi_consistency,
         patch.object(ipw_ptd_module, "_validate_sample_sizes") as mock_sample_sizes,
     ):
         estimator._preprocess(y_true, y_proxy, pi)

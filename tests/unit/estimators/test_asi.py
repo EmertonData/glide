@@ -62,10 +62,9 @@ def test_preprocess_delegates_to_validation(estimator):
 
     with (
         patch.object(asi_module, "_validate_equal_lengths") as mock_equal_lengths,
-        patch.object(asi_module, "_validate_sampling_probabilities") as mock_sampling_probs,
+        patch.object(asi_module, "_validate_probabilities") as mock_sampling_probs,
         patch.object(asi_module, "_validate_y_proxy") as mock_y_proxy,
-        patch.object(asi_module, "_validate_pi_consistency") as mock_pi_consistency,
-        patch.object(asi_module, "_validate_non_constant") as mock_non_constant,
+        patch.object(asi_module, "_validate_label_prob_consistency") as mock_pi_consistency,
     ):
         estimator._preprocess(y_true, y_proxy, pi)
 
@@ -76,9 +75,6 @@ def test_preprocess_delegates_to_validation(estimator):
         labeled_mask = ~np.isnan(y_true)
         np.testing.assert_array_equal(mock_pi_consistency.call_args[0][0], labeled_mask)
         np.testing.assert_array_equal(mock_pi_consistency.call_args[0][1], pi)
-        xi = labeled_mask.astype(float)
-        expected_rectifiers = y_proxy * (xi / pi - 1)
-        np.testing.assert_array_equal(mock_non_constant.call_args[0][0], expected_rectifiers)
 
 
 # --- _compute_tuning_parameter ---

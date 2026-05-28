@@ -4,7 +4,7 @@ import numpy as np
 from numpy.typing import NDArray
 
 from glide.confidence_intervals import CLTConfidenceInterval
-from glide.core.validation import _get_non_zero_pi_mask, _validate_sampling_probabilities
+from glide.core.validation import _get_non_zero_mask, _validate_probabilities
 from glide.mean_inference_results import ClassicalMeanInferenceResult
 
 
@@ -36,12 +36,12 @@ class IPWClassicalMeanEstimator:
     """
 
     def _preprocess(self, y: NDArray, sampling_probability: NDArray) -> Tuple[NDArray, NDArray]:
-        _validate_sampling_probabilities(sampling_probability)
-        non_zero_pi_mask = _get_non_zero_pi_mask(
+        _validate_probabilities(sampling_probability)
+        non_zero_mask = _get_non_zero_mask(
             sampling_probability,
             "Some observations have pi=0. These will be excluded from the estimation.",
         )
-        return y[non_zero_pi_mask], sampling_probability[non_zero_pi_mask]
+        return y[non_zero_mask], sampling_probability[non_zero_mask]
 
     def estimate(
         self,

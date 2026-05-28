@@ -6,11 +6,11 @@ from numpy.typing import NDArray
 
 from glide.confidence_intervals import CLTConfidenceInterval
 from glide.core.validation import (
-    _get_non_zero_pi_mask,
+    _get_non_zero_mask,
+    _is_constant,
     _validate_equal_lengths,
-    _validate_non_constant,
-    _validate_pi_consistency,
-    _validate_sampling_probabilities,
+    _validate_label_prob_consistency,
+    _validate_probabilities,
     _validate_y_proxy,
 )
 from glide.estimators.ipw_classical import IPWClassicalMeanEstimator
@@ -64,24 +64,25 @@ class ASIMeanEstimator:
         pi: NDArray,
     ) -> Tuple[NDArray, NDArray, NDArray, NDArray]:
         _validate_equal_lengths(y_true_all, y_proxy, pi, names=["y_true", "y_proxy", "pi"])
-        _validate_sampling_probabilities(pi)
+        _validate_probabilities(pi)
 
-        non_zero_pi_mask = _get_non_zero_pi_mask(
+        non_zero_mask = _get_non_zero_mask(
             pi,
             "Some observations have pi=0. These will be excluded from the estimation.",
         )
-        y_true_all = y_true_all[non_zero_pi_mask]
-        y_proxy = y_proxy[non_zero_pi_mask]
-        pi = pi[non_zero_pi_mask]
+        y_true_all = y_true_all[non_zero_mask]
+        y_proxy = y_proxy[non_zero_mask]
+        pi = pi[non_zero_mask]
 
         _validate_y_proxy(y_proxy)
 
         y_true_non_nan_mask = ~np.isnan(y_true_all)
         xi = y_true_non_nan_mask.astype(float)
 
-        _validate_pi_consistency(y_true_non_nan_mask, pi)
+        _validate_label_prob_consistency(y_true_non_nan_mask, pi)
 
-        _validate_non_constant(y_proxy * (xi / pi - 1))
+        if _is_constant(y_proxy * (xi / pi - 1)):
+            raise ValueError("Input proxy values lead to constant rectifiers")
 
         y_true_filled = np.nan_to_num(y_true_all, nan=0)
         return y_true_filled, y_proxy, xi, pi
