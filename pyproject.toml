@@ -59,11 +59,11 @@ dev = [
 ]
 doc = [
     "datasets>=4.8.5",
-    "matplotlib>=3.10.8",
+    "matplotlib>=3.10.9",
     "mkdocs>=1.6.1",
     "mkdocs-jupyter>=0.26.3",
-    "mkdocs-material>=9.7.4",
-    "mkdocstrings[python]>=1.0.3",
+    "mkdocs-material>=9.7.6",
+    "mkdocstrings[python]>=1.0.4",
     "scikit-learn>=1.8.0"
 ]
 
