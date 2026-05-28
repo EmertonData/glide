@@ -36,6 +36,13 @@ def test_preprocess_valid_output(estimator):
     np.testing.assert_array_equal(y_out, np.array([1.0, 2.0, np.nan]))
 
 
+def test_preprocess_warns_on_zero_pi(estimator):
+    y = np.array([1.0, np.nan])
+    pi = np.array([0.5, 0.0])
+    with pytest.warns(UserWarning, match="Some observations have pi=0"):
+        estimator._preprocess(y, pi)
+
+
 def test_preprocess_delegates_to_validation(estimator):
     y = np.array([1.0, np.nan])
     pi = np.array([0.5, 0.5])
@@ -46,13 +53,6 @@ def test_preprocess_delegates_to_validation(estimator):
 
 
 # --- estimate ---
-
-
-def test_estimate_warns_on_zero_pi(estimator):
-    y = np.array([1.0, 2.0, np.nan, np.nan, np.nan])
-    pi = np.array([0.5, 0.5, 0.5, 0.5, 0.0])
-    with pytest.warns(UserWarning, match="Some observations have pi=0"):
-        estimator.estimate(y, pi)
 
 
 def test_estimate_is_valid_inference_result(estimator, y, sampling_probability):

@@ -47,6 +47,14 @@ def test_preprocess_valid_output(estimator, y_arrays):
     assert not np.any(np.isnan(y_true))
 
 
+def test_preprocess_warns_on_zero_pi(estimator):
+    y_true = np.array([1.0, np.nan, np.nan])
+    y_proxy = np.array([0.5, 0.8, 0.3])
+    pi = np.array([0.5, 0.5, 0.0])
+    with pytest.warns(UserWarning, match="Some observations have pi=0"):
+        estimator._preprocess(y_true, y_proxy, pi)
+
+
 def test_preprocess_delegates_to_validation(estimator):
     y_true = np.array([1.0, 2.0, np.nan, np.nan])
     y_proxy = np.array([1.0, 2.0, 3.0, 4.0])
@@ -56,7 +64,6 @@ def test_preprocess_delegates_to_validation(estimator):
         patch.object(asi_module, "_validate_equal_lengths") as mock_equal_lengths,
         patch.object(asi_module, "_validate_sampling_probabilities") as mock_sampling_probs,
         patch.object(asi_module, "_validate_y_proxy") as mock_y_proxy,
-        patch.object(asi_module, "_validate_y_true") as mock_y_true,
         patch.object(asi_module, "_validate_pi_consistency") as mock_pi_consistency,
         patch.object(asi_module, "_validate_non_constant") as mock_non_constant,
     ):
@@ -64,8 +71,8 @@ def test_preprocess_delegates_to_validation(estimator):
 
         mock_equal_lengths.assert_called_once_with(y_true, y_proxy, pi, names=["y_true", "y_proxy", "pi"])
         mock_sampling_probs.assert_called_once_with(pi)
-        mock_y_proxy.assert_called_once_with(y_proxy)
-        mock_y_true.assert_called_once_with(y_true)
+        mock_y_proxy.assert_called_once()
+        np.testing.assert_array_equal(mock_y_proxy.call_args[0][0], y_proxy)
         labeled_mask = ~np.isnan(y_true)
         np.testing.assert_array_equal(mock_pi_consistency.call_args[0][0], labeled_mask)
         np.testing.assert_array_equal(mock_pi_consistency.call_args[0][1], pi)
@@ -128,14 +135,6 @@ def test_estimate_custom_confidence_level(estimator, y_arrays):
     assert result.std == pytest.approx(expected_std, abs=0.01)
     assert result.confidence_interval.lower_bound == pytest.approx(expected_lower, abs=0.01)
     assert result.confidence_interval.upper_bound == pytest.approx(expected_upper, abs=0.01)
-
-
-def test_estimate_warns_on_zero_pi(estimator):
-    y_true = np.array([3.0, 5.0, np.nan, np.nan, np.nan])
-    y_proxy = np.array([2.0, 4.0, 5.0, 7.0, 9.0])
-    pi = np.array([0.5, 0.5, 0.5, 0.5, 0.0])
-    with pytest.warns(UserWarning, match="Some observations have pi=0"):
-        estimator.estimate(y_true, y_proxy, pi)
 
 
 # --- __str__ / __repr__ ---

@@ -12,7 +12,6 @@ from glide.core.validation import (
     _validate_pi_consistency,
     _validate_sampling_probabilities,
     _validate_y_proxy,
-    _validate_y_true,
 )
 from glide.estimators.ipw_classical import IPWClassicalMeanEstimator
 from glide.mean_inference_results import PredictionPoweredMeanInferenceResult
@@ -66,8 +65,18 @@ class ASIMeanEstimator:
     ) -> Tuple[NDArray, NDArray, NDArray, NDArray]:
         _validate_equal_lengths(y_true_all, y_proxy, pi, names=["y_true", "y_proxy", "pi"])
         _validate_sampling_probabilities(pi)
+
+        non_zero_pi_mask = pi > 0
+        if not np.all(non_zero_pi_mask):
+            warnings.warn(
+                "Some observations have pi=0. These will be excluded from the estimation.",
+                UserWarning,
+            )
+        y_true_all = y_true_all[non_zero_pi_mask]
+        y_proxy = y_proxy[non_zero_pi_mask]
+        pi = pi[non_zero_pi_mask]
+
         _validate_y_proxy(y_proxy)
-        _validate_y_true(y_true_all)
 
         y_true_non_nan_mask = ~np.isnan(y_true_all)
         xi = y_true_non_nan_mask.astype(float)
@@ -158,23 +167,10 @@ class ASIMeanEstimator:
             - If the rectifiers ``y_proxy * (ξ_i / π_i - 1)`` have zero variance.
             - If any value in ``pi`` is not in [0, 1].
         """
-        non_zero_pi_mask = pi > 0
-        if not np.all(non_zero_pi_mask):
-            warnings.warn(
-                "Some observations have pi=0. These will be excluded from the estimation.",
-                UserWarning,
-            )
-
-        y_true_filtered = y_true[non_zero_pi_mask]
-        y_proxy_filtered = y_proxy[non_zero_pi_mask]
-        pi_filtered = pi[non_zero_pi_mask]
-
-        y_true_filled, y_proxy_filtered, xi, pi_filtered = self._preprocess(
-            y_true_filtered, y_proxy_filtered, pi_filtered
-        )
+        y_true_filled, y_proxy_filtered, xi, pi_filtered = self._preprocess(y_true, y_proxy, pi)
 
         n_true = int(xi.sum())
-        n_proxy = int(non_zero_pi_mask.sum())
+        n_proxy = len(pi_filtered)
 
         _lambda = self._compute_tuning_parameter(y_true_filled, y_proxy_filtered, xi, pi_filtered, power_tuning)
         rectified_labels = self._compute_rectified_labels(y_true_filled, y_proxy_filtered, xi, pi_filtered, _lambda)
