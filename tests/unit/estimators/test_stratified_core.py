@@ -35,6 +35,7 @@ def test_preprocess_delegates_to_validation():
         _preprocess(y_true, y_proxy, groups)
 
         mock_equal_lengths.assert_called_with(y_true, y_proxy, groups, names=["y_true", "y_proxy", "groups"])
+        assert mock_y_true.call_count == 3
         mock_y_true.assert_any_call(y_true)
         assert mock_y_proxy.call_count == 3
         mock_y_proxy.assert_any_call(y_proxy)

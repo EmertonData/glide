@@ -28,19 +28,13 @@ def sampling_probability() -> NDArray:
 
 
 def test_preprocess_valid_output(estimator):
-    y = np.array([1.0, 2.0, np.nan])
-    sampling_probability = np.array([0.5, 0.5, 0.5])
-    y_out, pi_out = estimator._preprocess(y, sampling_probability)
+    y = np.array([1.0, 2.0, np.nan, np.nan])
+    sampling_probability = np.array([0.5, 0.5, 0.0, 0.5])
+    with pytest.warns(UserWarning, match="Some observations have pi=0"):
+        y_out, pi_out = estimator._preprocess(y, sampling_probability)
     assert len(y_out) == 3
     assert len(pi_out) == 3
     np.testing.assert_array_equal(y_out, np.array([1.0, 2.0, np.nan]))
-
-
-def test_preprocess_warns_on_zero_pi(estimator):
-    y = np.array([1.0, np.nan])
-    pi = np.array([0.5, 0.0])
-    with pytest.warns(UserWarning, match="Some observations have pi=0"):
-        estimator._preprocess(y, pi)
 
 
 def test_preprocess_delegates_to_validation(estimator):
@@ -50,12 +44,17 @@ def test_preprocess_delegates_to_validation(estimator):
     with (
         patch.object(ipw_classical_module, "_validate_probabilities") as mock_sampling_probs,
         patch.object(ipw_classical_module, "_validate_label_prob_consistency") as mock_label_prob_consistency,
+        patch.object(
+            ipw_classical_module, "_get_non_zero_mask", return_value=np.ones(2, dtype=bool)
+        ) as mock_non_zero_mask,
     ):
         estimator._preprocess(y, pi)
         mock_sampling_probs.assert_called_with(pi)
         y_not_nan = ~np.isnan(y)
         np.testing.assert_array_equal(mock_label_prob_consistency.call_args[0][0], y_not_nan)
         np.testing.assert_array_equal(mock_label_prob_consistency.call_args[0][1], pi)
+        mock_non_zero_mask.assert_called_once()
+        np.testing.assert_array_equal(mock_non_zero_mask.call_args[0][0], pi)
 
 
 # --- estimate ---

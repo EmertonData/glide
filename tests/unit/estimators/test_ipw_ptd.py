@@ -67,6 +67,18 @@ def test_preprocess_delegates_to_validation(estimator):
         np.testing.assert_array_equal(mock_sample_sizes.call_args[0][0], y_true_non_nan_mask)
 
 
+# ── estimate delegates ────────────────────────────────────────────────────────
+
+
+def test_estimate_delegates_to_non_zero_mask(estimator, y_arrays):
+    y_true, y_proxy, pi = y_arrays
+
+    with patch.object(ipw_ptd_module, "_get_non_zero_mask", return_value=np.ones(6, dtype=bool)) as mock_non_zero_mask:
+        estimator.estimate(y_true, y_proxy, pi, n_bootstrap=5, random_seed=0)
+        mock_non_zero_mask.assert_called_once()
+        np.testing.assert_array_equal(mock_non_zero_mask.call_args[0][0], pi)
+
+
 # ── estimate ──────────────────────────────────────────────────────────────────
 
 
@@ -115,13 +127,6 @@ def test_estimate_reproducibility(estimator, y_arrays):
     result_b = estimator.estimate(y_true, y_proxy, pi, n_bootstrap=5, random_seed=7)
     assert result_a.confidence_interval.lower_bound == result_b.confidence_interval.lower_bound
     assert result_a.confidence_interval.upper_bound == result_b.confidence_interval.upper_bound
-
-
-def test_estimate_warns_on_zero_pi(estimator, y_arrays):
-    y_true, y_proxy, _ = y_arrays
-    pi = np.array([0.4, 0.6, 0.5, 0.0, 0.2, 0.8])
-    with pytest.warns(UserWarning, match="Some observations have pi=0"):
-        estimator.estimate(y_true, y_proxy, pi, n_bootstrap=5, random_seed=7)
 
 
 def test_estimate_warns_on_one_pi(estimator, y_arrays):

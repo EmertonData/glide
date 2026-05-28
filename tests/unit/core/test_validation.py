@@ -177,6 +177,7 @@ def test_validate_equal_lengths_two_arrays():
 
 
 def test_validate_equal_lengths_three_arrays():
+    # necessary for 100% coverage
     with pytest.raises(ValueError, match="'y_true', 'y_proxy', and 'groups' must have the same length"):
         _validate_equal_lengths(
             np.array([1.0, 2.0]),

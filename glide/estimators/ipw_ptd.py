@@ -145,7 +145,7 @@ class IPWPTDMeanEstimator:
         y_true_filled, y_proxy, xi, pi = self._preprocess(y_true, y_proxy, pi)
         rng = np.random.default_rng(random_seed)
 
-        non_zero_mask = _get_non_zero_mask(
+        non_zero_pi_mask = _get_non_zero_mask(
             pi,
             "Some observations have pi=0. These will be excluded from the estimation as per the original paper.",
         )
@@ -162,8 +162,8 @@ class IPWPTDMeanEstimator:
             labeled_ipw_weights = xi / pi
             unlabeled_ipw_weights = (1 - xi) / (1 - pi)
 
-        weighted_y_true_filled = (y_true_filled * labeled_ipw_weights)[non_zero_mask]
-        weighted_y_proxy_labeled = (y_proxy * labeled_ipw_weights)[non_zero_mask]
+        weighted_y_true_filled = (y_true_filled * labeled_ipw_weights)[non_zero_pi_mask]
+        weighted_y_proxy_labeled = (y_proxy * labeled_ipw_weights)[non_zero_pi_mask]
         weighted_y_proxy_unlabeled = (y_proxy * unlabeled_ipw_weights)[non_one_pi_mask]
 
         mean_proxy_unlabeled = np.mean(weighted_y_proxy_unlabeled)

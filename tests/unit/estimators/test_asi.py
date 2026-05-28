@@ -47,14 +47,6 @@ def test_preprocess_valid_output(estimator, y_arrays):
     assert not np.any(np.isnan(y_true))
 
 
-def test_preprocess_warns_on_zero_pi(estimator):
-    y_true = np.array([1.0, np.nan, np.nan])
-    y_proxy = np.array([0.5, 0.8, 0.3])
-    pi = np.array([0.5, 0.5, 0.0])
-    with pytest.warns(UserWarning, match="Some observations have pi=0"):
-        estimator._preprocess(y_true, y_proxy, pi)
-
-
 def test_preprocess_delegates_to_validation(estimator):
     y_true = np.array([1.0, 2.0, np.nan, np.nan])
     y_proxy = np.array([1.0, 2.0, 3.0, 4.0])
@@ -65,6 +57,7 @@ def test_preprocess_delegates_to_validation(estimator):
         patch.object(asi_module, "_validate_probabilities") as mock_sampling_probs,
         patch.object(asi_module, "_validate_y_proxy") as mock_y_proxy,
         patch.object(asi_module, "_validate_label_prob_consistency") as mock_pi_consistency,
+        patch.object(asi_module, "_get_non_zero_mask", return_value=np.ones(4, dtype=bool)) as mock_non_zero_mask,
     ):
         estimator._preprocess(y_true, y_proxy, pi)
 
@@ -75,6 +68,8 @@ def test_preprocess_delegates_to_validation(estimator):
         labeled_mask = ~np.isnan(y_true)
         np.testing.assert_array_equal(mock_pi_consistency.call_args[0][0], labeled_mask)
         np.testing.assert_array_equal(mock_pi_consistency.call_args[0][1], pi)
+        mock_non_zero_mask.assert_called_once()
+        np.testing.assert_array_equal(mock_non_zero_mask.call_args[0][0], pi)
 
 
 def test_preprocess_raises_on_constant_rectifiers(estimator):
