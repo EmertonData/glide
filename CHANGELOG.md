@@ -13,6 +13,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - `CostOptimalSampler` for uncertainty-based cost-optimal annotation strategy
 
 ### 🔄 Changed
+- Centralised input validation logic into `glide.core.validation`
 - Deep-dive validation notebooks use shared utilities from `glide.scientific_validation`
 - Binary dataset generators now take `n_total` instead of `n_labeled` + `n_unlabeled`, and return fully populated oracle arrays.
 

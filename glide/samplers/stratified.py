@@ -3,6 +3,8 @@ from typing import Dict, Hashable, Literal, Optional, Tuple
 import numpy as np
 from numpy.typing import NDArray
 
+from glide.core.validation import _validate_budget, _validate_y_proxy
+
 
 class StratifiedSampler:
     """Sampler for per-stratum annotation budget allocation.
@@ -46,23 +48,13 @@ class StratifiedSampler:
         self,
         y_proxy: NDArray,
         groups: NDArray,
+        budget: int,
     ) -> Tuple[NDArray, NDArray]:
-        if np.isnan(y_proxy).any():
-            raise ValueError("Input proxy values contain NaN")
-
-        unique_strata = np.unique(groups)
-        for stratum_id in unique_strata:
+        _validate_budget(budget, len(y_proxy))
+        _validate_y_proxy(y_proxy)
+        for stratum_id in np.unique(groups):
             stratum_mask = groups == stratum_id
-            stratum_size = stratum_mask.sum()
-            if stratum_size < 4:
-                raise ValueError(
-                    f"Stratum '{stratum_id}' has fewer than 4 samples; stratified sampling "
-                    "must yield at least 2 labeled and 2 unlabeled samples per stratum."
-                )
-            stratum_y_proxy = y_proxy[stratum_mask]
-            if len(np.unique(stratum_y_proxy)) < 2:
-                raise ValueError(f"Stratum '{stratum_id}' has zero variance in proxy values")
-
+            _validate_y_proxy(y_proxy[stratum_mask], stratum_id)
         return y_proxy, groups
 
     def _apply_largest_remainder_rounding(
@@ -191,15 +183,7 @@ class StratifiedSampler:
             - If ``budget`` is too low and results in zero allocations for some stratum.
             - If ``budget`` exceeds the total number of samples in the input.
         """
-        if (not isinstance(budget, (int, np.integer))) or isinstance(budget, bool) or budget <= 0:
-            raise ValueError(f"'budget' must be a strictly positive integer; got {budget!r}.")
-        if budget > len(y_proxy):
-            raise ValueError(
-                f"'budget' must not exceed the number of samples; "
-                f"got budget={budget} but input has {len(y_proxy)} samples."
-            )
-
-        y_proxy, groups = self._validate(y_proxy, groups)
+        y_proxy, groups = self._validate(y_proxy, groups, budget)
 
         if strategy == "proportional":
             allocation = self._proportional_allocation(groups, budget)
@@ -208,7 +192,6 @@ class StratifiedSampler:
         else:
             raise ValueError(f"Unknown strategy '{strategy}'. Expected 'proportional' or 'neyman'.")
 
-        # Validate that all strata received compatible allocations with downstream estimators
         for stratum_id, n_h in allocation.items():
             if n_h < 2:
                 raise ValueError(

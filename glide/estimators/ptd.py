@@ -5,6 +5,12 @@ import numpy as np
 from numpy.typing import NDArray
 
 from glide.confidence_intervals import BootstrapConfidenceInterval
+from glide.core.validation import (
+    _validate_equal_lengths,
+    _validate_sample_sizes,
+    _validate_y_proxy,
+    _validate_y_true,
+)
 from glide.estimators.classical import ClassicalMeanEstimator
 from glide.estimators.ptd_core import (
     _compute_bootstrap_labeled_means,
@@ -54,19 +60,11 @@ class PTDMeanEstimator:
     """
 
     def _preprocess(self, y_true_all: NDArray, y_proxy_all: NDArray) -> Tuple[NDArray, NDArray, NDArray]:
-        if len(y_true_all) != len(y_proxy_all):
-            raise ValueError(
-                f"y_true and y_proxy must have the same length, got {len(y_true_all)} and {len(y_proxy_all)}"
-            )
-        if np.isnan(y_proxy_all).any():
-            raise ValueError("Input proxy values contain NaN")
-        if len(np.unique(y_proxy_all)) == 1:
-            raise ValueError("Input proxy values have zero variance")
+        _validate_equal_lengths(y_true_all, y_proxy_all, names=["y_true", "y_proxy"])
+        _validate_y_proxy(y_proxy_all)
+        _validate_y_true(y_true_all)
         labeled_mask = ~np.isnan(y_true_all)
-        n_labeled = labeled_mask.sum()
-        n_unlabeled = len(y_true_all) - n_labeled
-        if min(n_labeled, n_unlabeled) <= 1:
-            raise ValueError("Too few labeled or unlabeled samples in dataset")
+        _validate_sample_sizes(labeled_mask)
         y_true = y_true_all[labeled_mask]
         y_proxy_labeled = y_proxy_all[labeled_mask]
         y_proxy_unlabeled = y_proxy_all[~labeled_mask]

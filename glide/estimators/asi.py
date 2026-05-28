@@ -6,6 +6,14 @@ import numpy as np
 from numpy.typing import NDArray
 
 from glide.confidence_intervals import CLTConfidenceInterval
+from glide.core.validation import (
+    _validate_equal_lengths,
+    _validate_non_constant,
+    _validate_pi_consistency,
+    _validate_sampling_probabilities,
+    _validate_y_proxy,
+    _validate_y_true,
+)
 from glide.estimators.ipw_classical import IPWClassicalMeanEstimator
 from glide.mean_inference_results import PredictionPoweredMeanInferenceResult
 
@@ -56,23 +64,17 @@ class ASIMeanEstimator:
         y_proxy: NDArray,
         pi: NDArray,
     ) -> Tuple[NDArray, NDArray, NDArray, NDArray]:
-        if not (len(y_true_all) == len(y_proxy) == len(pi)):
-            raise ValueError("y_true, y_proxy, and pi must all have the same length")
-        if np.min(pi) < 0 or np.max(pi) > 1:
-            raise ValueError("Sampling probabilities should be in [0, 1]")
-        if np.isnan(y_proxy).any():
-            raise ValueError("Input proxy values contain NaN")
+        _validate_equal_lengths(y_true_all, y_proxy, pi, names=["y_true", "y_proxy", "pi"])
+        _validate_sampling_probabilities(pi)
+        _validate_y_proxy(y_proxy)
+        _validate_y_true(y_true_all)
 
         y_true_non_nan_mask = ~np.isnan(y_true_all)
         xi = y_true_non_nan_mask.astype(float)
 
-        if np.any(y_true_non_nan_mask & (pi == 0)):
-            raise ValueError("Samples with non-zero probability of being labeled cannot be labeled")
-        if np.any(~y_true_non_nan_mask & (pi == 1)):
-            raise ValueError("Samples with probability one of being labeled must be labeled")
+        _validate_pi_consistency(y_true_non_nan_mask, pi)
 
-        if len(np.unique(y_proxy * (xi / pi - 1))) == 1:
-            raise ValueError("Input values lead to rectifiers with zero variance")
+        _validate_non_constant(y_proxy * (xi / pi - 1))
 
         y_true_filled = np.nan_to_num(y_true_all, nan=0)
         return y_true_filled, y_proxy, xi, pi

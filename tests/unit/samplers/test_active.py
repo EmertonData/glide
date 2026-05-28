@@ -1,7 +1,10 @@
+from unittest.mock import patch
+
 import numpy as np
 import pytest
 from numpy.typing import NDArray
 
+import glide.samplers.active as active_module
 from glide.samplers import ActiveSampler
 
 
@@ -13,20 +16,6 @@ def uncertainties() -> NDArray:
 @pytest.fixture
 def sampler() -> ActiveSampler:
     return ActiveSampler()
-
-
-# --- _validate ---
-
-
-@pytest.mark.parametrize("bad_uncertainty", [0.0, -0.1])
-def test_validate_raises_on_non_positive_uncertainty(sampler, bad_uncertainty):
-    with pytest.raises(ValueError, match="non-positive"):
-        sampler._validate(np.array([bad_uncertainty, 0.5]))
-
-
-def test_validate_raises_on_nan_uncertainty(sampler):
-    with pytest.raises(ValueError, match="NaN"):
-        sampler._validate(np.array([float("nan"), 0.5]))
 
 
 # --- sample ---
@@ -63,3 +52,14 @@ def test_sample_is_reproducible(sampler, uncertainties):
     pi2, xi2 = sampler.sample(uncertainties, budget=5, random_seed=42)
     np.testing.assert_array_equal(pi1, pi2)
     np.testing.assert_array_equal(xi1, xi2)
+
+
+def test_sample_delegates_to_validation(sampler, uncertainties):
+    with (
+        patch.object(active_module, "_validate_budget") as mock_budget,
+        patch.object(active_module, "_validate_uncertainties") as mock_uncertainties,
+    ):
+        sampler.sample(uncertainties, budget=5, random_seed=0)
+
+        mock_budget.assert_called_once_with(5, len(uncertainties))
+        mock_uncertainties.assert_called_once_with(uncertainties)

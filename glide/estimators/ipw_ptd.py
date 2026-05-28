@@ -6,6 +6,14 @@ import numpy as np
 from numpy.typing import NDArray
 
 from glide.confidence_intervals import BootstrapConfidenceInterval
+from glide.core.validation import (
+    _validate_equal_lengths,
+    _validate_pi_consistency,
+    _validate_sample_sizes,
+    _validate_sampling_probabilities,
+    _validate_y_proxy,
+    _validate_y_true,
+)
 from glide.estimators.ipw_classical import IPWClassicalMeanEstimator
 from glide.estimators.ptd_core import (
     _compute_bootstrap_labeled_means,
@@ -58,29 +66,17 @@ class IPWPTDMeanEstimator:
         y_proxy: NDArray,
         pi: NDArray,
     ) -> Tuple[NDArray, NDArray, NDArray, NDArray]:
-        if not (len(y_true) == len(y_proxy) == len(pi)):
-            raise ValueError(
-                f"y_true, y_proxy, and pi must have the same length, got {len(y_true)}, {len(y_proxy)}, and {len(pi)}"
-            )
-        if np.min(pi) < 0 or np.max(pi) > 1:
-            raise ValueError("Sampling probabilities should be in [0, 1]")
-        if np.isnan(y_proxy).any():
-            raise ValueError("Input proxy values contain NaN")
-        if len(np.unique(y_proxy)) == 1:
-            raise ValueError("Input proxy values have zero variance")
+        _validate_equal_lengths(y_true, y_proxy, pi, names=["y_true", "y_proxy", "pi"])
+        _validate_sampling_probabilities(pi)
+        _validate_y_proxy(y_proxy)
+        _validate_y_true(y_true)
 
         y_true_non_nan_mask = ~np.isnan(y_true)
         xi = y_true_non_nan_mask.astype(float)
 
-        if np.any(y_true_non_nan_mask & (pi == 0)):
-            raise ValueError("Samples with non-zero probability of being labeled cannot be labeled")
-        if np.any(~y_true_non_nan_mask & (pi == 1)):
-            raise ValueError("Samples with probability one of being labeled must be labeled")
+        _validate_pi_consistency(y_true_non_nan_mask, pi)
 
-        n_labeled = int(xi.sum())
-        n_unlabeled = len(y_true) - n_labeled
-        if min(n_labeled, n_unlabeled) <= 1:
-            raise ValueError("Too few labeled or unlabeled samples in dataset")
+        _validate_sample_sizes(y_true_non_nan_mask)
         y_true_filled = np.nan_to_num(y_true, nan=0)
         return y_true_filled, y_proxy, xi, pi
 

@@ -1,9 +1,11 @@
 from typing import Tuple
+from unittest.mock import patch
 
 import numpy as np
 import pytest
 from numpy.typing import NDArray
 
+import glide.estimators.ipw_ptd as ipw_ptd_module
 from glide.confidence_intervals import BootstrapConfidenceInterval
 from glide.estimators import IPWPTDMeanEstimator
 from glide.mean_inference_results import PredictionPoweredMeanInferenceResult
@@ -39,61 +41,30 @@ def test_preprocess_valid_output(estimator, y_arrays):
     assert np.sum(xi) == 3
 
 
-def test_preprocess_raises_on_length_mismatch(estimator):
-    y_true = np.array([1.0, 2.0, np.nan])
-    y_proxy = np.array([1.0, 2.0])
-    pi = np.array([0.5, 0.5, 0.5])
-    with pytest.raises(ValueError, match="y_true, y_proxy, and pi must have the same length"):
-        estimator._preprocess(y_true, y_proxy, pi)
-
-
-@pytest.mark.parametrize("bad_pi", [2.0, -0.5])
-def test_preprocess_raises_on_invalid_pi(estimator, bad_pi):
+def test_preprocess_delegates_to_validation(estimator):
     y_true = np.array([1.0, 2.0, np.nan, np.nan])
-    y_proxy = np.array([0.9, 1.9, 0.8, 1.8])
-    pi = np.array([0.5, bad_pi, 0.5, 0.5])
-    with pytest.raises(ValueError, match="Sampling probabilities should be in \\[0, 1\\]"):
+    y_proxy = np.array([1.0, 2.0, 3.0, 4.0])
+    pi = np.array([0.5, 0.5, 0.5, 0.5])
+
+    with (
+        patch.object(ipw_ptd_module, "_validate_equal_lengths") as mock_equal_lengths,
+        patch.object(ipw_ptd_module, "_validate_sampling_probabilities") as mock_sampling_probs,
+        patch.object(ipw_ptd_module, "_validate_y_proxy") as mock_y_proxy,
+        patch.object(ipw_ptd_module, "_validate_y_true") as mock_y_true,
+        patch.object(ipw_ptd_module, "_validate_pi_consistency") as mock_pi_consistency,
+        patch.object(ipw_ptd_module, "_validate_sample_sizes") as mock_sample_sizes,
+    ):
         estimator._preprocess(y_true, y_proxy, pi)
 
-
-def test_preprocess_raises_on_nan_proxy(estimator):
-    y_true = np.array([1.0, np.nan])
-    y_proxy = np.array([1.0, np.nan])
-    pi = np.array([0.5, 0.5])
-    with pytest.raises(ValueError, match="Input proxy values contain NaN"):
-        estimator._preprocess(y_true, y_proxy, pi)
-
-
-def test_preprocess_raises_on_constant_proxy(estimator):
-    y_true = np.array([1.0, np.nan])
-    y_proxy = np.array([1.0, 1.0])
-    pi = np.array([0.5, 0.5])
-    with pytest.raises(ValueError, match="Input proxy values have zero variance"):
-        estimator._preprocess(y_true, y_proxy, pi)
-
-
-def test_preprocess_raises_on_labeled_samples_with_zero_pi(estimator):
-    y_true = np.array([1.0, 2.0, np.nan, np.nan])
-    y_proxy = np.array([0.9, 1.9, 0.8, 1.8])
-    pi = np.array([0.5, 0.0, 0.5, 0.5])
-    with pytest.raises(ValueError, match="Samples with non-zero probability of being labeled cannot be labeled"):
-        estimator._preprocess(y_true, y_proxy, pi)
-
-
-def test_preprocess_raises_on_unlabeled_samples_with_one_pi(estimator):
-    y_true = np.array([1.0, np.nan, np.nan, np.nan])
-    y_proxy = np.array([0.9, 1.9, 0.8, 1.8])
-    pi = np.array([0.5, 1.0, 0.5, 0.5])
-    with pytest.raises(ValueError, match="Samples with probability one of being labeled must be labeled"):
-        estimator._preprocess(y_true, y_proxy, pi)
-
-
-def test_preprocess_raises_when_too_few_samples(estimator):
-    y_true = np.array([5.0, np.nan, np.nan])
-    y_proxy = np.array([4.9, 5.2, 6.1])
-    pi = np.array([0.5, 0.5, 0.5])
-    with pytest.raises(ValueError, match="Too few labeled or unlabeled samples in dataset"):
-        estimator._preprocess(y_true, y_proxy, pi)
+        mock_equal_lengths.assert_called_once_with(y_true, y_proxy, pi, names=["y_true", "y_proxy", "pi"])
+        mock_sampling_probs.assert_called_once_with(pi)
+        mock_y_proxy.assert_called_once_with(y_proxy)
+        mock_y_true.assert_called_once_with(y_true)
+        y_true_non_nan_mask = ~np.isnan(y_true)
+        np.testing.assert_array_equal(mock_pi_consistency.call_args[0][0], y_true_non_nan_mask)
+        np.testing.assert_array_equal(mock_pi_consistency.call_args[0][1], pi)
+        assert mock_sample_sizes.call_count == 1
+        np.testing.assert_array_equal(mock_sample_sizes.call_args[0][0], y_true_non_nan_mask)
 
 
 # ── estimate ──────────────────────────────────────────────────────────────────

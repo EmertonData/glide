@@ -4,6 +4,8 @@ import numpy as np
 from numpy.random.bit_generator import SeedSequence
 from numpy.typing import NDArray
 
+from glide.core.validation import _validate_budget, _validate_uncertainties
+
 
 class ActiveSampler:
     """Sampler that draws elements with probabilities based on uncertainty scores.
@@ -37,12 +39,6 @@ class ActiveSampler:
     >>> xi
     array([0., 1.])
     """
-
-    def _validate(self, uncertainties: NDArray) -> None:
-        if np.any(np.isnan(uncertainties)):
-            raise ValueError("All uncertainty values must be finite; got a NaN value.")
-        if np.any(uncertainties <= 0.0):
-            raise ValueError("All uncertainty values must be strictly positive; got a non-positive value.")
 
     def sample(
         self,
@@ -90,15 +86,8 @@ class ActiveSampler:
             exceeds ``len(uncertainties)``, or if any uncertainty value is NaN,
             zero, or negative.
         """
-        if (not isinstance(budget, (int, np.integer))) or isinstance(budget, bool) or budget <= 0:
-            raise ValueError(f"'budget' must be a strictly positive integer; got {budget!r}.")
-        if budget > len(uncertainties):
-            raise ValueError(
-                f"'budget' must not exceed the number of samples; "
-                f"got budget={budget} but uncertainties has {len(uncertainties)} elements."
-            )
-
-        self._validate(uncertainties)
+        _validate_budget(budget, len(uncertainties))
+        _validate_uncertainties(uncertainties)
         rng = np.random.default_rng(random_seed)
 
         pi = budget * uncertainties / uncertainties.sum()
