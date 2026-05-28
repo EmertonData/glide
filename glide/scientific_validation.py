@@ -3,6 +3,7 @@ from typing import Any, Callable, Dict, Tuple
 import numpy as np
 from numpy.typing import NDArray
 
+from glide.core.validation import _validate_strictly_positive
 from glide.estimators import ClassicalMeanEstimator
 
 
@@ -57,8 +58,7 @@ def run_monte_carlo(
     >>> stats["M"]["means"]
     array([0.5, 0.5])
     """
-    if n_seeds <= 0:
-        raise ValueError(f"'n_seeds' must be > 0; got {n_seeds!r}.")
+    _validate_strictly_positive(n_seeds, "n_seeds")
     if np.any(~((confidence_levels > 0) & (confidence_levels < 1))):
         raise ValueError(f"All 'confidence_levels' must be in (0, 1); got {confidence_levels!r}.")
     first_estimates = run_seed(0)
