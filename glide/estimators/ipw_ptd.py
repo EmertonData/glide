@@ -75,9 +75,9 @@ class IPWPTDMeanEstimator:
         y_true_non_nan_mask = ~np.isnan(y_true)
         xi = y_true_non_nan_mask.astype(float)
 
+        _validate_sample_sizes(y_true_non_nan_mask)
         _validate_label_prob_consistency(y_true_non_nan_mask, pi)
 
-        _validate_sample_sizes(y_true_non_nan_mask)
         y_true_filled = np.nan_to_num(y_true, nan=0)
         return y_true_filled, y_proxy, xi, pi
 

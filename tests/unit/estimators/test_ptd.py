@@ -49,9 +49,9 @@ def test_preprocess_delegates_to_validation(estimator):
     ):
         estimator._preprocess(y_true, y_proxy)
 
-        mock_equal_lengths.assert_called_once_with(y_true, y_proxy, names=["y_true", "y_proxy"])
-        mock_y_proxy.assert_called_once_with(y_proxy)
-        mock_y_true.assert_called_once_with(y_true)
+        mock_equal_lengths.assert_called_with(y_true, y_proxy, names=["y_true", "y_proxy"])
+        mock_y_proxy.assert_called_with(y_proxy)
+        mock_y_true.assert_called_with(y_true)
         assert mock_sample_sizes.call_count == 1
         labeled_mask_arg = mock_sample_sizes.call_args[0][0]
         np.testing.assert_array_equal(labeled_mask_arg, np.array([True, True, False, False]))

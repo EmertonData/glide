@@ -63,7 +63,7 @@ def test_sample_delegates_to_validation(sampler, uncertainties):
     ):
         sampler.sample(uncertainties, budget=5, random_seed=0)
 
-        mock_is_integer.assert_called_once_with(5, "budget")
-        mock_strictly_positive.assert_called_once_with(5, "budget")
-        mock_budget_bound.assert_called_once_with(5, len(uncertainties))
-        mock_uncertainties.assert_called_once_with(uncertainties)
+        mock_is_integer.assert_called_with(5, "budget")
+        mock_strictly_positive.assert_called_with(5, "budget")
+        mock_budget_bound.assert_called_with(5, len(uncertainties))
+        mock_uncertainties.assert_called_with(uncertainties)

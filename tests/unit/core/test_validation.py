@@ -103,6 +103,11 @@ def test_validate_y_true_valid():
     _validate_y_true(np.array([1.0, 2.0, np.nan, np.nan]))
 
 
+def test_validate_y_true_only_nans():
+    with pytest.raises(ValueError, match="only NaN values"):
+        _validate_y_true(np.array([np.nan, np.nan]))
+
+
 def test_validate_y_true_constant():
     with pytest.raises(ValueError, match="'y_true' labeled values are constant"):
         _validate_y_true(np.array([1.0, 1.0, np.nan]))

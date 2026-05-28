@@ -5,7 +5,6 @@ from numpy.random.bit_generator import SeedSequence
 from numpy.typing import NDArray
 
 from glide.core.validation import (
-    _is_constant,
     _validate_burn_in_y_true,
     _validate_equal_lengths,
     _validate_has_no_nan,
@@ -89,7 +88,7 @@ class CostOptimalRandomSampler:
         _validate_burn_in_y_true(y_true)
         _validate_equal_lengths(y_true, y_proxy, names=["y_true", "y_proxy"])
         _validate_has_no_nan(y_proxy, "y_proxy")
-        if _is_constant(y_true - y_proxy):
+        if np.max(np.abs(y_true - y_proxy)) == 0:
             raise ValueError("'y_proxy' has zero mean squared error with 'y_true'.")
 
         y_true_variance = np.var(y_true, ddof=1)

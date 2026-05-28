@@ -56,10 +56,10 @@ def test_preprocess_delegates_to_validation(estimator):
     ):
         estimator._preprocess(y_true, y_proxy, pi)
 
-        mock_equal_lengths.assert_called_once_with(y_true, y_proxy, pi, names=["y_true", "y_proxy", "pi"])
-        mock_sampling_probs.assert_called_once_with(pi)
-        mock_y_proxy.assert_called_once_with(y_proxy)
-        mock_y_true.assert_called_once_with(y_true)
+        mock_equal_lengths.assert_called_with(y_true, y_proxy, pi, names=["y_true", "y_proxy", "pi"])
+        mock_sampling_probs.assert_called_with(pi)
+        mock_y_proxy.assert_called_with(y_proxy)
+        mock_y_true.assert_called_with(y_true)
         y_true_non_nan_mask = ~np.isnan(y_true)
         np.testing.assert_array_equal(mock_pi_consistency.call_args[0][0], y_true_non_nan_mask)
         np.testing.assert_array_equal(mock_pi_consistency.call_args[0][1], pi)

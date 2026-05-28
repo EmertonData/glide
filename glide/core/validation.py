@@ -22,17 +22,19 @@ def _get_non_zero_mask(values: NDArray, warning_message: Optional[str] = None) -
 
 
 def _validate_y_proxy(y_proxy: NDArray, stratum_id: Optional[Hashable] = None) -> None:
-
     _validate_has_no_nan(y_proxy, "y_proxy")
     if _is_constant(y_proxy):
         stratum_part = f" in stratum '{stratum_id}'" if stratum_id is not None else ""
         raise ValueError(f"'y_proxy' values are constant{stratum_part}.")
 
 
-def _validate_y_true(y_true: NDArray) -> None:
+def _validate_y_true(y_true: NDArray, stratum_id: Optional[Hashable] = None) -> None:
     labeled = y_true[~np.isnan(y_true)]
+    if len(labeled) == 0:
+        raise ValueError("'y_true' contains only NaN values.")
     if _is_constant(labeled):
-        raise ValueError("'y_true' labeled values are constant.")
+        stratum_part = f" in stratum '{stratum_id}'" if stratum_id is not None else ""
+        raise ValueError(f"'y_true' labeled values are constant{stratum_part}.")
 
 
 def _validate_uncertainties(uncertainties: NDArray) -> None:

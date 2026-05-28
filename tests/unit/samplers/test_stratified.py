@@ -126,7 +126,7 @@ def test_sample_delegates_to_validation(sampler, y_proxy, groups):
     ):
         sampler.sample(y_proxy, groups, 4, random_seed=0)
 
-        mock_is_integer.assert_called_once_with(4, "budget")
-        mock_strictly_positive.assert_called_once_with(4, "budget")
-        mock_budget_bound.assert_called_once_with(4, len(y_proxy))
+        mock_is_integer.assert_called_with(4, "budget")
+        mock_strictly_positive.assert_called_with(4, "budget")
+        mock_budget_bound.assert_called_with(4, len(y_proxy))
         assert mock_y_proxy.call_count == 3

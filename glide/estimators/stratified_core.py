@@ -27,6 +27,7 @@ def _preprocess(
         stratum_y_proxy = y_proxy[stratum_mask]
         labeled_mask = ~np.isnan(stratum_y_true)
         _validate_y_proxy(stratum_y_proxy, stratum_id)
+        _validate_y_true(stratum_y_true, stratum_id)
         _validate_sample_sizes(labeled_mask, stratum_id)
         y_true_filtered = stratum_y_true[labeled_mask]
         y_proxy_labeled = stratum_y_proxy[labeled_mask]

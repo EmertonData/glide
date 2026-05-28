@@ -64,7 +64,11 @@ class ASIMeanEstimator:
         pi: NDArray,
     ) -> Tuple[NDArray, NDArray, NDArray, NDArray]:
         _validate_equal_lengths(y_true_all, y_proxy, pi, names=["y_true", "y_proxy", "pi"])
+        _validate_y_proxy(y_proxy)
         _validate_probabilities(pi)
+        y_true_non_nan_mask = ~np.isnan(y_true_all)
+        _validate_label_prob_consistency(y_true_non_nan_mask, pi)
+        xi = y_true_non_nan_mask.astype(float)
 
         non_zero_mask = _get_non_zero_mask(
             pi,
@@ -73,13 +77,7 @@ class ASIMeanEstimator:
         y_true_all = y_true_all[non_zero_mask]
         y_proxy = y_proxy[non_zero_mask]
         pi = pi[non_zero_mask]
-
-        _validate_y_proxy(y_proxy)
-
-        y_true_non_nan_mask = ~np.isnan(y_true_all)
-        xi = y_true_non_nan_mask.astype(float)
-
-        _validate_label_prob_consistency(y_true_non_nan_mask, pi)
+        xi = xi[non_zero_mask]
 
         if _is_constant(y_proxy * (xi / pi - 1)):
             raise ValueError("'y_proxy' values lead to constant rectifiers.")
