@@ -56,7 +56,7 @@ class ActiveSampler:
             gradient = -squared_uncertainties / np.power(pi, 2)
             return gradient
 
-        bounds = Bounds(ub=np.ones(n))
+        bounds = Bounds(lb=np.zeros(n), ub=np.ones(n))
         budget_constraint = LinearConstraint(np.ones((1, n)), lb=budget, ub=budget)
         optimization_result = minimize(
             objective,
