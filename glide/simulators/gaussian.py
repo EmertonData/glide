@@ -3,6 +3,8 @@ from typing import Optional, Tuple
 import numpy as np
 from numpy.typing import NDArray
 
+from glide.core.validation import _validate_in_bounds
+
 
 def generate_gaussian_dataset(
     n_labeled: int,
@@ -130,8 +132,7 @@ def generate_gaussian_dataset(
     >>> int(np.sum(~np.isnan(y_proxy)))
     8
     """
-    if abs(correlation) > 1:
-        raise ValueError(f"'correlation' must be in [-1, 1]; got {correlation!r}.")
+    _validate_in_bounds(correlation, -1, 1, "correlation")
     rng = np.random.default_rng(seed=random_seed)
     angle = np.arccos(correlation)
     lin_transform = np.array([[true_std, 0], [proxy_std * np.cos(angle), proxy_std * np.sin(angle)]])

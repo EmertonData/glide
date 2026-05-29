@@ -5,11 +5,11 @@ from numpy.random.bit_generator import SeedSequence
 from numpy.typing import NDArray
 
 from glide.core.validation import (
-    _validate_burn_in_y_true,
     _validate_equal_lengths,
     _validate_has_no_nan,
     _validate_is_integer,
     _validate_strictly_positive,
+    _validate_y_true_fully_labeled,
 )
 
 
@@ -85,7 +85,7 @@ class CostOptimalRandomSampler:
               (proxy labels match ground truth perfectly). This would lead to zero
               annotation probability making sampling impossible.
         """
-        _validate_burn_in_y_true(y_true)
+        _validate_y_true_fully_labeled(y_true)
         _validate_equal_lengths(y_true, y_proxy, names=["y_true", "y_proxy"])
         _validate_has_no_nan(y_proxy, "y_proxy")
         _validate_has_no_nan(y_true, "y_true")

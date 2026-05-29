@@ -1,5 +1,5 @@
 import warnings
-from typing import Hashable, List, Optional
+from typing import Hashable, List, Optional, Union
 
 import numpy as np
 from numpy.typing import NDArray
@@ -45,7 +45,7 @@ def _validate_uncertainties(uncertainties: NDArray) -> None:
 
 def _validate_probabilities(values: NDArray) -> None:
     if np.min(values) < 0 or np.max(values) > 1:
-        raise ValueError("Sampling probabilities must be in [0, 1].")
+        raise ValueError("Probabilities must be in [0, 1].")
 
 
 def _validate_label_prob_consistency(labeled_mask: NDArray, pi: NDArray) -> None:
@@ -67,7 +67,7 @@ def _validate_equal_lengths(*arrays: NDArray, names: List[str]) -> None:
         raise ValueError(f"{names_str} must have the same length; got {lengths_str}.")
 
 
-def _validate_burn_in_y_true(y_true: NDArray) -> None:
+def _validate_y_true_fully_labeled(y_true: NDArray) -> None:
     if len(y_true) == 0:
         raise ValueError("'y_true' must be non-empty.")
     _validate_has_no_nan(y_true, "y_true")
@@ -78,6 +78,28 @@ def _validate_burn_in_y_true(y_true: NDArray) -> None:
 def _validate_strictly_positive(value: float, name: str) -> None:
     if value <= 0.0:
         raise ValueError(f"'{name}' must be strictly positive; got {value}.")
+
+
+def _validate_above(array: List, min_length: int, name: str) -> None:
+    if len(array) < min_length:
+        raise ValueError(f"'{name}' must have at least {min_length} element; got {len(array)!r}.")
+
+
+def _validate_in_bounds(
+    value: Union[float, NDArray], lower: float, upper: float, name: str, inclusive: bool = True
+) -> None:
+    if inclusive:
+        valid = bool(np.all(value >= lower) and np.all(value <= upper))
+    else:
+        valid = bool(np.all(value > lower) and np.all(value < upper))
+    interval_str = f"[{lower}, {upper}]" if inclusive else f"({lower}, {upper})"
+    if not valid:
+        raise ValueError(f"'{name}' must be in {interval_str}; got {value!r}.")
+
+
+def _validate_alternative(alternative: str) -> None:
+    if alternative not in ("two-sided", "larger", "smaller"):
+        raise ValueError(f"'alternative' must be 'two-sided', 'larger', or 'smaller'; got {alternative!r}.")
 
 
 def _validate_is_integer(param: int, name: str) -> None:
@@ -101,3 +123,19 @@ def _validate_sample_sizes(
     if min(n_labeled, n_unlabeled) <= 1:
         stratum_part = f"stratum '{stratum_id}'" if stratum_id is not None else "dataset"
         raise ValueError(f"Too few labeled or unlabeled samples in {stratum_part}.")
+
+
+def _validate_binary_or_nan(array: NDArray, name: str) -> None:
+    array_float = array.astype(float)
+    if not (np.isnan(array_float) | np.isin(array_float, [0.0, 1.0])).all():
+        raise ValueError(f"'{name}' must only contain 0, 1, and np.nan values.")
+
+
+def _validate_min_samples(values: NDArray, name: str, stratum_id: Optional[Hashable] = None) -> None:
+    if len(values) < 2:
+        if stratum_id is not None:
+            raise ValueError(
+                f"'{name}' must have at least 2 non-NaN values per stratum; "
+                f"got {len(values)} in stratum '{stratum_id}'."
+            )
+        raise ValueError(f"'{name}' must have at least 2 non-NaN values; got {len(values)}.")

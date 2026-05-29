@@ -3,6 +3,7 @@ from typing import List, Optional, Tuple
 import numpy as np
 from numpy.typing import NDArray
 
+from glide.core.validation import _validate_above, _validate_equal_lengths
 from glide.simulators.binary import generate_binary_dataset
 
 
@@ -76,20 +77,16 @@ def generate_stratified_binary_dataset(
     >>> bool(np.all(np.isin(y_proxy, [0.0, 1.0])))
     True
     """
+    _validate_above(n_total, 1, "n_total")
     num_strata = len(n_total)
-    if num_strata < 1:
-        raise ValueError(f"'n_total' must have at least 1 element; got {num_strata!r}.")
 
-    # Validate all lists have the same length
-    param_lengths = {
-        "n_total": num_strata,
-        "true_mean": len(true_mean),
-        "proxy_mean": len(proxy_mean),
-        "correlation": len(correlation),
-    }
-    if not all(length == num_strata for length in param_lengths.values()):
-        lengths_str = ", ".join(f"'{name}'={length}" for name, length in param_lengths.items())
-        raise ValueError(f"All input lists must have the same length; got: {lengths_str}.")
+    _validate_equal_lengths(
+        np.array(n_total),
+        np.array(true_mean),
+        np.array(proxy_mean),
+        np.array(correlation),
+        names=["n_total", "true_mean", "proxy_mean", "correlation"],
+    )
 
     # Generate data for each stratum
     y_true_per_stratum = []

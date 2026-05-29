@@ -119,14 +119,20 @@ def test_sample_is_reproducible(sampler, y_proxy, groups):
 
 def test_sample_delegates_to_validation(sampler, y_proxy, groups):
     with (
-        patch.object(stratified_module, "_validate_is_integer") as mock_is_integer,
-        patch.object(stratified_module, "_validate_strictly_positive") as mock_strictly_positive,
-        patch.object(stratified_module, "_validate_budget_bound") as mock_budget_bound,
-        patch.object(stratified_module, "_validate_y_proxy") as mock_y_proxy,
+        patch.object(stratified_module, "_validate_is_integer") as mock_validate_is_integer,
+        patch.object(stratified_module, "_validate_strictly_positive") as mock_validate_strictly_positive,
+        patch.object(stratified_module, "_validate_budget_bound") as mock_validate_budget_bound,
+        patch.object(stratified_module, "_validate_y_proxy") as mock_validate_y_proxy,
     ):
         sampler.sample(y_proxy, groups, 4, random_seed=0)
 
-        mock_is_integer.assert_called_with(4, "budget")
-        mock_strictly_positive.assert_called_with(4, "budget")
-        mock_budget_bound.assert_called_with(4, len(y_proxy))
-        assert mock_y_proxy.call_count == 3
+        mock_validate_is_integer.assert_called_once_with(4, "budget")
+        mock_validate_strictly_positive.assert_called_once_with(4, "budget")
+        mock_validate_budget_bound.assert_called_once_with(4, len(y_proxy))
+
+        assert mock_validate_y_proxy.call_count == 3
+        np.testing.assert_array_equal(mock_validate_y_proxy.call_args_list[0][0][0], y_proxy)
+        np.testing.assert_array_equal(mock_validate_y_proxy.call_args_list[1][0][0], y_proxy[groups == "A"])
+        assert mock_validate_y_proxy.call_args_list[1][0][1] == "A"
+        np.testing.assert_array_equal(mock_validate_y_proxy.call_args_list[2][0][0], y_proxy[groups == "B"])
+        assert mock_validate_y_proxy.call_args_list[2][0][1] == "B"

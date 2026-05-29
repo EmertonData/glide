@@ -1,4 +1,4 @@
-from typing import Dict, Hashable, Literal, Optional, Tuple
+from typing import Dict, Hashable, Literal, Optional
 
 import numpy as np
 from numpy.typing import NDArray
@@ -54,7 +54,7 @@ class StratifiedSampler:
         y_proxy: NDArray,
         groups: NDArray,
         budget: int,
-    ) -> Tuple[NDArray, NDArray]:
+    ) -> None:
         _validate_is_integer(budget, "budget")
         _validate_strictly_positive(budget, "budget")
         _validate_budget_bound(budget, len(y_proxy))
@@ -62,7 +62,6 @@ class StratifiedSampler:
         for stratum_id in np.unique(groups):
             stratum_mask = groups == stratum_id
             _validate_y_proxy(y_proxy[stratum_mask], stratum_id)
-        return y_proxy, groups
 
     def _apply_largest_remainder_rounding(
         self,
@@ -190,7 +189,7 @@ class StratifiedSampler:
             - If ``budget`` is too low and results in zero allocations for some stratum.
             - If ``budget`` exceeds the total number of samples in the input.
         """
-        y_proxy, groups = self._validate(y_proxy, groups, budget)
+        self._validate(y_proxy, groups, budget)
 
         if strategy == "proportional":
             allocation = self._proportional_allocation(groups, budget)

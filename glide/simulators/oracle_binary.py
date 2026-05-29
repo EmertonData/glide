@@ -3,6 +3,8 @@ from typing import Optional, Tuple
 import numpy as np
 from numpy.typing import NDArray
 
+from glide.core.validation import _validate_in_bounds
+
 
 def generate_binary_dataset_with_oracle_sampling(
     n_total: int,
@@ -179,10 +181,8 @@ def generate_binary_dataset_with_oracle_sampling(
     >>> bool(np.all((uncertainty >= 0) & (uncertainty <= 1)))
     True
     """
-    if not (0 < true_mean < 1):
-        raise ValueError(f"'true_mean' must be in (0, 1); got {true_mean!r}.")
-    if not (0 < proxy_mean < 1):
-        raise ValueError(f"'proxy_mean' must be in (0, 1); got {proxy_mean!r}.")
+    _validate_in_bounds(true_mean, 0, 1, "true_mean", inclusive=False)
+    _validate_in_bounds(proxy_mean, 0, 1, "proxy_mean", inclusive=False)
 
     rng = np.random.default_rng(seed=random_seed)
     p_t = true_mean

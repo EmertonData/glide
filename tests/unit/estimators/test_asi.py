@@ -53,23 +53,24 @@ def test_preprocess_delegates_to_validation(estimator):
     pi = np.array([0.5, 0.5, 0.5, 0.5])
 
     with (
-        patch.object(asi_module, "_validate_equal_lengths") as mock_equal_lengths,
-        patch.object(asi_module, "_validate_probabilities") as mock_sampling_probs,
-        patch.object(asi_module, "_validate_y_proxy") as mock_y_proxy,
-        patch.object(asi_module, "_validate_label_prob_consistency") as mock_pi_consistency,
-        patch.object(asi_module, "_get_non_zero_mask", return_value=np.ones(4, dtype=bool)) as mock_non_zero_mask,
+        patch.object(asi_module, "_validate_equal_lengths") as mock_validate_equal_lengths,
+        patch.object(asi_module, "_validate_probabilities") as mock_validate_probabilities,
+        patch.object(asi_module, "_validate_y_proxy") as mock_validate_y_proxy,
+        patch.object(asi_module, "_validate_label_prob_consistency") as mock_validate_label_prob_consistency,
+        patch.object(asi_module, "_get_non_zero_mask", return_value=np.ones(4, dtype=bool)) as mock_get_non_zero_mask,
     ):
         estimator._preprocess(y_true, y_proxy, pi)
 
-        mock_equal_lengths.assert_called_with(y_true, y_proxy, pi, names=["y_true", "y_proxy", "pi"])
-        mock_sampling_probs.assert_called_with(pi)
-        mock_y_proxy.assert_called_once()
-        np.testing.assert_array_equal(mock_y_proxy.call_args[0][0], y_proxy)
+        mock_validate_equal_lengths.assert_called_once_with(y_true, y_proxy, pi, names=["y_true", "y_proxy", "pi"])
+        mock_validate_probabilities.assert_called_once_with(pi)
+        mock_validate_y_proxy.assert_called_once()
+        np.testing.assert_array_equal(mock_validate_y_proxy.call_args[0][0], y_proxy)
+        mock_validate_label_prob_consistency.assert_called_once()
         labeled_mask = ~np.isnan(y_true)
-        np.testing.assert_array_equal(mock_pi_consistency.call_args[0][0], labeled_mask)
-        np.testing.assert_array_equal(mock_pi_consistency.call_args[0][1], pi)
-        mock_non_zero_mask.assert_called_once()
-        np.testing.assert_array_equal(mock_non_zero_mask.call_args[0][0], pi)
+        np.testing.assert_array_equal(mock_validate_label_prob_consistency.call_args[0][0], labeled_mask)
+        np.testing.assert_array_equal(mock_validate_label_prob_consistency.call_args[0][1], pi)
+        mock_get_non_zero_mask.assert_called_once()
+        np.testing.assert_array_equal(mock_get_non_zero_mask.call_args[0][0], pi)
 
 
 def test_preprocess_raises_on_constant_rectifiers(estimator):

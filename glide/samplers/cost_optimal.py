@@ -6,9 +6,9 @@ from numpy.typing import NDArray
 
 from glide.core.validation import (
     _is_constant,
-    _validate_burn_in_y_true,
     _validate_strictly_positive,
     _validate_uncertainties,
+    _validate_y_true_fully_labeled,
 )
 
 
@@ -78,7 +78,7 @@ class CostOptimalSampler:
             If ``y_true`` is empty, contains NaN, or all labels are identical (zero true label variance).
 
         """
-        _validate_burn_in_y_true(y_true)
+        _validate_y_true_fully_labeled(y_true)
         self._y_true_variance = np.var(y_true, ddof=1)
         return self
 
@@ -201,7 +201,10 @@ class CostOptimalSampler:
         if y_proxy_cost < 0.0:
             raise ValueError(f"'y_proxy_cost' must be non-negative; got {y_proxy_cost}.")
         if y_proxy_cost == 0.0 and _is_constant(uncertainties):
-            raise ValueError("All uncertainty values are equal and 'y_proxy_cost' is zero.")
+            raise ValueError(
+                "All uncertainty values are equal and 'y_proxy_cost' is zero."
+                " Provide non-constant uncertainties or set 'y_proxy_cost' to a positive value."
+            )
         _validate_strictly_positive(budget, "budget")
         _validate_uncertainties(uncertainties)
 
@@ -212,7 +215,10 @@ class CostOptimalSampler:
         cumulative_costs = np.cumsum(y_true_cost * pi_all + y_proxy_cost)
         n_affordable = np.searchsorted(cumulative_costs, budget, side="right")
         if n_affordable < 1:
-            raise ValueError(f"'budget' is too small to afford a single sample; got {budget}.")
+            raise ValueError(
+                f"'budget' is too small to afford a single sample; got {budget}."
+                " Increase 'budget' or reduce 'y_true_cost'."
+            )
 
         n_samples = len(uncertainties)
         cutoff = min(n_affordable, n_samples)

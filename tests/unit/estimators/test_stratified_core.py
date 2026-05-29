@@ -27,13 +27,29 @@ def test_preprocess_delegates_to_validation():
     groups = np.array(["A", "A", "A", "A", "B", "B", "B", "B"])
 
     with (
-        patch.object(stratified_core_module, "_validate_equal_lengths") as mock_equal_lengths,
-        patch.object(stratified_core_module, "_validate_y_proxy") as mock_y_proxy,
-        patch.object(stratified_core_module, "_validate_sample_sizes") as mock_sample_sizes,
+        patch.object(stratified_core_module, "_validate_equal_lengths") as mock_validate_equal_lengths,
+        patch.object(stratified_core_module, "_validate_y_proxy") as mock_validate_y_proxy,
+        patch.object(stratified_core_module, "_validate_sample_sizes") as mock_validate_sample_sizes,
     ):
         _preprocess(y_true, y_proxy, groups)
 
-        mock_equal_lengths.assert_called_with(y_true, y_proxy, groups, names=["y_true", "y_proxy", "groups"])
-        assert mock_y_proxy.call_count == 3
-        mock_y_proxy.assert_any_call(y_proxy)
-        assert mock_sample_sizes.call_count == 2
+        mock_validate_equal_lengths.assert_called_once_with(
+            y_true, y_proxy, groups, names=["y_true", "y_proxy", "groups"]
+        )
+
+        assert mock_validate_y_proxy.call_count == 3
+        np.testing.assert_array_equal(mock_validate_y_proxy.call_args_list[0][0][0], y_proxy)
+        y_proxy_a = y_proxy[groups == "A"]
+        np.testing.assert_array_equal(mock_validate_y_proxy.call_args_list[1][0][0], y_proxy_a)
+        assert mock_validate_y_proxy.call_args_list[1][0][1] == "A"
+        y_proxy_b = y_proxy[groups == "B"]
+        np.testing.assert_array_equal(mock_validate_y_proxy.call_args_list[2][0][0], y_proxy_b)
+        assert mock_validate_y_proxy.call_args_list[2][0][1] == "B"
+
+        assert mock_validate_sample_sizes.call_count == 2
+        labeled_mask_a = ~np.isnan(y_true[groups == "A"])
+        np.testing.assert_array_equal(mock_validate_sample_sizes.call_args_list[0][0][0], labeled_mask_a)
+        assert mock_validate_sample_sizes.call_args_list[0][0][1] == "A"
+        labeled_mask_b = ~np.isnan(y_true[groups == "B"])
+        np.testing.assert_array_equal(mock_validate_sample_sizes.call_args_list[1][0][0], labeled_mask_b)
+        assert mock_validate_sample_sizes.call_args_list[1][0][1] == "B"

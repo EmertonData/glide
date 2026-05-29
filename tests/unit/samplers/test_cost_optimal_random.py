@@ -1,4 +1,4 @@
-from unittest.mock import patch
+from unittest.mock import call, patch
 
 import numpy as np
 import pytest
@@ -42,19 +42,25 @@ def fitted_sampler_high_MSE(sampler) -> CostOptimalRandomSampler:
 
 def test_fit_delegates_to_validation(sampler, y_true, y_proxy):
     with (
-        patch.object(cost_optimal_random_module, "_validate_burn_in_y_true") as mock_burn_in,
-        patch.object(cost_optimal_random_module, "_validate_equal_lengths") as mock_equal_lengths,
-        patch.object(cost_optimal_random_module, "_validate_has_no_nan") as mock_has_no_nan,
+        patch.object(
+            cost_optimal_random_module, "_validate_y_true_fully_labeled"
+        ) as mock_validate_y_true_fully_labeled,
+        patch.object(cost_optimal_random_module, "_validate_equal_lengths") as mock_validate_equal_lengths,
+        patch.object(cost_optimal_random_module, "_validate_has_no_nan") as mock_validate_has_no_nan,
     ):
         sampler.fit(y_true, y_proxy)
 
-        mock_burn_in.assert_called_once_with(y_true)
-        mock_equal_lengths.assert_called_once_with(y_true, y_proxy, names=["y_true", "y_proxy"])
-        assert mock_has_no_nan.call_count == 2
-        np.testing.assert_array_equal(mock_has_no_nan.call_args_list[0][0][0], y_proxy)
-        assert mock_has_no_nan.call_args_list[0][0][1] == "y_proxy"
-        np.testing.assert_array_equal(mock_has_no_nan.call_args_list[1][0][0], y_true)
-        assert mock_has_no_nan.call_args_list[1][0][1] == "y_true"
+        mock_validate_y_true_fully_labeled.assert_called_once()
+        np.testing.assert_array_equal(mock_validate_y_true_fully_labeled.call_args[0][0], y_true)
+        mock_validate_equal_lengths.assert_called_once()
+        np.testing.assert_array_equal(mock_validate_equal_lengths.call_args[0][0], y_true)
+        np.testing.assert_array_equal(mock_validate_equal_lengths.call_args[0][1], y_proxy)
+        assert mock_validate_equal_lengths.call_args[1] == {"names": ["y_true", "y_proxy"]}
+        assert mock_validate_has_no_nan.call_count == 2
+        np.testing.assert_array_equal(mock_validate_has_no_nan.call_args_list[0][0][0], y_proxy)
+        assert mock_validate_has_no_nan.call_args_list[0][0][1] == "y_proxy"
+        np.testing.assert_array_equal(mock_validate_has_no_nan.call_args_list[1][0][0], y_true)
+        assert mock_validate_has_no_nan.call_args_list[1][0][1] == "y_true"
 
 
 def test_fit_raises_on_zero_mse(sampler):
@@ -102,17 +108,20 @@ def test_sample_raises_if_fit_not_called(sampler):
 
 def test_sample_delegates_to_validation(fitted_sampler):
     with (
-        patch.object(cost_optimal_random_module, "_validate_is_integer") as mock_is_integer,
-        patch.object(cost_optimal_random_module, "_validate_strictly_positive") as mock_strictly_positive,
+        patch.object(cost_optimal_random_module, "_validate_is_integer") as mock_validate_is_integer,
+        patch.object(cost_optimal_random_module, "_validate_strictly_positive") as mock_validate_strictly_positive,
     ):
         fitted_sampler.sample(n_samples=2, y_true_cost=10.0, y_proxy_cost=1.0, budget=5, random_seed=42)
 
-        mock_is_integer.assert_called_once_with(2, "n_samples")
-        assert mock_strictly_positive.call_count == 4
-        mock_strictly_positive.assert_any_call(2, "n_samples")
-        mock_strictly_positive.assert_any_call(10.0, "y_true_cost")
-        mock_strictly_positive.assert_any_call(1.0, "y_proxy_cost")
-        mock_strictly_positive.assert_any_call(5, "budget")
+        mock_validate_is_integer.assert_called_once_with(2, "n_samples")
+        mock_validate_strictly_positive.assert_has_calls(
+            [
+                call(2, "n_samples"),
+                call(10.0, "y_true_cost"),
+                call(1.0, "y_proxy_cost"),
+                call(5, "budget"),
+            ]
+        )
 
 
 def test_sample_budget_too_small_raises(fitted_sampler):

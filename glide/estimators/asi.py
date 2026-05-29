@@ -74,16 +74,16 @@ class ASIMeanEstimator:
             pi,
             "Some observations have pi=0. These will be excluded from the estimation.",
         )
-        y_true_all = y_true_all[non_zero_mask]
-        y_proxy = y_proxy[non_zero_mask]
-        pi = pi[non_zero_mask]
-        xi = xi[non_zero_mask]
+        y_true_all_filtered = y_true_all[non_zero_mask]
+        y_proxy_filtered = y_proxy[non_zero_mask]
+        pi_filtered = pi[non_zero_mask]
+        xi_filtered = xi[non_zero_mask]
 
-        if _is_constant(y_proxy * (xi / pi - 1)):
+        if _is_constant(y_proxy_filtered * (xi_filtered / pi_filtered - 1)):
             raise ValueError("'y_proxy' values lead to constant rectifiers.")
 
-        y_true_filled = np.nan_to_num(y_true_all, nan=0)
-        return y_true_filled, y_proxy, xi, pi
+        y_true_filled = np.nan_to_num(y_true_all_filtered, nan=0)
+        return y_true_filled, y_proxy_filtered, xi_filtered, pi_filtered
 
     def _compute_tuning_parameter(
         self,

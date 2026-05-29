@@ -4,6 +4,8 @@ from typing import Literal, Tuple
 import numpy as np
 from numpy.typing import NDArray
 
+from glide.core.validation import _validate_alternative, _validate_in_bounds
+
 
 @dataclass
 class BootstrapConfidenceInterval:
@@ -52,8 +54,7 @@ class BootstrapConfidenceInterval:
 
     @confidence_level.setter
     def confidence_level(self, value: float) -> None:
-        if not 0 < value < 1:
-            raise ValueError(f"'confidence_level' must be in (0, 1); got {value!r}.")
+        _validate_in_bounds(value, 0, 1, "confidence_level", inclusive=False)
         self._confidence_level = value
         alpha_over_two = (1 - value) / 2
         self.lower_bound = float(np.quantile(self._sorted_estimates, alpha_over_two))
@@ -104,7 +105,7 @@ class BootstrapConfidenceInterval:
             # Count estimates >= h0_value (evidence against "smaller" alternative)
             count_extreme = n - np.searchsorted(self._sorted_estimates, h0_value, side="left")
         else:
-            raise ValueError(f"'alternative' must be 'two-sided', 'larger', or 'smaller'; got {alternative!r}.")
+            _validate_alternative(alternative)
 
         p_value = float(count_extreme) / n
 

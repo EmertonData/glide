@@ -42,19 +42,20 @@ def test_preprocess_delegates_to_validation(estimator):
     pi = np.array([0.5, 0.5])
 
     with (
-        patch.object(ipw_classical_module, "_validate_probabilities") as mock_sampling_probs,
-        patch.object(ipw_classical_module, "_validate_label_prob_consistency") as mock_label_prob_consistency,
+        patch.object(ipw_classical_module, "_validate_probabilities") as mock_validate_probabilities,
+        patch.object(ipw_classical_module, "_validate_label_prob_consistency") as mock_validate_label_prob_consistency,
         patch.object(
             ipw_classical_module, "_get_non_zero_mask", return_value=np.ones(2, dtype=bool)
-        ) as mock_non_zero_mask,
+        ) as mock_get_non_zero_mask,
     ):
         estimator._preprocess(y, pi)
-        mock_sampling_probs.assert_called_with(pi)
+        mock_validate_probabilities.assert_called_once_with(pi)
+        mock_validate_label_prob_consistency.assert_called_once()
         y_not_nan = ~np.isnan(y)
-        np.testing.assert_array_equal(mock_label_prob_consistency.call_args[0][0], y_not_nan)
-        np.testing.assert_array_equal(mock_label_prob_consistency.call_args[0][1], pi)
-        mock_non_zero_mask.assert_called_once()
-        np.testing.assert_array_equal(mock_non_zero_mask.call_args[0][0], pi)
+        np.testing.assert_array_equal(mock_validate_label_prob_consistency.call_args[0][0], y_not_nan)
+        np.testing.assert_array_equal(mock_validate_label_prob_consistency.call_args[0][1], pi)
+        mock_get_non_zero_mask.assert_called_once()
+        np.testing.assert_array_equal(mock_get_non_zero_mask.call_args[0][0], pi)
 
 
 # --- estimate ---

@@ -1,3 +1,4 @@
+from typing import Tuple
 from unittest.mock import patch
 
 import numpy as np
@@ -13,7 +14,7 @@ from glide.mean_inference_results import PredictionPoweredMeanInferenceResult
 
 
 @pytest.fixture
-def y_arrays(n_true: int = 2, n_proxy: int = 2, seed: int = 42) -> tuple[NDArray, NDArray]:
+def y_arrays(n_true: int = 2, n_proxy: int = 2, seed: int = 42) -> Tuple[NDArray, NDArray]:
     rng = np.random.default_rng(seed)
     y_true = rng.normal(loc=5.0, scale=1.0, size=n_true)
     y_proxy_labeled = y_true + rng.normal(0, 0.5, size=n_true)
@@ -45,18 +46,18 @@ def test_preprocess_delegates_to_validation(estimator):
     y_proxy = np.array([1.0, 2.0, 3.0, 4.0])
 
     with (
-        patch.object(ppi_module, "_validate_equal_lengths") as mock_equal_lengths,
-        patch.object(ppi_module, "_validate_y_proxy") as mock_y_proxy,
-        patch.object(ppi_module, "_validate_y_true") as mock_y_true,
-        patch.object(ppi_module, "_validate_sample_sizes") as mock_sample_sizes,
+        patch.object(ppi_module, "_validate_equal_lengths") as mock_validate_equal_lengths,
+        patch.object(ppi_module, "_validate_y_proxy") as mock_validate_y_proxy,
+        patch.object(ppi_module, "_validate_y_true") as mock_validate_y_true,
+        patch.object(ppi_module, "_validate_sample_sizes") as mock_validate_sample_sizes,
     ):
         estimator._preprocess(y_true, y_proxy)
 
-        mock_equal_lengths.assert_called_with(y_true, y_proxy, names=["y_true", "y_proxy"])
-        mock_y_proxy.assert_called_with(y_proxy)
-        mock_y_true.assert_called_with(y_true)
-        assert mock_sample_sizes.call_count == 1
-        labeled_mask_arg = mock_sample_sizes.call_args[0][0]
+        mock_validate_equal_lengths.assert_called_once_with(y_true, y_proxy, names=["y_true", "y_proxy"])
+        mock_validate_y_proxy.assert_called_once_with(y_proxy)
+        mock_validate_y_true.assert_called_once_with(y_true)
+        mock_validate_sample_sizes.assert_called_once()
+        labeled_mask_arg = mock_validate_sample_sizes.call_args[0][0]
         np.testing.assert_array_equal(labeled_mask_arg, np.array([True, True, False, False]))
 
 

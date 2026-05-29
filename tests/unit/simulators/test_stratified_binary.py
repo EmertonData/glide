@@ -31,7 +31,7 @@ def test_generate_stratified_binary_dataset_empty_strata_raises():
 
 
 def test_generate_stratified_binary_dataset_mismatched_lists_raises():
-    with pytest.raises(ValueError, match=r"All input lists must have the same length"):
+    with pytest.raises(ValueError, match=r"must have the same length"):
         generate_stratified_binary_dataset(
             n_total=[3, 3],
             true_mean=[0.5, 0.6],

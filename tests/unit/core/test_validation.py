@@ -5,17 +5,22 @@ from numpy.typing import NDArray
 from glide.core.validation import (
     _get_non_zero_mask,
     _is_constant,
+    _validate_above,
+    _validate_alternative,
+    _validate_binary_or_nan,
     _validate_budget_bound,
-    _validate_burn_in_y_true,
     _validate_equal_lengths,
     _validate_has_no_nan,
+    _validate_in_bounds,
     _validate_label_prob_consistency,
+    _validate_min_samples,
     _validate_probabilities,
     _validate_sample_sizes,
     _validate_strictly_positive,
     _validate_uncertainties,
     _validate_y_proxy,
     _validate_y_true,
+    _validate_y_true_fully_labeled,
 )
 
 # --- helpers ---
@@ -139,7 +144,7 @@ def test_validate_probabilities_valid():
 
 @pytest.mark.parametrize("bad_pi", [-0.5, 1.5])
 def test_validate_probabilities_out_of_range(bad_pi):
-    with pytest.raises(ValueError, match="Sampling probabilities must be in"):
+    with pytest.raises(ValueError, match="Probabilities must be in"):
         _validate_probabilities(np.array([0.5, bad_pi]))
 
 
@@ -187,26 +192,26 @@ def test_validate_equal_lengths_three_arrays():
         )
 
 
-# --- _validate_burn_in_y_true ---
+# --- _validate_y_true_fully_labeled ---
 
 
-def test_validate_burn_in_y_true_valid():
-    _validate_burn_in_y_true(np.array([1.0, 2.0]))
+def test_validate_y_true_fully_labeled_valid():
+    _validate_y_true_fully_labeled(np.array([1.0, 2.0]))
 
 
-def test_validate_burn_in_y_true_empty():
+def test_validate_y_true_fully_labeled_empty():
     with pytest.raises(ValueError, match="non-empty"):
-        _validate_burn_in_y_true(np.array([]))
+        _validate_y_true_fully_labeled(np.array([]))
 
 
-def test_validate_burn_in_y_true_nan():
+def test_validate_y_true_fully_labeled_nan():
     with pytest.raises(ValueError, match="NaN"):
-        _validate_burn_in_y_true(np.array([1.0, float("nan")]))
+        _validate_y_true_fully_labeled(np.array([1.0, float("nan")]))
 
 
-def test_validate_burn_in_y_true_constant():
+def test_validate_y_true_fully_labeled_constant():
     with pytest.raises(ValueError, match="label values are constant"):
-        _validate_burn_in_y_true(np.array([1.0, 1.0]))
+        _validate_y_true_fully_labeled(np.array([1.0, 1.0]))
 
 
 # --- _validate_strictly_positive ---
@@ -220,6 +225,68 @@ def test_validate_strictly_positive_valid():
 def test_validate_strictly_positive_invalid(bad_value):
     with pytest.raises(ValueError, match="must be strictly positive"):
         _validate_strictly_positive(bad_value, "x")
+
+
+# --- _validate_above ---
+
+
+def test_validate_above_valid():
+    _validate_above([1, 2], 1, "x")
+
+
+def test_validate_above_empty():
+    with pytest.raises(ValueError, match="'x' must have at least 1 element"):
+        _validate_above([], 1, "x")
+
+
+# --- _validate_in_bounds ---
+
+
+def test_validate_in_bounds_closed_valid():
+    _validate_in_bounds(0.0, -1, 1, "x")
+
+
+@pytest.mark.parametrize("boundary_value", [-1.0, 1.0])
+def test_validate_in_bounds_closed_at_boundary(boundary_value):
+    _validate_in_bounds(boundary_value, -1, 1, "x")
+
+
+@pytest.mark.parametrize("bad_value", [-1.1, 1.1])
+def test_validate_in_bounds_closed_out_of_range(bad_value):
+    with pytest.raises(ValueError, match="'x' must be in"):
+        _validate_in_bounds(bad_value, -1, 1, "x")
+
+
+def test_validate_in_bounds_open_valid():
+    _validate_in_bounds(0.5, 0, 1, "x", inclusive=False)
+
+
+@pytest.mark.parametrize("bad_value", [0.0, 1.0])
+def test_validate_in_bounds_open_at_boundary(bad_value):
+    with pytest.raises(ValueError, match="'x' must be in"):
+        _validate_in_bounds(bad_value, 0, 1, "x", inclusive=False)
+
+
+def test_validate_in_bounds_array_valid():
+    _validate_in_bounds(np.array([0.1, 0.9]), 0, 1, "x", inclusive=False)
+
+
+def test_validate_in_bounds_array_out_of_range():
+    with pytest.raises(ValueError, match="'x' must be in"):
+        _validate_in_bounds(np.array([0.5, 1.0]), 0, 1, "x", inclusive=False)
+
+
+# --- _validate_alternative ---
+
+
+@pytest.mark.parametrize("valid", ["two-sided", "larger", "smaller"])
+def test_validate_alternative_valid(valid):
+    _validate_alternative(valid)
+
+
+def test_validate_alternative_invalid():
+    with pytest.raises(ValueError, match="'alternative' must be"):
+        _validate_alternative("both")
 
 
 # --- _validate_budget_bound ---
@@ -249,3 +316,33 @@ def test_validate_sample_sizes_no_stratum_id(too_few_labeled_mask):
 def test_validate_sample_sizes_with_stratum_id(too_few_labeled_mask):
     with pytest.raises(ValueError, match="Too few labeled or unlabeled samples in stratum 'A'"):
         _validate_sample_sizes(too_few_labeled_mask, stratum_id="A")
+
+
+# --- _validate_binary_or_nan ---
+
+
+@pytest.mark.parametrize("valid", [np.array([0, 1, np.nan]), np.array([0.0, 1.0])])
+def test_validate_binary_or_nan_valid(valid):
+    _validate_binary_or_nan(valid, "x")
+
+
+def test_validate_binary_or_nan_invalid():
+    with pytest.raises(ValueError, match="'x' must only contain 0, 1, and np.nan"):
+        _validate_binary_or_nan(np.array([0.5, 1.0]), "x")
+
+
+# --- _validate_min_samples ---
+
+
+def test_validate_min_samples_valid():
+    _validate_min_samples(np.array([1.0, 2.0]), "y")
+
+
+def test_validate_min_samples_too_few():
+    with pytest.raises(ValueError, match="'y' must have at least 2 non-NaN values; got 1"):
+        _validate_min_samples(np.array([1.0]), "y")
+
+
+def test_validate_min_samples_too_few_with_stratum():
+    with pytest.raises(ValueError, match="per stratum; got 1 in stratum 'A'"):
+        _validate_min_samples(np.array([1.0]), "y", stratum_id="A")

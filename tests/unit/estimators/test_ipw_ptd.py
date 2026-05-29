@@ -47,24 +47,25 @@ def test_preprocess_delegates_to_validation(estimator):
     pi = np.array([0.5, 0.5, 0.5, 0.5])
 
     with (
-        patch.object(ipw_ptd_module, "_validate_equal_lengths") as mock_equal_lengths,
-        patch.object(ipw_ptd_module, "_validate_probabilities") as mock_sampling_probs,
-        patch.object(ipw_ptd_module, "_validate_y_proxy") as mock_y_proxy,
-        patch.object(ipw_ptd_module, "_validate_y_true") as mock_y_true,
-        patch.object(ipw_ptd_module, "_validate_label_prob_consistency") as mock_pi_consistency,
-        patch.object(ipw_ptd_module, "_validate_sample_sizes") as mock_sample_sizes,
+        patch.object(ipw_ptd_module, "_validate_equal_lengths") as mock_validate_equal_lengths,
+        patch.object(ipw_ptd_module, "_validate_probabilities") as mock_validate_probabilities,
+        patch.object(ipw_ptd_module, "_validate_y_proxy") as mock_validate_y_proxy,
+        patch.object(ipw_ptd_module, "_validate_y_true") as mock_validate_y_true,
+        patch.object(ipw_ptd_module, "_validate_label_prob_consistency") as mock_validate_label_prob_consistency,
+        patch.object(ipw_ptd_module, "_validate_sample_sizes") as mock_validate_sample_sizes,
     ):
         estimator._preprocess(y_true, y_proxy, pi)
 
-        mock_equal_lengths.assert_called_with(y_true, y_proxy, pi, names=["y_true", "y_proxy", "pi"])
-        mock_sampling_probs.assert_called_with(pi)
-        mock_y_proxy.assert_called_with(y_proxy)
-        mock_y_true.assert_called_with(y_true)
+        mock_validate_equal_lengths.assert_called_once_with(y_true, y_proxy, pi, names=["y_true", "y_proxy", "pi"])
+        mock_validate_probabilities.assert_called_once_with(pi)
+        mock_validate_y_proxy.assert_called_once_with(y_proxy)
+        mock_validate_y_true.assert_called_once_with(y_true)
+        mock_validate_label_prob_consistency.assert_called_once()
         y_true_non_nan_mask = ~np.isnan(y_true)
-        np.testing.assert_array_equal(mock_pi_consistency.call_args[0][0], y_true_non_nan_mask)
-        np.testing.assert_array_equal(mock_pi_consistency.call_args[0][1], pi)
-        assert mock_sample_sizes.call_count == 1
-        np.testing.assert_array_equal(mock_sample_sizes.call_args[0][0], y_true_non_nan_mask)
+        np.testing.assert_array_equal(mock_validate_label_prob_consistency.call_args[0][0], y_true_non_nan_mask)
+        np.testing.assert_array_equal(mock_validate_label_prob_consistency.call_args[0][1], pi)
+        mock_validate_sample_sizes.assert_called_once()
+        np.testing.assert_array_equal(mock_validate_sample_sizes.call_args[0][0], y_true_non_nan_mask)
 
 
 # ── estimate delegates ────────────────────────────────────────────────────────
@@ -73,10 +74,12 @@ def test_preprocess_delegates_to_validation(estimator):
 def test_estimate_delegates_to_non_zero_mask(estimator, y_arrays):
     y_true, y_proxy, pi = y_arrays
 
-    with patch.object(ipw_ptd_module, "_get_non_zero_mask", return_value=np.ones(6, dtype=bool)) as mock_non_zero_mask:
+    with patch.object(
+        ipw_ptd_module, "_get_non_zero_mask", return_value=np.ones(6, dtype=bool)
+    ) as mock_get_non_zero_mask:
         estimator.estimate(y_true, y_proxy, pi, n_bootstrap=5, random_seed=0)
-        mock_non_zero_mask.assert_called_once()
-        np.testing.assert_array_equal(mock_non_zero_mask.call_args[0][0], pi)
+        mock_get_non_zero_mask.assert_called_once()
+        np.testing.assert_array_equal(mock_get_non_zero_mask.call_args[0][0], pi)
 
 
 # ── estimate ──────────────────────────────────────────────────────────────────
