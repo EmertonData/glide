@@ -55,7 +55,17 @@ def test_sample_valid_output(sampler, uncertainties):
 
 def test_sample_pi_clipped_and_higher_uncertainty_gets_higher_pi(sampler):
     pi, _ = sampler.sample(np.array([0.001, 10.0]), budget=2, random_seed=0)
-    np.testing.assert_allclose(pi, np.array([0.0, 1.0]), atol=0.001)
+    np.testing.assert_allclose(pi, np.array([1.0, 1.0]), atol=1e-6)
+
+
+def test_compute_probabilities_no_saturation(sampler):
+    pi = sampler._compute_probabilities(np.array([0.1, 0.4]), budget=1)
+    np.testing.assert_allclose(pi, np.array([0.2, 0.8]), atol=1e-10)
+
+
+def test_compute_probabilities_with_saturation(sampler):
+    pi = sampler._compute_probabilities(np.array([0.01, 1.0, 9.0]), budget=2)
+    np.testing.assert_allclose(pi, np.array([1 / 101, 100 / 101, 1.0]), atol=1e-5)
 
 
 def test_sample_is_reproducible(sampler, uncertainties):

@@ -3,6 +3,7 @@ from typing import Optional, Tuple, Union
 import numpy as np
 from numpy.random.bit_generator import SeedSequence
 from numpy.typing import NDArray
+from scipy.optimize import Bounds, LinearConstraint, minimize
 
 
 class ActiveSampler:
@@ -38,6 +39,36 @@ class ActiveSampler:
     array([0., 1.])
     """
 
+    def _compute_probabilities(self, uncertainties: NDArray, budget: int) -> NDArray:
+        raw_pi = budget * uncertainties / uncertainties.sum()
+        if np.max(raw_pi) <= 1.0:
+            return raw_pi
+
+        n = len(uncertainties)
+        warm_start = np.minimum(raw_pi, 1.0)
+        squared_uncertainties = np.power(uncertainties, 2)
+
+        def objective(pi: NDArray) -> float:
+            result = np.sum(squared_uncertainties / pi)
+            return result
+
+        def jacobian(pi: NDArray) -> NDArray:
+            gradient = -squared_uncertainties / np.power(pi, 2)
+            return gradient
+
+        bounds = Bounds(ub=np.ones(n))
+        budget_constraint = LinearConstraint(np.ones((1, n)), lb=budget, ub=budget)
+        optimization_result = minimize(
+            objective,
+            warm_start,
+            method="trust-constr",
+            jac=jacobian,
+            constraints=[budget_constraint],
+            bounds=bounds,
+            options={"maxiter": 100},
+        )
+        return np.minimum(optimization_result.x, 1.0)
+
     def _validate(self, uncertainties: NDArray) -> None:
         if np.any(np.isnan(uncertainties)):
             raise ValueError("All uncertainty values must be finite; got a NaN value.")
@@ -53,11 +84,10 @@ class ActiveSampler:
         """Sample observations with probability proportional to uncertainty.
 
         Each observation receives a drawing probability π_i proportional to
-        ``uncertainty_i``, normalised so that the raw probabilities sum to
-        ``budget`` (the expected number of selected observations). Because each
-        π_i must be a valid Bernoulli probability, values are capped at 1 before
-        the coin flip; the actual number of selected items is therefore a random
-        variable whose expectation equals at most ``budget``.
+        ``uncertainty_i``, normalised so that the probabilities sum to ``budget``
+        exactly. Probabilities are constrained to ``(0, 1]``; when the closed-form
+        allocation would exceed 1 for any item, the constrained optimum is found
+        via numerical optimisation.
 
         The two returned arrays are intended for use with IPW-based downstream estimators.
         ``pi`` holds the per-sample probability of being selected. ``xi`` holds the
@@ -80,6 +110,7 @@ class ActiveSampler:
         -------
         Tuple[NDArray, NDArray]
             [0]: array of shape ``(n_samples,)``, pi with drawing probabilities in ``(0, 1]``
+                 that sum to ``budget``
             [1]: array of shape ``(n_samples,)``, xi with Bernoulli selection indicators
             (1 if selected for annotation, 0 otherwise)
 
@@ -101,9 +132,7 @@ class ActiveSampler:
         self._validate(uncertainties)
         rng = np.random.default_rng(random_seed)
 
-        pi = budget * uncertainties / uncertainties.sum()
-        # Cap at 1: a Bernoulli probability cannot exceed 1.
-        pi = np.minimum(pi, 1.0)
+        pi = self._compute_probabilities(uncertainties, budget)
         xi = rng.binomial(n=1, p=pi).astype(float)
 
         return pi, xi
