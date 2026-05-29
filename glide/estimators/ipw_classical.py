@@ -50,6 +50,7 @@ class IPWClassicalMeanEstimator:
         sampling_probability: NDArray,
         metric_name: str = "Metric",
         confidence_level: float = 0.95,
+        ignore_zero_probabilities: bool = False,
     ) -> ClassicalMeanInferenceResult:
         """Estimate the population mean using IPW-corrected sample mean.
 

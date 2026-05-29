@@ -59,10 +59,17 @@ class ActiveSampler:
         the coin flip; the actual number of selected items is therefore a random
         variable whose expectation equals at most ``budget``.
 
+        Samples are randomly permuted before drawing and the inverse permutation
+        is applied to the output, so the returned arrays are always in the
+        original input order. A post-draw cutoff is then applied to strictly
+        respect the budget: samples beyond the cutoff are discarded and receive
+        ``pi = 0.0`` and ``xi = NaN``.
+
         The two returned arrays are intended for use with IPW-based downstream estimators.
         ``pi`` holds the per-sample probability of being selected. ``xi`` holds the
         selection indicators for each sample so that a value of 1 means the sample
-        should be sent for annotation and a value of 0 means it should not.
+        should be sent for annotation, a value of 0 means it was not selected, and
+        ``NaN`` means it was discarded by the budget cutoff.
 
         Parameters
         ----------
@@ -81,7 +88,8 @@ class ActiveSampler:
         Tuple[NDArray, NDArray]
             [0]: array of shape ``(n_samples,)``, pi with drawing probabilities in ``(0, 1]``
             [1]: array of shape ``(n_samples,)``, xi with Bernoulli selection indicators
-            (1 if selected for annotation, 0 otherwise)
+            (``1.0`` if selected for annotation, ``0.0`` if not selected, ``NaN`` if
+            discarded by the budget cutoff)
 
         Raises
         ------
@@ -102,8 +110,17 @@ class ActiveSampler:
         rng = np.random.default_rng(random_seed)
 
         pi = budget * uncertainties / uncertainties.sum()
-        # Cap at 1: a Bernoulli probability cannot exceed 1.
         pi = np.minimum(pi, 1.0)
-        xi = rng.binomial(n=1, p=pi).astype(float)
+
+        n_samples = len(uncertainties)
+        order = rng.permutation(n_samples)
+        xi_all = rng.binomial(n=1, p=pi[order]).astype(float)
+
+        cumsum = np.cumsum(xi_all)
+        cutoff = np.searchsorted(cumsum, budget, side="right")
+
+        xi = np.full(n_samples, np.nan)
+        xi[order[:cutoff]] = xi_all[:cutoff]
+        pi[order[cutoff:]] = 0.0
 
         return pi, xi
