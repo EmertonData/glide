@@ -8,7 +8,7 @@ Only the latest version of `glide-py` published on PyPI receives security fixes.
 
 Please **do not** open a public GitHub issue for security vulnerabilities, as this would disclose the issue before a fix is available.
 
-To report a vulnerability, use the **"Report a vulnerability"** button in the [Security tab](https://github.com/EmertonData/glide/security/advisories/new) of this repository. This opens a draft private advisory visible only to you and the maintainers.
+To report a vulnerability, use the **"Report a vulnerability"** button in the [Security and Quality tab](https://github.com/EmertonData/glide/security/advisories/new) of this repository. This opens a draft private advisory visible only to you and the maintainers.
 
 Please include as much of the following as possible: a description of the vulnerability, the affected version(s), steps to reproduce, and any proof-of-concept code.
 
