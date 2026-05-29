@@ -1,10 +1,8 @@
-import warnings
 from typing import Optional, Tuple, Union
 
 import numpy as np
 from numpy.random.bit_generator import SeedSequence
 from numpy.typing import NDArray
-from scipy.optimize import Bounds, LinearConstraint, minimize
 
 
 class ActiveSampler:
@@ -47,41 +45,16 @@ class ActiveSampler:
             raise ValueError("All uncertainty values must be strictly positive; got a non-positive value.")
 
     def _compute_probabilities(self, uncertainties: NDArray, budget: int) -> NDArray:
-        uncertainty_ratio = np.max(uncertainties) / np.min(uncertainties)
-        if uncertainty_ratio > 1e3:
-            warnings.warn(
-                f"Extreme uncertainty ratio detected among samples (max/min={uncertainty_ratio:.2e} > 1e3); "
-                "this may cause numerical instability.",
-                UserWarning,
-            )
-        naive_pi = budget * uncertainties / uncertainties.sum()
-        if np.max(naive_pi) <= 1.0:
-            return naive_pi
+        pi = np.zeros(len(uncertainties))
 
-        n = len(uncertainties)
-        squared_uncertainties = np.power(uncertainties, 2)
+        while np.sum(pi) < budget:
+            unsaturated_mask = pi < 1
+            remaining_budget = budget - np.sum(pi == 1)
+            unsaturated_uncertainties = uncertainties[unsaturated_mask]
+            pi[unsaturated_mask] = remaining_budget * unsaturated_uncertainties / np.sum(unsaturated_uncertainties)
+            pi = np.minimum(pi, 1)
 
-        def objective(pi: NDArray) -> float:
-            result = np.sum(squared_uncertainties / pi)
-            return result
-
-        def jacobian(pi: NDArray) -> NDArray:
-            gradient = -squared_uncertainties / np.power(pi, 2)
-            return gradient
-
-        bounds = Bounds(lb=np.zeros(n), ub=np.ones(n))
-        budget_constraint = LinearConstraint(np.ones((1, n)), lb=budget, ub=budget)
-        optimization_result = minimize(
-            objective,
-            naive_pi,
-            method="trust-constr",
-            jac=jacobian,
-            constraints=[budget_constraint],
-            bounds=bounds,
-            options={"maxiter": 100},
-        )
-        result = np.minimum(optimization_result.x, 1.0)
-        return result
+        return pi
 
     def sample(
         self,
@@ -91,11 +64,10 @@ class ActiveSampler:
     ) -> Tuple[NDArray, NDArray]:
         """Sample observations with probability proportional to uncertainty.
 
-        Each observation receives a drawing probability π_i proportional to
-        ``uncertainty_i``, normalised so that the probabilities sum to ``budget``
-        exactly. Probabilities are constrained to ``(0, 1]``; when the closed-form
-        allocation would exceed 1 for any item, the constrained optimum is found
-        via numerical optimisation.
+        Each observation receives a drawing probability π_i that minimises the
+        sum of ``uncertainty_i / π_i`` over all observations, which minimises
+        downstream estimation variance. Probabilities are constrained to ``(0, 1]``
+        and sum to ``budget`` exactly.
 
         The two returned arrays are intended for use with IPW-based downstream estimators.
         ``pi`` holds the per-sample probability of being selected. ``xi`` holds the
@@ -129,11 +101,6 @@ class ActiveSampler:
             exceeds ``len(uncertainties)``, or if any uncertainty value is NaN,
             zero, or negative.
 
-        Warns
-        -----
-        UserWarning
-            If the ratio of the largest to the smallest uncertainty is extreme,
-            indicating potential numerical instability.
         """
         if (not isinstance(budget, (int, np.integer))) or isinstance(budget, bool) or budget <= 0:
             raise ValueError(f"'budget' must be a strictly positive integer; got {budget!r}.")

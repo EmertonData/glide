@@ -32,11 +32,6 @@ def test_validate_raises_on_nan_uncertainty(sampler):
 # --- _compute_probabilities ---
 
 
-def test_compute_probabilities_warns_on_extreme_ratio(sampler):
-    with pytest.warns(UserWarning, match="Extreme uncertainty ratio"):
-        sampler._compute_probabilities(np.array([0.001, 1.001]), budget=1)
-
-
 def test_compute_probabilities_no_saturation(sampler):
     pi = sampler._compute_probabilities(np.array([0.1, 1.0]), budget=1)
     np.testing.assert_allclose(pi, np.array([0.090909, 0.90909]), atol=1e-5)
