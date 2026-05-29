@@ -94,6 +94,8 @@ class ActiveSampler:
         Each observation receives a drawing probability π_i that optimizes downstream
         estimation variance by minimizing the sum of ``uncertainty_i / π_i`` over all
         observations. Probabilities are constrained to ``(0, 1]`` and sum to ``budget``.
+        The actual number of selected items is a random variable with expectation equal
+        to ``budget``.
 
         The two returned arrays are intended for use with IPW-based downstream estimators.
         ``pi`` holds the per-sample probability of being selected. ``xi`` holds the
