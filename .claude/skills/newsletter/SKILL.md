@@ -146,6 +146,14 @@ Title: "Get involved"
 
 ---
 
+### Closing line
+
+Before the References section, always include the following line as a standalone paragraph (no title, no blank lines above it other than the standard section spacing):
+
+GLIDE is built by the R&D team at Emerton Data. This newsletter comes out monthly: one new capability, one tutorial, no filler.
+
+---
+
 ### References
 
 Title: "References"
@@ -169,5 +177,6 @@ Only include papers actually cited in the tutorial section.
 - [ ] Code snippet is 5–10 lines, self-contained, no imports
 - [ ] "What's new" is in plain language, no jargon
 - [ ] At least 800 words total
+- [ ] Closing "GLIDE is built by…" line present before References
 - [ ] References section present if any paper was cited
 - [ ] File saved to `newsletters/YYYY-MM.md`
