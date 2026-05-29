@@ -64,10 +64,9 @@ class ActiveSampler:
     ) -> Tuple[NDArray, NDArray]:
         """Sample observations with probability proportional to uncertainty.
 
-        Each observation receives a drawing probability π_i that minimises the
-        sum of ``uncertainty_i / π_i`` over all observations, which minimises
-        downstream estimation variance. Probabilities are constrained to ``(0, 1]``
-        and sum to ``budget`` exactly.
+        Each observation receives a drawing probability π_i that optimizes downstream
+        estimation variance by minimizing the sum of ``uncertainty_i / π_i`` over all
+        observations. Probabilities are constrained to ``(0, 1]`` and sum to ``budget``.
 
         The two returned arrays are intended for use with IPW-based downstream estimators.
         ``pi`` holds the per-sample probability of being selected. ``xi`` holds the
