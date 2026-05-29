@@ -59,25 +59,31 @@ The `ActiveSampler` concentrates the annotation budget on the samples with the *
 
 ### Sampling probabilities
 
-Each sample $i$ has an **uncertainty score** $u_i > 0$. The raw drawing probability is set proportional to $u_i$, normalised so that the expected number of selected samples equals the budget $b$:
+Each sample $i$ has an **uncertainty score** $u_i > 0$. In estimation problems where we try to estimate the mean $\mathbb{E}[Y]$ of ground truth labels $Y$ using proxies $\tilde{Y}$ the $u_i$ values are taken as estimates of the per-sample conditional mean squared error $\sqrt{\mathbb{E}[(\tilde{Y_i} - Y_i)^2 \mid X_i]}$. The variance of an IPW based estimator like ASI has the form (see [[3](#ref-3), Equation (2)])
+
+$$\mathrm{Var}(Y) + \mathbb{E}\Big[(Y - \tilde{Y})^2\Big(\frac{1}{\pi(X)} - 1\Big)\Big]$$
+
+The active sampler computes probabilities which minimize this variance. Since it only depends on the sampling probabilities via $\mathbb{E}\Big[\frac{(Y - \tilde{Y})^2}{\pi(X)}\Big]$, the optimal probabilities are computed by minimizing the objective $\sum_i \frac{u_i^2}{\pi_i}$ subject to the constraint that all $\pi_i$ values are in $(0, 1]$ and that $\sum_i \pi_i$ matches the budget $b$.
+
+In most cases, the optimal probabilities $\pi_i$ are proportional to the uncertainties and can be computed as:
 
 $$\tilde{\pi}_i = b \cdot \frac{u_i}{\sum_{j=1}^{n} u_j}$$
 
-Because $\tilde{\pi}_i$ must be a valid Bernoulli probability, values are capped at 1:
+However, when the uncertanties $u_i$ contain extreme values, the above formula may lead to invalid probabilities $\tilde{\pi}_i > 1$. In this case, numerical optimization is run to find the optimal solution respecting the constraints.
 
-$$\pi_i = \min\!\left(\tilde{\pi}_i,\; 1\right)$$
-
-Samples whose raw probability exceeds 1 are selected with certainty ($\pi_i = 1$). As a result, the actual expected number of selected samples is at most $b$ (it may be slightly less when some values are capped).
+Note that uncertainty scores must be strictly positive. The `ActiveSampler` requires $u_i > 0$ for every sample. A zero or negative uncertainty score would result in a zero sampling probability, making that sample permanently unselectable, which violates the IPW assumption $\pi_i > 0$ required for valid inference.
 
 ### Sampling procedure
 
 Given the probabilities $\pi_i$, each sample is independently selected via a Bernoulli trial:
 
-$$\xi_i \sim \mathrm{Bernoulli}(\pi_i), \quad i = 1, \ldots, n$$
+$$\xi_i \sim \mathrm{Bernoulli}(\pi_i)$$
 
 The draws are independent across samples. Each sample receives values $(\pi_i, \xi_i)$; samples with $\xi_i = 1$ are the ones to be sent for human annotation.
 
-Note that uncertainty scores must be strictly positive. The `ActiveSampler` requires $u_i > 0$ for every sample. A zero or negative uncertainty score would result in a zero sampling probability, making that sample permanently unselectable, which violates the IPW assumption $\pi_i > 0$ required for valid inference.
+Since the sampling procedure is random, the total number of selected samples only equals the budget on average and will generally either over or undershoot the precise budget. To prevent overshooting, the $\xi_i$ values are drawn one by one and a hard cutoff is applied if the budget is reached. When this happens, the remaining samples are discarded from by setting their probabilities $\pi_i$ to zero and the indicators $\xi_i$ to $\mathrm{NaN}$ meaning that there was no random draw.
+
+To ensure no bias is introduced by this procedure through the input sample order, the samples are shuffled before it is run and the final result is given in the original order.
 
 ---
 
