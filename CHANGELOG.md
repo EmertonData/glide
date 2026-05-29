@@ -15,6 +15,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 ### 🔄 Changed
 - Deep-dive validation notebooks use shared utilities from `glide.scientific_validation`
 - Binary dataset generators now take `n_total` instead of `n_labeled` + `n_unlabeled`, and return fully populated oracle arrays.
+- Improved `ActiveSampler` to output probabilities that always sum to the budget
 
 ### 🐛 Fixed
 - Fixed effective sample size computation to use the correct classical baseline for each sampling design

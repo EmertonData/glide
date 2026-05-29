@@ -1,3 +1,4 @@
+import warnings
 from typing import Optional, Tuple, Union
 
 import numpy as np
@@ -39,13 +40,25 @@ class ActiveSampler:
     array([0., 1.])
     """
 
+    def _validate(self, uncertainties: NDArray) -> None:
+        if np.any(np.isnan(uncertainties)):
+            raise ValueError("All uncertainty values must be finite; got a NaN value.")
+        if np.any(uncertainties <= 0.0):
+            raise ValueError("All uncertainty values must be strictly positive; got a non-positive value.")
+
     def _compute_probabilities(self, uncertainties: NDArray, budget: int) -> NDArray:
-        raw_pi = budget * uncertainties / uncertainties.sum()
-        if np.max(raw_pi) <= 1.0:
-            return raw_pi
+        uncertainty_ratio = np.max(uncertainties) / np.min(uncertainties)
+        if uncertainty_ratio > 1e3:
+            warnings.warn(
+                f"Extreme uncertainty ratio detected among samples (max/min={uncertainty_ratio:.2e} > 1e3); "
+                "this may cause numerical instability.",
+                UserWarning,
+            )
+        naive_pi = budget * uncertainties / uncertainties.sum()
+        if np.max(naive_pi) <= 1.0:
+            return naive_pi
 
         n = len(uncertainties)
-        warm_start = np.minimum(raw_pi, 1.0)
         squared_uncertainties = np.power(uncertainties, 2)
 
         def objective(pi: NDArray) -> float:
@@ -60,20 +73,15 @@ class ActiveSampler:
         budget_constraint = LinearConstraint(np.ones((1, n)), lb=budget, ub=budget)
         optimization_result = minimize(
             objective,
-            warm_start,
+            naive_pi,
             method="trust-constr",
             jac=jacobian,
             constraints=[budget_constraint],
             bounds=bounds,
             options={"maxiter": 100},
         )
-        return np.minimum(optimization_result.x, 1.0)
-
-    def _validate(self, uncertainties: NDArray) -> None:
-        if np.any(np.isnan(uncertainties)):
-            raise ValueError("All uncertainty values must be finite; got a NaN value.")
-        if np.any(uncertainties <= 0.0):
-            raise ValueError("All uncertainty values must be strictly positive; got a non-positive value.")
+        result = np.minimum(optimization_result.x, 1.0)
+        return result
 
     def sample(
         self,
@@ -120,6 +128,12 @@ class ActiveSampler:
             If ``budget`` is not a strictly positive integer, if ``budget``
             exceeds ``len(uncertainties)``, or if any uncertainty value is NaN,
             zero, or negative.
+
+        Warns
+        -----
+        UserWarning
+            If the ratio of the largest to the smallest uncertainty is extreme,
+            indicating potential numerical instability.
         """
         if (not isinstance(budget, (int, np.integer))) or isinstance(budget, bool) or budget <= 0:
             raise ValueError(f"'budget' must be a strictly positive integer; got {budget!r}.")
