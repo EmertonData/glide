@@ -9,6 +9,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 ## [Next release]
 
 ### ✨ Added
+
+### 🔄 Changed
+
+### 🐛 Fixed
+
+### 💛 Contributors
+
+## [0.6.0] – 2026-06-01
+
+### ✨ Added
 - `scientific_validation.md` deep-dive page covering shared validation methodology
 - `CostOptimalSampler` for uncertainty-based cost-optimal annotation strategy
 
@@ -21,6 +31,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - Invalid inputs/outputs in `StratifiedSampler` with no raised errors
 
 ### 💛 Contributors
+Thank you to everyone who contributed to this release: @gmartinon-ed, @imerad, @mraki-ed
 
 ## [0.5.0] – 2026-05-18
 
