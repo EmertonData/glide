@@ -30,8 +30,7 @@ def sampling_probability() -> NDArray:
 def test_preprocess_valid_output(estimator):
     y = np.array([1.0, 2.0, np.nan, np.nan])
     sampling_probability = np.array([0.5, 0.5, 0.0, 0.5])
-    with pytest.warns(UserWarning, match="Some observations have pi=0"):
-        y_out, pi_out = estimator._preprocess(y, sampling_probability)
+    y_out, pi_out = estimator._preprocess(y, sampling_probability)
     assert len(y_out) == 3
     assert len(pi_out) == 3
     np.testing.assert_array_equal(y_out, np.array([1.0, 2.0, np.nan]))

@@ -145,14 +145,8 @@ class IPWPTDMeanEstimator:
         y_true_filled, y_proxy, xi, pi = self._preprocess(y_true, y_proxy, pi)
         rng = np.random.default_rng(random_seed)
 
-        non_zero_pi_mask = _get_non_zero_mask(
-            pi,
-            "Some observations have pi=0. These will be excluded from the estimation as per the original paper.",
-        )
-        non_one_pi_mask = _get_non_zero_mask(
-            1 - pi,
-            "Some observations have pi=1. These will be excluded from the estimation as per the original paper.",
-        )
+        non_zero_pi_mask = _get_non_zero_mask(pi)
+        non_one_pi_mask = _get_non_zero_mask(1 - pi)
 
         with warnings.catch_warnings():
             warnings.filterwarnings("ignore")

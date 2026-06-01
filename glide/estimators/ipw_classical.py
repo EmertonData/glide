@@ -37,10 +37,7 @@ class IPWClassicalMeanEstimator:
 
     def _preprocess(self, y: NDArray, sampling_probability: NDArray) -> Tuple[NDArray, NDArray]:
         _validate_probabilities(sampling_probability)
-        non_zero_pi_mask = _get_non_zero_mask(
-            sampling_probability,
-            "Some observations have pi=0. These will be excluded from the estimation.",
-        )
+        non_zero_pi_mask = _get_non_zero_mask(sampling_probability)
         y_not_nan = ~np.isnan(y)
         _validate_label_prob_consistency(y_not_nan, sampling_probability)
         return y[non_zero_pi_mask], sampling_probability[non_zero_pi_mask]

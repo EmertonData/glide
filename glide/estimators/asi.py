@@ -70,10 +70,7 @@ class ASIMeanEstimator:
         _validate_label_prob_consistency(y_true_non_nan_mask, pi)
         xi = y_true_non_nan_mask.astype(float)
 
-        non_zero_mask = _get_non_zero_mask(
-            pi,
-            "Some observations have pi=0. These will be excluded from the estimation.",
-        )
+        non_zero_mask = _get_non_zero_mask(pi)
         y_true_all_filtered = y_true_all[non_zero_mask]
         y_proxy_filtered = y_proxy[non_zero_mask]
         pi_filtered = pi[non_zero_mask]

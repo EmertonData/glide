@@ -63,7 +63,7 @@ def _validate_y_true_burn_in(y_true: NDArray) -> None:
         raise ValueError("'y_true' label values are constant.")
 
 
-def _validate_non_empty(array: List | NDArray, name: str) -> None:
+def _validate_non_empty(array: Union[List, NDArray], name: str) -> None:
     if len(array) == 0:
         raise ValueError(f"'{name}' must be non-empty.")
 
