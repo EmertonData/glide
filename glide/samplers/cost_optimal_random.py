@@ -9,7 +9,7 @@ from glide.core.validation import (
     _validate_has_no_nan,
     _validate_is_integer,
     _validate_strictly_positive,
-    _validate_y_true_fully_labeled,
+    _validate_y_true_burn_in,
 )
 
 
@@ -85,12 +85,12 @@ class CostOptimalRandomSampler:
               (proxy labels match ground truth perfectly). This would lead to zero
               annotation probability making sampling impossible.
         """
-        _validate_y_true_fully_labeled(y_true)
+        _validate_y_true_burn_in(y_true)
         _validate_equal_lengths(y_true, y_proxy, names=["y_true", "y_proxy"])
         _validate_has_no_nan(y_proxy, "y_proxy")
         _validate_has_no_nan(y_true, "y_true")
         if np.max(np.abs(y_true - y_proxy)) == 0:
-            raise ValueError("'y_proxy' has zero mean squared error with 'y_true'.")
+            raise ValueError("'y_proxy' predicts 'y_true' perfectly (zero MSE). Annotation probability will be zero")
 
         y_true_variance = np.var(y_true, ddof=1)
         mean_squared_error = np.mean((y_true - y_proxy) ** 2)

@@ -40,10 +40,10 @@ def fitted_sampler_small_variance(sampler) -> CostOptimalSampler:
 
 def test_fit_delegates_to_validation(sampler, y_true):
     with (
-        patch.object(cost_optimal_module, "_validate_y_true_fully_labeled") as mock_validate_y_true_fully_labeled,
+        patch.object(cost_optimal_module, "_validate_y_true_burn_in") as mock_validate_y_true_burn_in,
     ):
         sampler.fit(y_true)
-        mock_validate_y_true_fully_labeled.assert_called_once_with(y_true)
+        mock_validate_y_true_burn_in.assert_called_once_with(y_true)
 
 
 def test_fit_known_variance(sampler):

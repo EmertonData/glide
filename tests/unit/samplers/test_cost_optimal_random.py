@@ -42,16 +42,14 @@ def fitted_sampler_high_MSE(sampler) -> CostOptimalRandomSampler:
 
 def test_fit_delegates_to_validation(sampler, y_true, y_proxy):
     with (
-        patch.object(
-            cost_optimal_random_module, "_validate_y_true_fully_labeled"
-        ) as mock_validate_y_true_fully_labeled,
+        patch.object(cost_optimal_random_module, "_validate_y_true_burn_in") as mock_validate_y_true_burn_in,
         patch.object(cost_optimal_random_module, "_validate_equal_lengths") as mock_validate_equal_lengths,
         patch.object(cost_optimal_random_module, "_validate_has_no_nan") as mock_validate_has_no_nan,
     ):
         sampler.fit(y_true, y_proxy)
 
-        mock_validate_y_true_fully_labeled.assert_called_once()
-        np.testing.assert_array_equal(mock_validate_y_true_fully_labeled.call_args[0][0], y_true)
+        mock_validate_y_true_burn_in.assert_called_once()
+        np.testing.assert_array_equal(mock_validate_y_true_burn_in.call_args[0][0], y_true)
         mock_validate_equal_lengths.assert_called_once()
         np.testing.assert_array_equal(mock_validate_equal_lengths.call_args[0][0], y_true)
         np.testing.assert_array_equal(mock_validate_equal_lengths.call_args[0][1], y_proxy)
@@ -64,7 +62,7 @@ def test_fit_delegates_to_validation(sampler, y_true, y_proxy):
 
 
 def test_fit_raises_on_zero_mse(sampler):
-    with pytest.raises(ValueError, match="'y_proxy' has zero mean squared error"):
+    with pytest.raises(ValueError, match="'y_proxy' predicts 'y_true' perfectly"):
         sampler.fit(y_true=np.array([1.0, 2.0]), y_proxy=np.array([1.0, 2.0]))
 
 

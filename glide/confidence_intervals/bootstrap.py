@@ -4,7 +4,7 @@ from typing import Literal, Tuple
 import numpy as np
 from numpy.typing import NDArray
 
-from glide.core.validation import _validate_alternative, _validate_in_bounds
+from glide.core.validation import _validate_literal, _validate_within_bounds
 
 
 @dataclass
@@ -54,7 +54,9 @@ class BootstrapConfidenceInterval:
 
     @confidence_level.setter
     def confidence_level(self, value: float) -> None:
-        _validate_in_bounds(value, 0, 1, "confidence_level", inclusive=False)
+        _validate_within_bounds(
+            value, "confidence_level", lower=0, upper=1, left_inclusive=False, right_inclusive=False
+        )
         self._confidence_level = value
         alpha_over_two = (1 - value) / 2
         self.lower_bound = float(np.quantile(self._sorted_estimates, alpha_over_two))
@@ -89,8 +91,10 @@ class BootstrapConfidenceInterval:
             bootstrap p-value, and ``df`` is ``float('inf')``.
         """
         n = len(self._sorted_estimates)
+        alternatives = ["two-sided", "larger", "smaller"]
+        _validate_literal(alternative, "alternative", alternatives)
 
-        if alternative == "two-sided":
+        if alternative == alternatives[0]:
             observed_deviation = abs(h0_value - self.mean)
             # Count estimates <= (mean - deviation) or >= (mean + deviation)
             lower_threshold = self.mean - observed_deviation
@@ -98,14 +102,12 @@ class BootstrapConfidenceInterval:
             count_below = np.searchsorted(self._sorted_estimates, lower_threshold, side="right")
             count_above = n - np.searchsorted(self._sorted_estimates, upper_threshold, side="left")
             count_extreme = count_below + count_above
-        elif alternative == "larger":
+        elif alternative == alternatives[1]:
             # Count estimates <= h0_value (evidence against "larger" alternative)
             count_extreme = np.searchsorted(self._sorted_estimates, h0_value, side="right")
-        elif alternative == "smaller":
+        else:
             # Count estimates >= h0_value (evidence against "smaller" alternative)
             count_extreme = n - np.searchsorted(self._sorted_estimates, h0_value, side="left")
-        else:
-            _validate_alternative(alternative)
 
         p_value = float(count_extreme) / n
 

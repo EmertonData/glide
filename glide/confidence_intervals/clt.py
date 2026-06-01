@@ -3,7 +3,7 @@ from typing import Literal, Tuple
 
 from scipy.stats import norm
 
-from glide.core.validation import _validate_alternative, _validate_in_bounds
+from glide.core.validation import _validate_literal, _validate_within_bounds
 
 
 @dataclass
@@ -52,7 +52,9 @@ class CLTConfidenceInterval:
 
     @confidence_level.setter
     def confidence_level(self, value: float) -> None:
-        _validate_in_bounds(value, 0, 1, "confidence_level", inclusive=False)
+        _validate_within_bounds(
+            value, "confidence_level", lower=0, upper=1, left_inclusive=False, right_inclusive=False
+        )
         self._confidence_level = value
         alpha_over_two = (1 - value) / 2
         z_score = norm.ppf(1 - alpha_over_two)
@@ -88,13 +90,15 @@ class CLTConfidenceInterval:
             If ``alternative`` is not one of ``'two-sided'``, ``'larger'``, or ``'smaller'``.
         """
         z_stat = (self.mean - h0_value) / self.std
-        if alternative == "two-sided":
+        alternatives = ["two-sided", "larger", "smaller"]
+        _validate_literal(alternative, "alternative", alternatives)
+
+        if alternative == alternatives[0]:
             p_value = 2 * norm.sf(abs(z_stat))
-        elif alternative == "larger":
+        elif alternative == alternatives[1]:
             p_value = norm.sf(z_stat)
-        elif alternative == "smaller":
-            p_value = norm.cdf(z_stat)
         else:
-            _validate_alternative(alternative)
+            p_value = norm.cdf(z_stat)
+
         df = float("inf")
         return z_stat, p_value, df

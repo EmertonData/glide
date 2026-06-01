@@ -8,7 +8,7 @@ from glide.core.validation import (
     _is_constant,
     _validate_strictly_positive,
     _validate_uncertainties,
-    _validate_y_true_fully_labeled,
+    _validate_y_true_burn_in,
 )
 
 
@@ -78,7 +78,7 @@ class CostOptimalSampler:
             If ``y_true`` is empty, contains NaN, or all labels are identical (zero true label variance).
 
         """
-        _validate_y_true_fully_labeled(y_true)
+        _validate_y_true_burn_in(y_true)
         self._y_true_variance = np.var(y_true, ddof=1)
         return self
 

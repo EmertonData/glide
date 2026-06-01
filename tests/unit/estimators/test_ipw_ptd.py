@@ -78,8 +78,10 @@ def test_estimate_delegates_to_non_zero_mask(estimator, y_arrays):
         ipw_ptd_module, "_get_non_zero_mask", return_value=np.ones(6, dtype=bool)
     ) as mock_get_non_zero_mask:
         estimator.estimate(y_true, y_proxy, pi, n_bootstrap=5, random_seed=0)
-        mock_get_non_zero_mask.assert_called_once()
-        np.testing.assert_array_equal(mock_get_non_zero_mask.call_args[0][0], pi)
+        assert mock_get_non_zero_mask.call_count == 2
+
+        np.testing.assert_array_equal(mock_get_non_zero_mask.call_args_list[0][0][0], pi)
+        np.testing.assert_array_equal(mock_get_non_zero_mask.call_args_list[1][0][0], 1 - pi)
 
 
 # ── estimate ──────────────────────────────────────────────────────────────────

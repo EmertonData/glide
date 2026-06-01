@@ -3,7 +3,7 @@ from typing import Optional, Tuple, Union
 import numpy as np
 from numpy.typing import NDArray
 
-from glide.core.validation import _validate_in_bounds
+from glide.core.validation import _validate_within_bounds
 
 
 def generate_binary_dataset(
@@ -109,8 +109,8 @@ def generate_binary_dataset(
     >>> bool(np.all(np.isin(y_proxy, [0.0, 1.0])))
     True
     """
-    _validate_in_bounds(true_mean, 0, 1, "true_mean", inclusive=False)
-    _validate_in_bounds(proxy_mean, 0, 1, "proxy_mean", inclusive=False)
+    _validate_within_bounds(true_mean, "true_mean", lower=0, upper=1, left_inclusive=False, right_inclusive=False)
+    _validate_within_bounds(proxy_mean, "proxy_mean", lower=0, upper=1, left_inclusive=False, right_inclusive=False)
 
     rng = np.random.default_rng(seed=random_seed)
 

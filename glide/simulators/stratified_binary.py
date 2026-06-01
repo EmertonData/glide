@@ -3,7 +3,7 @@ from typing import List, Optional, Tuple
 import numpy as np
 from numpy.typing import NDArray
 
-from glide.core.validation import _validate_above, _validate_equal_lengths
+from glide.core.validation import _validate_equal_lengths, _validate_non_empty
 from glide.simulators.binary import generate_binary_dataset
 
 
@@ -77,7 +77,7 @@ def generate_stratified_binary_dataset(
     >>> bool(np.all(np.isin(y_proxy, [0.0, 1.0])))
     True
     """
-    _validate_above(n_total, 1, "n_total")
+    _validate_non_empty(n_total, "n_total")
     num_strata = len(n_total)
 
     _validate_equal_lengths(

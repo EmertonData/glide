@@ -1,6 +1,8 @@
-import numpy as np
-import pytest
+from unittest.mock import patch
 
+import numpy as np
+
+import glide.simulators.stratified_binary as stratified_binary_module
 from glide.simulators import generate_stratified_binary_dataset
 
 
@@ -25,19 +27,32 @@ def test_generate_stratified_binary_dataset_structure_and_counts():
     np.testing.assert_allclose(y_proxy, y_proxy_expected)
 
 
-def test_generate_stratified_binary_dataset_empty_strata_raises():
-    with pytest.raises(ValueError, match=r"'n_total' must have at least 1 element"):
-        generate_stratified_binary_dataset(n_total=[], true_mean=[], proxy_mean=[], correlation=[])
+def test_generate_stratified_binary_dataset_delegates_to_validation():
+    n_total = [3, 3]
+    true_mean = [0.5, 0.6]
+    proxy_mean = [0.5, 0.6]
+    correlation = [0.8, 0.8]
 
-
-def test_generate_stratified_binary_dataset_mismatched_lists_raises():
-    with pytest.raises(ValueError, match=r"must have the same length"):
+    with (
+        patch.object(stratified_binary_module, "_validate_non_empty") as mock_validate_non_empty,
+        patch.object(stratified_binary_module, "_validate_equal_lengths") as mock_validate_equal_lengths,
+    ):
         generate_stratified_binary_dataset(
-            n_total=[3, 3],
-            true_mean=[0.5, 0.6],
-            proxy_mean=[0.5, 0.6, 0.7],
-            correlation=[0.8, 0.8],
+            n_total=n_total,
+            true_mean=true_mean,
+            proxy_mean=proxy_mean,
+            correlation=correlation,
         )
+
+        mock_validate_non_empty.assert_called_once_with(n_total, "n_total")
+
+        mock_validate_equal_lengths.assert_called_once()
+        np.testing.assert_array_equal(mock_validate_equal_lengths.call_args[0][0], np.array(n_total))
+        np.testing.assert_array_equal(mock_validate_equal_lengths.call_args[0][1], np.array(true_mean))
+        np.testing.assert_array_equal(mock_validate_equal_lengths.call_args[0][2], np.array(proxy_mean))
+        np.testing.assert_array_equal(mock_validate_equal_lengths.call_args[0][3], np.array(correlation))
+        expected_names = ["n_total", "true_mean", "proxy_mean", "correlation"]
+        assert mock_validate_equal_lengths.call_args[1]["names"] == expected_names
 
 
 def test_generate_stratified_binary_dataset_reproducibility():

@@ -149,13 +149,10 @@ class IPWPTDMeanEstimator:
             pi,
             "Some observations have pi=0. These will be excluded from the estimation as per the original paper.",
         )
-        non_one_pi_mask = pi < 1
-
-        if np.any(~non_one_pi_mask):
-            warnings.warn(
-                "Some observations have pi=1. These will be excluded from the estimation as per the original paper.",
-                UserWarning,
-            )
+        non_one_pi_mask = _get_non_zero_mask(
+            1 - pi,
+            "Some observations have pi=1. These will be excluded from the estimation as per the original paper.",
+        )
 
         with warnings.catch_warnings():
             warnings.filterwarnings("ignore")

@@ -1,3 +1,5 @@
+from typing import List
+
 import numpy as np
 import pytest
 from numpy.typing import NDArray
@@ -5,22 +7,22 @@ from numpy.typing import NDArray
 from glide.core.validation import (
     _get_non_zero_mask,
     _is_constant,
-    _validate_above,
-    _validate_alternative,
     _validate_binary_or_nan,
     _validate_budget_bound,
     _validate_equal_lengths,
     _validate_has_no_nan,
-    _validate_in_bounds,
     _validate_label_prob_consistency,
+    _validate_literal,
     _validate_min_samples,
+    _validate_non_empty,
     _validate_probabilities,
     _validate_sample_sizes,
     _validate_strictly_positive,
     _validate_uncertainties,
+    _validate_within_bounds,
     _validate_y_proxy,
     _validate_y_true,
-    _validate_y_true_fully_labeled,
+    _validate_y_true_burn_in,
 )
 
 # --- helpers ---
@@ -34,6 +36,11 @@ def pi_consistency_mask() -> NDArray:
 @pytest.fixture
 def too_few_labeled_mask() -> NDArray:
     return np.array([True, False, False])
+
+
+@pytest.fixture
+def alternatives() -> List[str]:
+    return ["two-sided", "larger", "smaller"]
 
 
 # --- _is_constant ---
@@ -192,26 +199,26 @@ def test_validate_equal_lengths_three_arrays():
         )
 
 
-# --- _validate_y_true_fully_labeled ---
+# --- _validate_y_true_burn_in ---
 
 
-def test_validate_y_true_fully_labeled_valid():
-    _validate_y_true_fully_labeled(np.array([1.0, 2.0]))
+def test_validate_y_true_burn_in_valid():
+    _validate_y_true_burn_in(np.array([1.0, 2.0]))
 
 
-def test_validate_y_true_fully_labeled_empty():
+def test_validate_y_true_burn_in_empty():
     with pytest.raises(ValueError, match="non-empty"):
-        _validate_y_true_fully_labeled(np.array([]))
+        _validate_y_true_burn_in(np.array([]))
 
 
-def test_validate_y_true_fully_labeled_nan():
+def test_validate_y_true_burn_in_nan():
     with pytest.raises(ValueError, match="NaN"):
-        _validate_y_true_fully_labeled(np.array([1.0, float("nan")]))
+        _validate_y_true_burn_in(np.array([1.0, float("nan")]))
 
 
-def test_validate_y_true_fully_labeled_constant():
+def test_validate_y_true_burn_in_constant():
     with pytest.raises(ValueError, match="label values are constant"):
-        _validate_y_true_fully_labeled(np.array([1.0, 1.0]))
+        _validate_y_true_burn_in(np.array([1.0, 1.0]))
 
 
 # --- _validate_strictly_positive ---
@@ -227,66 +234,70 @@ def test_validate_strictly_positive_invalid(bad_value):
         _validate_strictly_positive(bad_value, "x")
 
 
-# --- _validate_above ---
+# --- _validate_non_empty ---
 
 
-def test_validate_above_valid():
-    _validate_above([1, 2], 1, "x")
+def test_validate_non_empty_valid():
+    _validate_non_empty([1, 2], "x")
 
 
-def test_validate_above_empty():
-    with pytest.raises(ValueError, match="'x' must have at least 1 element"):
-        _validate_above([], 1, "x")
+def test_validate_non_empty_empty():
+    with pytest.raises(ValueError, match="'x' must be non-empty"):
+        _validate_non_empty([], "x")
 
 
-# --- _validate_in_bounds ---
+# --- _validate_within_bounds ---
 
 
-def test_validate_in_bounds_closed_valid():
-    _validate_in_bounds(0.0, -1, 1, "x")
-
-
-@pytest.mark.parametrize("boundary_value", [-1.0, 1.0])
-def test_validate_in_bounds_closed_at_boundary(boundary_value):
-    _validate_in_bounds(boundary_value, -1, 1, "x")
+@pytest.mark.parametrize("value", [-1.0, 0.0, 1.0])
+def test_validate_within_bounds_closed_valid(value):
+    _validate_within_bounds(value, "x", lower=-1, upper=1)
 
 
 @pytest.mark.parametrize("bad_value", [-1.1, 1.1])
-def test_validate_in_bounds_closed_out_of_range(bad_value):
+def test_validate_within_bounds_closed_invalid(bad_value):
+    with pytest.raises(ValueError, match="'x' must be in \\[-1, 1\\]"):
+        _validate_within_bounds(bad_value, "x", lower=-1, upper=1)
+
+
+@pytest.mark.parametrize("value", [0.001, 0.5, 0.999])
+def test_validate_within_bounds_open_valid(value):
+    _validate_within_bounds(value, "x", lower=0, upper=1, left_inclusive=False, right_inclusive=False)
+
+
+@pytest.mark.parametrize("bad_value", [-0.1, 0.0, 1.0, 1.1])
+def test_validate_within_bounds_open_invalid(bad_value):
+    with pytest.raises(ValueError, match="'x' must be in \\(0, 1\\)"):
+        _validate_within_bounds(bad_value, "x", lower=0, upper=1, left_inclusive=False, right_inclusive=False)
+
+
+def test_validate_within_bounds_default_infinite():
+    _validate_within_bounds(-1e10, "x")
+    _validate_within_bounds(1e10, "x")
+
+
+def test_validate_within_bounds_array_valid():
+    _validate_within_bounds(np.array([0.1, 0.9]), "x", lower=0, upper=1, left_inclusive=False, right_inclusive=False)
+
+
+def test_validate_within_bounds_array_invalid():
     with pytest.raises(ValueError, match="'x' must be in"):
-        _validate_in_bounds(bad_value, -1, 1, "x")
+        _validate_within_bounds(
+            np.array([0.5, 1.0]), "x", lower=0, upper=1, left_inclusive=False, right_inclusive=False
+        )
 
 
-def test_validate_in_bounds_open_valid():
-    _validate_in_bounds(0.5, 0, 1, "x", inclusive=False)
+# --- _validate_literal ---
 
 
-@pytest.mark.parametrize("bad_value", [0.0, 1.0])
-def test_validate_in_bounds_open_at_boundary(bad_value):
-    with pytest.raises(ValueError, match="'x' must be in"):
-        _validate_in_bounds(bad_value, 0, 1, "x", inclusive=False)
+@pytest.mark.parametrize("alternative", ["two-sided", "larger", "smaller"])
+def test_validate_literal_valid(alternative, alternatives):
+    _validate_literal(alternative, "param", alternatives)
 
 
-def test_validate_in_bounds_array_valid():
-    _validate_in_bounds(np.array([0.1, 0.9]), 0, 1, "x", inclusive=False)
-
-
-def test_validate_in_bounds_array_out_of_range():
-    with pytest.raises(ValueError, match="'x' must be in"):
-        _validate_in_bounds(np.array([0.5, 1.0]), 0, 1, "x", inclusive=False)
-
-
-# --- _validate_alternative ---
-
-
-@pytest.mark.parametrize("valid", ["two-sided", "larger", "smaller"])
-def test_validate_alternative_valid(valid):
-    _validate_alternative(valid)
-
-
-def test_validate_alternative_invalid():
-    with pytest.raises(ValueError, match="'alternative' must be"):
-        _validate_alternative("both")
+def test_validate_literal_invalid(alternatives):
+    with pytest.raises(ValueError, match="'param' must be"):
+        _validate_literal("something", "param", alternatives)
 
 
 # --- _validate_budget_bound ---

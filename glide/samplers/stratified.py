@@ -6,6 +6,7 @@ from numpy.typing import NDArray
 from glide.core.validation import (
     _validate_budget_bound,
     _validate_is_integer,
+    _validate_literal,
     _validate_strictly_positive,
     _validate_y_proxy,
 )
@@ -190,13 +191,12 @@ class StratifiedSampler:
             - If ``budget`` exceeds the total number of samples in the input.
         """
         self._validate(y_proxy, groups, budget)
+        _validate_literal(strategy, "strategy", ["proportional", "neyman"])
 
         if strategy == "proportional":
             allocation = self._proportional_allocation(groups, budget)
-        elif strategy == "neyman":
-            allocation = self._neyman_allocation(y_proxy, groups, budget)
         else:
-            raise ValueError(f"'strategy' must be 'proportional' or 'neyman'; got {strategy!r}.")
+            allocation = self._neyman_allocation(y_proxy, groups, budget)
 
         for stratum_id, n_h in allocation.items():
             if n_h < 2:
