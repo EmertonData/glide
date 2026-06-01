@@ -5,8 +5,9 @@ import numpy as np
 from numpy.typing import NDArray
 
 
-def _is_constant(array: NDArray) -> bool:
-    return np.max(array) == np.min(array)
+def _validate_non_constant(array: NDArray, error_message: str) -> None:
+    if np.max(array) == np.min(array):
+        raise ValueError(error_message)
 
 
 def _validate_has_no_nan(array: NDArray, name: str) -> None:
@@ -23,18 +24,16 @@ def _get_non_zero_mask(values: NDArray, warning_message: Optional[str] = None) -
 
 def _validate_y_proxy(y_proxy: NDArray, stratum_id: Optional[Hashable] = None) -> None:
     _validate_has_no_nan(y_proxy, "y_proxy")
-    if _is_constant(y_proxy):
-        stratum_part = f" in stratum '{stratum_id}'" if stratum_id is not None else ""
-        raise ValueError(f"'y_proxy' values are constant{stratum_part}.")
+    stratum_part = f" in stratum '{stratum_id}'" if stratum_id is not None else ""
+    _validate_non_constant(y_proxy, f"'y_proxy' values are constant{stratum_part}.")
 
 
 def _validate_y_true(y_true: NDArray, stratum_id: Optional[Hashable] = None) -> None:
     labeled = y_true[~np.isnan(y_true)]
     if len(labeled) == 0:
         raise ValueError("'y_true' contains only NaN values.")
-    if _is_constant(labeled):
-        stratum_part = f" in stratum '{stratum_id}'" if stratum_id is not None else ""
-        raise ValueError(f"'y_true' labeled values are constant{stratum_part}.")
+    stratum_part = f" in stratum '{stratum_id}'" if stratum_id is not None else ""
+    _validate_non_constant(labeled, f"'y_true' labeled values are constant{stratum_part}.")
 
 
 def _validate_label_prob_consistency(labeled_mask: NDArray, pi: NDArray) -> None:
@@ -59,8 +58,7 @@ def _validate_equal_lengths(*arrays: NDArray, names: List[str]) -> None:
 def _validate_y_true_burn_in(y_true: NDArray) -> None:
     _validate_non_empty(y_true, "y_true")
     _validate_has_no_nan(y_true, "y_true")
-    if _is_constant(y_true):
-        raise ValueError("'y_true' label values are constant.")
+    _validate_non_constant(y_true, "'y_true' label values are constant.")
 
 
 def _validate_non_empty(array: Union[List, NDArray], name: str) -> None:

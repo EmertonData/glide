@@ -58,6 +58,7 @@ def test_preprocess_delegates_to_validation(estimator):
         patch.object(asi_module, "_validate_y_proxy") as mock_validate_y_proxy,
         patch.object(asi_module, "_validate_label_prob_consistency") as mock_validate_label_prob_consistency,
         patch.object(asi_module, "_get_non_zero_mask", return_value=np.ones(4, dtype=bool)) as mock_get_non_zero_mask,
+        patch.object(asi_module, "_validate_non_constant") as mock_validate_non_constant,
     ):
         estimator._preprocess(y_true, y_proxy, pi)
 
@@ -71,14 +72,11 @@ def test_preprocess_delegates_to_validation(estimator):
         np.testing.assert_array_equal(mock_validate_label_prob_consistency.call_args[0][1], pi)
         mock_get_non_zero_mask.assert_called_once()
         np.testing.assert_array_equal(mock_get_non_zero_mask.call_args[0][0], pi)
-
-
-def test_preprocess_raises_on_constant_rectifiers(estimator):
-    y_true = np.array([1.0, 0.2, 0.3])
-    y_proxy = np.array([0.0, 0.0, 0.1])
-    pi = np.ones(3)
-    with pytest.raises(ValueError, match="'y_proxy' values lead to constant rectifiers"):
-        estimator._preprocess(y_true, y_proxy, pi)
+        mock_validate_non_constant.assert_called_once()
+        xi = labeled_mask.astype(float)
+        expected_rectifiers = y_proxy * (xi / pi - 1)
+        np.testing.assert_array_equal(mock_validate_non_constant.call_args[0][0], expected_rectifiers)
+        assert mock_validate_non_constant.call_args[0][1] == "'y_proxy' values lead to constant rectifiers."
 
 
 # --- _compute_tuning_parameter ---

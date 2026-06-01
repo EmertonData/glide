@@ -7,9 +7,9 @@ from numpy.typing import NDArray
 from glide.confidence_intervals import CLTConfidenceInterval
 from glide.core.validation import (
     _get_non_zero_mask,
-    _is_constant,
     _validate_equal_lengths,
     _validate_label_prob_consistency,
+    _validate_non_constant,
     _validate_probabilities,
     _validate_y_proxy,
 )
@@ -76,8 +76,10 @@ class ASIMeanEstimator:
         pi_filtered = pi[non_zero_mask]
         xi_filtered = xi[non_zero_mask]
 
-        if _is_constant(y_proxy_filtered * (xi_filtered / pi_filtered - 1)):
-            raise ValueError("'y_proxy' values lead to constant rectifiers.")
+        _validate_non_constant(
+            y_proxy_filtered * (xi_filtered / pi_filtered - 1),
+            "'y_proxy' values lead to constant rectifiers.",
+        )
 
         y_true_filled = np.nan_to_num(y_true_all_filtered, nan=0)
         return y_true_filled, y_proxy_filtered, xi_filtered, pi_filtered

@@ -7,7 +7,6 @@ from numpy.typing import NDArray
 
 from glide.core.validation import (
     _get_non_zero_mask,
-    _is_constant,
     _validate_binary_or_nan,
     _validate_bounds,
     _validate_budget_bound,
@@ -16,6 +15,7 @@ from glide.core.validation import (
     _validate_label_prob_consistency,
     _validate_literal,
     _validate_min_samples,
+    _validate_non_constant,
     _validate_non_empty,
     _validate_probabilities,
     _validate_sample_sizes,
@@ -44,15 +44,16 @@ def alternatives() -> List[str]:
     return ["two-sided", "larger", "smaller"]
 
 
-# --- _is_constant ---
+# --- _validate_non_constant ---
 
 
-def test_is_constant_true():
-    assert _is_constant(np.array([3.0, 3.0]))
+def test_validate_non_constant_valid():
+    _validate_non_constant(np.array([1.0, 2.0]), "error")
 
 
-def test_is_constant_false():
-    assert not _is_constant(np.array([1.0, 2.0]))
+def test_validate_non_constant_raises():
+    with pytest.raises(ValueError, match="custom error"):
+        _validate_non_constant(np.array([3.0, 3.0]), "custom error")
 
 
 # --- _validate_has_no_nan ---
@@ -86,23 +87,19 @@ def test_get_non_zero_mask_with_zero_emits_warning():
 # --- _validate_y_proxy ---
 
 
-def test_validate_y_proxy_delegates_to_validate_has_no_nan():
-    with patch("glide.core.validation._validate_has_no_nan") as mock:
+def test_validate_y_proxy_delegates():
+    with (
+        patch("glide.core.validation._validate_has_no_nan") as mock_nan,
+        patch("glide.core.validation._validate_non_constant") as mock_non_constant,
+    ):
         arr = np.array([1.0, 2.0])
         _validate_y_proxy(arr)
-        mock.assert_called_once()
-        np.testing.assert_array_equal(mock.call_args[0][0], arr)
-        assert mock.call_args[0][1] == "y_proxy"
-
-
-def test_validate_y_proxy_constant():
-    with pytest.raises(ValueError, match="'y_proxy' values are constant"):
-        _validate_y_proxy(np.array([1.0, 1.0]))
-
-
-def test_validate_y_proxy_stratum_constant():
-    with pytest.raises(ValueError, match="'y_proxy' values are constant in stratum 'A'"):
-        _validate_y_proxy(np.array([1.0, 1.0]), stratum_id="A")
+        mock_nan.assert_called_once()
+        np.testing.assert_array_equal(mock_nan.call_args[0][0], arr)
+        assert mock_nan.call_args[0][1] == "y_proxy"
+        mock_non_constant.assert_called_once()
+        np.testing.assert_array_equal(mock_non_constant.call_args[0][0], arr)
+        assert mock_non_constant.call_args[0][1] == "'y_proxy' values are constant."
 
 
 # --- _validate_y_true ---
@@ -117,9 +114,14 @@ def test_validate_y_true_only_nans():
         _validate_y_true(np.array([np.nan, np.nan]))
 
 
-def test_validate_y_true_constant():
-    with pytest.raises(ValueError, match="'y_true' labeled values are constant"):
-        _validate_y_true(np.array([1.0, 1.0, np.nan]))
+def test_validate_y_true_delegates_to_validate_non_constant():
+    with patch("glide.core.validation._validate_non_constant") as mock:
+        arr = np.array([1.0, 1.0, np.nan])
+        _validate_y_true(arr)
+        mock.assert_called_once()
+        labeled = arr[~np.isnan(arr)]
+        np.testing.assert_array_equal(mock.call_args[0][0], labeled)
+        assert mock.call_args[0][1] == "'y_true' labeled values are constant."
 
 
 # --- _validate_uncertainties ---
@@ -210,6 +212,7 @@ def test_validate_y_true_burn_in_delegates():
     with (
         patch("glide.core.validation._validate_non_empty") as mock_non_empty,
         patch("glide.core.validation._validate_has_no_nan") as mock_nan,
+        patch("glide.core.validation._validate_non_constant") as mock_non_constant,
     ):
         arr = np.array([1.0, 2.0])
         _validate_y_true_burn_in(arr)
@@ -219,11 +222,9 @@ def test_validate_y_true_burn_in_delegates():
         mock_nan.assert_called_once()
         np.testing.assert_array_equal(mock_nan.call_args[0][0], arr)
         assert mock_nan.call_args[0][1] == "y_true"
-
-
-def test_validate_y_true_burn_in_constant():
-    with pytest.raises(ValueError, match="label values are constant"):
-        _validate_y_true_burn_in(np.array([1.0, 1.0]))
+        mock_non_constant.assert_called_once()
+        np.testing.assert_array_equal(mock_non_constant.call_args[0][0], arr)
+        assert mock_non_constant.call_args[0][1] == "'y_true' label values are constant."
 
 
 # --- _validate_strictly_positive ---

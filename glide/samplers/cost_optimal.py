@@ -5,7 +5,7 @@ from numpy.random.bit_generator import SeedSequence
 from numpy.typing import NDArray
 
 from glide.core.validation import (
-    _is_constant,
+    _validate_non_constant,
     _validate_strictly_positive,
     _validate_uncertainties,
     _validate_y_true_burn_in,
@@ -198,10 +198,11 @@ class CostOptimalSampler:
         _validate_strictly_positive(y_true_cost, "y_true_cost")
         if y_proxy_cost < 0.0:
             raise ValueError(f"'y_proxy_cost' must be non-negative; got {y_proxy_cost}.")
-        if y_proxy_cost == 0.0 and _is_constant(uncertainties):
-            raise ValueError(
+        if y_proxy_cost == 0.0:
+            _validate_non_constant(
+                uncertainties,
                 "All uncertainty values are equal and 'y_proxy_cost' is zero."
-                " Provide non-constant uncertainties or set 'y_proxy_cost' to a positive value."
+                " Provide non-constant uncertainties or set 'y_proxy_cost' to a positive value.",
             )
         _validate_strictly_positive(budget, "budget")
         _validate_uncertainties(uncertainties)

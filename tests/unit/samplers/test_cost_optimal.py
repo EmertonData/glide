@@ -112,22 +112,25 @@ def test_sample_delegates_to_validation(fitted_sampler, uncertainties):
     with (
         patch.object(cost_optimal_module, "_validate_strictly_positive") as mock_validate_strictly_positive,
         patch.object(cost_optimal_module, "_validate_uncertainties") as mock_validate_uncertainties,
+        patch.object(cost_optimal_module, "_validate_non_constant") as mock_validate_non_constant,
     ):
-        fitted_sampler.sample(uncertainties, y_true_cost=10.0, y_proxy_cost=1.0, budget=10, random_seed=42)
+        fitted_sampler.sample(uncertainties, y_true_cost=10.0, y_proxy_cost=0.0, budget=10, random_seed=42)
 
         mock_validate_strictly_positive.assert_has_calls([call(10.0, "y_true_cost"), call(10, "budget")])
         mock_validate_uncertainties.assert_called_once()
         np.testing.assert_array_equal(mock_validate_uncertainties.call_args[0][0], uncertainties)
+        mock_validate_non_constant.assert_called_once()
+        np.testing.assert_array_equal(mock_validate_non_constant.call_args[0][0], uncertainties)
+        expected_msg = (
+            "All uncertainty values are equal and 'y_proxy_cost' is zero."
+            " Provide non-constant uncertainties or set 'y_proxy_cost' to a positive value."
+        )
+        assert mock_validate_non_constant.call_args[0][1] == expected_msg
 
 
 def test_sample_negative_y_proxy_cost(fitted_sampler, uncertainties):
     with pytest.raises(ValueError, match="'y_proxy_cost' must be non-negative"):
         fitted_sampler.sample(uncertainties, y_true_cost=10.0, y_proxy_cost=-1, budget=5, random_seed=42)
-
-
-def test_sample_constant_uncertainties_and_zero_y_proxy_cost(fitted_sampler):
-    with pytest.raises(ValueError, match="All uncertainty values are equal and 'y_proxy_cost' is zero."):
-        fitted_sampler.sample(np.ones(2), y_true_cost=10.0, y_proxy_cost=0.0, budget=5, random_seed=42)
 
 
 def test_sample_budget_too_small_raises(fitted_sampler, uncertainties):

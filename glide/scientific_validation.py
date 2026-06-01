@@ -3,7 +3,7 @@ from typing import Any, Callable, Dict, Tuple
 import numpy as np
 from numpy.typing import NDArray
 
-from glide.core.validation import _validate_bounds, _validate_strictly_positive
+from glide.core.validation import _validate_bounds, _validate_non_empty, _validate_strictly_positive
 from glide.estimators import ClassicalMeanEstimator
 
 
@@ -200,8 +200,7 @@ def coverage_with_error_bar(
     >>> round(float(upper), 4)
     0.9447
     """
-    if len(hits) == 0:
-        raise ValueError("'hits' must be non-empty.")
+    _validate_non_empty(hits, "hits")
     _validate_bounds(
         confidence_level, "confidence_level", lower=0, upper=1, left_inclusive=False, right_inclusive=False
     )
