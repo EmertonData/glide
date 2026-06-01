@@ -100,6 +100,12 @@ def test_find_optimal_threshold_known_output(fitted_sampler, uncertainties):
     assert tau_star == pytest.approx(expected_tau_star, abs=0.001)
 
 
+def test_find_optimal_threshold_null_y_proxy_cost_known_output(fitted_sampler, uncertainties):
+    tau_star = fitted_sampler._find_optimal_threshold(uncertainties, y_true_cost=10.0, y_proxy_cost=0.0)
+    expected_tau_star = 0.1
+    assert tau_star == pytest.approx(expected_tau_star, abs=0.001)
+
+
 # --- sample ---
 
 
