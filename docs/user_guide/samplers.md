@@ -4,7 +4,7 @@ Samplers sit **upstream of the estimators**: they decide *which* samples to send
 
 When auxiliary signals are available, choosing samples strategically can substantially reduce the annotation budget needed to reach a target confidence-interval width. Other samplers (for example, `ActiveSampler`) go further: in addition to $\xi_i$, they compute a **drawing probability** $\pi_i$ for each sample, which allows downstream estimators to apply Inverse Probability Weighting (IPW) and correct for non-uniform sampling bias.
 
-The underlying statistical task is to estimate the mean $\mathbb{E}[Y]$ of a ground truth label $Y$ that is costly to obtain. A proxy label $\tilde{Y}$, available cheaply for all samples, serves as an auxiliary signal. When per-sample proxy errors $\mathbb{E}[(Y_i - \tilde{Y}_i)^2 \mid X_i]$ can be estimated from an input $X_i$, they reveal which samples the proxy is least reliable for and can guide the allocation of the annotation budget to reduce estimation variance.
+The ultimate purpose is to estimate the mean $\mathbb{E}[Y]$ of ground truths $Y$ that are costly to obtain. Proxys label $\tilde{Y}$, available cheaply for all samples, serve as an auxiliary signal. When per-sample proxy errors $\mathbb{E}[(Y_i - \tilde{Y}_i)^2 \mid X_i]$ can be estimated for each input $X_i$, they reveal which samples the proxy is least reliable for and can guide the allocation of the annotation budget to reduce estimation variance.
 
 | Value | Description |
 |---|---|
@@ -64,19 +64,22 @@ The `ActiveSampler` concentrates the annotation budget on the samples with the *
 
 ### Sampling probabilities
 
-Each sample $i$ has an **uncertainty score** $u_i > 0$, an estimate of the root mean squared error of the proxy label relative to the ground truth label, $\sqrt{\mathbb{E}[(Y_i - \tilde{Y}_i)^2 \mid X_i]}$. The variance of an IPW-based estimator such as ASI takes the form (see [[3](#ref-3), Equation (2)]):
+Each sample $i$ has an **uncertainty score** $u_i > 0$, an estimate of the root mean squared error of the proxy label relative to the ground truth, $\sqrt{\mathbb{E}[(Y_i - \tilde{Y}_i)^2 \mid X_i]}$. The variance of an IPW-based estimator such as ASI takes the form (see [[3](#ref-3), Equation (2)]):
 
 $$\mathrm{Var}(Y) + \mathbb{E}\!\left[(Y - \tilde{Y})^2\left(\frac{1}{\pi(X)} - 1\right)\right]$$
 
-The sampling probabilities are chosen to minimise this quantity. Because it depends on the probabilities only through $\mathbb{E}\!\left[\frac{(Y - \tilde{Y})^2}{\pi(X)}\right]$, the problem reduces to minimising $\sum_i \frac{u_i^2}{\pi_i}$ subject to $\pi_i \in (0, 1]$ for all $i$ and $\sum_i \pi_i = b$.
+The sampling probabilities are chosen to minimise this quantity. Because it depends on the probabilities only through $\mathbb{E}\!\left[\frac{(Y - \tilde{Y})^2}{\pi(X)}\right]$, the problem reduces to solving the optimisation:
 
-When all resulting probabilities are valid ($\tilde{\pi}_i \leq 1$), the closed-form solution is:
+$$\mathrm{minimize} \sum_i \frac{u_i^2}{\pi_i}$$
+
+subject to $\pi_i \in (0, 1]$ for all $i$ and $\sum_i \pi_i = b$. When all resulting probabilities are valid ($\tilde{\pi}_i \leq 1$), the closed-form solution is:
 
 $$\tilde{\pi}_i = b \cdot \frac{u_i}{\sum_{j=1}^{n} u_j}$$
 
+
 When some uncertainty scores are large enough to push $\tilde{\pi}_i$ above 1, numerical optimisation finds the optimal solution satisfying the constraints.
 
-Uncertainty scores must be strictly positive: $u_i > 0$ for every sample. A zero or negative score would assign a zero probability to that sample, making it permanently unselectable and violating the IPW requirement $\pi_i > 0$ for valid inference.
+Uncertainty scores must be strictly positive: $u_i > 0$ for every sample. A zero or negative score would assign a zero probability to that sample, making it unselectable.
 
 ### Sampling procedure
 
