@@ -6,10 +6,15 @@ on:
       - "v*"         # automated PyPi publish on tag push of the form vX.Y.Z
   workflow_dispatch: # manual TestPyPI publish
 
+permissions: {}
+
 jobs:
   build:
     name: Build distribution 📦
     runs-on: ubuntu-latest
+
+    permissions:
+        contents: read
 
     steps:
       - uses: actions/checkout@v6.0.2
@@ -17,13 +22,13 @@ jobs:
           persist-credentials: false
 
       - name: Install uv
-        uses: astral-sh/setup-uv@v7.4.0
+        uses: astral-sh/setup-uv@v8.1.0
 
       - name: Build a binary wheel and a source tarball
         run: make build
 
       - name: Store the distribution packages
-        uses: actions/upload-artifact@v7.0.0
+        uses: actions/upload-artifact@v7.0.1
         with:
           name: python-package-distributions
           path: dist/
@@ -48,7 +53,7 @@ jobs:
           name: python-package-distributions
           path: dist/
       - name: Publish distribution 📦 to PyPI
-        uses: pypa/gh-action-pypi-publish@v1.13.0
+        uses: pypa/gh-action-pypi-publish@v1.14.0
         with:
           verbose: true
 
@@ -72,7 +77,7 @@ jobs:
           name: python-package-distributions
           path: dist/
       - name: Publish distribution 📦 to TestPyPI
-        uses: pypa/gh-action-pypi-publish@v1.13.0
+        uses: pypa/gh-action-pypi-publish@v1.14.0
         with:
           repository-url: https://test.pypi.org/legacy/
           verbose: true
