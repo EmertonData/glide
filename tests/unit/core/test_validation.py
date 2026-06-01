@@ -89,17 +89,17 @@ def test_get_non_zero_mask_with_zero_emits_warning():
 
 def test_validate_y_proxy_delegates():
     with (
-        patch("glide.core.validation._validate_has_no_nan") as mock_nan,
-        patch("glide.core.validation._validate_non_constant") as mock_non_constant,
+        patch("glide.core.validation._validate_has_no_nan") as mock_validate_has_no_nan,
+        patch("glide.core.validation._validate_non_constant") as mock_validate_non_constant,
     ):
         arr = np.array([1.0, 2.0])
         _validate_y_proxy(arr)
-        mock_nan.assert_called_once()
-        np.testing.assert_array_equal(mock_nan.call_args[0][0], arr)
-        assert mock_nan.call_args[0][1] == "y_proxy"
-        mock_non_constant.assert_called_once()
-        np.testing.assert_array_equal(mock_non_constant.call_args[0][0], arr)
-        assert mock_non_constant.call_args[0][1] == "'y_proxy' values are constant."
+        mock_validate_has_no_nan.assert_called_once()
+        np.testing.assert_array_equal(mock_validate_has_no_nan.call_args[0][0], arr)
+        assert mock_validate_has_no_nan.call_args[0][1] == "y_proxy"
+        mock_validate_non_constant.assert_called_once()
+        np.testing.assert_array_equal(mock_validate_non_constant.call_args[0][0], arr)
+        assert mock_validate_non_constant.call_args[0][1] == "'y_proxy' values are constant."
 
 
 # --- _validate_y_true ---
@@ -115,13 +115,13 @@ def test_validate_y_true_only_nans():
 
 
 def test_validate_y_true_delegates_to_validate_non_constant():
-    with patch("glide.core.validation._validate_non_constant") as mock:
+    with patch("glide.core.validation._validate_non_constant") as mock_validate_non_constant:
         arr = np.array([1.0, 1.0, np.nan])
         _validate_y_true(arr)
-        mock.assert_called_once()
+        mock_validate_non_constant.assert_called_once()
         labeled = arr[~np.isnan(arr)]
-        np.testing.assert_array_equal(mock.call_args[0][0], labeled)
-        assert mock.call_args[0][1] == "'y_true' labeled values are constant."
+        np.testing.assert_array_equal(mock_validate_non_constant.call_args[0][0], labeled)
+        assert mock_validate_non_constant.call_args[0][1] == "'y_true' labeled values are constant."
 
 
 # --- _validate_label_prob_consistency ---
@@ -173,21 +173,21 @@ def test_validate_equal_lengths_three_arrays():
 
 def test_validate_y_true_burn_in_delegates():
     with (
-        patch("glide.core.validation._validate_non_empty") as mock_non_empty,
-        patch("glide.core.validation._validate_has_no_nan") as mock_nan,
-        patch("glide.core.validation._validate_non_constant") as mock_non_constant,
+        patch("glide.core.validation._validate_non_empty") as mock_validate_non_empty,
+        patch("glide.core.validation._validate_has_no_nan") as mock_validate_has_no_nan,
+        patch("glide.core.validation._validate_non_constant") as mock_validate_non_constant,
     ):
         arr = np.array([1.0, 2.0])
         _validate_y_true_burn_in(arr)
-        mock_non_empty.assert_called_once()
-        np.testing.assert_array_equal(mock_non_empty.call_args[0][0], arr)
-        assert mock_non_empty.call_args[0][1] == "y_true"
-        mock_nan.assert_called_once()
-        np.testing.assert_array_equal(mock_nan.call_args[0][0], arr)
-        assert mock_nan.call_args[0][1] == "y_true"
-        mock_non_constant.assert_called_once()
-        np.testing.assert_array_equal(mock_non_constant.call_args[0][0], arr)
-        assert mock_non_constant.call_args[0][1] == "'y_true' label values are constant."
+        mock_validate_non_empty.assert_called_once()
+        np.testing.assert_array_equal(mock_validate_non_empty.call_args[0][0], arr)
+        assert mock_validate_non_empty.call_args[0][1] == "y_true"
+        mock_validate_has_no_nan.assert_called_once()
+        np.testing.assert_array_equal(mock_validate_has_no_nan.call_args[0][0], arr)
+        assert mock_validate_has_no_nan.call_args[0][1] == "y_true"
+        mock_validate_non_constant.assert_called_once()
+        np.testing.assert_array_equal(mock_validate_non_constant.call_args[0][0], arr)
+        assert mock_validate_non_constant.call_args[0][1] == "'y_true' label values are constant."
 
 
 # --- _validate_non_empty ---
@@ -251,30 +251,30 @@ def test_validate_bounds_custom_error_message():
 
 def test_validate_uncertainties_delegates():
     with (
-        patch("glide.core.validation._validate_has_no_nan") as mock_nan,
-        patch("glide.core.validation._validate_bounds") as mock_bounds,
+        patch("glide.core.validation._validate_has_no_nan") as mock_validate_has_no_nan,
+        patch("glide.core.validation._validate_bounds") as mock_validate_bounds,
     ):
         arr = np.array([0.1, 0.9])
         _validate_uncertainties(arr)
-        mock_nan.assert_called_once()
-        np.testing.assert_array_equal(mock_nan.call_args[0][0], arr)
-        assert mock_nan.call_args[0][1] == "uncertainties"
-        mock_bounds.assert_called_once()
-        np.testing.assert_array_equal(mock_bounds.call_args[0][0], arr)
-        assert mock_bounds.call_args[0][1] == "uncertainties"
-        assert mock_bounds.call_args[1]["lower"] == 0
-        assert mock_bounds.call_args[1]["left_inclusive"] is False
+        mock_validate_has_no_nan.assert_called_once()
+        np.testing.assert_array_equal(mock_validate_has_no_nan.call_args[0][0], arr)
+        assert mock_validate_has_no_nan.call_args[0][1] == "uncertainties"
+        mock_validate_bounds.assert_called_once()
+        np.testing.assert_array_equal(mock_validate_bounds.call_args[0][0], arr)
+        assert mock_validate_bounds.call_args[0][1] == "uncertainties"
+        assert mock_validate_bounds.call_args[1]["lower"] == 0
+        assert mock_validate_bounds.call_args[1]["left_inclusive"] is False
         expected_msg = "'uncertainties' must all be strictly positive; got a non-positive value."
-        assert mock_bounds.call_args[1]["error_message"] == expected_msg
+        assert mock_validate_bounds.call_args[1]["error_message"] == expected_msg
 
 
 # --- _validate_strictly_positive ---
 
 
 def test_validate_strictly_positive_delegates():
-    with patch("glide.core.validation._validate_bounds") as mock:
+    with patch("glide.core.validation._validate_bounds") as mock_validate_bounds:
         _validate_strictly_positive(1.0, "x")
-        mock.assert_called_once_with(
+        mock_validate_bounds.assert_called_once_with(
             1.0, "x", lower=0, left_inclusive=False, error_message="'x' must be strictly positive; got 1.0."
         )
 
@@ -283,25 +283,25 @@ def test_validate_strictly_positive_delegates():
 
 
 def test_validate_probabilities_delegates():
-    with patch("glide.core.validation._validate_bounds") as mock:
+    with patch("glide.core.validation._validate_bounds") as mock_validate_bounds:
         arr = np.array([0.0, 1.0])
         _validate_probabilities(arr)
-        mock.assert_called_once()
-        np.testing.assert_array_equal(mock.call_args[0][0], arr)
-        assert mock.call_args[0][1] == "Probabilities"
-        assert mock.call_args[1]["lower"] == 0
-        assert mock.call_args[1]["upper"] == 1
-        assert mock.call_args[1]["error_message"] == "Probabilities must be in [0, 1]."
+        mock_validate_bounds.assert_called_once()
+        np.testing.assert_array_equal(mock_validate_bounds.call_args[0][0], arr)
+        assert mock_validate_bounds.call_args[0][1] == "Probabilities"
+        assert mock_validate_bounds.call_args[1]["lower"] == 0
+        assert mock_validate_bounds.call_args[1]["upper"] == 1
+        assert mock_validate_bounds.call_args[1]["error_message"] == "Probabilities must be in [0, 1]."
 
 
 # --- _validate_budget_bound ---
 
 
 def test_validate_budget_bound_delegates():
-    with patch("glide.core.validation._validate_bounds") as mock:
+    with patch("glide.core.validation._validate_bounds") as mock_validate_bounds:
         _validate_budget_bound(3, n_max=5)
         expected_msg = "'budget' must not exceed the number of samples; got budget=3 but the dataset has 5 elements."
-        mock.assert_called_once_with(3, "budget", upper=5, error_message=expected_msg)
+        mock_validate_bounds.assert_called_once_with(3, "budget", upper=5, error_message=expected_msg)
 
 
 # --- _validate_literal ---

@@ -133,8 +133,10 @@ class CostOptimalSampler:
     ) -> float:
         candidates = np.unique(uncertainties)
         if y_proxy_cost == 0:
-            # if y_proxy_cost is zero, exclude the highest uncertainty value to
-            # avoid prob_above = 0 in _compute_gamma
+            # if y_proxy_cost is zero and the highest uncertainty is tried as a candidate for tau
+            # this leads to prob_above = "fraction of uncertainties > tau" = 0 in _compute_gamma
+            # -> possibly gamma_star = 0 -> pi_values contains zeros -> zero division in _compute_objective
+            # avoid this by excluding the highest uncertainty from candidate values for tau
             candidates = candidates[:-1]
         objectives = [self._compute_objective(tau, uncertainties, y_true_cost, y_proxy_cost) for tau in candidates]
         optimal_tau = candidates[np.argmin(objectives)]
