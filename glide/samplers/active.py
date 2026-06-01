@@ -92,7 +92,6 @@ class ActiveSampler:
             zero, or negative.
         """
         _validate_is_integer(budget, "budget")
-
         _validate_strictly_positive(budget, "budget")
         _validate_budget_bound(budget, len(uncertainties))
         _validate_uncertainties(uncertainties)

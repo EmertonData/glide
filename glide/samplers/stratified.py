@@ -50,12 +50,8 @@ class StratifiedSampler:
     array([0, 1, 1, 0, 1, 0, 1, 0])
     """
 
-    def _validate(
-        self,
-        y_proxy: NDArray,
-        groups: NDArray,
-        budget: int,
-    ) -> None:
+    def _validate(self, y_proxy: NDArray, groups: NDArray, budget: int, strategy: str) -> None:
+        _validate_literal(strategy, "strategy", ["proportional", "neyman"])
         _validate_is_integer(budget, "budget")
         _validate_strictly_positive(budget, "budget")
         _validate_budget_bound(budget, len(y_proxy))
@@ -190,8 +186,7 @@ class StratifiedSampler:
             - If ``budget`` is too low and results in zero allocations for some stratum.
             - If ``budget`` exceeds the total number of samples in the input.
         """
-        self._validate(y_proxy, groups, budget)
-        _validate_literal(strategy, "strategy", ["proportional", "neyman"])
+        self._validate(y_proxy, groups, budget, strategy)
 
         if strategy == "proportional":
             allocation = self._proportional_allocation(groups, budget)

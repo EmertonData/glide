@@ -124,43 +124,6 @@ def test_validate_y_true_delegates_to_validate_non_constant():
         assert mock.call_args[0][1] == "'y_true' labeled values are constant."
 
 
-# --- _validate_uncertainties ---
-
-
-def test_validate_uncertainties_delegates():
-    with (
-        patch("glide.core.validation._validate_has_no_nan") as mock_nan,
-        patch("glide.core.validation._validate_bounds") as mock_bounds,
-    ):
-        arr = np.array([0.1, 0.9])
-        _validate_uncertainties(arr)
-        mock_nan.assert_called_once()
-        np.testing.assert_array_equal(mock_nan.call_args[0][0], arr)
-        assert mock_nan.call_args[0][1] == "uncertainties"
-        mock_bounds.assert_called_once()
-        np.testing.assert_array_equal(mock_bounds.call_args[0][0], arr)
-        assert mock_bounds.call_args[0][1] == "uncertainties"
-        assert mock_bounds.call_args[1]["lower"] == 0
-        assert mock_bounds.call_args[1]["left_inclusive"] is False
-        expected_msg = "'uncertainties' must all be strictly positive; got a non-positive value."
-        assert mock_bounds.call_args[1]["error_message"] == expected_msg
-
-
-# --- _validate_probabilities ---
-
-
-def test_validate_probabilities_delegates():
-    with patch("glide.core.validation._validate_bounds") as mock:
-        arr = np.array([0.0, 1.0])
-        _validate_probabilities(arr)
-        mock.assert_called_once()
-        np.testing.assert_array_equal(mock.call_args[0][0], arr)
-        assert mock.call_args[0][1] == "Probabilities"
-        assert mock.call_args[1]["lower"] == 0
-        assert mock.call_args[1]["upper"] == 1
-        assert mock.call_args[1]["error_message"] == "Probabilities must be in [0, 1]."
-
-
 # --- _validate_label_prob_consistency ---
 
 
@@ -227,17 +190,6 @@ def test_validate_y_true_burn_in_delegates():
         assert mock_non_constant.call_args[0][1] == "'y_true' label values are constant."
 
 
-# --- _validate_strictly_positive ---
-
-
-def test_validate_strictly_positive_delegates():
-    with patch("glide.core.validation._validate_bounds") as mock:
-        _validate_strictly_positive(1.0, "x")
-        mock.assert_called_once_with(
-            1.0, "x", lower=0, left_inclusive=False, error_message="'x' must be strictly positive; got 1.0."
-        )
-
-
 # --- _validate_non_empty ---
 
 
@@ -245,7 +197,7 @@ def test_validate_non_empty_valid():
     _validate_non_empty([1, 2], "x")
 
 
-def test_validate_non_empty_empty():
+def test_validate_non_empty_raises():
     with pytest.raises(ValueError, match="'x' must be non-empty"):
         _validate_non_empty([], "x")
 
@@ -259,7 +211,7 @@ def test_validate_bounds_closed_valid(value):
 
 
 @pytest.mark.parametrize("bad_value", [-1.1, 1.1])
-def test_validate_bounds_closed_invalid(bad_value):
+def test_validate_bounds_closed_raises(bad_value):
     with pytest.raises(ValueError, match="'x' must be in \\[-1, 1\\]"):
         _validate_bounds(bad_value, "x", lower=-1, upper=1)
 
@@ -270,7 +222,7 @@ def test_validate_bounds_open_valid(value):
 
 
 @pytest.mark.parametrize("bad_value", [-0.1, 0.0, 1.0, 1.1])
-def test_validate_bounds_open_invalid(bad_value):
+def test_validate_bounds_open_raises(bad_value):
     with pytest.raises(ValueError, match="'x' must be in \\(0, 1\\)"):
         _validate_bounds(bad_value, "x", lower=0, upper=1, left_inclusive=False, right_inclusive=False)
 
@@ -284,7 +236,7 @@ def test_validate_bounds_array_valid():
     _validate_bounds(np.array([0.1, 0.9]), "x", lower=0, upper=1, left_inclusive=False, right_inclusive=False)
 
 
-def test_validate_bounds_array_invalid():
+def test_validate_bounds_array_raises():
     with pytest.raises(ValueError, match="'x' must be in"):
         _validate_bounds(np.array([0.5, 1.0]), "x", lower=0, upper=1, left_inclusive=False, right_inclusive=False)
 
@@ -294,17 +246,52 @@ def test_validate_bounds_custom_error_message():
         _validate_bounds(2.0, "x", upper=1, error_message="custom error")
 
 
-# --- _validate_literal ---
+# --- _validate_uncertainties ---
 
 
-@pytest.mark.parametrize("alternative", ["two-sided", "larger", "smaller"])
-def test_validate_literal_valid(alternative, alternatives):
-    _validate_literal(alternative, "param", alternatives)
+def test_validate_uncertainties_delegates():
+    with (
+        patch("glide.core.validation._validate_has_no_nan") as mock_nan,
+        patch("glide.core.validation._validate_bounds") as mock_bounds,
+    ):
+        arr = np.array([0.1, 0.9])
+        _validate_uncertainties(arr)
+        mock_nan.assert_called_once()
+        np.testing.assert_array_equal(mock_nan.call_args[0][0], arr)
+        assert mock_nan.call_args[0][1] == "uncertainties"
+        mock_bounds.assert_called_once()
+        np.testing.assert_array_equal(mock_bounds.call_args[0][0], arr)
+        assert mock_bounds.call_args[0][1] == "uncertainties"
+        assert mock_bounds.call_args[1]["lower"] == 0
+        assert mock_bounds.call_args[1]["left_inclusive"] is False
+        expected_msg = "'uncertainties' must all be strictly positive; got a non-positive value."
+        assert mock_bounds.call_args[1]["error_message"] == expected_msg
 
 
-def test_validate_literal_invalid(alternatives):
-    with pytest.raises(ValueError, match="'param' must be"):
-        _validate_literal("something", "param", alternatives)
+# --- _validate_strictly_positive ---
+
+
+def test_validate_strictly_positive_delegates():
+    with patch("glide.core.validation._validate_bounds") as mock:
+        _validate_strictly_positive(1.0, "x")
+        mock.assert_called_once_with(
+            1.0, "x", lower=0, left_inclusive=False, error_message="'x' must be strictly positive; got 1.0."
+        )
+
+
+# --- _validate_probabilities ---
+
+
+def test_validate_probabilities_delegates():
+    with patch("glide.core.validation._validate_bounds") as mock:
+        arr = np.array([0.0, 1.0])
+        _validate_probabilities(arr)
+        mock.assert_called_once()
+        np.testing.assert_array_equal(mock.call_args[0][0], arr)
+        assert mock.call_args[0][1] == "Probabilities"
+        assert mock.call_args[1]["lower"] == 0
+        assert mock.call_args[1]["upper"] == 1
+        assert mock.call_args[1]["error_message"] == "Probabilities must be in [0, 1]."
 
 
 # --- _validate_budget_bound ---
@@ -315,6 +302,19 @@ def test_validate_budget_bound_delegates():
         _validate_budget_bound(3, n_max=5)
         expected_msg = "'budget' must not exceed the number of samples; got budget=3 but the dataset has 5 elements."
         mock.assert_called_once_with(3, "budget", upper=5, error_message=expected_msg)
+
+
+# --- _validate_literal ---
+
+
+@pytest.mark.parametrize("alternative", ["two-sided", "larger", "smaller"])
+def test_validate_literal_valid(alternative, alternatives):
+    _validate_literal(alternative, "param", alternatives)
+
+
+def test_validate_literal_raises(alternatives):
+    with pytest.raises(ValueError, match="'param' must be"):
+        _validate_literal("something", "param", alternatives)
 
 
 # --- _validate_sample_sizes ---
@@ -342,7 +342,7 @@ def test_validate_binary_or_nan_valid(valid):
     _validate_binary_or_nan(valid, "x")
 
 
-def test_validate_binary_or_nan_invalid():
+def test_validate_binary_or_nan_raises():
     with pytest.raises(ValueError, match="'x' must only contain 0, 1, and np.nan"):
         _validate_binary_or_nan(np.array([0.5, 1.0]), "x")
 
