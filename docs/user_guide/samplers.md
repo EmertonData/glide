@@ -81,7 +81,7 @@ Note that uncertainty scores must be strictly positive. The `ActiveSampler` requ
 
 ---
 
-## Cost Optimal Random Sampler
+## Cost-Optimal Random Sampler
 
 The `CostOptimalRandomSampler` addresses the following setting: two annotation sources are available, one **cheap but error-prone** (the proxy rater) and one **expensive but highly reliable** (the ground truth rater). A budget limit is imposed, potentially limiting the number of samples that can be annotated. The sampler determines how many samples are affordable and the proxy is queried for all of them. The sampler additionally decides which samples to also send to the expensive rater, so that downstream estimation of the mean ground truth rating is as precise as possible within the available budget.
 
@@ -146,7 +146,7 @@ where $\xi_i = 1$ means the sample additionally receives ground truth annotation
 
 ---
 
-## Cost Optimal Sampler
+## Cost-Optimal Sampler
 
 The `CostOptimalSampler` generalizes the `CostOptimalRandomSampler`. Two annotation sources are available: one **cheap but error-prone** (the proxy rater) and one **expensive but highly reliable** (the ground truth rater). A budget limit is imposed, potentially limiting the number of samples that can be annotated. Rather than querying the ground truth rater at a **fixed probability** for every sample, the `CostOptimalSampler` computes an **active policy**: a per-sample annotation probability that depends on how unreliable the proxy label is expected to be for that sample. Samples where the proxy is likely to err are annotated more frequently; samples where the proxy is reliable are annotated at a lower rate. This concentrates the annotation budget where it reduces variance the most.
 

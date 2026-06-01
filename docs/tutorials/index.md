@@ -8,8 +8,8 @@ Use the table below to find the tutorial that matches your situation.
 |---|---|---|---|---|---|
 | No | No | No | Uniform random | PPI++ | [Standard annotation budget (PPI++)](ppi.ipynb) |
 | No | No | Yes | Stratified uniform | Stratified PPI++ | [Stratified data (Stratified PPI++)](stratified_ppi.ipynb) |
-| No | Yes | — | Uncertainty-aware | ASI | [Uncertainty scores available (ASI)](asi.ipynb) |
-| Yes | No | — | Cost-optimal random | PPI++ | [Cost estimates available (Cost-Optimal Random Sampling)](cost_optimal_random.ipynb) |
-| Yes | Yes | — | Cost-optimal | ASI | [Cost and uncertainty scores available (Cost-Optimal Sampling)](cost_optimal.ipynb) |
+| No | Yes | No | Uncertainty-aware | ASI | [Uncertainty scores available (ASI)](asi.ipynb) |
+| Yes | No | No | Cost-optimal random | PPI++ | [Cost estimates available (Cost-Optimal Random Sampling)](cost_optimal_random.ipynb) |
+| Yes | Yes | No | Cost-optimal | ASI | [Cost and uncertainty scores available (Cost-Optimal Sampling)](cost_optimal.ipynb) |
 
-If your data contains fewer than 50 human labels: use the PTD variant of the estimators above (`PTDMeanEstimator` for PPI++, `StratifiedPTDMeanEstimator` for Stratified PPI and `IPWPTDMeanEstimator` for ASI). Apply this criterion stratum-wise in the stratified case. The tutorial workflow for the respective estimators is identical; only the estimator class changes.
+If your data contains fewer than 50 human labels: use the PTD variant of the estimators above (`PTDMeanEstimator` for PPI++, `StratifiedPTDMeanEstimator` for Stratified PPI++ and `IPWPTDMeanEstimator` for ASI). Apply this criterion stratum-wise in the stratified case. The tutorial workflow for the respective estimators is identical; only the estimator class changes.
