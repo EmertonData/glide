@@ -137,15 +137,17 @@ To compute $\pi^*$, estimates of $\text{Var}(Y)$ and $\text{MSE}(Y, \tilde{Y})$ 
 
 ### Sampling procedure
 
+Each sample is sent to the expensive rater via a Bernoulli trial:
+
+$$\xi_i \sim \mathrm{Bernoulli}(\pi_i)$$
+
+where $\xi_i = 1$ means the sample additionally receives ground truth annotation and $\xi_i = 0$ means only the proxy label is used. All processed samples share the drawing probability $\pi_i = \pi^*$. 
+
 Since the proxy is queried for every processed sample, the actual cost of sample $i$ is $c_{\tilde{y}} + c_y \cdot \xi_i$, with expected value:
 
 $$\mathbb{E}[\text{cost}_i] = c_{\tilde{y}} + c_y \cdot \pi^*$$
 
-Each sample is independently sent to the expensive rater via a Bernoulli trial:
-
-$$\xi_i \sim \mathrm{Bernoulli}(\pi^*)$$
-
-where $\xi_i = 1$ means the sample additionally receives ground truth annotation and $\xi_i = 0$ means only the proxy label is used. All processed samples share the drawing probability $\pi_i = \pi^*$. The draws are performed one by one, accumulating the actual cost of each sample until the budget $b$ is exhausted. Samples not reached when the budget runs out receive $\pi_i = 0$ and $\xi_i = \mathrm{NaN}$, indicating no draw was performed.
+The draws are performed one by one, accumulating the actual cost of each sample until the budget $b$ is exhausted. Samples not reached when the budget runs out receive $\pi_i = 0$ and $\xi_i = \mathrm{NaN}$, indicating no draw was performed.
 
 To ensure the cutoff does not depend on the input order, the samples are shuffled before the draws begin and the results are returned in the original order.
 
@@ -201,15 +203,15 @@ In order to compute the optimal policy, the ground truth label variance $\mathrm
 
 ### Sampling procedure
 
-The proxy is queried for every processed sample at cost $c_{\tilde{y}}$, while the ground truth label is additionally requested with probability $\pi_i$ at cost $c_y$. The actual cost of sample $i$ is $c_{\tilde{y}} + c_y \cdot \xi_i$, with expected value:
-
-$$\mathbb{E}[\text{cost}_i] = c_{\tilde{y}} + c_y \cdot \pi_i$$
-
-Each sample is independently sent to the expensive rater via a Bernoulli trial:
+Each sample is sent to the expensive rater via a Bernoulli trial:
 
 $$\xi_i \sim \mathrm{Bernoulli}(\pi_i)$$
 
-where $\xi_i = 1$ means the sample additionally receives ground truth annotation and $\xi_i = 0$ means only the proxy label is used. The draws are performed one by one, accumulating the actual cost of each sample until the budget $b$ is exhausted. Samples not reached when the budget runs out receive $\pi_i = 0$ and $\xi_i = \mathrm{NaN}$, indicating no draw was performed.
+where $\xi_i = 1$ means the sample additionally receives ground truth annotation and $\xi_i = 0$ means only the proxy label is used. Since the proxy is queried for every sample, the actual cost of sample $i$ is $c_{\tilde{y}} + c_y \cdot \xi_i$, with expected value:
+
+$$\mathbb{E}[\text{cost}_i] = c_{\tilde{y}} + c_y \cdot \pi_i$$
+
+The draws are performed one by one, accumulating the actual cost of each sample until the budget $b$ is exhausted. Samples not reached when the budget runs out receive $\pi_i = 0$ and $\xi_i = \mathrm{NaN}$, indicating no draw was performed.
 
 To ensure the cutoff does not depend on the input order, the samples are shuffled before the draws begin and the results are returned in the original order.
 
