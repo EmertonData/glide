@@ -37,12 +37,6 @@ def _validate_y_true(y_true: NDArray, stratum_id: Optional[Hashable] = None) -> 
         raise ValueError(f"'y_true' labeled values are constant{stratum_part}.")
 
 
-def _validate_uncertainties(uncertainties: NDArray) -> None:
-    _validate_has_no_nan(uncertainties, "uncertainties")
-    if np.any(uncertainties <= 0.0):
-        raise ValueError("'uncertainties' must all be strictly positive; got a non-positive value.")
-
-
 def _validate_label_prob_consistency(labeled_mask: NDArray, pi: NDArray) -> None:
     if np.any(labeled_mask & (pi == 0)):
         raise ValueError("Samples with zero probability of being labeled cannot be labeled.")
@@ -74,7 +68,7 @@ def _validate_non_empty(array: List | NDArray, name: str) -> None:
         raise ValueError(f"'{name}' must be non-empty.")
 
 
-def _validate_within_bounds(
+def _validate_bounds(
     value: Union[float, NDArray],
     name: str,
     lower: float = -np.inf,
@@ -96,18 +90,29 @@ def _validate_within_bounds(
         raise ValueError(message)
 
 
+def _validate_uncertainties(uncertainties: NDArray) -> None:
+    _validate_has_no_nan(uncertainties, "uncertainties")
+    _validate_bounds(
+        uncertainties,
+        "uncertainties",
+        lower=0,
+        left_inclusive=False,
+        error_message="'uncertainties' must all be strictly positive; got a non-positive value.",
+    )
+
+
 def _validate_strictly_positive(value: float, name: str) -> None:
-    _validate_within_bounds(
+    _validate_bounds(
         value, name, lower=0, left_inclusive=False, error_message=f"'{name}' must be strictly positive; got {value}."
     )
 
 
 def _validate_probabilities(values: NDArray) -> None:
-    _validate_within_bounds(values, "Probabilities", lower=0, upper=1, error_message="Probabilities must be in [0, 1].")
+    _validate_bounds(values, "Probabilities", lower=0, upper=1, error_message="Probabilities must be in [0, 1].")
 
 
 def _validate_budget_bound(budget: int, n_max: int) -> None:
-    _validate_within_bounds(
+    _validate_bounds(
         budget,
         "budget",
         upper=n_max,

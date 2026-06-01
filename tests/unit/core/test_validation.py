@@ -1,4 +1,5 @@
 from typing import List
+from unittest.mock import patch
 
 import numpy as np
 import pytest
@@ -8,6 +9,7 @@ from glide.core.validation import (
     _get_non_zero_mask,
     _is_constant,
     _validate_binary_or_nan,
+    _validate_bounds,
     _validate_budget_bound,
     _validate_equal_lengths,
     _validate_has_no_nan,
@@ -19,7 +21,6 @@ from glide.core.validation import (
     _validate_sample_sizes,
     _validate_strictly_positive,
     _validate_uncertainties,
-    _validate_within_bounds,
     _validate_y_proxy,
     _validate_y_true,
     _validate_y_true_burn_in,
@@ -85,22 +86,18 @@ def test_get_non_zero_mask_with_zero_emits_warning():
 # --- _validate_y_proxy ---
 
 
-def test_validate_y_proxy_valid():
-    _validate_y_proxy(np.array([1.0, 2.0]))
-
-
-def test_validate_y_proxy_nan():
-    with pytest.raises(ValueError, match="'y_proxy' contains NaN"):
-        _validate_y_proxy(np.array([1.0, float("nan")]))
+def test_validate_y_proxy_delegates_to_validate_has_no_nan():
+    with patch("glide.core.validation._validate_has_no_nan") as mock:
+        arr = np.array([1.0, 2.0])
+        _validate_y_proxy(arr)
+        mock.assert_called_once()
+        np.testing.assert_array_equal(mock.call_args[0][0], arr)
+        assert mock.call_args[0][1] == "y_proxy"
 
 
 def test_validate_y_proxy_constant():
     with pytest.raises(ValueError, match="'y_proxy' values are constant"):
         _validate_y_proxy(np.array([1.0, 1.0]))
-
-
-def test_validate_y_proxy_stratum_valid():
-    _validate_y_proxy(np.array([1.0, 2.0]), stratum_id="A")
 
 
 def test_validate_y_proxy_stratum_constant():
@@ -128,31 +125,38 @@ def test_validate_y_true_constant():
 # --- _validate_uncertainties ---
 
 
-def test_validate_uncertainties_valid():
-    _validate_uncertainties(np.array([0.1, 0.9]))
-
-
-def test_validate_uncertainties_nan():
-    with pytest.raises(ValueError, match="NaN"):
-        _validate_uncertainties(np.array([float("nan"), 0.5]))
-
-
-def test_validate_uncertainties_non_positive():
-    with pytest.raises(ValueError, match="non-positive"):
-        _validate_uncertainties(np.array([0.0, 0.5]))
+def test_validate_uncertainties_delegates():
+    with (
+        patch("glide.core.validation._validate_has_no_nan") as mock_nan,
+        patch("glide.core.validation._validate_bounds") as mock_bounds,
+    ):
+        arr = np.array([0.1, 0.9])
+        _validate_uncertainties(arr)
+        mock_nan.assert_called_once()
+        np.testing.assert_array_equal(mock_nan.call_args[0][0], arr)
+        assert mock_nan.call_args[0][1] == "uncertainties"
+        mock_bounds.assert_called_once()
+        np.testing.assert_array_equal(mock_bounds.call_args[0][0], arr)
+        assert mock_bounds.call_args[0][1] == "uncertainties"
+        assert mock_bounds.call_args[1]["lower"] == 0
+        assert mock_bounds.call_args[1]["left_inclusive"] is False
+        expected_msg = "'uncertainties' must all be strictly positive; got a non-positive value."
+        assert mock_bounds.call_args[1]["error_message"] == expected_msg
 
 
 # --- _validate_probabilities ---
 
 
-def test_validate_probabilities_valid():
-    _validate_probabilities(np.array([0.0, 1.0]))
-
-
-@pytest.mark.parametrize("bad_pi", [-0.5, 1.5])
-def test_validate_probabilities_out_of_range(bad_pi):
-    with pytest.raises(ValueError, match="Probabilities must be in"):
-        _validate_probabilities(np.array([0.5, bad_pi]))
+def test_validate_probabilities_delegates():
+    with patch("glide.core.validation._validate_bounds") as mock:
+        arr = np.array([0.0, 1.0])
+        _validate_probabilities(arr)
+        mock.assert_called_once()
+        np.testing.assert_array_equal(mock.call_args[0][0], arr)
+        assert mock.call_args[0][1] == "Probabilities"
+        assert mock.call_args[1]["lower"] == 0
+        assert mock.call_args[1]["upper"] == 1
+        assert mock.call_args[1]["error_message"] == "Probabilities must be in [0, 1]."
 
 
 # --- _validate_label_prob_consistency ---
@@ -202,18 +206,19 @@ def test_validate_equal_lengths_three_arrays():
 # --- _validate_y_true_burn_in ---
 
 
-def test_validate_y_true_burn_in_valid():
-    _validate_y_true_burn_in(np.array([1.0, 2.0]))
-
-
-def test_validate_y_true_burn_in_empty():
-    with pytest.raises(ValueError, match="non-empty"):
-        _validate_y_true_burn_in(np.array([]))
-
-
-def test_validate_y_true_burn_in_nan():
-    with pytest.raises(ValueError, match="NaN"):
-        _validate_y_true_burn_in(np.array([1.0, float("nan")]))
+def test_validate_y_true_burn_in_delegates():
+    with (
+        patch("glide.core.validation._validate_non_empty") as mock_non_empty,
+        patch("glide.core.validation._validate_has_no_nan") as mock_nan,
+    ):
+        arr = np.array([1.0, 2.0])
+        _validate_y_true_burn_in(arr)
+        mock_non_empty.assert_called_once()
+        np.testing.assert_array_equal(mock_non_empty.call_args[0][0], arr)
+        assert mock_non_empty.call_args[0][1] == "y_true"
+        mock_nan.assert_called_once()
+        np.testing.assert_array_equal(mock_nan.call_args[0][0], arr)
+        assert mock_nan.call_args[0][1] == "y_true"
 
 
 def test_validate_y_true_burn_in_constant():
@@ -224,14 +229,12 @@ def test_validate_y_true_burn_in_constant():
 # --- _validate_strictly_positive ---
 
 
-def test_validate_strictly_positive_valid():
-    _validate_strictly_positive(1.0, "x")
-
-
-@pytest.mark.parametrize("bad_value", [0.0, -1.0])
-def test_validate_strictly_positive_invalid(bad_value):
-    with pytest.raises(ValueError, match="must be strictly positive"):
-        _validate_strictly_positive(bad_value, "x")
+def test_validate_strictly_positive_delegates():
+    with patch("glide.core.validation._validate_bounds") as mock:
+        _validate_strictly_positive(1.0, "x")
+        mock.assert_called_once_with(
+            1.0, "x", lower=0, left_inclusive=False, error_message="'x' must be strictly positive; got 1.0."
+        )
 
 
 # --- _validate_non_empty ---
@@ -246,45 +249,48 @@ def test_validate_non_empty_empty():
         _validate_non_empty([], "x")
 
 
-# --- _validate_within_bounds ---
+# --- _validate_bounds ---
 
 
 @pytest.mark.parametrize("value", [-1.0, 0.0, 1.0])
-def test_validate_within_bounds_closed_valid(value):
-    _validate_within_bounds(value, "x", lower=-1, upper=1)
+def test_validate_bounds_closed_valid(value):
+    _validate_bounds(value, "x", lower=-1, upper=1)
 
 
 @pytest.mark.parametrize("bad_value", [-1.1, 1.1])
-def test_validate_within_bounds_closed_invalid(bad_value):
+def test_validate_bounds_closed_invalid(bad_value):
     with pytest.raises(ValueError, match="'x' must be in \\[-1, 1\\]"):
-        _validate_within_bounds(bad_value, "x", lower=-1, upper=1)
+        _validate_bounds(bad_value, "x", lower=-1, upper=1)
 
 
 @pytest.mark.parametrize("value", [0.001, 0.5, 0.999])
-def test_validate_within_bounds_open_valid(value):
-    _validate_within_bounds(value, "x", lower=0, upper=1, left_inclusive=False, right_inclusive=False)
+def test_validate_bounds_open_valid(value):
+    _validate_bounds(value, "x", lower=0, upper=1, left_inclusive=False, right_inclusive=False)
 
 
 @pytest.mark.parametrize("bad_value", [-0.1, 0.0, 1.0, 1.1])
-def test_validate_within_bounds_open_invalid(bad_value):
+def test_validate_bounds_open_invalid(bad_value):
     with pytest.raises(ValueError, match="'x' must be in \\(0, 1\\)"):
-        _validate_within_bounds(bad_value, "x", lower=0, upper=1, left_inclusive=False, right_inclusive=False)
+        _validate_bounds(bad_value, "x", lower=0, upper=1, left_inclusive=False, right_inclusive=False)
 
 
-def test_validate_within_bounds_default_infinite():
-    _validate_within_bounds(-1e10, "x")
-    _validate_within_bounds(1e10, "x")
+def test_validate_bounds_default_infinite():
+    _validate_bounds(-1e10, "x")
+    _validate_bounds(1e10, "x")
 
 
-def test_validate_within_bounds_array_valid():
-    _validate_within_bounds(np.array([0.1, 0.9]), "x", lower=0, upper=1, left_inclusive=False, right_inclusive=False)
+def test_validate_bounds_array_valid():
+    _validate_bounds(np.array([0.1, 0.9]), "x", lower=0, upper=1, left_inclusive=False, right_inclusive=False)
 
 
-def test_validate_within_bounds_array_invalid():
+def test_validate_bounds_array_invalid():
     with pytest.raises(ValueError, match="'x' must be in"):
-        _validate_within_bounds(
-            np.array([0.5, 1.0]), "x", lower=0, upper=1, left_inclusive=False, right_inclusive=False
-        )
+        _validate_bounds(np.array([0.5, 1.0]), "x", lower=0, upper=1, left_inclusive=False, right_inclusive=False)
+
+
+def test_validate_bounds_custom_error_message():
+    with pytest.raises(ValueError, match="custom error"):
+        _validate_bounds(2.0, "x", upper=1, error_message="custom error")
 
 
 # --- _validate_literal ---
@@ -303,13 +309,11 @@ def test_validate_literal_invalid(alternatives):
 # --- _validate_budget_bound ---
 
 
-def test_validate_budget_bound_valid():
-    _validate_budget_bound(3, n_max=5)
-
-
-def test_validate_budget_bound_exceeds_max():
-    with pytest.raises(ValueError, match="budget"):
-        _validate_budget_bound(10, n_max=5)
+def test_validate_budget_bound_delegates():
+    with patch("glide.core.validation._validate_bounds") as mock:
+        _validate_budget_bound(3, n_max=5)
+        expected_msg = "'budget' must not exceed the number of samples; got budget=3 but the dataset has 5 elements."
+        mock.assert_called_once_with(3, "budget", upper=5, error_message=expected_msg)
 
 
 # --- _validate_sample_sizes ---

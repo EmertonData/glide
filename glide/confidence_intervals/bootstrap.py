@@ -4,7 +4,7 @@ from typing import Literal, Tuple
 import numpy as np
 from numpy.typing import NDArray
 
-from glide.core.validation import _validate_literal, _validate_within_bounds
+from glide.core.validation import _validate_bounds, _validate_literal
 
 
 @dataclass
@@ -54,9 +54,7 @@ class BootstrapConfidenceInterval:
 
     @confidence_level.setter
     def confidence_level(self, value: float) -> None:
-        _validate_within_bounds(
-            value, "confidence_level", lower=0, upper=1, left_inclusive=False, right_inclusive=False
-        )
+        _validate_bounds(value, "confidence_level", lower=0, upper=1, left_inclusive=False, right_inclusive=False)
         self._confidence_level = value
         alpha_over_two = (1 - value) / 2
         self.lower_bound = float(np.quantile(self._sorted_estimates, alpha_over_two))

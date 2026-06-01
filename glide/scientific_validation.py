@@ -3,7 +3,7 @@ from typing import Any, Callable, Dict, Tuple
 import numpy as np
 from numpy.typing import NDArray
 
-from glide.core.validation import _validate_strictly_positive, _validate_within_bounds
+from glide.core.validation import _validate_bounds, _validate_strictly_positive
 from glide.estimators import ClassicalMeanEstimator
 
 
@@ -59,7 +59,7 @@ def run_monte_carlo(
     array([0.5, 0.5])
     """
     _validate_strictly_positive(n_seeds, "n_seeds")
-    _validate_within_bounds(
+    _validate_bounds(
         confidence_levels, "confidence_levels", lower=0, upper=1, left_inclusive=False, right_inclusive=False
     )
     first_estimates = run_seed(0)
@@ -141,7 +141,7 @@ def compute_hits(
     >>> hits["M"]
     array([1., 0.])
     """
-    _validate_within_bounds(
+    _validate_bounds(
         confidence_level, "confidence_level", lower=0, upper=1, left_inclusive=False, right_inclusive=False
     )
     hits = {}
@@ -202,7 +202,7 @@ def coverage_with_error_bar(
     """
     if len(hits) == 0:
         raise ValueError("'hits' must be non-empty.")
-    _validate_within_bounds(
+    _validate_bounds(
         confidence_level, "confidence_level", lower=0, upper=1, left_inclusive=False, right_inclusive=False
     )
     estimator = ClassicalMeanEstimator()
