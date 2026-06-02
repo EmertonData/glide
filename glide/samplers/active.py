@@ -1,8 +1,10 @@
+import warnings
 from typing import Optional, Tuple, Union
 
 import numpy as np
 from numpy.random.bit_generator import SeedSequence
 from numpy.typing import NDArray
+from scipy.optimize import Bounds, LinearConstraint, minimize
 
 from glide.core.validation import (
     _validate_budget_bound,
@@ -45,6 +47,43 @@ class ActiveSampler:
     array([0., 1.])
     """
 
+    def _compute_probabilities(self, uncertainties: NDArray, budget: int) -> NDArray:
+        uncertainty_ratio = np.max(uncertainties) / np.min(uncertainties)
+        if uncertainty_ratio > 1e3:
+            warnings.warn(
+                f"Extreme uncertainty ratio detected among samples (max/min={uncertainty_ratio:.2e} > 1e3); "
+                "this may cause numerical instability.",
+                UserWarning,
+            )
+        naive_pi = budget * uncertainties / uncertainties.sum()
+        if np.max(naive_pi) <= 1.0:
+            return naive_pi
+
+        n = len(uncertainties)
+        squared_uncertainties = np.power(uncertainties, 2)
+
+        def objective(pi: NDArray) -> float:
+            result = np.sum(squared_uncertainties / pi)
+            return result
+
+        def jacobian(pi: NDArray) -> NDArray:
+            gradient = -squared_uncertainties / np.power(pi, 2)
+            return gradient
+
+        bounds = Bounds(lb=np.zeros(n), ub=np.ones(n))
+        budget_constraint = LinearConstraint(np.ones((1, n)), lb=budget, ub=budget)
+        optimization_result = minimize(
+            objective,
+            naive_pi,
+            method="trust-constr",
+            jac=jacobian,
+            constraints=[budget_constraint],
+            bounds=bounds,
+            options={"maxiter": 100},
+        )
+        result = np.minimum(optimization_result.x, 1.0)
+        return result
+
     def sample(
         self,
         uncertainties: NDArray,
@@ -53,12 +92,11 @@ class ActiveSampler:
     ) -> Tuple[NDArray, NDArray]:
         """Sample observations with probability proportional to uncertainty.
 
-        Each observation receives a drawing probability π_i proportional to
-        ``uncertainty_i``, normalised so that the raw probabilities sum to
-        ``budget`` (the expected number of selected observations). Because each
-        π_i must be a valid Bernoulli probability, values are capped at 1 before
-        the coin flip; the actual number of selected items is therefore a random
-        variable whose expectation equals at most ``budget``.
+        Each observation receives a drawing probability π_i that minimizes the variance
+        of downstream IPW-based estimators. This is equivalently done by minimizing the sum of
+        ``uncertainty_i^2 / π_i`` over all observations. Probabilities are constrained to
+        ``(0, 1]`` and sum to ``budget``. The actual number of selected items is a random
+        variable with expectation equal to ``budget``.
 
         The two returned arrays are intended for use with IPW-based downstream estimators.
         ``pi`` holds the per-sample probability of being selected. ``xi`` holds the
@@ -81,6 +119,7 @@ class ActiveSampler:
         -------
         Tuple[NDArray, NDArray]
             [0]: array of shape ``(n_samples,)``, pi with drawing probabilities in ``(0, 1]``
+                 that sum to ``budget``
             [1]: array of shape ``(n_samples,)``, xi with Bernoulli selection indicators
             (1 if selected for annotation, 0 otherwise)
 
@@ -90,6 +129,17 @@ class ActiveSampler:
             If ``budget`` is not a strictly positive integer, if ``budget``
             exceeds ``len(uncertainties)``, or if any uncertainty value is NaN,
             zero, or negative.
+
+        Warns
+        -----
+        UserWarning
+            If the ratio of the largest to the smallest uncertainty is extreme,
+            indicating potential numerical instability.
+
+        References
+        ----------
+        Zrnic, Tijana, and Emmanuel J. Candès. "Active statistical inference." In Proceedings
+        of the 41st International Conference on Machine Learning, pp. 62993-63010. 2024.
         """
         _validate_is_integer(budget, "budget")
         _validate_strictly_positive(budget, "budget")
@@ -97,9 +147,7 @@ class ActiveSampler:
         _validate_uncertainties(uncertainties)
         rng = np.random.default_rng(random_seed)
 
-        pi = budget * uncertainties / uncertainties.sum()
-        # Cap at 1: a Bernoulli probability cannot exceed 1.
-        pi = np.minimum(pi, 1.0)
+        pi = self._compute_probabilities(uncertainties, budget)
         xi = rng.binomial(n=1, p=pi).astype(float)
 
         return pi, xi
