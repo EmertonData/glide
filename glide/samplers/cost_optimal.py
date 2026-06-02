@@ -44,7 +44,7 @@ class CostOptimalSampler:
     ...     uncertainties,
     ...     y_true_cost=10.0,
     ...     y_proxy_cost=1.0,
-    ...     budget=5,
+    ...     budget=20,
     ...     random_seed=0
     ... )
     >>> float(pi[0])  # doctest: +ELLIPSIS
@@ -52,7 +52,7 @@ class CostOptimalSampler:
     >>> xi[0]
     np.float64(0.0)
     >>> np.isnan(xi[-1])
-    np.True_
+    np.False_
     """
 
     def fit(self, y_true: NDArray) -> "CostOptimalSampler":
@@ -155,13 +155,16 @@ class CostOptimalSampler:
 
         Per-sample annotation probabilities are derived from the supplied uncertainty
         scores (root mean squared errors) and the true label variance estimated by ``fit()``.
-        When the budget is tight, samples beyond a certain index in the input array are
-        excluded from sampling and receive a probability of zero.
+
+        Samples are randomly permuted before drawing and the inverse permutation is applied
+        to the output, so the returned arrays are always in the original input order. A
+        post-draw cutoff is then applied to strictly respect the budget: samples beyond the
+        cutoff are discarded and receive ``pi = 0.0`` and ``xi = NaN``.
 
         The two returned arrays are intended for use with IPW-based downstream estimators. ``pi``
         holds the per-sample probability of querying the expensive rater. ``xi`` holds the
-        annotation indicators for selected samples, with NaN marking unselected samples that
-        should be discarded before running an estimator.
+        annotation indicators for selected samples, with NaN marking samples excluded by the
+        budget cutoff.
 
         Parameters
         ----------
@@ -173,7 +176,7 @@ class CostOptimalSampler:
         y_proxy_cost : float
             Cost of one proxy label. Must be non-negative.
         budget : float
-            Total annotation budget in cost units. Must be strictly positive.
+            Total annotation budget in cost units. Must be at least ``y_true_cost + y_proxy_cost``.
         random_seed : int or SeedSequence or None, optional
             Random seed passed to ``numpy.random.default_rng`` for reproducibility.
             Pass ``None`` (the default) to use a non-deterministic seed.
@@ -185,7 +188,7 @@ class CostOptimalSampler:
             for selected samples and ``0.0`` for unselected samples.
             [1]: array of shape ``(n_samples,)``, ``xi`` with Bernoulli indicators:
             ``1.0`` if the true label was requested, ``0.0`` if only the proxy
-            was used, ``NaN`` if the sample was not selected.
+            was used, ``NaN`` if the sample was excluded by the budget cutoff.
 
         Raises
         ------
@@ -196,7 +199,7 @@ class CostOptimalSampler:
             - If ``budget`` is not strictly positive.
             - If any uncertainty value is NaN or non-positive.
             - If all uncertainty values are equal and ``y_proxy_cost`` is zero.
-            - If ``budget`` is too small to afford a single sample.
+            - If ``budget`` is too small to afford a single annotation.
 
         """
         if not hasattr(self, "_y_true_variance"):
@@ -212,27 +215,27 @@ class CostOptimalSampler:
             )
         _validate_strictly_positive(budget, "budget")
         _validate_uncertainties(uncertainties)
+        if budget < y_true_cost + y_proxy_cost:
+            raise ValueError(
+                f"'budget' is too small to afford a single annotation; got {budget}."
+                f" Minimum budget is y_true_cost + y_proxy_cost = {y_true_cost + y_proxy_cost}."
+            )
 
         tau_star = self._find_optimal_threshold(uncertainties, y_true_cost, y_proxy_cost)
         gamma_star = self._compute_gamma(tau_star, uncertainties, y_true_cost, y_proxy_cost)
         pi_all = self._compute_per_sample_probabilities(tau_star, gamma_star, uncertainties)
 
-        cumulative_costs = np.cumsum(y_true_cost * pi_all + y_proxy_cost)
-        n_affordable = np.searchsorted(cumulative_costs, budget, side="right")
-        if n_affordable < 1:
-            raise ValueError(
-                f"'budget' is too small to afford a single sample; got {budget}."
-                " Increase 'budget' or reduce 'y_true_cost'."
-            )
-
         n_samples = len(uncertainties)
-        cutoff = min(n_affordable, n_samples)
-
         rng = np.random.default_rng(random_seed)
+        order = rng.permutation(n_samples)
+        xi_all = rng.binomial(n=1, p=pi_all[order]).astype(float)
+
+        actual_costs = xi_all * y_true_cost + y_proxy_cost
+        cumsum = np.cumsum(actual_costs)
+        cutoff = np.searchsorted(cumsum, budget, side="right")
 
         pi = np.zeros(n_samples)
         xi = np.full(n_samples, np.nan)
-        pi[:cutoff] = pi_all[:cutoff]
-        xi[:cutoff] = rng.binomial(n=1, p=pi_all[:cutoff], size=cutoff).astype(float)
-
+        pi[order[:cutoff]] = pi_all[order[:cutoff]]
+        xi[order[:cutoff]] = xi_all[:cutoff]
         return pi, xi

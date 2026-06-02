@@ -109,7 +109,7 @@ def test_sample_delegates_to_validation(fitted_sampler):
         patch.object(cost_optimal_random_module, "_validate_is_integer") as mock_validate_is_integer,
         patch.object(cost_optimal_random_module, "_validate_strictly_positive") as mock_validate_strictly_positive,
     ):
-        fitted_sampler.sample(n_samples=2, y_true_cost=10.0, y_proxy_cost=1.0, budget=5, random_seed=42)
+        fitted_sampler.sample(n_samples=2, y_true_cost=10.0, y_proxy_cost=1.0, budget=15, random_seed=42)
 
         mock_validate_is_integer.assert_called_once_with(2, "n_samples")
         mock_validate_strictly_positive.assert_has_calls(
@@ -117,7 +117,7 @@ def test_sample_delegates_to_validation(fitted_sampler):
                 call(2, "n_samples"),
                 call(10.0, "y_true_cost"),
                 call(1.0, "y_proxy_cost"),
-                call(5, "budget"),
+                call(15, "budget"),
             ]
         )
 
@@ -129,7 +129,7 @@ def test_sample_budget_too_small_raises(fitted_sampler):
 
 def test_sample_known_output(fitted_sampler):
     n_samples = 2
-    pi, xi = fitted_sampler.sample(n_samples=n_samples, y_true_cost=10.0, y_proxy_cost=1.0, budget=5, random_seed=42)
+    pi, xi = fitted_sampler.sample(n_samples=n_samples, y_true_cost=10.0, y_proxy_cost=1.0, budget=15, random_seed=42)
 
     expected_pi = np.array([0.045, 0.045])
     expected_xi = np.array([0.0, 0.0])
@@ -140,18 +140,32 @@ def test_sample_known_output(fitted_sampler):
 
 def test_sample_known_output_truncated_samples(fitted_sampler):
     n_samples = 5
-    pi, xi = fitted_sampler.sample(n_samples=n_samples, y_true_cost=20.0, y_proxy_cost=1.0, budget=5, random_seed=42)
+    pi, xi = fitted_sampler.sample(n_samples=n_samples, y_true_cost=10.0, y_proxy_cost=1.0, budget=11, random_seed=6)
 
-    expected_pi = np.array([0.032, 0.032, 0.032, 0.0, 0.0])
-    expected_xi = np.array([0.0, 0.0, 0.0, np.nan, np.nan])
+    expected_pi = np.array([0.0, 0.0, 0.045, 0.0, 0.045])
+    expected_xi = np.array([np.nan, np.nan, 0.0, np.nan, 0.0])
 
     np.testing.assert_allclose(pi, expected_pi, atol=0.01, equal_nan=True)
     np.testing.assert_array_equal(xi, expected_xi)
 
 
+def test_sample_never_exceeds_budget(fitted_sampler):
+    for seed in range(5):
+        _, xi = fitted_sampler.sample(n_samples=5, y_true_cost=10.0, y_proxy_cost=1.0, budget=15, random_seed=seed)
+        selected = ~np.isnan(xi)
+        actual_cost = np.nansum(xi[selected]) * 10.0 + np.sum(selected) * 1.0
+        assert actual_cost <= 15
+
+
+def test_sample_excluded_samples_have_zero_pi_and_nan_xi(fitted_sampler):
+    pi, xi = fitted_sampler.sample(n_samples=5, y_true_cost=10.0, y_proxy_cost=1.0, budget=11, random_seed=6)
+    assert np.any(np.isnan(xi))
+    assert np.all(pi[np.isnan(xi)] == 0.0)
+
+
 def test_sample_reproducibility(fitted_sampler):
-    pi1, xi1 = fitted_sampler.sample(n_samples=2, y_true_cost=10.0, y_proxy_cost=1.0, budget=5, random_seed=42)
-    pi2, xi2 = fitted_sampler.sample(n_samples=2, y_true_cost=10.0, y_proxy_cost=1.0, budget=5, random_seed=42)
+    pi1, xi1 = fitted_sampler.sample(n_samples=2, y_true_cost=10.0, y_proxy_cost=1.0, budget=15, random_seed=42)
+    pi2, xi2 = fitted_sampler.sample(n_samples=2, y_true_cost=10.0, y_proxy_cost=1.0, budget=15, random_seed=42)
 
     np.testing.assert_array_equal(pi1, pi2)
     np.testing.assert_array_equal(xi1, xi2)

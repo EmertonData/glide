@@ -39,7 +39,7 @@ class CostOptimalRandomSampler:
     ...     n_samples=2,
     ...     y_true_cost=10.0,
     ...     y_proxy_cost=1.0,
-    ...     budget=2,
+    ...     budget=15,
     ...     random_seed=42
     ... )
     >>> float(pi[0])  # doctest: +ELLIPSIS
@@ -47,7 +47,7 @@ class CostOptimalRandomSampler:
     >>> xi[0]
     np.float64(0.0)
     >>> np.isnan(xi[1])
-    np.True_
+    np.False_
     """
 
     def fit(
@@ -127,19 +127,17 @@ class CostOptimalRandomSampler:
         """Sample observations with cost-optimal allocation between raters.
 
         Derives the optimal probability of querying the expensive rater (ground truth)
-        based on relative costs and proxy quality. Determines the maximum number of samples
-        that can be afforded within the budget, then selects those samples for annotation.
+        based on relative costs and proxy quality.
 
-        If the budget can afford fewer than n_samples, only the first affordable number of
-        samples are selected. Otherwise, all n_samples are selected.
-
-        For each selected sample, an independent Bernoulli draw with the optimal probability
-        determines whether the expensive rater is also queried (1) or only the proxy is used (0).
+        Samples are randomly permuted before drawing and the inverse permutation is applied
+        to the output, so the returned arrays are always in the original input order. A
+        post-draw cutoff is then applied to strictly respect the budget: samples beyond the
+        cutoff are discarded and receive ``pi = 0.0`` and ``xi = NaN``.
 
         The two returned arrays are intended for use with IPW-based downstream estimators. ``pi``
-        holds the per-sample probability of querying the expensive rater, set to zero for unselected
-        samples. ``xi`` holds the annotation indicators for selected samples, with NaN marking
-        unselected samples that should be discarded before running an estimator.
+        holds the per-sample probability of querying the expensive rater. ``xi`` holds the
+        annotation indicators for selected samples, with NaN marking samples excluded by the
+        budget cutoff.
 
         Parameters
         ----------
@@ -150,7 +148,7 @@ class CostOptimalRandomSampler:
         y_proxy_cost : float
             Per-sample cost of the cheap rater (G). Must be strictly positive.
         budget : float
-            Total annotation budget in cost units. Must be strictly positive.
+            Total annotation budget in cost units. Must be at least ``y_true_cost + y_proxy_cost``.
         random_seed : int or SeedSequence or None, optional
             Random seed passed to ``numpy.random.default_rng`` for reproducibility.
             Pass ``None`` (the default) to use a non-deterministic seed.
@@ -158,10 +156,11 @@ class CostOptimalRandomSampler:
         Returns
         -------
         Tuple[NDArray, NDArray]
-            [0]: array of shape ``(n_samples,)``, pi with the optimal probability of querying the expensive rater
-            for selected samples, NaN for unselected samples.
-            [1]: array of shape ``(n_samples,)``, xi with indicators for each sample:
-            1 if both raters are queried, 0 if only proxy is used, NaN if sample is not selected.
+            [0]: array of shape ``(n_samples,)``, ``pi`` with the optimal probability of querying
+            the expensive rater for selected samples and ``0.0`` for unselected samples.
+            [1]: array of shape ``(n_samples,)``, ``xi`` with indicators for each sample:
+            ``1.0`` if both raters are queried, ``0.0`` if only the proxy is used,
+            ``NaN`` if the sample was excluded by the budget cutoff.
 
         Raises
         ------
@@ -171,7 +170,7 @@ class CostOptimalRandomSampler:
             - If ``n_samples`` is not a strictly positive integer.
             - If ``y_true_cost`` or ``y_proxy_cost`` is not strictly positive.
             - If ``budget`` is not strictly positive.
-            - If ``budget`` is too small to afford a single sample.
+            - If ``budget`` is too small to afford a single annotation.
         """
         if not hasattr(self, "_y_true_variance") or not hasattr(self, "_mean_squared_error"):
             raise RuntimeError("Call fit() before sample().")
@@ -180,21 +179,24 @@ class CostOptimalRandomSampler:
         _validate_strictly_positive(y_true_cost, "y_true_cost")
         _validate_strictly_positive(y_proxy_cost, "y_proxy_cost")
         _validate_strictly_positive(budget, "budget")
-
-        pi_opt = self._compute_optimal_probability(y_true_cost, y_proxy_cost)
-        cost_per_sample = y_true_cost * pi_opt + y_proxy_cost
-        n_affordable = int(np.floor(budget / cost_per_sample))
-        if n_affordable < 1:
+        if budget < y_true_cost + y_proxy_cost:
             raise ValueError(
-                f"'budget' is too small to afford a single sample; got budget={budget}"
-                f", cost_per_sample={cost_per_sample}."
+                f"'budget' is too small to afford a single annotation; got budget={budget}."
+                f" Minimum budget is y_true_cost + y_proxy_cost = {y_true_cost + y_proxy_cost}."
             )
 
-        rng = np.random.default_rng(random_seed)
-        xi = np.full(n_samples, np.nan)
-        pi = np.zeros(n_samples)
-        cutoff = min(n_affordable, n_samples)
+        pi_opt = self._compute_optimal_probability(y_true_cost, y_proxy_cost)
 
-        xi[:cutoff] = rng.binomial(n=1, p=pi_opt, size=cutoff).astype(float)
-        pi[:cutoff] = pi_opt
+        rng = np.random.default_rng(random_seed)
+        order = rng.permutation(n_samples)
+        xi_all = rng.binomial(n=1, p=pi_opt, size=n_samples).astype(float)
+
+        actual_costs = xi_all[order] * y_true_cost + y_proxy_cost
+        cumsum = np.cumsum(actual_costs)
+        cutoff = np.searchsorted(cumsum, budget, side="right")
+
+        pi = np.zeros(n_samples)
+        xi = np.full(n_samples, np.nan)
+        pi[order[:cutoff]] = pi_opt
+        xi[order[:cutoff]] = xi_all[order[:cutoff]]
         return pi, xi

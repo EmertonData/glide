@@ -145,9 +145,9 @@ def test_sample_budget_too_small_raises(fitted_sampler, uncertainties):
 
 
 def test_sample_known_output(fitted_sampler, uncertainties):
-    pi, xi = fitted_sampler.sample(uncertainties, y_true_cost=10.0, y_proxy_cost=1.0, budget=10, random_seed=42)
+    pi, xi = fitted_sampler.sample(uncertainties, y_true_cost=10.0, y_proxy_cost=1.0, budget=20, random_seed=42)
 
-    expected_pi = np.array([0.049, 0.197])
+    expected_pi = np.array([0.049, 0.196])
     expected_xi = np.array([0.0, 0.0])
 
     np.testing.assert_allclose(pi, expected_pi, atol=0.001)
@@ -155,13 +155,27 @@ def test_sample_known_output(fitted_sampler, uncertainties):
 
 
 def test_sample_known_output_truncated_samples(fitted_sampler, uncertainties):
-    pi, xi = fitted_sampler.sample(uncertainties, y_true_cost=10.0, y_proxy_cost=1.0, budget=2, random_seed=42)
+    pi, xi = fitted_sampler.sample(uncertainties, y_true_cost=10.0, y_proxy_cost=1.0, budget=11, random_seed=2)
 
     expected_pi = np.array([0.049, 0.0])
 
     np.testing.assert_allclose(pi, expected_pi, atol=0.001)
     assert xi[0] == 0.0
     assert np.isnan(xi[1])
+
+
+def test_sample_never_exceeds_budget(fitted_sampler, uncertainties):
+    for seed in range(5):
+        _, xi = fitted_sampler.sample(uncertainties, y_true_cost=10.0, y_proxy_cost=1.0, budget=20, random_seed=seed)
+        selected = ~np.isnan(xi)
+        actual_cost = np.nansum(xi[selected]) * 10.0 + np.sum(selected) * 1.0
+        assert actual_cost <= 20
+
+
+def test_sample_excluded_samples_have_zero_pi_and_nan_xi(fitted_sampler, uncertainties):
+    pi, xi = fitted_sampler.sample(uncertainties, y_true_cost=10.0, y_proxy_cost=1.0, budget=11, random_seed=2)
+    assert np.any(np.isnan(xi))
+    assert np.all(pi[np.isnan(xi)] == 0.0)
 
 
 def test_sample_reproducibility(fitted_sampler, uncertainties):
