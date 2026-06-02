@@ -74,9 +74,8 @@ nav:
     - Evaluation Workflow: user_guide/evaluation_workflow.md
     - Samplers: user_guide/samplers.md
     - Estimators: user_guide/estimators.md
-    - Which estimator to use: user_guide/which_estimator_to_use.md
   - Tutorials:
-    - Overview: tutorials/index.md
+    - Overview and Selection Guide: tutorials/index.md
     - Standard annotation budget (PPI++): tutorials/ppi.ipynb
     - Stratified data (Stratified PPI++): tutorials/stratified_ppi.ipynb
     - Uncertainty scores available (ASI): tutorials/asi.ipynb
