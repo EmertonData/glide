@@ -6,10 +6,15 @@ on:
       - "v*"         # automated PyPi publish on tag push of the form vX.Y.Z
   workflow_dispatch: # manual TestPyPI publish
 
+permissions: {}
+
 jobs:
   build:
     name: Build distribution 📦
     runs-on: ubuntu-latest
+
+    permissions:
+        contents: read
 
     steps:
       - uses: actions/checkout@v6.0.2

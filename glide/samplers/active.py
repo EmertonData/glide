@@ -6,6 +6,13 @@ from numpy.random.bit_generator import SeedSequence
 from numpy.typing import NDArray
 from scipy.optimize import Bounds, LinearConstraint, minimize
 
+from glide.core.validation import (
+    _validate_budget_bound,
+    _validate_is_integer,
+    _validate_strictly_positive,
+    _validate_uncertainties,
+)
+
 
 class ActiveSampler:
     """Sampler that draws elements with probabilities based on uncertainty scores.
@@ -39,12 +46,6 @@ class ActiveSampler:
     >>> xi
     array([0., 1.])
     """
-
-    def _validate(self, uncertainties: NDArray) -> None:
-        if np.any(np.isnan(uncertainties)):
-            raise ValueError("All uncertainty values must be finite; got a NaN value.")
-        if np.any(uncertainties <= 0.0):
-            raise ValueError("All uncertainty values must be strictly positive; got a non-positive value.")
 
     def _compute_probabilities(self, uncertainties: NDArray, budget: int) -> NDArray:
         uncertainty_ratio = np.max(uncertainties) / np.min(uncertainties)
@@ -135,15 +136,10 @@ class ActiveSampler:
             If the ratio of the largest to the smallest uncertainty is extreme,
             indicating potential numerical instability.
         """
-        if (not isinstance(budget, (int, np.integer))) or isinstance(budget, bool) or budget <= 0:
-            raise ValueError(f"'budget' must be a strictly positive integer; got {budget!r}.")
-        if budget > len(uncertainties):
-            raise ValueError(
-                f"'budget' must not exceed the number of samples; "
-                f"got budget={budget} but uncertainties has {len(uncertainties)} elements."
-            )
-
-        self._validate(uncertainties)
+        _validate_is_integer(budget, "budget")
+        _validate_strictly_positive(budget, "budget")
+        _validate_budget_bound(budget, len(uncertainties))
+        _validate_uncertainties(uncertainties)
         rng = np.random.default_rng(random_seed)
 
         pi = self._compute_probabilities(uncertainties, budget)
