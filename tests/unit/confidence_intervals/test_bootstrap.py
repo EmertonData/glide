@@ -16,7 +16,7 @@ def test_default_confidence_level(estimates):
 
 @pytest.mark.parametrize("confidence_level", [0.0, 1.5])
 def test_confidence_level_validation(estimates, confidence_level):
-    with pytest.raises(ValueError, match="confidence_level must be in \\(0, 1\\)"):
+    with pytest.raises(ValueError, match="'confidence_level' must be in"):
         BootstrapConfidenceInterval(bootstrap_estimates=estimates, confidence_level=confidence_level)
 
 
@@ -101,5 +101,5 @@ def test_null_hypothesis_smaller(estimates):
 
 def test_null_hypothesis_invalid_alternative(estimates):
     ci = BootstrapConfidenceInterval(bootstrap_estimates=estimates)
-    with pytest.raises(ValueError, match="alternative must be 'two-sided', 'larger', or 'smaller'"):
+    with pytest.raises(ValueError, match="'alternative' must be 'two-sided', 'larger', or 'smaller'"):
         ci.test_null_hypothesis(h0_value=0.0, alternative="invalid")  # ty: ignore

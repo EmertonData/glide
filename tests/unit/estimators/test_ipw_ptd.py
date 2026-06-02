@@ -1,9 +1,11 @@
 from typing import Tuple
+from unittest.mock import patch
 
 import numpy as np
 import pytest
 from numpy.typing import NDArray
 
+import glide.estimators.ipw_ptd as ipw_ptd_module
 from glide.confidence_intervals import BootstrapConfidenceInterval
 from glide.estimators import IPWPTDMeanEstimator
 from glide.mean_inference_results import PredictionPoweredMeanInferenceResult
@@ -39,61 +41,47 @@ def test_preprocess_valid_output(estimator, y_arrays):
     assert np.sum(xi) == 3
 
 
-def test_preprocess_raises_on_length_mismatch(estimator):
-    y_true = np.array([1.0, 2.0, np.nan])
-    y_proxy = np.array([1.0, 2.0])
-    pi = np.array([0.5, 0.5, 0.5])
-    with pytest.raises(ValueError, match="y_true, y_proxy, and pi must have the same length"):
-        estimator._preprocess(y_true, y_proxy, pi)
-
-
-@pytest.mark.parametrize("bad_pi", [2.0, -0.5])
-def test_preprocess_raises_on_invalid_pi(estimator, bad_pi):
+def test_preprocess_delegates_to_validation(estimator):
     y_true = np.array([1.0, 2.0, np.nan, np.nan])
-    y_proxy = np.array([0.9, 1.9, 0.8, 1.8])
-    pi = np.array([0.5, bad_pi, 0.5, 0.5])
-    with pytest.raises(ValueError, match="Sampling probabilities should be in \\[0, 1\\]"):
+    y_proxy = np.array([1.0, 2.0, 3.0, 4.0])
+    pi = np.array([0.5, 0.5, 0.5, 0.5])
+
+    with (
+        patch.object(ipw_ptd_module, "_validate_equal_lengths") as mock_validate_equal_lengths,
+        patch.object(ipw_ptd_module, "_validate_probabilities") as mock_validate_probabilities,
+        patch.object(ipw_ptd_module, "_validate_y_proxy") as mock_validate_y_proxy,
+        patch.object(ipw_ptd_module, "_validate_y_true") as mock_validate_y_true,
+        patch.object(ipw_ptd_module, "_validate_label_prob_consistency") as mock_validate_label_prob_consistency,
+        patch.object(ipw_ptd_module, "_validate_sample_sizes") as mock_validate_sample_sizes,
+    ):
         estimator._preprocess(y_true, y_proxy, pi)
 
-
-def test_preprocess_raises_on_nan_proxy(estimator):
-    y_true = np.array([1.0, np.nan])
-    y_proxy = np.array([1.0, np.nan])
-    pi = np.array([0.5, 0.5])
-    with pytest.raises(ValueError, match="Input proxy values contain NaN"):
-        estimator._preprocess(y_true, y_proxy, pi)
-
-
-def test_preprocess_raises_on_constant_proxy(estimator):
-    y_true = np.array([1.0, np.nan])
-    y_proxy = np.array([1.0, 1.0])
-    pi = np.array([0.5, 0.5])
-    with pytest.raises(ValueError, match="Input proxy values have zero variance"):
-        estimator._preprocess(y_true, y_proxy, pi)
+        mock_validate_equal_lengths.assert_called_once_with(y_true, y_proxy, pi, names=["y_true", "y_proxy", "pi"])
+        mock_validate_probabilities.assert_called_once_with(pi)
+        mock_validate_y_proxy.assert_called_once_with(y_proxy)
+        mock_validate_y_true.assert_called_once_with(y_true)
+        mock_validate_label_prob_consistency.assert_called_once()
+        y_true_non_nan_mask = ~np.isnan(y_true)
+        np.testing.assert_array_equal(mock_validate_label_prob_consistency.call_args[0][0], y_true_non_nan_mask)
+        np.testing.assert_array_equal(mock_validate_label_prob_consistency.call_args[0][1], pi)
+        mock_validate_sample_sizes.assert_called_once()
+        np.testing.assert_array_equal(mock_validate_sample_sizes.call_args[0][0], y_true_non_nan_mask)
 
 
-def test_preprocess_raises_on_labeled_samples_with_zero_pi(estimator):
-    y_true = np.array([1.0, 2.0, np.nan, np.nan])
-    y_proxy = np.array([0.9, 1.9, 0.8, 1.8])
-    pi = np.array([0.5, 0.0, 0.5, 0.5])
-    with pytest.raises(ValueError, match="Samples with non-zero probability of being labeled cannot be labeled"):
-        estimator._preprocess(y_true, y_proxy, pi)
+# ── estimate delegates ────────────────────────────────────────────────────────
 
 
-def test_preprocess_raises_on_unlabeled_samples_with_one_pi(estimator):
-    y_true = np.array([1.0, np.nan, np.nan, np.nan])
-    y_proxy = np.array([0.9, 1.9, 0.8, 1.8])
-    pi = np.array([0.5, 1.0, 0.5, 0.5])
-    with pytest.raises(ValueError, match="Samples with probability one of being labeled must be labeled"):
-        estimator._preprocess(y_true, y_proxy, pi)
+def test_estimate_delegates_to_non_zero_mask(estimator, y_arrays):
+    y_true, y_proxy, pi = y_arrays
 
+    with patch.object(
+        ipw_ptd_module, "_get_non_zero_mask", return_value=np.ones(6, dtype=bool)
+    ) as mock_get_non_zero_mask:
+        estimator.estimate(y_true, y_proxy, pi, n_bootstrap=5, random_seed=0)
+        assert mock_get_non_zero_mask.call_count == 2
 
-def test_preprocess_raises_when_too_few_samples(estimator):
-    y_true = np.array([5.0, np.nan, np.nan])
-    y_proxy = np.array([4.9, 5.2, 6.1])
-    pi = np.array([0.5, 0.5, 0.5])
-    with pytest.raises(ValueError, match="Too few labeled or unlabeled samples in dataset"):
-        estimator._preprocess(y_true, y_proxy, pi)
+        np.testing.assert_array_equal(mock_get_non_zero_mask.call_args_list[0][0][0], pi)
+        np.testing.assert_array_equal(mock_get_non_zero_mask.call_args_list[1][0][0], 1 - pi)
 
 
 # ── estimate ──────────────────────────────────────────────────────────────────
@@ -144,20 +132,6 @@ def test_estimate_reproducibility(estimator, y_arrays):
     result_b = estimator.estimate(y_true, y_proxy, pi, n_bootstrap=5, random_seed=7)
     assert result_a.confidence_interval.lower_bound == result_b.confidence_interval.lower_bound
     assert result_a.confidence_interval.upper_bound == result_b.confidence_interval.upper_bound
-
-
-def test_estimate_warns_on_zero_pi(estimator, y_arrays):
-    y_true, y_proxy, _ = y_arrays
-    pi = np.array([0.4, 0.6, 0.5, 0.0, 0.2, 0.8])
-    with pytest.warns(UserWarning, match="Some observations have pi=0"):
-        estimator.estimate(y_true, y_proxy, pi, n_bootstrap=5, random_seed=7)
-
-
-def test_estimate_warns_on_one_pi(estimator, y_arrays):
-    y_true, y_proxy, _ = y_arrays
-    pi = np.array([0.4, 0.6, 1.0, 0.5, 0.2, 0.8])
-    with pytest.warns(UserWarning, match="Some observations have pi=1"):
-        estimator.estimate(y_true, y_proxy, pi, n_bootstrap=5, random_seed=7)
 
 
 # ── __str__ / __repr__ ────────────────────────────────────────────────────────

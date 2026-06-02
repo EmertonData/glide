@@ -1,4 +1,3 @@
-import warnings
 from math import floor
 from typing import Tuple
 
@@ -6,6 +5,14 @@ import numpy as np
 from numpy.typing import NDArray
 
 from glide.confidence_intervals import CLTConfidenceInterval
+from glide.core.validation import (
+    _get_non_zero_mask,
+    _validate_equal_lengths,
+    _validate_label_prob_consistency,
+    _validate_non_constant,
+    _validate_probabilities,
+    _validate_y_proxy,
+)
 from glide.estimators.ipw_classical import IPWClassicalMeanEstimator
 from glide.mean_inference_results import PredictionPoweredMeanInferenceResult
 
@@ -56,26 +63,26 @@ class ASIMeanEstimator:
         y_proxy: NDArray,
         pi: NDArray,
     ) -> Tuple[NDArray, NDArray, NDArray, NDArray]:
-        if not (len(y_true_all) == len(y_proxy) == len(pi)):
-            raise ValueError("y_true, y_proxy, and pi must all have the same length")
-        if np.min(pi) < 0 or np.max(pi) > 1:
-            raise ValueError("Sampling probabilities should be in [0, 1]")
-        if np.isnan(y_proxy).any():
-            raise ValueError("Input proxy values contain NaN")
-
+        _validate_equal_lengths(y_true_all, y_proxy, pi, names=["y_true", "y_proxy", "pi"])
+        _validate_y_proxy(y_proxy)
+        _validate_probabilities(pi)
         y_true_non_nan_mask = ~np.isnan(y_true_all)
+        _validate_label_prob_consistency(y_true_non_nan_mask, pi)
         xi = y_true_non_nan_mask.astype(float)
 
-        if np.any(y_true_non_nan_mask & (pi == 0)):
-            raise ValueError("Samples with non-zero probability of being labeled cannot be labeled")
-        if np.any(~y_true_non_nan_mask & (pi == 1)):
-            raise ValueError("Samples with probability one of being labeled must be labeled")
+        non_zero_mask = _get_non_zero_mask(pi)
+        y_true_all_filtered = y_true_all[non_zero_mask]
+        y_proxy_filtered = y_proxy[non_zero_mask]
+        pi_filtered = pi[non_zero_mask]
+        xi_filtered = xi[non_zero_mask]
 
-        if len(np.unique(y_proxy * (xi / pi - 1))) == 1:
-            raise ValueError("Input values lead to rectifiers with zero variance")
+        _validate_non_constant(
+            y_proxy_filtered * (xi_filtered / pi_filtered - 1),
+            "'y_proxy' values lead to constant rectifiers.",
+        )
 
-        y_true_filled = np.nan_to_num(y_true_all, nan=0)
-        return y_true_filled, y_proxy, xi, pi
+        y_true_filled = np.nan_to_num(y_true_all_filtered, nan=0)
+        return y_true_filled, y_proxy_filtered, xi_filtered, pi_filtered
 
     def _compute_tuning_parameter(
         self,
@@ -153,26 +160,13 @@ class ASIMeanEstimator:
         ValueError
             - If ``y_true``, ``y_proxy``, and ``pi`` do not all have the same length.
             - If any proxy value is NaN.
-            - If the rectifiers ``y_proxy * (ξ_i / π_i - 1)`` have zero variance.
+            - If the rectifiers ``y_proxy * (ξ_i / π_i - 1)`` are constant.
             - If any value in ``pi`` is not in [0, 1].
         """
-        non_zero_pi_mask = pi > 0
-        if not np.all(non_zero_pi_mask):
-            warnings.warn(
-                "Some observations have pi=0. These will be excluded from the estimation.",
-                UserWarning,
-            )
-
-        y_true_filtered = y_true[non_zero_pi_mask]
-        y_proxy_filtered = y_proxy[non_zero_pi_mask]
-        pi_filtered = pi[non_zero_pi_mask]
-
-        y_true_filled, y_proxy_filtered, xi, pi_filtered = self._preprocess(
-            y_true_filtered, y_proxy_filtered, pi_filtered
-        )
+        y_true_filled, y_proxy_filtered, xi, pi_filtered = self._preprocess(y_true, y_proxy, pi)
 
         n_true = int(xi.sum())
-        n_proxy = int(non_zero_pi_mask.sum())
+        n_proxy = len(pi_filtered)
 
         _lambda = self._compute_tuning_parameter(y_true_filled, y_proxy_filtered, xi, pi_filtered, power_tuning)
         rectified_labels = self._compute_rectified_labels(y_true_filled, y_proxy_filtered, xi, pi_filtered, _lambda)

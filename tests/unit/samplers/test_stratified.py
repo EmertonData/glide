@@ -1,6 +1,9 @@
+from unittest.mock import patch
+
 import numpy as np
 import pytest
 
+import glide.samplers.stratified as stratified_module
 from glide.samplers import StratifiedSampler
 
 
@@ -17,33 +20,6 @@ def y_proxy() -> np.ndarray:
 @pytest.fixture
 def groups() -> np.ndarray:
     return np.array(["A", "A", "A", "A", "B", "B", "B", "B"], dtype=object)
-
-
-# --- _validate ---
-
-
-def test_validate_validates_nan_proxy(sampler):
-    y_proxy = np.array([0.5, np.nan])
-    groups = np.array(["A", "A"], dtype=object)
-
-    with pytest.raises(ValueError, match="NaN"):
-        sampler._validate(y_proxy, groups)
-
-
-def test_validate_raises_on_stratum_size_too_small(sampler):
-    y_proxy = np.array([0.5, 0.6, 0.7])
-    groups = np.array(["A", "A", "B"], dtype=object)
-
-    with pytest.raises(ValueError, match="fewer than 4"):
-        sampler._validate(y_proxy, groups)
-
-
-def test_validate_raises_on_zero_variance_proxy_in_stratum(sampler):
-    y_proxy = np.array([0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 1.0, 1.0])
-    groups = np.array(["A", "A", "A", "A", "B", "B", "B", "B"], dtype=object)
-
-    with pytest.raises(ValueError, match="has zero variance in proxy"):
-        sampler._validate(y_proxy, groups)
 
 
 # --- _proportional_allocation ---
@@ -130,7 +106,7 @@ def test_sample_neyman_strategy(sampler, y_proxy, groups):
 
 
 def test_sample_invalid_strategy_raises(sampler, y_proxy, groups):
-    with pytest.raises(ValueError, match="Unknown strategy"):
+    with pytest.raises(ValueError, match="'strategy' must be"):
         sampler.sample(y_proxy, groups, 4, strategy="unknown")
 
 
@@ -139,3 +115,24 @@ def test_sample_is_reproducible(sampler, y_proxy, groups):
     xi2 = sampler.sample(y_proxy, groups, 4, random_seed=42)
 
     np.testing.assert_array_equal(xi1, xi2)
+
+
+def test_sample_delegates_to_validation(sampler, y_proxy, groups):
+    with (
+        patch.object(stratified_module, "_validate_is_integer") as mock_validate_is_integer,
+        patch.object(stratified_module, "_validate_strictly_positive") as mock_validate_strictly_positive,
+        patch.object(stratified_module, "_validate_budget_bound") as mock_validate_budget_bound,
+        patch.object(stratified_module, "_validate_y_proxy") as mock_validate_y_proxy,
+    ):
+        sampler.sample(y_proxy, groups, 4, random_seed=0)
+
+        mock_validate_is_integer.assert_called_once_with(4, "budget")
+        mock_validate_strictly_positive.assert_called_once_with(4, "budget")
+        mock_validate_budget_bound.assert_called_once_with(4, len(y_proxy))
+
+        assert mock_validate_y_proxy.call_count == 3
+        np.testing.assert_array_equal(mock_validate_y_proxy.call_args_list[0][0][0], y_proxy)
+        np.testing.assert_array_equal(mock_validate_y_proxy.call_args_list[1][0][0], y_proxy[groups == "A"])
+        assert mock_validate_y_proxy.call_args_list[1][0][1] == "A"
+        np.testing.assert_array_equal(mock_validate_y_proxy.call_args_list[2][0][0], y_proxy[groups == "B"])
+        assert mock_validate_y_proxy.call_args_list[2][0][1] == "B"

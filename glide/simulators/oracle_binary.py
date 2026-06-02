@@ -3,6 +3,8 @@ from typing import Optional, Tuple
 import numpy as np
 from numpy.typing import NDArray
 
+from glide.core.validation import _validate_bounds
+
 
 def generate_binary_dataset_with_oracle_sampling(
     n_total: int,
@@ -179,10 +181,8 @@ def generate_binary_dataset_with_oracle_sampling(
     >>> bool(np.all((uncertainty >= 0) & (uncertainty <= 1)))
     True
     """
-    if not (0 < true_mean < 1):
-        raise ValueError(f"true_mean must be in (0, 1), got {true_mean}")
-    if not (0 < proxy_mean < 1):
-        raise ValueError(f"proxy_mean must be in (0, 1), got {proxy_mean}")
+    _validate_bounds(true_mean, "true_mean", lower=0, upper=1, left_inclusive=False, right_inclusive=False)
+    _validate_bounds(proxy_mean, "proxy_mean", lower=0, upper=1, left_inclusive=False, right_inclusive=False)
 
     rng = np.random.default_rng(seed=random_seed)
     p_t = true_mean
@@ -197,10 +197,10 @@ def generate_binary_dataset_with_oracle_sampling(
     max_possible_correlation = min(p_t * (1 - p_p), p_p * (1 - p_t)) / D
     if correlation < min_possible_correlation or correlation > max_possible_correlation:
         raise ValueError(
-            f"Impossible combination of true_mean={true_mean}, proxy_mean={proxy_mean}, "
-            f"and correlation={correlation}: leads to negative joint probabilities\n"
-            f"possible correlation values are in the range ({min_possible_correlation:.3f}"
-            f", {max_possible_correlation:.3f})"
+            f"Impossible combination of 'true_mean'={true_mean!r}, 'proxy_mean'={proxy_mean!r}, "
+            f"and 'correlation'={correlation!r}: leads to negative joint probabilities; "
+            f"possible 'correlation' values are in the range ({min_possible_correlation:.3f}"
+            f", {max_possible_correlation:.3f})."
         )
 
     # Global (marginal) joint distribution — same as generate_binary_dataset

@@ -1,6 +1,8 @@
 import numpy as np
 from numpy.typing import NDArray
 
+from glide.core.validation import _validate_binary_or_nan, _validate_equal_lengths, _validate_has_no_nan
+
 
 def simulate_annotation(
     y_true_oracle: NDArray,
@@ -44,13 +46,10 @@ def simulate_annotation(
     >>> simulate_annotation(y_true_oracle, xi)
     array([ 0., nan,  1., nan])
     """
-    if len(y_true_oracle) != len(xi):
-        raise ValueError(f"y_true_oracle and xi must have the same length, got {len(y_true_oracle)} and {len(xi)}")
-    if np.any(np.isnan(y_true_oracle)):
-        raise ValueError("y_true_oracle contains NaN values")
+    _validate_equal_lengths(y_true_oracle, xi, names=["y_true_oracle", "xi"])
+    _validate_has_no_nan(y_true_oracle, "y_true_oracle")
     xi_float = xi.astype(float)
-    if not (np.isnan(xi_float) | np.isin(xi_float, [0.0, 1.0])).all():
-        raise ValueError("xi must only contain 0, 1, and np.nan values")
+    _validate_binary_or_nan(xi, "xi")
 
     y_true = y_true_oracle.astype(float)
     y_true[xi_float != 1] = np.nan

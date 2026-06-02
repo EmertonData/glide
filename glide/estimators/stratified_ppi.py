@@ -116,7 +116,7 @@ class StratifiedPPIMeanEstimator:
         ValueError
             - If ``y_true``, ``y_proxy``, and ``groups`` do not all have the same length.
             - If any proxy value is NaN.
-            - If all proxy values within a stratum are identical (zero variance).
+            - If all proxy values within a stratum are identical.
             - If any stratum has fewer than 2 labeled or fewer than 2 unlabeled samples.
         """
         strata = _preprocess(y_true, y_proxy, groups)

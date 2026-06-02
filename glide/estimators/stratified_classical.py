@@ -4,6 +4,7 @@ import numpy as np
 from numpy.typing import NDArray
 
 from glide.confidence_intervals import CLTConfidenceInterval
+from glide.core.validation import _validate_min_samples
 from glide.mean_inference_results import ClassicalMeanInferenceResult
 
 
@@ -92,11 +93,7 @@ class StratifiedClassicalMeanEstimator:
         for i, stratum_id in enumerate(unique_strata):
             stratum_mask = groups == stratum_id
             y_stratum = y[stratum_mask & not_nan_mask]
-            if len(y_stratum) < 2:
-                raise ValueError(
-                    "At least 2 non-NaN values are required in each stratum, "
-                    f"got {len(y_stratum)} in stratum {stratum_id}."
-                )
+            _validate_min_samples(y_stratum, "y", stratum_id)
 
             n_samples_k = len(y_stratum)
             if stratum_weights is not None:
