@@ -122,7 +122,7 @@ def test_sample_delegates_to_validation(fitted_sampler, uncertainties):
     ):
         fitted_sampler.sample(uncertainties, y_true_cost=10.0, y_proxy_cost=0.0, budget=10, random_seed=42)
 
-        mock_validate_strictly_positive.assert_has_calls([call(10.0, "y_true_cost"), call(10, "budget")])
+        mock_validate_strictly_positive.assert_has_calls([call(10.0, "y_true_cost")])
         mock_validate_uncertainties.assert_called_once()
         np.testing.assert_array_equal(mock_validate_uncertainties.call_args[0][0], uncertainties)
         mock_validate_non_constant.assert_called_once()
@@ -140,7 +140,7 @@ def test_sample_negative_y_proxy_cost(fitted_sampler, uncertainties):
 
 
 def test_sample_budget_too_small_raises(fitted_sampler, uncertainties):
-    with pytest.raises(ValueError, match="'budget' is too small"):
+    with pytest.raises(ValueError, match="'budget' should be greater than"):
         fitted_sampler.sample(uncertainties, y_true_cost=10.0, y_proxy_cost=1.0, budget=1, random_seed=42)
 
 

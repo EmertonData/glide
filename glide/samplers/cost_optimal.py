@@ -196,10 +196,9 @@ class CostOptimalSampler:
             If ``fit()`` has not been called before ``sample()``.
         ValueError
             - If ``y_true_cost`` is not strictly positive or ``y_proxy_cost`` is negative.
-            - If ``budget`` is not strictly positive.
             - If any uncertainty value is NaN or non-positive.
             - If all uncertainty values are equal and ``y_proxy_cost`` is zero.
-            - If ``budget`` is too small to afford a single annotation.
+            - If ``budget < y_true_cost + y_proxy_cost``.
 
         """
         if not hasattr(self, "_y_true_variance"):
@@ -213,13 +212,9 @@ class CostOptimalSampler:
                 "All uncertainty values are equal and 'y_proxy_cost' is zero."
                 " Provide non-constant uncertainties or set 'y_proxy_cost' to a positive value.",
             )
-        _validate_strictly_positive(budget, "budget")
         _validate_uncertainties(uncertainties)
         if budget < y_true_cost + y_proxy_cost:
-            raise ValueError(
-                f"'budget' is too small to afford a single annotation; got {budget}."
-                f" Minimum budget is y_true_cost + y_proxy_cost = {y_true_cost + y_proxy_cost}."
-            )
+            raise ValueError(f"'budget' should be greater than y_true_cost + y_proxy_cost; got {budget}.")
 
         tau_star = self._find_optimal_threshold(uncertainties, y_true_cost, y_proxy_cost)
         gamma_star = self._compute_gamma(tau_star, uncertainties, y_true_cost, y_proxy_cost)

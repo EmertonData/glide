@@ -117,13 +117,12 @@ def test_sample_delegates_to_validation(fitted_sampler):
                 call(2, "n_samples"),
                 call(10.0, "y_true_cost"),
                 call(1.0, "y_proxy_cost"),
-                call(15, "budget"),
             ]
         )
 
 
 def test_sample_budget_too_small_raises(fitted_sampler):
-    with pytest.raises(ValueError, match="'budget' is too small"):
+    with pytest.raises(ValueError, match="'budget' should be greater than"):
         fitted_sampler.sample(n_samples=2, y_true_cost=100.0, y_proxy_cost=1.0, budget=1, random_seed=42)
 
 

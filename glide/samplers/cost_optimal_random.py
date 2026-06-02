@@ -169,8 +169,7 @@ class CostOptimalRandomSampler:
         ValueError
             - If ``n_samples`` is not a strictly positive integer.
             - If ``y_true_cost`` or ``y_proxy_cost`` is not strictly positive.
-            - If ``budget`` is not strictly positive.
-            - If ``budget`` is too small to afford a single annotation.
+            - If ``budget < y_true_cost + y_proxy_cost``.
         """
         if not hasattr(self, "_y_true_variance") or not hasattr(self, "_mean_squared_error"):
             raise RuntimeError("Call fit() before sample().")
@@ -178,12 +177,8 @@ class CostOptimalRandomSampler:
         _validate_strictly_positive(n_samples, "n_samples")
         _validate_strictly_positive(y_true_cost, "y_true_cost")
         _validate_strictly_positive(y_proxy_cost, "y_proxy_cost")
-        _validate_strictly_positive(budget, "budget")
         if budget < y_true_cost + y_proxy_cost:
-            raise ValueError(
-                f"'budget' is too small to afford a single annotation; got budget={budget}."
-                f" Minimum budget is y_true_cost + y_proxy_cost = {y_true_cost + y_proxy_cost}."
-            )
+            raise ValueError(f"'budget' should be greater than y_true_cost + y_proxy_cost; got {budget}.")
 
         pi_opt = self._compute_optimal_probability(y_true_cost, y_proxy_cost)
 
