@@ -1,4 +1,4 @@
-from unittest.mock import call, patch
+from unittest.mock import patch
 
 import numpy as np
 import pytest
@@ -123,7 +123,8 @@ def test_sample_delegates_to_validation(fitted_sampler, uncertainties):
     ):
         fitted_sampler.sample(uncertainties, y_true_cost=10.0, y_proxy_cost=0.0, budget=10, random_seed=42)
 
-        mock_validate_strictly_positive.assert_has_calls([call(10.0, "y_true_cost")])
+        mock_validate_strictly_positive.assert_called_once_with(10.0, "y_true_cost")
+
         mock_validate_uncertainties.assert_called_once()
         np.testing.assert_array_equal(mock_validate_uncertainties.call_args[0][0], uncertainties)
         mock_validate_non_constant.assert_called_once()
@@ -137,7 +138,7 @@ def test_sample_delegates_to_validation(fitted_sampler, uncertainties):
             10,
             "budget",
             lower=10.0,
-            error_message="'budget' should be at least y_true_cost + y_proxy_cost; got 10.",
+            error_message="'budget' should be at least 10.0; got 10.",
         )
 
 

@@ -12,6 +12,7 @@ from glide.core.validation import (
     _validate_strictly_positive,
     _validate_uncertainties,
 )
+from glide.samplers.core import _apply_budget_cutoff, _draw_shuffled_bernoulli
 
 
 class ActiveSampler:
@@ -125,12 +126,11 @@ class ActiveSampler:
         Returns
         -------
         Tuple[NDArray, NDArray]
-            [0]: array of shape ``(n_samples,)``, pi with per-sample annotation
-            probabilities; positive for included samples, 0.0 for samples discarded
-            by the budget cutoff.
-            [1]: array of shape ``(n_samples,)``, xi with Bernoulli selection indicators
-            (``1.0`` if selected for annotation, ``0.0`` if not selected, ``NaN`` if
-            discarded by the budget cutoff)
+            [0]: array of shape ``(n_samples,)``, ``pi`` with per-sample annotation probabilities
+            for selected samples and ``0.0`` for unselected samples.
+            [1]: array of shape ``(n_samples,)``, ``xi`` with Bernoulli indicators:
+            ``1.0`` if selected for annotation, ``0.0`` if not selected,
+            ``NaN`` if excluded by the budget cutoff.
 
         Raises
         ------
@@ -154,19 +154,9 @@ class ActiveSampler:
         _validate_strictly_positive(budget, "budget")
         _validate_budget_bound(budget, len(uncertainties))
         _validate_uncertainties(uncertainties)
-        rng = np.random.default_rng(random_seed)
-
         pi = self._compute_probabilities(uncertainties, budget)
 
-        n_samples = len(uncertainties)
-        order = rng.permutation(n_samples)
-        xi_all = rng.binomial(n=1, p=pi[order]).astype(float)
-
-        cumsum = np.cumsum(xi_all)
-        cutoff = np.searchsorted(cumsum, budget, side="right")
-
-        xi = np.full(n_samples, np.nan)
-        xi[order[:cutoff]] = xi_all[:cutoff]
-        pi[order[cutoff:]] = 0.0
-
+        order, xi_shuffled = _draw_shuffled_bernoulli(pi, random_seed)
+        cumulative_costs = np.cumsum(xi_shuffled)
+        pi, xi = _apply_budget_cutoff(xi_shuffled, pi, cumulative_costs, order, budget)
         return pi, xi

@@ -110,7 +110,7 @@ def test_sample_delegates_to_validation(fitted_sampler):
         patch.object(cost_optimal_random_module, "_validate_strictly_positive") as mock_validate_strictly_positive,
         patch.object(cost_optimal_random_module, "_validate_bounds") as mock_validate_bounds,
     ):
-        fitted_sampler.sample(n_samples=2, y_true_cost=10.0, y_proxy_cost=1.0, budget=15, random_seed=42)
+        fitted_sampler.sample(n_samples=2, y_true_cost=10.0, y_proxy_cost=1.0, budget=10, random_seed=42)
 
         mock_validate_is_integer.assert_called_once_with(2, "n_samples")
         mock_validate_strictly_positive.assert_has_calls(
@@ -121,10 +121,10 @@ def test_sample_delegates_to_validation(fitted_sampler):
             ]
         )
         mock_validate_bounds.assert_called_once_with(
-            15,
+            10,
             "budget",
             lower=11.0,
-            error_message="'budget' should be at least y_true_cost + y_proxy_cost; got 15.",
+            error_message="'budget' should be at least 11.0; got 10.",
         )
 
 

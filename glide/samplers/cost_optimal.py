@@ -11,6 +11,7 @@ from glide.core.validation import (
     _validate_uncertainties,
     _validate_y_true_burn_in,
 )
+from glide.samplers.core import _apply_budget_cutoff, _draw_shuffled_bernoulli
 
 
 class CostOptimalSampler:
@@ -48,12 +49,10 @@ class CostOptimalSampler:
     ...     budget=20,
     ...     random_seed=0
     ... )
-    >>> float(pi[0])  # doctest: +ELLIPSIS
-    0.025...
-    >>> xi[0]
-    np.float64(0.0)
-    >>> np.isnan(xi[-1])
-    np.False_
+    >>> pi
+    array([0.02514447, 0.10057789, 0.02514447, 0.10057789])
+    >>> xi
+    array([0., 0., 0., 1.])
     """
 
     def fit(self, y_true: NDArray) -> "CostOptimalSampler":
@@ -189,8 +188,8 @@ class CostOptimalSampler:
             [0]: array of shape ``(n_samples,)``, ``pi`` with per-sample annotation probabilities
             for selected samples and ``0.0`` for unselected samples.
             [1]: array of shape ``(n_samples,)``, ``xi`` with Bernoulli indicators:
-            ``1.0`` if the true label was requested, ``0.0`` if only the proxy
-            was used, ``NaN`` if the sample was excluded by the budget cutoff.
+            ``1.0`` if selected for annotation, ``0.0`` if not selected,
+            ``NaN`` if excluded by the budget cutoff.
 
         Raises
         ------
@@ -219,25 +218,14 @@ class CostOptimalSampler:
             budget,
             "budget",
             lower=y_true_cost + y_proxy_cost,
-            error_message=f"'budget' should be at least y_true_cost + y_proxy_cost; got {budget}.",
+            error_message=f"'budget' should be at least {y_true_cost + y_proxy_cost}; got {budget}.",
         )
 
         tau_star = self._find_optimal_threshold(uncertainties, y_true_cost, y_proxy_cost)
         gamma_star = self._compute_gamma(tau_star, uncertainties, y_true_cost, y_proxy_cost)
         pi_all = self._compute_per_sample_probabilities(tau_star, gamma_star, uncertainties)
 
-        n_samples = len(uncertainties)
-        rng = np.random.default_rng(random_seed)
-        order = rng.permutation(n_samples)
-        xi_all = rng.binomial(n=1, p=pi_all[order]).astype(float)
-
-        actual_costs = xi_all * y_true_cost + y_proxy_cost
-        cumsum = np.cumsum(actual_costs)
-        cutoff = np.searchsorted(cumsum, budget, side="right")
-
-        pi = np.zeros(n_samples)
-        xi = np.full(n_samples, np.nan)
-        kept_indices = order[:cutoff]
-        pi[kept_indices] = pi_all[kept_indices]
-        xi[kept_indices] = xi_all[:cutoff]
+        order, xi_shuffled = _draw_shuffled_bernoulli(pi_all, random_seed)
+        cumulative_costs = np.cumsum(xi_shuffled * y_true_cost + y_proxy_cost)
+        pi, xi = _apply_budget_cutoff(xi_shuffled, pi_all, cumulative_costs, order, budget)
         return pi, xi
