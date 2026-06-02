@@ -9,6 +9,8 @@ This skill produces a single markdown file in `tickets/` that a junior Python de
 
 There are four ticket types, each with its own template. The workflow is the same for all of them.
 
+This skill also handles **updating an existing ticket** that has diverged from the current code since it was written — for example when the referenced classes or files have been renamed, restructured, or the relevant logic has moved. When the user points to an existing ticket file, re-read both the ticket and the current codebase, then update the ticket in place to reflect the current state.
+
 ---
 
 ## Workflow
@@ -66,7 +68,7 @@ Load the template for the ticket type from `references/`:
 | Documentation | `references/template-documentation.md` |
 | Repository | `references/template-repository.md` |
 
-Follow the template exactly. Acceptance criteria must be specific to this ticket. Never include items already covered by the team's PR template (`.github/PULL_REQUEST_TEMPLATE.md`) — the following are required on every PR and must not appear in ticket-specific criteria:
+Follow the template exactly. Keep the overall ticket concise: the **Background** and **Design choices** sections in particular must be brief and synthetic — a few tight sentences per paragraph at most, not exhaustive write-ups. Avoid restating the paper, the full codebase context, or rationale that can be inferred from the code. Acceptance criteria must be specific to this ticket. Never include items already covered by the team's PR template (`.github/PULL_REQUEST_TEMPLATE.md`) — the following are required on every PR and must not appear in ticket-specific criteria:
 
 - `make lint` passes
 - `make type-check` passes
