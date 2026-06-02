@@ -5,6 +5,7 @@ from numpy.random.bit_generator import SeedSequence
 from numpy.typing import NDArray
 
 from glide.core.validation import (
+    _validate_bounds,
     _validate_non_constant,
     _validate_strictly_positive,
     _validate_uncertainties,
@@ -213,8 +214,12 @@ class CostOptimalSampler:
                 " Provide non-constant uncertainties or set 'y_proxy_cost' to a positive value.",
             )
         _validate_uncertainties(uncertainties)
-        if budget < y_true_cost + y_proxy_cost:
-            raise ValueError(f"'budget' should be greater than y_true_cost + y_proxy_cost; got {budget}.")
+        _validate_bounds(
+            budget,
+            "budget",
+            lower=y_true_cost + y_proxy_cost,
+            error_message=f"'budget' should be greater than y_true_cost + y_proxy_cost; got {budget}.",
+        )
 
         tau_star = self._find_optimal_threshold(uncertainties, y_true_cost, y_proxy_cost)
         gamma_star = self._compute_gamma(tau_star, uncertainties, y_true_cost, y_proxy_cost)
@@ -223,14 +228,15 @@ class CostOptimalSampler:
         n_samples = len(uncertainties)
         rng = np.random.default_rng(random_seed)
         order = rng.permutation(n_samples)
-        xi_all = rng.binomial(n=1, p=pi_all[order]).astype(float)
+        xi_all = rng.binomial(n=1, p=pi_all).astype(float)
 
-        actual_costs = xi_all * y_true_cost + y_proxy_cost
+        actual_costs = xi_all[order] * y_true_cost + y_proxy_cost
         cumsum = np.cumsum(actual_costs)
         cutoff = np.searchsorted(cumsum, budget, side="right")
 
         pi = np.zeros(n_samples)
         xi = np.full(n_samples, np.nan)
-        pi[order[:cutoff]] = pi_all[order[:cutoff]]
-        xi[order[:cutoff]] = xi_all[:cutoff]
+        kept_indices = order[:cutoff]
+        pi[kept_indices] = pi_all[kept_indices]
+        xi[kept_indices] = xi_all[kept_indices]
         return pi, xi

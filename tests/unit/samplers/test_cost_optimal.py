@@ -119,6 +119,7 @@ def test_sample_delegates_to_validation(fitted_sampler, uncertainties):
         patch.object(cost_optimal_module, "_validate_strictly_positive") as mock_validate_strictly_positive,
         patch.object(cost_optimal_module, "_validate_uncertainties") as mock_validate_uncertainties,
         patch.object(cost_optimal_module, "_validate_non_constant") as mock_validate_non_constant,
+        patch.object(cost_optimal_module, "_validate_bounds") as mock_validate_bounds,
     ):
         fitted_sampler.sample(uncertainties, y_true_cost=10.0, y_proxy_cost=0.0, budget=10, random_seed=42)
 
@@ -132,6 +133,12 @@ def test_sample_delegates_to_validation(fitted_sampler, uncertainties):
             " Provide non-constant uncertainties or set 'y_proxy_cost' to a positive value."
         )
         assert mock_validate_non_constant.call_args[0][1] == expected_msg
+        mock_validate_bounds.assert_called_once_with(
+            10,
+            "budget",
+            lower=10.0,
+            error_message="'budget' should be greater than y_true_cost + y_proxy_cost; got 10.",
+        )
 
 
 def test_sample_negative_y_proxy_cost(fitted_sampler, uncertainties):
@@ -148,7 +155,7 @@ def test_sample_known_output(fitted_sampler, uncertainties):
     pi, xi = fitted_sampler.sample(uncertainties, y_true_cost=10.0, y_proxy_cost=1.0, budget=20, random_seed=42)
 
     expected_pi = np.array([0.049, 0.196])
-    expected_xi = np.array([0.0, 0.0])
+    expected_xi = np.array([0.0, 1.0])
 
     np.testing.assert_allclose(pi, expected_pi, atol=0.001)
     np.testing.assert_array_equal(xi, expected_xi)

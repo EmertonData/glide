@@ -5,6 +5,7 @@ from numpy.random.bit_generator import SeedSequence
 from numpy.typing import NDArray
 
 from glide.core.validation import (
+    _validate_bounds,
     _validate_equal_lengths,
     _validate_has_no_nan,
     _validate_is_integer,
@@ -177,8 +178,12 @@ class CostOptimalRandomSampler:
         _validate_strictly_positive(n_samples, "n_samples")
         _validate_strictly_positive(y_true_cost, "y_true_cost")
         _validate_strictly_positive(y_proxy_cost, "y_proxy_cost")
-        if budget < y_true_cost + y_proxy_cost:
-            raise ValueError(f"'budget' should be greater than y_true_cost + y_proxy_cost; got {budget}.")
+        _validate_bounds(
+            budget,
+            "budget",
+            lower=y_true_cost + y_proxy_cost,
+            error_message=f"'budget' should be greater than y_true_cost + y_proxy_cost; got {budget}.",
+        )
 
         pi_opt = self._compute_optimal_probability(y_true_cost, y_proxy_cost)
 
@@ -192,6 +197,7 @@ class CostOptimalRandomSampler:
 
         pi = np.zeros(n_samples)
         xi = np.full(n_samples, np.nan)
-        pi[order[:cutoff]] = pi_opt
-        xi[order[:cutoff]] = xi_all[order[:cutoff]]
+        kept_indices = order[:cutoff]
+        pi[kept_indices] = pi_opt
+        xi[kept_indices] = xi_all[kept_indices]
         return pi, xi

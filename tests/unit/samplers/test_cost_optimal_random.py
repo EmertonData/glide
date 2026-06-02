@@ -108,6 +108,7 @@ def test_sample_delegates_to_validation(fitted_sampler):
     with (
         patch.object(cost_optimal_random_module, "_validate_is_integer") as mock_validate_is_integer,
         patch.object(cost_optimal_random_module, "_validate_strictly_positive") as mock_validate_strictly_positive,
+        patch.object(cost_optimal_random_module, "_validate_bounds") as mock_validate_bounds,
     ):
         fitted_sampler.sample(n_samples=2, y_true_cost=10.0, y_proxy_cost=1.0, budget=15, random_seed=42)
 
@@ -118,6 +119,12 @@ def test_sample_delegates_to_validation(fitted_sampler):
                 call(10.0, "y_true_cost"),
                 call(1.0, "y_proxy_cost"),
             ]
+        )
+        mock_validate_bounds.assert_called_once_with(
+            15,
+            "budget",
+            lower=11.0,
+            error_message="'budget' should be greater than y_true_cost + y_proxy_cost; got 15.",
         )
 
 
