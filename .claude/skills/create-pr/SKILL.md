@@ -15,22 +15,25 @@ The user may create the PR before they are ready for review (e.g., to share a wo
 
 ### Step 1 — Collect required context
 
-Run these in parallel to build a picture of the branch:
+Always run these first:
 
 ```bash
 git log main..HEAD --oneline
 git diff main...HEAD --stat
-git diff main...HEAD
 gh issue list --limit 30 --state open
 ```
 
 Also read `CHANGELOG.md` (the first 30 lines suffice) and `.github/PULL_REQUEST_TEMPLATE.md`.
 
-Before proceeding, you need:
-1. **The issue or ticket this PR addresses.** If the user did not mention one, ask: *"Which issue or ticket does this branch address? If it's a GitHub issue, give me the number; if it's a project board item, paste the link. If there's no issue, just say so."* Do not proceed until you have this answer.
-2. **Noteworthy implementation decisions or trade-offs.** Ask: *"Is there anything noteworthy about implementation decisions or trade-offs you want captured in the PR description?"* An empty answer is fine — do not fill this section yourself.
+**Reading the full diff** — only do this if you genuinely need more detail to write the PR description or determine labels. Skip it if:
+- The user already described what the branch does in enough detail, or
+- The `--stat` output makes the scope of changes obvious.
 
-Ask both questions in one message and wait for the user's reply.
+If you do need the full diff, first check how large it is from the `--stat` summary (total insertions + deletions). If it exceeds ~300 lines, ask the user before loading it: *"The diff is large (~N lines). Do you want me to read through it, or can you tell me what the branch does?"*
+
+Before proceeding, you need two things from the user. Ask them together in one message and wait for the reply:
+1. **The issue or ticket this PR addresses.** *"Which issue or ticket does this branch address? If it's a GitHub issue, give me the number; if it's a project board item, paste the link. If there's no issue, just say so."*
+2. **Noteworthy implementation decisions or trade-offs.** *"Is there anything noteworthy about implementation decisions or trade-offs you want captured in the PR description?"* An empty answer is fine — do not fill this section yourself.
 
 ### Step 2 — Determine the PR title
 
@@ -90,21 +93,29 @@ Disclose if an LLM was used in writing this PR:
 - Both → `Handles this [ticket](<url>) Closes #<N>`
 - No issue → leave the bullet empty or write "N/A"
 
-**Checklist logic — only tick a box when you are confident it applies:**
+**Checklist logic:**
+
+Run the following commands before filling in the checklist and tick the box if and only if the command exits successfully:
+
+```bash
+make lint
+make type-check
+make tests
+make coverage
+```
+
+Run them sequentially (each is a prerequisite for the next making sense). If a command fails, do not tick its box — and tell the user what failed so they can fix it before requesting review.
+
+For `make test-notebooks`: only run it if notebooks were modified in the diff. Notebook tests can be slow, so skip them when notebooks are untouched.
+
+For the remaining boxes, use the diff and your judgment:
 
 | Box | Tick when |
 |---|---|
-| `make lint` | The diff contains only formatting/trivial fixes, or the user confirms it passes |
-| `make type-check` | No new type annotations or complex signatures were added, or the user confirms it passes |
-| `make tests` | The diff contains test changes that clearly cover the new code, or the user confirms it passes |
-| `make coverage` | Same as tests |
-| `make test-notebooks` | Notebooks were not modified, or the user confirms it passes |
 | New public API docstrings | New public methods/classes were added and docstrings are visible in the diff |
 | API reference | New public API was added and the relevant `docs/api_reference` page was updated in the diff |
-| Docs build | Documentation files were modified, or docs are untouched |
+| Docs build without warnings | Documentation files were modified and `make doc` exits cleanly; or docs are entirely untouched |
 | CHANGELOG updated | A user-facing change was made and you (or the user) added a CHANGELOG entry |
-
-When in doubt, leave the box unchecked. It is better to leave boxes unticked than to tick boxes that the user hasn't verified. The user can tick the remaining boxes before requesting review.
 
 Always check "I have read `CONTRIBUTING.md`" and always check the LLM box (since this skill uses Claude).
 
@@ -142,11 +153,7 @@ Apply one **type label** and one or more **component labels** as applicable.
 
 Derive component labels from the diff: look at which files under `glide/` were modified.
 
-### Step 6 — Determine reviewer
-
-The typical reviewers are `gmartinon-ed`, `imerad`, and `mraki-ed`. Pick the one(s) that are not the PR author. If you know who the author is from `git config user.name` or recent commits, exclude them and assign the others. If uncertain, ask the user.
-
-### Step 7 — Push and create the PR
+### Step 6 — Push and create the PR
 
 First, check if the branch is already on the remote:
 
@@ -168,9 +175,10 @@ gh pr create \
 <filled body>
 EOF
 )" \
-  --label "<label1>" --label "<label2>" \
-  --reviewer "<reviewer>"
+  --label "<label1>" --label "<label2>"
 ```
+
+Do not assign reviewers — the user will request reviews themselves when ready.
 
 After creation, print the PR URL for the user.
 
@@ -181,7 +189,7 @@ If you updated CHANGELOG, also tell the user: *"I updated CHANGELOG.md — you'l
 ## Important constraints
 
 - Never fill in "Any noteworthy implementation decisions or trade-offs?" yourself based on the diff. Only include content the user explicitly provided.
-- Never tick checklist boxes you cannot verify from the diff alone (e.g., lint, tests, coverage). Leave them for the user.
 - If the branch only partially addresses the ticket, say so clearly in the PR description and prefix the title with "WIP:".
 - Always check the LLM box, since Claude is writing this PR.
 - Use `Closes #N` only for GitHub issues that this PR fully resolves. Use `Handles this [ticket](url)` for partial work or project-board-only items.
+- If `make lint`, `make tests`, or `make coverage` fails, report the failure clearly but still ask whether to proceed with PR creation anyway — a failing check does not block opening the PR.

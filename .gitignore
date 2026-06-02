@@ -16,6 +16,10 @@ wheels/
 site/
 docs/generated_examples/
 
+# Claude Code artifacts
+.claude/skills/*-workspace/
+tickets/
+
 # Credentials
 .env
 
