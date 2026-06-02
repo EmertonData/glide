@@ -98,13 +98,16 @@ Disclose if an LLM was used in writing this PR:
 Run the following commands before filling in the checklist and tick the box if and only if the command exits successfully:
 
 ```bash
-make lint
-make type-check
+make pre-commit
 make tests
 make coverage
 ```
 
-Run them sequentially (each is a prerequisite for the next making sense). If a command fails, do not tick its box — and tell the user what failed so they can fix it before requesting review.
+`make pre-commit` runs all pre-commit hooks via `prek`: ruff formatting (`ruff-format`), ruff linting (`ruff --fix`), type checking (`ty check`), notebook output stripping (`nbstripout`), and notebook format normalization. The first four hooks apply corrections in-place — if the first run fails because files were modified, re-run immediately; it should pass the second time. Only report a genuine failure if the second run also fails (or if `ty check` or the mkdocs-execute check failed with an actual error).
+
+For checklist box mapping: `make lint` maps to the ruff hooks in `make pre-commit`; `make type-check` maps to the `ty` hook. Tick both boxes if `make pre-commit` exits cleanly.
+
+Run them sequentially. If a command fails, do not tick its box — and tell the user what failed so they can fix it before requesting review.
 
 For `make test-notebooks`: only run it if notebooks were modified in the diff. Notebook tests can be slow, so skip them when notebooks are untouched.
 
