@@ -64,7 +64,7 @@ The `ActiveSampler` concentrates the annotation budget on the samples with the *
 
 ### Sampling probabilities
 
-Each sample $i$ has an **uncertainty score** $u_i > 0$, an estimate of the root mean squared error of the proxy label relative to the ground truth, $\sqrt{\mathbb{E}[(Y_i - \tilde{Y}_i)^2 \mid X_i]}$. The variance of an IPW-based estimator such as ASI takes the form (see [[3](#ref-3), Equation (2)]):
+Each sample $i$ has an **uncertainty score** $u_i > 0$, an estimate of the root mean squared error of the proxy label relative to the ground truth, $\sqrt{\mathbb{E}[(Y_i - \tilde{Y}_i)^2 \mid X_i]}$. The variance of an IPW-based estimator (see [Estimators](estimators.md) for examples) takes the form (see [[3](#ref-3), Equation (2)]):
 
 $$\mathrm{Var}(Y) + \mathbb{E}\!\left[(Y - \tilde{Y})^2\left(\frac{1}{\pi(X)} - 1\right)\right]$$
 
@@ -89,9 +89,9 @@ $$\xi_i \sim \mathrm{Bernoulli}(\pi_i)$$
 
 The draws are independent across samples. Each sample receives values $(\pi_i, \xi_i)$; samples with $\xi_i = 1$ are sent for human annotation.
 
-Because the draws are random, the total number of selected samples equals the budget only in expectation. To prevent overshooting, the $\xi_i$ draws are performed one by one, stopping as soon as the budget is reached. Samples not drawn when the budget is exhausted receive $\pi_i = 0$ and $\xi_i = \mathrm{NaN}$, indicating no Bernoulli draw was performed.
+Because the draws are random, the total number of selected samples equals the budget only in expectation. To prevent overshooting, the $\xi_i$ draws can be performed one by one, stopping as soon as the budget is reached. Samples not drawn when the budget is exhausted receive $\pi_i = 0$ and $\xi_i = \mathrm{NaN}$, indicating no Bernoulli draw was performed.
 
-To ensure the cutoff does not depend on the input order, the samples are shuffled before the draws begin and the results are returned in the original order.
+To ensure the cutoff does not depend on the input order, the samples can be shuffled before the draws begin and the results are returned in the original order.
 
 ---
 
@@ -147,9 +147,9 @@ Since the proxy is queried for every processed sample, the actual cost of sample
 
 $$\mathbb{E}[\text{cost}_i] = c_{\tilde{y}} + c_y \cdot \pi^*$$
 
-The draws are performed one by one, accumulating the actual cost of each sample until the budget $b$ is exhausted. Samples not reached when the budget runs out receive $\pi_i = 0$ and $\xi_i = \mathrm{NaN}$, indicating no draw was performed.
+The draws can be performed one by one, accumulating the actual cost of each sample until the budget $b$ is exhausted. Samples not reached when the budget runs out receive $\pi_i = 0$ and $\xi_i = \mathrm{NaN}$, indicating no draw was performed.
 
-To ensure the cutoff does not depend on the input order, the samples are shuffled before the draws begin and the results are returned in the original order.
+To ensure the cutoff does not depend on the input order, the samples can be shuffled before the draws begin and the results are returned in the original order.
 
 ---
 
@@ -211,9 +211,9 @@ where $\xi_i = 1$ means the sample additionally receives ground truth annotation
 
 $$\mathbb{E}[\text{cost}_i] = c_{\tilde{y}} + c_y \cdot \pi_i$$
 
-The draws are performed one by one, accumulating the actual cost of each sample until the budget $b$ is exhausted. Samples not reached when the budget runs out receive $\pi_i = 0$ and $\xi_i = \mathrm{NaN}$, indicating no draw was performed.
+The draws can be performed one by one, accumulating the actual cost of each sample until the budget $b$ is exhausted. Samples not reached when the budget runs out receive $\pi_i = 0$ and $\xi_i = \mathrm{NaN}$, indicating no draw was performed.
 
-To ensure the cutoff does not depend on the input order, the samples are shuffled before the draws begin and the results are returned in the original order.
+To ensure the cutoff does not depend on the input order, the samples can be shuffled before the draws begin and the results are returned in the original order.
 
 ---
 
