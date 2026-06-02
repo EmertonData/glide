@@ -1,6 +1,8 @@
-import numpy as np
-import pytest
+from unittest.mock import patch
 
+import numpy as np
+
+import glide.estimators.stratified_core as stratified_core_module
 from glide.estimators.stratified_core import _preprocess
 
 # --- _preprocess ---
@@ -19,33 +21,35 @@ def test_preprocess_returns_correct_shapes():
         assert len(y_proxy_unlabeled) == 2
 
 
-def test_preprocess_raises_on_length_mismatch():
-    y_true = np.array([1.0, 2.0, np.nan, np.nan])
-    y_proxy = np.array([1.1, 1.8, 3.9])
-    grps = np.array(["A", "A", "A", "A"])
-    with pytest.raises(ValueError, match="y_true, y_proxy, and groups must have the same length"):
-        _preprocess(y_true, y_proxy, grps)
+def test_preprocess_delegates_to_validation():
+    y_true = np.array([5.0, 6.0, np.nan, np.nan, 5.0, 6.0, np.nan, np.nan])
+    y_proxy = np.array([4.9, 6.1, 5.2, 6.1, 4.9, 6.1, 5.2, 6.1])
+    groups = np.array(["A", "A", "A", "A", "B", "B", "B", "B"])
 
+    with (
+        patch.object(stratified_core_module, "_validate_equal_lengths") as mock_validate_equal_lengths,
+        patch.object(stratified_core_module, "_validate_y_proxy") as mock_validate_y_proxy,
+        patch.object(stratified_core_module, "_validate_sample_sizes") as mock_validate_sample_sizes,
+    ):
+        _preprocess(y_true, y_proxy, groups)
 
-def test_preprocess_raises_on_nan_proxy():
-    y_true = np.array([1.0, 2.0, np.nan, np.nan])
-    y_proxy = np.array([1.1, np.nan, 5.2, 6.1])
-    grps = np.array(["A", "A", "B", "B"])
-    with pytest.raises(ValueError, match="Input proxy values contain NaN"):
-        _preprocess(y_true, y_proxy, grps)
+        mock_validate_equal_lengths.assert_called_once_with(
+            y_true, y_proxy, groups, names=["y_true", "y_proxy", "groups"]
+        )
 
+        assert mock_validate_y_proxy.call_count == 3
+        np.testing.assert_array_equal(mock_validate_y_proxy.call_args_list[0][0][0], y_proxy)
+        y_proxy_a = y_proxy[groups == "A"]
+        np.testing.assert_array_equal(mock_validate_y_proxy.call_args_list[1][0][0], y_proxy_a)
+        assert mock_validate_y_proxy.call_args_list[1][0][1] == "A"
+        y_proxy_b = y_proxy[groups == "B"]
+        np.testing.assert_array_equal(mock_validate_y_proxy.call_args_list[2][0][0], y_proxy_b)
+        assert mock_validate_y_proxy.call_args_list[2][0][1] == "B"
 
-def test_preprocess_raises_on_zero_variance_proxy_in_stratum():
-    y_true = np.array([1.0, 2.0, np.nan, np.nan])
-    y_proxy = np.array([1.0, 1.0, 1.0, 1.0])
-    grps = np.array(["A", "A", "A", "A"])
-    with pytest.raises(ValueError, match="Input proxy values have zero variance in stratum 'A'"):
-        _preprocess(y_true, y_proxy, grps)
-
-
-def test_preprocess_raises_on_stratum_size_too_small():
-    y_true = np.array([1.0, np.nan, 4.0, np.nan])
-    y_proxy = np.array([1.1, 1.8, 3.9, 4.8])
-    grps = np.array(["A", "A", "B", "B"])
-    with pytest.raises(ValueError, match="Too few labeled or unlabeled samples in stratum 'A'"):
-        _preprocess(y_true, y_proxy, grps)
+        assert mock_validate_sample_sizes.call_count == 2
+        labeled_mask_a = ~np.isnan(y_true[groups == "A"])
+        np.testing.assert_array_equal(mock_validate_sample_sizes.call_args_list[0][0][0], labeled_mask_a)
+        assert mock_validate_sample_sizes.call_args_list[0][0][1] == "A"
+        labeled_mask_b = ~np.isnan(y_true[groups == "B"])
+        np.testing.assert_array_equal(mock_validate_sample_sizes.call_args_list[1][0][0], labeled_mask_b)
+        assert mock_validate_sample_sizes.call_args_list[1][0][1] == "B"

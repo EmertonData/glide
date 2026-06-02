@@ -1,7 +1,10 @@
+from unittest.mock import patch
+
 import numpy as np
 import pytest
 from numpy.typing import NDArray
 
+import glide.samplers.active as active_module
 from glide.samplers import ActiveSampler
 
 
@@ -15,18 +18,22 @@ def sampler() -> ActiveSampler:
     return ActiveSampler()
 
 
-# --- _validate ---
+# --- _compute_probabilities ---
 
 
-@pytest.mark.parametrize("bad_uncertainty", [0.0, -0.1])
-def test_validate_raises_on_non_positive_uncertainty(sampler, bad_uncertainty):
-    with pytest.raises(ValueError, match="non-positive"):
-        sampler._validate(np.array([bad_uncertainty, 0.5]))
+def test_compute_probabilities_warns_on_extreme_ratio(sampler):
+    with pytest.warns(UserWarning, match="Extreme uncertainty ratio"):
+        sampler._compute_probabilities(np.array([0.001, 1.001]), budget=1)
 
 
-def test_validate_raises_on_nan_uncertainty(sampler):
-    with pytest.raises(ValueError, match="NaN"):
-        sampler._validate(np.array([float("nan"), 0.5]))
+def test_compute_probabilities_no_saturation(sampler):
+    pi = sampler._compute_probabilities(np.array([0.1, 1.0]), budget=1)
+    np.testing.assert_allclose(pi, np.array([0.090909, 0.90909]), atol=1e-5)
+
+
+def test_compute_probabilities_with_saturation(sampler):
+    pi = sampler._compute_probabilities(np.array([0.01, 1.0, 9.0]), budget=2)
+    np.testing.assert_allclose(pi, np.array([1 / 101, 100 / 101, 1.0]), atol=1e-5)
 
 
 # --- sample ---
@@ -53,13 +60,24 @@ def test_sample_valid_output(sampler, uncertainties):
     np.testing.assert_array_equal(xi, expected_xi)
 
 
-def test_sample_pi_clipped_and_higher_uncertainty_gets_higher_pi(sampler):
-    pi, _ = sampler.sample(np.array([0.001, 10.0]), budget=2, random_seed=0)
-    np.testing.assert_allclose(pi, np.array([0.0, 1.0]), atol=0.001)
-
-
 def test_sample_is_reproducible(sampler, uncertainties):
     pi1, xi1 = sampler.sample(uncertainties, budget=5, random_seed=42)
     pi2, xi2 = sampler.sample(uncertainties, budget=5, random_seed=42)
     np.testing.assert_array_equal(pi1, pi2)
     np.testing.assert_array_equal(xi1, xi2)
+
+
+def test_sample_delegates_to_validation(sampler, uncertainties):
+    with (
+        patch.object(active_module, "_validate_is_integer") as mock_validate_is_integer,
+        patch.object(active_module, "_validate_strictly_positive") as mock_validate_strictly_positive,
+        patch.object(active_module, "_validate_budget_bound") as mock_validate_budget_bound,
+        patch.object(active_module, "_validate_uncertainties") as mock_validate_uncertainties,
+    ):
+        sampler.sample(uncertainties, budget=5, random_seed=0)
+
+        mock_validate_is_integer.assert_called_once_with(5, "budget")
+        mock_validate_strictly_positive.assert_called_once_with(5, "budget")
+        mock_validate_budget_bound.assert_called_once_with(5, len(uncertainties))
+        mock_validate_uncertainties.assert_called_once()
+        np.testing.assert_array_equal(mock_validate_uncertainties.call_args[0][0], uncertainties)

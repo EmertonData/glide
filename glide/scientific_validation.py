@@ -3,6 +3,7 @@ from typing import Any, Callable, Dict, Tuple
 import numpy as np
 from numpy.typing import NDArray
 
+from glide.core.validation import _validate_bounds, _validate_non_empty, _validate_strictly_positive
 from glide.estimators import ClassicalMeanEstimator
 
 
@@ -57,10 +58,10 @@ def run_monte_carlo(
     >>> stats["M"]["means"]
     array([0.5, 0.5])
     """
-    if n_seeds <= 0:
-        raise ValueError(f"'n_seeds' must be > 0; got {n_seeds!r}.")
-    if not np.all((confidence_levels > 0) & (confidence_levels < 1)):
-        raise ValueError(f"All 'confidence_levels' must be in (0, 1); got {confidence_levels!r}.")
+    _validate_strictly_positive(n_seeds, "n_seeds")
+    _validate_bounds(
+        confidence_levels, "confidence_levels", lower=0, upper=1, left_inclusive=False, right_inclusive=False
+    )
     first_estimates = run_seed(0)
     methods = list(first_estimates.keys())
     if not methods:
@@ -140,8 +141,9 @@ def compute_hits(
     >>> hits["M"]
     array([1., 0.])
     """
-    if not 0 < confidence_level < 1:
-        raise ValueError(f"'confidence_level' must be in (0, 1); got {confidence_level!r}.")
+    _validate_bounds(
+        confidence_level, "confidence_level", lower=0, upper=1, left_inclusive=False, right_inclusive=False
+    )
     hits = {}
     for method in stats:
         if confidence_level not in stats[method]["lower_bounds"]:
@@ -198,10 +200,10 @@ def coverage_with_error_bar(
     >>> round(float(upper), 4)
     0.9447
     """
-    if len(hits) == 0:
-        raise ValueError("'hits' must be non-empty.")
-    if not 0 < confidence_level < 1:
-        raise ValueError(f"'confidence_level' must be in (0, 1); got {confidence_level!r}.")
+    _validate_non_empty(hits, "hits")
+    _validate_bounds(
+        confidence_level, "confidence_level", lower=0, upper=1, left_inclusive=False, right_inclusive=False
+    )
     estimator = ClassicalMeanEstimator()
     result = estimator.estimate(hits, confidence_level=confidence_level)
     coverage = result.mean

@@ -9,18 +9,31 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 ## [Next release]
 
 ### ✨ Added
+
+### 🔄 Changed
+
+### 🐛 Fixed
+
+### 💛 Contributors
+
+## [0.6.0] – 2026-06-01
+
+### ✨ Added
 - `scientific_validation.md` deep-dive page covering shared validation methodology
 - `CostOptimalSampler` for uncertainty-based cost-optimal annotation strategy
 
 ### 🔄 Changed
+- Centralised input validation logic into `glide.core.validation`
 - Deep-dive validation notebooks use shared utilities from `glide.scientific_validation`
 - Binary dataset generators now take `n_total` instead of `n_labeled` + `n_unlabeled`, and return fully populated oracle arrays.
+- Improved `ActiveSampler` to compute probabilities that always sum to the budget.
 
 ### 🐛 Fixed
 - Fixed effective sample size computation to use the correct classical baseline for each sampling design
 - Invalid inputs/outputs in `StratifiedSampler` with no raised errors
 
 ### 💛 Contributors
+Thank you to everyone who contributed to this release: @gmartinon-ed, @imerad, @mraki-ed
 
 ## [0.5.0] – 2026-05-18
 

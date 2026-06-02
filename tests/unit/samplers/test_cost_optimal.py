@@ -1,7 +1,10 @@
+from unittest.mock import call, patch
+
 import numpy as np
 import pytest
 from numpy.typing import NDArray
 
+import glide.samplers.cost_optimal as cost_optimal_module
 from glide.samplers import CostOptimalSampler
 
 
@@ -35,19 +38,12 @@ def fitted_sampler_small_variance(sampler) -> CostOptimalSampler:
 # --- fit ---
 
 
-def test_fit_raises_on_empty_y_true(sampler):
-    with pytest.raises(ValueError, match="non-empty"):
-        sampler.fit(np.array([]))
-
-
-def test_fit_raises_on_nan_in_y_true(sampler):
-    with pytest.raises(ValueError, match="NaN"):
-        sampler.fit(np.array([1.0, np.nan]))
-
-
-def test_fit_raises_on_zero_variance_y_true(sampler):
-    with pytest.raises(ValueError, match="zero variance"):
-        sampler.fit(np.array([1.0, 1.0]))
+def test_fit_delegates_to_validation(sampler, y_true):
+    with (
+        patch.object(cost_optimal_module, "_validate_y_true_burn_in") as mock_validate_y_true_burn_in,
+    ):
+        sampler.fit(y_true)
+        mock_validate_y_true_burn_in.assert_called_once_with(y_true)
 
 
 def test_fit_known_variance(sampler):
@@ -104,6 +100,12 @@ def test_find_optimal_threshold_known_output(fitted_sampler, uncertainties):
     assert tau_star == pytest.approx(expected_tau_star, abs=0.001)
 
 
+def test_find_optimal_threshold_zero_y_proxy_cost_known_output(fitted_sampler, uncertainties):
+    tau_star = fitted_sampler._find_optimal_threshold(uncertainties, y_true_cost=10.0, y_proxy_cost=0.0)
+    expected_tau_star = 0.1
+    assert tau_star == pytest.approx(expected_tau_star, abs=0.001)
+
+
 # --- sample ---
 
 
@@ -112,10 +114,24 @@ def test_sample_raises_if_fit_not_called(sampler, uncertainties):
         sampler.sample(uncertainties, y_true_cost=10.0, y_proxy_cost=1.0, budget=5, random_seed=42)
 
 
-@pytest.mark.parametrize("cost", [0.0, -1.0])
-def test_sample_invalid_y_true_cost(fitted_sampler, uncertainties, cost):
-    with pytest.raises(ValueError, match="'y_true_cost' must be strictly positive"):
-        fitted_sampler.sample(uncertainties, y_true_cost=cost, y_proxy_cost=1.0, budget=5, random_seed=42)
+def test_sample_delegates_to_validation(fitted_sampler, uncertainties):
+    with (
+        patch.object(cost_optimal_module, "_validate_strictly_positive") as mock_validate_strictly_positive,
+        patch.object(cost_optimal_module, "_validate_uncertainties") as mock_validate_uncertainties,
+        patch.object(cost_optimal_module, "_validate_non_constant") as mock_validate_non_constant,
+    ):
+        fitted_sampler.sample(uncertainties, y_true_cost=10.0, y_proxy_cost=0.0, budget=10, random_seed=42)
+
+        mock_validate_strictly_positive.assert_has_calls([call(10.0, "y_true_cost"), call(10, "budget")])
+        mock_validate_uncertainties.assert_called_once()
+        np.testing.assert_array_equal(mock_validate_uncertainties.call_args[0][0], uncertainties)
+        mock_validate_non_constant.assert_called_once()
+        np.testing.assert_array_equal(mock_validate_non_constant.call_args[0][0], uncertainties)
+        expected_msg = (
+            "All uncertainty values are equal and 'y_proxy_cost' is zero."
+            " Provide non-constant uncertainties or set 'y_proxy_cost' to a positive value."
+        )
+        assert mock_validate_non_constant.call_args[0][1] == expected_msg
 
 
 def test_sample_negative_y_proxy_cost(fitted_sampler, uncertainties):
@@ -123,30 +139,9 @@ def test_sample_negative_y_proxy_cost(fitted_sampler, uncertainties):
         fitted_sampler.sample(uncertainties, y_true_cost=10.0, y_proxy_cost=-1, budget=5, random_seed=42)
 
 
-def test_sample_constant_uncertainties_and_zero_y_proxy_cost(fitted_sampler):
-    with pytest.raises(ValueError, match="All uncertainty values are equal and 'y_proxy_cost' is zero."):
-        fitted_sampler.sample(np.ones(2), y_true_cost=10.0, y_proxy_cost=0.0, budget=5, random_seed=42)
-
-
-@pytest.mark.parametrize("budget", [0, -1])
-def test_sample_invalid_budget(fitted_sampler, uncertainties, budget):
-    with pytest.raises(ValueError, match="'budget' must be strictly positive"):
-        fitted_sampler.sample(uncertainties, y_true_cost=10.0, y_proxy_cost=1.0, budget=budget, random_seed=42)
-
-
 def test_sample_budget_too_small_raises(fitted_sampler, uncertainties):
-    with pytest.raises(ValueError, match="Budget .* is too small"):
+    with pytest.raises(ValueError, match="'budget' is too small"):
         fitted_sampler.sample(uncertainties, y_true_cost=10.0, y_proxy_cost=1.0, budget=1, random_seed=42)
-
-
-def test_sample_raises_on_nan_uncertainties(fitted_sampler):
-    with pytest.raises(ValueError, match="NaN"):
-        fitted_sampler.sample(np.array([0.1, np.nan]), y_true_cost=10.0, y_proxy_cost=1.0, budget=5, random_seed=42)
-
-
-def test_sample_raises_on_non_positive_uncertainties(fitted_sampler):
-    with pytest.raises(ValueError, match="non-positive value"):
-        fitted_sampler.sample(np.array([0.1, 0.0]), y_true_cost=10.0, y_proxy_cost=1.0, budget=5, random_seed=42)
 
 
 def test_sample_known_output(fitted_sampler, uncertainties):

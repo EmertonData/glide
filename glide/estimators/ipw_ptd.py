@@ -6,6 +6,15 @@ import numpy as np
 from numpy.typing import NDArray
 
 from glide.confidence_intervals import BootstrapConfidenceInterval
+from glide.core.validation import (
+    _get_non_zero_mask,
+    _validate_equal_lengths,
+    _validate_label_prob_consistency,
+    _validate_probabilities,
+    _validate_sample_sizes,
+    _validate_y_proxy,
+    _validate_y_true,
+)
 from glide.estimators.ipw_classical import IPWClassicalMeanEstimator
 from glide.estimators.ptd_core import (
     _compute_bootstrap_labeled_means,
@@ -58,29 +67,17 @@ class IPWPTDMeanEstimator:
         y_proxy: NDArray,
         pi: NDArray,
     ) -> Tuple[NDArray, NDArray, NDArray, NDArray]:
-        if not (len(y_true) == len(y_proxy) == len(pi)):
-            raise ValueError(
-                f"y_true, y_proxy, and pi must have the same length, got {len(y_true)}, {len(y_proxy)}, and {len(pi)}"
-            )
-        if np.min(pi) < 0 or np.max(pi) > 1:
-            raise ValueError("Sampling probabilities should be in [0, 1]")
-        if np.isnan(y_proxy).any():
-            raise ValueError("Input proxy values contain NaN")
-        if len(np.unique(y_proxy)) == 1:
-            raise ValueError("Input proxy values have zero variance")
+        _validate_equal_lengths(y_true, y_proxy, pi, names=["y_true", "y_proxy", "pi"])
+        _validate_probabilities(pi)
+        _validate_y_proxy(y_proxy)
+        _validate_y_true(y_true)
 
         y_true_non_nan_mask = ~np.isnan(y_true)
         xi = y_true_non_nan_mask.astype(float)
 
-        if np.any(y_true_non_nan_mask & (pi == 0)):
-            raise ValueError("Samples with non-zero probability of being labeled cannot be labeled")
-        if np.any(~y_true_non_nan_mask & (pi == 1)):
-            raise ValueError("Samples with probability one of being labeled must be labeled")
+        _validate_sample_sizes(y_true_non_nan_mask)
+        _validate_label_prob_consistency(y_true_non_nan_mask, pi)
 
-        n_labeled = int(xi.sum())
-        n_unlabeled = len(y_true) - n_labeled
-        if min(n_labeled, n_unlabeled) <= 1:
-            raise ValueError("Too few labeled or unlabeled samples in dataset")
         y_true_filled = np.nan_to_num(y_true, nan=0)
         return y_true_filled, y_proxy, xi, pi
 
@@ -139,7 +136,7 @@ class IPWPTDMeanEstimator:
         ValueError
             - If ``y_true``, ``y_proxy``, and ``pi`` do not all have the same length.
             - If any proxy value is NaN.
-            - If all proxy values are identical (zero variance).
+            - If all proxy values are identical.
             - If any sampling probability is not in [0, 1].
             - If any labeled sample (non-NaN ``y_true``) has a labeling probability of 0.
             - If any unlabeled sample (NaN ``y_true``) has a labeling probability of 1.
@@ -148,19 +145,8 @@ class IPWPTDMeanEstimator:
         y_true_filled, y_proxy, xi, pi = self._preprocess(y_true, y_proxy, pi)
         rng = np.random.default_rng(random_seed)
 
-        non_zero_pi_mask = pi > 0
-        non_one_pi_mask = pi < 1
-
-        if not np.all(non_zero_pi_mask):
-            warnings.warn(
-                "Some observations have pi=0. These will be excluded from the estimation as per the original paper.",
-                UserWarning,
-            )
-        if not np.all(non_one_pi_mask):
-            warnings.warn(
-                "Some observations have pi=1. These will be excluded from the estimation as per the original paper.",
-                UserWarning,
-            )
+        non_zero_pi_mask = _get_non_zero_mask(pi)
+        non_one_pi_mask = _get_non_zero_mask(1 - pi)
 
         with warnings.catch_warnings():
             warnings.filterwarnings("ignore")

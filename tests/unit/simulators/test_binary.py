@@ -13,19 +13,19 @@ def test_generate_binary_dataset_structure_and_counts():
 
 
 def test_generate_binary_dataset_invalid_true_mean_raises():
-    with pytest.raises(ValueError, match=r"true_mean must be in \(0, 1\), got 1\.5"):
+    with pytest.raises(ValueError, match=r"'true_mean' must be in \(0, 1\)"):
         generate_binary_dataset(n_total=2, true_mean=1.5)
 
 
 def test_generate_binary_dataset_invalid_proxy_mean_raises():
-    with pytest.raises(ValueError, match=r"proxy_mean must be in \(0, 1\), got 0"):
+    with pytest.raises(ValueError, match=r"'proxy_mean' must be in \(0, 1\)"):
         generate_binary_dataset(n_total=2, proxy_mean=0.0)
 
 
 def test_generate_binary_dataset_impossible_correlation_raises():
     with pytest.raises(
         ValueError,
-        match=r"Impossible combination of true_mean=0\.7, proxy_mean=0\.6, and correlation=0\.95",
+        match=r"Impossible combination of 'true_mean'=0\.7, 'proxy_mean'=0\.6, and 'correlation'=0\.95",
     ):
         generate_binary_dataset(n_total=10, true_mean=0.7, proxy_mean=0.6, correlation=0.95)
 

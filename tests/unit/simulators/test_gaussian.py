@@ -15,12 +15,12 @@ def test_generate_gaussian_dataset_structure_and_counts():
 
 
 def test_generate_gaussian_dataset_invalid_positive_correlation_raises():
-    with pytest.raises(ValueError, match="Correlation should be between -1 and 1"):
+    with pytest.raises(ValueError, match="'correlation' must be in"):
         generate_gaussian_dataset(n_labeled=1, n_unlabeled=1, correlation=1.5)
 
 
 def test_generate_gaussian_dataset_invalid_negative_correlation_raises():
-    with pytest.raises(ValueError, match="Correlation should be between -1 and 1"):
+    with pytest.raises(ValueError, match="'correlation' must be in"):
         generate_gaussian_dataset(n_labeled=1, n_unlabeled=1, correlation=-1.5)
 
 

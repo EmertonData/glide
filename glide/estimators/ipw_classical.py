@@ -1,10 +1,10 @@
-import warnings
 from typing import Tuple
 
 import numpy as np
 from numpy.typing import NDArray
 
 from glide.confidence_intervals import CLTConfidenceInterval
+from glide.core.validation import _get_non_zero_mask, _validate_label_prob_consistency, _validate_probabilities
 from glide.mean_inference_results import ClassicalMeanInferenceResult
 
 
@@ -36,12 +36,10 @@ class IPWClassicalMeanEstimator:
     """
 
     def _preprocess(self, y: NDArray, sampling_probability: NDArray) -> Tuple[NDArray, NDArray]:
-        if np.min(sampling_probability) < 0 or np.max(sampling_probability) > 1:
-            raise ValueError("Sampling probabilities should be in [0, 1]")
-        non_nan_mask = ~np.isnan(y)
-        if np.any(non_nan_mask & (sampling_probability == 0)):
-            raise ValueError("Samples with non-zero probability of being labeled cannot be labeled")
-        non_zero_pi_mask = sampling_probability > 0
+        _validate_probabilities(sampling_probability)
+        non_zero_pi_mask = _get_non_zero_mask(sampling_probability)
+        y_not_nan = ~np.isnan(y)
+        _validate_label_prob_consistency(y_not_nan, sampling_probability)
         return y[non_zero_pi_mask], sampling_probability[non_zero_pi_mask]
 
     def estimate(
@@ -80,11 +78,6 @@ class IPWClassicalMeanEstimator:
             If any value in ``sampling_probability`` is outside of [0, 1].
             If any labeled observation (non-NaN ``y``) has ``sampling_probability`` equal to 0.
         """
-        if not np.all(sampling_probability > 0):
-            warnings.warn(
-                "Some observations have pi=0. These will be excluded from the estimation.",
-                UserWarning,
-            )
         y_non_zero_pi, pi_non_zero = self._preprocess(y, sampling_probability)
         n_labeled = int(np.sum(~np.isnan(y_non_zero_pi)))
         n_samples = len(y_non_zero_pi)

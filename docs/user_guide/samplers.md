@@ -4,8 +4,13 @@ Samplers sit **upstream of the estimators**: they decide *which* samples to send
 
 When auxiliary signals are available, choosing samples strategically can substantially reduce the annotation budget needed to reach a target confidence-interval width. Other samplers (for example, `ActiveSampler`) go further: in addition to $\xi_i$, they compute a **drawing probability** $\pi_i$ for each sample, which allows downstream estimators to apply Inverse Probability Weighting (IPW) and correct for non-uniform sampling bias.
 
+The ultimate purpose is to estimate the mean $\mathbb{E}[Y]$ of ground truths $Y$ that are costly to obtain. Proxys label $\tilde{Y}$, available cheaply for all samples, serve as an auxiliary signal. When per-sample proxy errors $\mathbb{E}[(Y_i - \tilde{Y}_i)^2 \mid X_i]$ can be estimated for each input $X_i$, they reveal which samples the proxy is least reliable for and can guide the allocation of the annotation budget to reduce estimation variance.
+
 | Value | Description |
 |---|---|
+| $Y_i$ | Ground truth label for sample $i$ |
+| $\tilde{Y}_i$ | Proxy label for sample $i$ |
+| $X_i$ | Input for sample $i$ |
 | $\pi_i$ | Drawing probability used to select sample $i$ for annotation ($0 < \pi_i \leq 1$) |
 | $\xi_i$ | Bernoulli indicator: $1$ if the sample was selected, $0$ otherwise |
 
@@ -59,29 +64,38 @@ The `ActiveSampler` concentrates the annotation budget on the samples with the *
 
 ### Sampling probabilities
 
-Each sample $i$ has an **uncertainty score** $u_i > 0$. The raw drawing probability is set proportional to $u_i$, normalised so that the expected number of selected samples equals the budget $b$:
+Each sample $i$ has an **uncertainty score** $u_i > 0$, an estimate of the root mean squared error of the proxy label relative to the ground truth, $\sqrt{\mathbb{E}[(Y_i - \tilde{Y}_i)^2 \mid X_i]}$. The variance of an IPW-based estimator (see [Estimators](estimators.md) for examples) takes the form (see [[3](#ref-3), Equation (2)]):
+
+$$\mathrm{Var}(Y) + \mathbb{E}\!\left[(Y - \tilde{Y})^2\left(\frac{1}{\pi(X)} - 1\right)\right]$$
+
+The sampling probabilities are chosen to minimise this quantity. Because it depends on the probabilities only through $\mathbb{E}\!\left[\frac{(Y - \tilde{Y})^2}{\pi(X)}\right]$, the problem reduces to solving the optimisation:
+
+$$\mathrm{minimize} \sum_i \frac{u_i^2}{\pi_i}$$
+
+subject to $\pi_i \in (0, 1]$ for all $i$ and $\sum_i \pi_i = b$. When all resulting probabilities are valid ($\tilde{\pi}_i \leq 1$), the closed-form solution is:
 
 $$\tilde{\pi}_i = b \cdot \frac{u_i}{\sum_{j=1}^{n} u_j}$$
 
-Because $\tilde{\pi}_i$ must be a valid Bernoulli probability, values are capped at 1:
 
-$$\pi_i = \min\!\left(\tilde{\pi}_i,\; 1\right)$$
+When some uncertainty scores are large enough to push $\tilde{\pi}_i$ above 1, numerical optimisation finds the optimal solution satisfying the constraints.
 
-Samples whose raw probability exceeds 1 are selected with certainty ($\pi_i = 1$). As a result, the actual expected number of selected samples is at most $b$ (it may be slightly less when some values are capped).
+Uncertainty scores must be strictly positive: $u_i > 0$ for every sample. A zero or negative score would assign a zero probability to that sample, making it unselectable.
 
 ### Sampling procedure
 
 Given the probabilities $\pi_i$, each sample is independently selected via a Bernoulli trial:
 
-$$\xi_i \sim \mathrm{Bernoulli}(\pi_i), \quad i = 1, \ldots, n$$
+$$\xi_i \sim \mathrm{Bernoulli}(\pi_i)$$
 
-The draws are independent across samples. Each sample receives values $(\pi_i, \xi_i)$; samples with $\xi_i = 1$ are the ones to be sent for human annotation.
+The draws are independent across samples. Each sample receives values $(\pi_i, \xi_i)$; samples with $\xi_i = 1$ are sent for human annotation.
 
-Note that uncertainty scores must be strictly positive. The `ActiveSampler` requires $u_i > 0$ for every sample. A zero or negative uncertainty score would result in a zero sampling probability, making that sample permanently unselectable, which violates the IPW assumption $\pi_i > 0$ required for valid inference.
+Because the draws are random, the total number of selected samples equals the budget only in expectation. To prevent overshooting, the $\xi_i$ draws can be performed one by one, stopping as soon as the budget is reached. Samples not drawn when the budget is exhausted receive $\pi_i = 0$ and $\xi_i = \mathrm{NaN}$, indicating no Bernoulli draw was performed.
+
+To ensure the cutoff does not depend on the input order, the samples can be shuffled before the draws begin and the results are returned in the original order.
 
 ---
 
-## Cost Optimal Random Sampler
+## Cost-Optimal Random Sampler
 
 The `CostOptimalRandomSampler` addresses the following setting: two annotation sources are available, one **cheap but error-prone** (the proxy rater) and one **expensive but highly reliable** (the ground truth rater). A budget limit is imposed, potentially limiting the number of samples that can be annotated. The sampler determines how many samples are affordable and the proxy is queried for all of them. The sampler additionally decides which samples to also send to the expensive rater, so that downstream estimation of the mean ground truth rating is as precise as possible within the available budget.
 
@@ -115,38 +129,31 @@ $$
 - If the first case condition holds, the proxy is accurate enough that querying the ground truth rater on only a fraction $\pi^* < 1$ of samples is cost-efficient. The optimal rate varies inversely with both the ratio $\text{Var}(Y) / \text{MSE}(Y, \tilde{Y})$ and the cost ratio $c_y / c_{\tilde{y}}$: a more accurate proxy or a more expensive ground truth rater both lead to a lower $\pi^*$.
 - In the second case, the proxy is too unreliable and every sample must be sent to the expensive rater ($\pi^* = 1$).
 
-The intuition: if $H$ has high variance but $G$ closely tracks it, the estimator can primarily exploit the proxy's cheap, high-quality predictions, querying the ground truth rater at a low rate only to correct for residual bias.
+The intuition: if $Y$ has high variance but $\tilde{Y}$ closely tracks it, the estimator can primarily exploit the proxy's cheap, high-quality predictions, querying the ground truth rater at a low rate only to correct for residual bias.
 
 ### Burn-in phase
 
 To compute $\pi^*$, estimates of $\text{Var}(Y)$ and $\text{MSE}(Y, \tilde{Y})$ are needed. When no labeled data is available upfront, one can first annotate a number of initial samples unconditionally with ground truth ($\pi = 1$). This burn-in dataset is used to compute the required statistics. Once $\pi^*$ is determined, the subsequent data is annotated with this probability and can be used by downstream estimators that support inverse probability weighting.
 
-### Total cost and budget mapping
-
-Since the proxy is queried for every sample, the expected cost per sample is:
-
-$$\mathbb{E}[\text{Cost per sample}] = c_{\tilde{y}} + c_y \cdot \pi$$
-
-Given a budget $b$ and optimal probability $\pi^*$, the maximum number of samples that can be processed is:
-
-$$T = \left\lfloor \frac{b}{c_{\tilde{y}} + c_y \cdot \pi^*} \right\rfloor$$
-
 ### Sampling procedure
 
-The annotation process proceeds in two stages. First, the sampler determines which samples to process, depending on how $T$ compares to the dataset size $N$:
+Each sample is sent to the expensive rater via a Bernoulli trial:
 
-- If $T < N$: the first $T$ samples are selected from the dataset.
-- If $T \geq N$: all $N$ samples are used.
+$$\xi_i \sim \mathrm{Bernoulli}(\pi_i)$$
 
-Second, each selected sample is independently sent to the expensive rater with probability $\pi^*$:
+where $\xi_i = 1$ means the sample additionally receives ground truth annotation and $\xi_i = 0$ means only the proxy label is used. All processed samples share the drawing probability $\pi_i = \pi^*$. 
 
-$$\xi_i \sim \mathrm{Bernoulli}(\pi^*), \quad i = 1, \ldots, \min(T, N)$$
+Since the proxy is queried for every processed sample, the actual cost of sample $i$ is $c_{\tilde{y}} + c_y \cdot \xi_i$, with expected value:
 
-where $\xi_i = 1$ means the sample additionally receives ground truth annotation and $\xi_i = 0$ means only the proxy annotation is used. All selected samples share the same drawing probability $\pi_i = \pi^*$. Unselected samples receive $\pi_i = 0$ and no indicator $\xi_i$ (absent value encoded as $\mathrm{NaN}$).
+$$\mathbb{E}[\text{cost}_i] = c_{\tilde{y}} + c_y \cdot \pi^*$$
+
+The draws can be performed one by one, accumulating the actual cost of each sample until the budget $b$ is exhausted. Samples not reached when the budget runs out receive $\pi_i = 0$ and $\xi_i = \mathrm{NaN}$, indicating no draw was performed.
+
+To ensure the cutoff does not depend on the input order, the samples can be shuffled before the draws begin and the results are returned in the original order.
 
 ---
 
-## Cost Optimal Sampler
+## Cost-Optimal Sampler
 
 The `CostOptimalSampler` generalizes the `CostOptimalRandomSampler`. Two annotation sources are available: one **cheap but error-prone** (the proxy rater) and one **expensive but highly reliable** (the ground truth rater). A budget limit is imposed, potentially limiting the number of samples that can be annotated. Rather than querying the ground truth rater at a **fixed probability** for every sample, the `CostOptimalSampler` computes an **active policy**: a per-sample annotation probability that depends on how unreliable the proxy label is expected to be for that sample. Samples where the proxy is likely to err are annotated more frequently; samples where the proxy is reliable are annotated at a lower rate. This concentrates the annotation budget where it reduces variance the most.
 
@@ -194,25 +201,19 @@ Note also that when all uncertainty scores are equal ($u_i = u$ for all $i$), th
 
 In order to compute the optimal policy, the ground truth label variance $\mathrm{Var}(Y)$ needs to be known. This is estimated from a **burn-in dataset**: a set of samples annotated unconditionally by the ground truth rater before the active policy is applied. The burn-in labels are used to compute this variance estimate, after which the active policy governs subsequent annotation.
 
-### Budget and sample selection
-
-The proxy label is queried for every selected sample, while the ground truth label is queried with probability $\pi_i$. The expected cost of processing sample $i$ under the active policy is therefore:
-
-$$\mathbb{E}[\text{cost}_i] = c_y \cdot \pi_i + c_{\tilde{y}}$$
-
-Because each sample has its own annotation probability, the number of affordable samples is determined by adding their expected costs until the budget $b$ is saturated. Indeed, it is not always possible to use all samples due to the annotation costs $c_{y}$ and $c_{\tilde{y}}$ even though the latter is generally small.
-
-$$T = \max\!\left\{t \,:\, \sum_{i=1}^{t} \bigl(c_y\,\pi_i + c_{\tilde{y}}\bigr) \leq b\right\}$$
-
-A hard cutoff is applied: samples beyond index $T$ receive $\pi_i = 0$ and are excluded from sampling.
-
 ### Sampling procedure
 
-All selected samples $i \leq T$ are queried for their proxy label. Additionally, for each selected sample, the ground truth annotation is independently requested with probability $\pi_i$:
+Each sample is sent to the expensive rater via a Bernoulli trial:
 
-$$\xi_i \sim \mathrm{Bernoulli}(\pi_i), \quad i = 1, \ldots, T$$
+$$\xi_i \sim \mathrm{Bernoulli}(\pi_i)$$
 
-where $\xi_i = 1$ means the sample additionally receives ground truth annotation and $\xi_i = 0$ means only the proxy label is used. Unselected samples receive no indicator $\xi_i$ (absent value encoded as $\mathrm{NaN}$).
+where $\xi_i = 1$ means the sample additionally receives ground truth annotation and $\xi_i = 0$ means only the proxy label is used. Since the proxy is queried for every sample, the actual cost of sample $i$ is $c_{\tilde{y}} + c_y \cdot \xi_i$, with expected value:
+
+$$\mathbb{E}[\text{cost}_i] = c_{\tilde{y}} + c_y \cdot \pi_i$$
+
+The draws can be performed one by one, accumulating the actual cost of each sample until the budget $b$ is exhausted. Samples not reached when the budget runs out receive $\pi_i = 0$ and $\xi_i = \mathrm{NaN}$, indicating no draw was performed.
+
+To ensure the cutoff does not depend on the input order, the samples can be shuffled before the draws begin and the results are returned in the original order.
 
 ---
 

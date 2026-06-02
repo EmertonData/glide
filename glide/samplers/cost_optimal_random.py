@@ -4,6 +4,14 @@ import numpy as np
 from numpy.random.bit_generator import SeedSequence
 from numpy.typing import NDArray
 
+from glide.core.validation import (
+    _validate_equal_lengths,
+    _validate_has_no_nan,
+    _validate_is_integer,
+    _validate_strictly_positive,
+    _validate_y_true_burn_in,
+)
+
 
 class CostOptimalRandomSampler:
     """Sampler implementing cost-optimal random annotation.
@@ -77,16 +85,12 @@ class CostOptimalRandomSampler:
               (proxy labels match ground truth perfectly). This would lead to zero
               annotation probability making sampling impossible.
         """
-        if len(y_true) == 0:
-            raise ValueError("'y_true' must not be empty")
-        if len(y_true) != len(y_proxy):
-            raise ValueError(f"'y_true' and y_proxy must have the same length; got {len(y_true)} and {len(y_proxy)}.")
-        if np.any(np.isnan(y_true)) or np.any(np.isnan(y_proxy)):
-            raise ValueError("Input contains NaN values")
-        if np.all(y_true == y_proxy):
-            raise ValueError("Proxy values have zero MSE with ground-truths")
-        if len(np.unique(y_true)) < 2:
-            raise ValueError("Input ground-truth values have zero variance")
+        _validate_y_true_burn_in(y_true)
+        _validate_equal_lengths(y_true, y_proxy, names=["y_true", "y_proxy"])
+        _validate_has_no_nan(y_proxy, "y_proxy")
+        _validate_has_no_nan(y_true, "y_true")
+        if np.max(np.abs(y_true - y_proxy)) == 0:
+            raise ValueError("'y_proxy' predicts 'y_true' perfectly (zero MSE). Annotation probability will be zero")
 
         y_true_variance = np.var(y_true, ddof=1)
         mean_squared_error = np.mean((y_true - y_proxy) ** 2)
@@ -170,22 +174,20 @@ class CostOptimalRandomSampler:
             - If ``budget`` is too small to afford a single sample.
         """
         if not hasattr(self, "_y_true_variance") or not hasattr(self, "_mean_squared_error"):
-            raise RuntimeError("fit() must be called before sample()")
-        if not isinstance(n_samples, (int, np.integer)) or n_samples <= 0:
-            raise ValueError(f"'n_samples' must be a strictly positive integer; got {n_samples!r}.")
-        if y_true_cost <= 0.0:
-            raise ValueError(f"'y_true_cost' must be strictly positive; got {y_true_cost}.")
-        if y_proxy_cost <= 0.0:
-            raise ValueError(f"'y_proxy_cost' must be strictly positive; got {y_proxy_cost}.")
-        if budget <= 0:
-            raise ValueError(f"'budget' must be strictly positive; got {budget}.")
+            raise RuntimeError("Call fit() before sample().")
+        _validate_is_integer(n_samples, "n_samples")
+        _validate_strictly_positive(n_samples, "n_samples")
+        _validate_strictly_positive(y_true_cost, "y_true_cost")
+        _validate_strictly_positive(y_proxy_cost, "y_proxy_cost")
+        _validate_strictly_positive(budget, "budget")
 
         pi_opt = self._compute_optimal_probability(y_true_cost, y_proxy_cost)
         cost_per_sample = y_true_cost * pi_opt + y_proxy_cost
         n_affordable = int(np.floor(budget / cost_per_sample))
         if n_affordable < 1:
             raise ValueError(
-                f"Budget {budget} is too small to afford a single sample at cost_per_sample={cost_per_sample}."
+                f"'budget' is too small to afford a single sample; got budget={budget}"
+                f", cost_per_sample={cost_per_sample}."
             )
 
         rng = np.random.default_rng(random_seed)

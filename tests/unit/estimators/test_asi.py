@@ -1,9 +1,11 @@
 from typing import Tuple
+from unittest.mock import patch
 
 import numpy as np
 import pytest
 from numpy.typing import NDArray
 
+import glide.estimators.asi as asi_module
 from glide.confidence_intervals import CLTConfidenceInterval
 from glide.estimators import ASIMeanEstimator
 from glide.mean_inference_results import PredictionPoweredMeanInferenceResult
@@ -41,58 +43,40 @@ def test_preprocess_valid_output(estimator, y_arrays):
     assert len(xi) == 4
     assert int(xi.sum()) == 2
     assert len(pi) == 4
-    assert np.all((pi >= 0)) and np.all((pi <= 1))
     assert np.isin(xi, [0.0, 1.0]).all()
     assert not np.any(np.isnan(y_true))
 
 
-def test_preprocess_raises_on_length_mismatch(estimator):
-    y_true = np.array([1.0, np.nan])
-    y_proxy = np.array([1.0, 1.0, 1.0])
-    pi = np.array([0.5, 0.5])
-    with pytest.raises(ValueError, match="same length"):
-        estimator._preprocess(y_true, y_proxy, pi)
-
-
-@pytest.mark.parametrize("bad_pi", [-0.5, 2.0])
-def test_preprocess_raises_on_bad_pi(estimator, bad_pi):
-    y_true = np.array([1.0, np.nan])
-    y_proxy = np.array([1.0, 2.0])
-    pi = np.array([0.5, bad_pi])
-    with pytest.raises(ValueError, match="Sampling probabilities should be in \\[0, 1]"):
-        estimator._preprocess(y_true, y_proxy, pi)
-
-
-def test_preprocess_raises_on_nan_proxy(estimator):
-    y_true = np.array([1.0, np.nan])
-    y_proxy = np.array([1.0, float("nan")])
-    pi = np.array([0.5, 0.5])
-    with pytest.raises(ValueError, match="Input proxy values contain NaN"):
-        estimator._preprocess(y_true, y_proxy, pi)
-
-
-def test_preprocess_raises_on_zero_variance_rectifiers(estimator):
-    y_true = np.array([1.0, np.nan])
-    y_proxy = np.array([0.0, 0.0])
-    pi = np.array([0.5, 0.5])
-    with pytest.raises(ValueError, match="Input values lead to rectifiers with zero variance"):
-        estimator._preprocess(y_true, y_proxy, pi)
-
-
-def test_preprocess_raises_on_labeled_samples_with_zero_pi(estimator):
+def test_preprocess_delegates_to_validation(estimator):
     y_true = np.array([1.0, 2.0, np.nan, np.nan])
-    y_proxy = np.array([0.9, 1.9, 0.8, 1.8])
-    pi = np.array([0.5, 0.0, 0.5, 0.5])
-    with pytest.raises(ValueError, match="Samples with non-zero probability of being labeled cannot be labeled"):
+    y_proxy = np.array([1.0, 2.0, 3.0, 4.0])
+    pi = np.array([0.5, 0.5, 0.5, 0.5])
+
+    with (
+        patch.object(asi_module, "_validate_equal_lengths") as mock_validate_equal_lengths,
+        patch.object(asi_module, "_validate_probabilities") as mock_validate_probabilities,
+        patch.object(asi_module, "_validate_y_proxy") as mock_validate_y_proxy,
+        patch.object(asi_module, "_validate_label_prob_consistency") as mock_validate_label_prob_consistency,
+        patch.object(asi_module, "_get_non_zero_mask", return_value=np.ones(4, dtype=bool)) as mock_get_non_zero_mask,
+        patch.object(asi_module, "_validate_non_constant") as mock_validate_non_constant,
+    ):
         estimator._preprocess(y_true, y_proxy, pi)
 
-
-def test_preprocess_raises_on_unlabeled_samples_with_one_pi(estimator):
-    y_true = np.array([1.0, np.nan, np.nan, np.nan])
-    y_proxy = np.array([0.9, 1.9, 0.8, 1.8])
-    pi = np.array([0.5, 1.0, 0.5, 0.5])
-    with pytest.raises(ValueError, match="Samples with probability one of being labeled must be labeled"):
-        estimator._preprocess(y_true, y_proxy, pi)
+        mock_validate_equal_lengths.assert_called_once_with(y_true, y_proxy, pi, names=["y_true", "y_proxy", "pi"])
+        mock_validate_probabilities.assert_called_once_with(pi)
+        mock_validate_y_proxy.assert_called_once()
+        np.testing.assert_array_equal(mock_validate_y_proxy.call_args[0][0], y_proxy)
+        mock_validate_label_prob_consistency.assert_called_once()
+        labeled_mask = ~np.isnan(y_true)
+        np.testing.assert_array_equal(mock_validate_label_prob_consistency.call_args[0][0], labeled_mask)
+        np.testing.assert_array_equal(mock_validate_label_prob_consistency.call_args[0][1], pi)
+        mock_get_non_zero_mask.assert_called_once()
+        np.testing.assert_array_equal(mock_get_non_zero_mask.call_args[0][0], pi)
+        mock_validate_non_constant.assert_called_once()
+        xi = labeled_mask.astype(float)
+        expected_rectifiers = y_proxy * (xi / pi - 1)
+        np.testing.assert_array_equal(mock_validate_non_constant.call_args[0][0], expected_rectifiers)
+        assert mock_validate_non_constant.call_args[0][1] == "'y_proxy' values lead to constant rectifiers."
 
 
 # --- _compute_tuning_parameter ---
@@ -149,14 +133,6 @@ def test_estimate_custom_confidence_level(estimator, y_arrays):
     assert result.std == pytest.approx(expected_std, abs=0.01)
     assert result.confidence_interval.lower_bound == pytest.approx(expected_lower, abs=0.01)
     assert result.confidence_interval.upper_bound == pytest.approx(expected_upper, abs=0.01)
-
-
-def test_estimate_warns_on_zero_pi(estimator):
-    y_true = np.array([3.0, 5.0, np.nan, np.nan, np.nan])
-    y_proxy = np.array([2.0, 4.0, 5.0, 7.0, 9.0])
-    pi = np.array([0.5, 0.5, 0.5, 0.5, 0.0])
-    with pytest.warns(UserWarning, match="Some observations have pi=0"):
-        estimator.estimate(y_true, y_proxy, pi)
 
 
 # --- __str__ / __repr__ ---
