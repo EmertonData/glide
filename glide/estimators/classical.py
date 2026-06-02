@@ -2,6 +2,7 @@ import numpy as np
 from numpy.typing import NDArray
 
 from glide.confidence_intervals import CLTConfidenceInterval
+from glide.core.validation import _validate_min_samples
 from glide.mean_inference_results import ClassicalMeanInferenceResult
 
 
@@ -29,8 +30,7 @@ class ClassicalMeanEstimator:
 
     def _preprocess(self, y: NDArray) -> NDArray:
         y_clean = y[~np.isnan(y)]
-        if len(y_clean) < 2:
-            raise ValueError(f"At least 2 non-NaN values are required, got {len(y_clean)}.")
+        _validate_min_samples(y_clean, "y")
         return y_clean
 
     def estimate(

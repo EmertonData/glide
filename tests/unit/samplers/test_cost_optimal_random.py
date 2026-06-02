@@ -1,7 +1,10 @@
+from unittest.mock import call, patch
+
 import numpy as np
 import pytest
 from numpy.typing import NDArray
 
+import glide.samplers.cost_optimal_random as cost_optimal_random_module
 from glide.samplers import CostOptimalRandomSampler
 
 
@@ -37,33 +40,29 @@ def fitted_sampler_high_MSE(sampler) -> CostOptimalRandomSampler:
 # --- fit ---
 
 
-def test_fit_raises_on_empty_y_true(sampler):
-    with pytest.raises(ValueError, match=r"'y_true' must not be empty"):
-        sampler.fit(y_true=np.array([]), y_proxy=np.array([1.0]))
+def test_fit_delegates_to_validation(sampler, y_true, y_proxy):
+    with (
+        patch.object(cost_optimal_random_module, "_validate_y_true_burn_in") as mock_validate_y_true_burn_in,
+        patch.object(cost_optimal_random_module, "_validate_equal_lengths") as mock_validate_equal_lengths,
+        patch.object(cost_optimal_random_module, "_validate_has_no_nan") as mock_validate_has_no_nan,
+    ):
+        sampler.fit(y_true, y_proxy)
 
-
-def test_fit_raises_on_length_mismatch(sampler):
-    with pytest.raises(ValueError, match="must have the same length"):
-        sampler.fit(y_true=np.array([1.0, 2.0]), y_proxy=np.array([1.1]))
-
-
-def test_fit_raises_on_nan_in_y_true(sampler):
-    with pytest.raises(ValueError, match="Input contains NaN values"):
-        sampler.fit(y_true=np.array([1.0, np.nan]), y_proxy=np.array([1.1, 1.9]))
-
-
-def test_fit_raises_on_nan_in_y_proxy(sampler):
-    with pytest.raises(ValueError, match="Input contains NaN values"):
-        sampler.fit(y_true=np.array([1.0, 2.0]), y_proxy=np.array([1.1, np.nan]))
-
-
-def test_fit_raises_on_zero_variance_y_true(sampler):
-    with pytest.raises(ValueError, match="Input ground-truth values have zero variance"):
-        sampler.fit(y_true=np.array([1.0, 1.0]), y_proxy=np.array([1.1, 1.1]))
+        mock_validate_y_true_burn_in.assert_called_once()
+        np.testing.assert_array_equal(mock_validate_y_true_burn_in.call_args[0][0], y_true)
+        mock_validate_equal_lengths.assert_called_once()
+        np.testing.assert_array_equal(mock_validate_equal_lengths.call_args[0][0], y_true)
+        np.testing.assert_array_equal(mock_validate_equal_lengths.call_args[0][1], y_proxy)
+        assert mock_validate_equal_lengths.call_args[1] == {"names": ["y_true", "y_proxy"]}
+        assert mock_validate_has_no_nan.call_count == 2
+        np.testing.assert_array_equal(mock_validate_has_no_nan.call_args_list[0][0][0], y_proxy)
+        assert mock_validate_has_no_nan.call_args_list[0][0][1] == "y_proxy"
+        np.testing.assert_array_equal(mock_validate_has_no_nan.call_args_list[1][0][0], y_true)
+        assert mock_validate_has_no_nan.call_args_list[1][0][1] == "y_true"
 
 
 def test_fit_raises_on_zero_mse(sampler):
-    with pytest.raises(ValueError, match="Proxy values have zero MSE with ground-truths"):
+    with pytest.raises(ValueError, match="'y_proxy' predicts 'y_true' perfectly"):
         sampler.fit(y_true=np.array([1.0, 2.0]), y_proxy=np.array([1.0, 2.0]))
 
 
@@ -101,36 +100,30 @@ def test_compute_optimal_probability_pi_known_value(fitted_sampler):
 
 
 def test_sample_raises_if_fit_not_called(sampler):
-    with pytest.raises(RuntimeError, match="fit\\(\\) must be called before sample"):
+    with pytest.raises(RuntimeError, match="Call fit\\(\\) before sample"):
         sampler.sample(n_samples=2, y_true_cost=10.0, y_proxy_cost=1.0, budget=5, random_seed=42)
 
 
-@pytest.mark.parametrize("n_samples", [0, -1, 1.5])
-def test_sample_invalid_n_samples(fitted_sampler, n_samples):
-    with pytest.raises(ValueError, match=r"'n_samples' must be a strictly positive integer"):
-        fitted_sampler.sample(n_samples=n_samples, y_true_cost=10.0, y_proxy_cost=1.0, budget=5, random_seed=42)
+def test_sample_delegates_to_validation(fitted_sampler):
+    with (
+        patch.object(cost_optimal_random_module, "_validate_is_integer") as mock_validate_is_integer,
+        patch.object(cost_optimal_random_module, "_validate_strictly_positive") as mock_validate_strictly_positive,
+    ):
+        fitted_sampler.sample(n_samples=2, y_true_cost=10.0, y_proxy_cost=1.0, budget=5, random_seed=42)
 
-
-@pytest.mark.parametrize("cost", [0.0, -1.0])
-def test_sample_invalid_y_true_cost(fitted_sampler, cost):
-    with pytest.raises(ValueError, match=r"'y_true_cost' must be strictly positive"):
-        fitted_sampler.sample(n_samples=2, y_true_cost=cost, y_proxy_cost=1.0, budget=5, random_seed=42)
-
-
-@pytest.mark.parametrize("cost", [0.0, -1.0])
-def test_sample_invalid_y_proxy_cost(fitted_sampler, cost):
-    with pytest.raises(ValueError, match=r"'y_proxy_cost' must be strictly positive"):
-        fitted_sampler.sample(n_samples=2, y_true_cost=10.0, y_proxy_cost=cost, budget=5, random_seed=42)
-
-
-@pytest.mark.parametrize("budget", [0.0, -1.0])
-def test_sample_invalid_budget(fitted_sampler, budget):
-    with pytest.raises(ValueError, match=r"'budget' must be strictly positive"):
-        fitted_sampler.sample(n_samples=2, y_true_cost=10.0, y_proxy_cost=1.0, budget=budget, random_seed=42)
+        mock_validate_is_integer.assert_called_once_with(2, "n_samples")
+        mock_validate_strictly_positive.assert_has_calls(
+            [
+                call(2, "n_samples"),
+                call(10.0, "y_true_cost"),
+                call(1.0, "y_proxy_cost"),
+                call(5, "budget"),
+            ]
+        )
 
 
 def test_sample_budget_too_small_raises(fitted_sampler):
-    with pytest.raises(ValueError, match="Budget .* is too small"):
+    with pytest.raises(ValueError, match="'budget' is too small"):
         fitted_sampler.sample(n_samples=2, y_true_cost=100.0, y_proxy_cost=1.0, budget=1, random_seed=42)
 
 

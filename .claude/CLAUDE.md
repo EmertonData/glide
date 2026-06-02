@@ -61,6 +61,12 @@ The package has multiple layers:
 - Use `np.testing.assert_array_equal` when comparing arrays of strings or categories in tests
 - No comments within unit test functions. Encode non-obvious derivations as named variables in the test body instead
 - Never write a test that doesn't actually test anything — e.g., asserting on a copy made after the function call, or asserting a value that is always true regardless of the implementation
+- To assert a mock called once with scalar/list arguments, use `assert_called_once_with(...)`.
+- To assert a mock called once with numpy array arguments, use `assert_called_once()` followed by `np.testing.assert_array_equal(mock.call_args[0][i], ...)` for each array argument.
+- To assert a mock called multiple times with scalar arguments, use `assert_has_calls([call(...), call(...)])` to verify each call in order.
+- To assert a mock called multiple times with numpy arguments, verify each call individually via `call_args_list`.
+- Never use `assert_called_with`, `assert_any_call`, or `assert mock.call_count == N` alone.
+- Name every mock variable `mock_<mocked_function_name>`, stripping the leading underscore from private functions — BAD: `mock`, `mock_nan`, `mock_bounds`; GOOD: `mock_validate_has_no_nan`, `mock_validate_bounds`.
 
 ## Code Conventions
 

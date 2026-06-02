@@ -4,6 +4,13 @@ import numpy as np
 from numpy.random.bit_generator import SeedSequence
 from numpy.typing import NDArray
 
+from glide.core.validation import (
+    _validate_non_constant,
+    _validate_strictly_positive,
+    _validate_uncertainties,
+    _validate_y_true_burn_in,
+)
+
 
 class CostOptimalSampler:
     """Sampler that draws elements with optimal probabilities based on uncertainty
@@ -48,20 +55,6 @@ class CostOptimalSampler:
     np.True_
     """
 
-    def _validate_y_true(self, y_true: NDArray) -> None:
-        if len(y_true) == 0:
-            raise ValueError("'y_true' must be non-empty.")
-        if np.any(np.isnan(y_true)):
-            raise ValueError("'y_true' contains NaN values. The burn-in dataset must be fully labeled.")
-        if np.min(y_true) == np.max(y_true):
-            raise ValueError("'y_true' label values have zero variance.")
-
-    def _validate_uncertainties(self, uncertainties: NDArray) -> None:
-        if np.any(np.isnan(uncertainties)):
-            raise ValueError("All uncertainty values must be finite; got a NaN value.")
-        if np.any(uncertainties <= 0.0):
-            raise ValueError("All uncertainty values must be strictly positive; got a non-positive value.")
-
     def fit(self, y_true: NDArray) -> "CostOptimalSampler":
         """Estimate the true label variance from a burn-in dataset.
 
@@ -85,7 +78,7 @@ class CostOptimalSampler:
             If ``y_true`` is empty, contains NaN, or all labels are identical (zero true label variance).
 
         """
-        self._validate_y_true(y_true)
+        _validate_y_true_burn_in(y_true)
         self._y_true_variance = np.var(y_true, ddof=1)
         return self
 
@@ -139,6 +132,12 @@ class CostOptimalSampler:
         y_proxy_cost: float,
     ) -> float:
         candidates = np.unique(uncertainties)
+        if y_proxy_cost == 0:
+            # When y_proxy_cost=0, cost_ratio=0 in _compute_gamma, so gamma = sqrt(prob_above / ...).
+            # If tau equals the largest uncertainty, no sample exceeds it, so prob_above=0 and gamma=0.
+            # gamma=0 makes every pi value 0, which causes division by zero in _compute_objective.
+            # Dropping the largest candidate ensures at least one sample always exceeds tau (prob_above > 0).
+            candidates = candidates[:-1]
         objectives = [self._compute_objective(tau, uncertainties, y_true_cost, y_proxy_cost) for tau in candidates]
         optimal_tau = candidates[np.argmin(objectives)]
         return optimal_tau
@@ -202,15 +201,17 @@ class CostOptimalSampler:
         """
         if not hasattr(self, "_y_true_variance"):
             raise RuntimeError("Call fit() before sample().")
-        if y_true_cost <= 0.0:
-            raise ValueError(f"'y_true_cost' must be strictly positive; got {y_true_cost}.")
+        _validate_strictly_positive(y_true_cost, "y_true_cost")
         if y_proxy_cost < 0.0:
             raise ValueError(f"'y_proxy_cost' must be non-negative; got {y_proxy_cost}.")
-        if y_proxy_cost == 0.0 and (np.max(uncertainties) - np.min(uncertainties) == 0):
-            raise ValueError("All uncertainty values are equal and 'y_proxy_cost' is zero.")
-        if budget <= 0:
-            raise ValueError(f"'budget' must be strictly positive; got {budget}.")
-        self._validate_uncertainties(uncertainties)
+        if y_proxy_cost == 0.0:
+            _validate_non_constant(
+                uncertainties,
+                "All uncertainty values are equal and 'y_proxy_cost' is zero."
+                " Provide non-constant uncertainties or set 'y_proxy_cost' to a positive value.",
+            )
+        _validate_strictly_positive(budget, "budget")
+        _validate_uncertainties(uncertainties)
 
         tau_star = self._find_optimal_threshold(uncertainties, y_true_cost, y_proxy_cost)
         gamma_star = self._compute_gamma(tau_star, uncertainties, y_true_cost, y_proxy_cost)
@@ -219,7 +220,10 @@ class CostOptimalSampler:
         cumulative_costs = np.cumsum(y_true_cost * pi_all + y_proxy_cost)
         n_affordable = np.searchsorted(cumulative_costs, budget, side="right")
         if n_affordable < 1:
-            raise ValueError(f"Budget {budget} is too small to afford a single sample with the given inputs.")
+            raise ValueError(
+                f"'budget' is too small to afford a single sample; got {budget}."
+                " Increase 'budget' or reduce 'y_true_cost'."
+            )
 
         n_samples = len(uncertainties)
         cutoff = min(n_affordable, n_samples)
