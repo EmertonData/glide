@@ -92,11 +92,11 @@ class ActiveSampler:
     ) -> Tuple[NDArray, NDArray]:
         """Sample observations with probability proportional to uncertainty.
 
-        Each observation receives a drawing probability π_i that optimizes downstream
-        estimation variance by minimizing the sum of ``uncertainty_i / π_i`` over all
-        observations. Probabilities are constrained to ``(0, 1]`` and sum to ``budget``.
-        The actual number of selected items is a random variable with expectation equal
-        to ``budget``.
+        Each observation receives a drawing probability π_i that minimizes the variance
+        of downstream IPW-based estimators. This is equivalently done by minimizing the sum of
+        ``uncertainty_i^2 / π_i`` over all observations. Probabilities are constrained to
+        ``(0, 1]`` and sum to ``budget``. The actual number of selected items is a random
+        variable with expectation equal to ``budget``.
 
         The two returned arrays are intended for use with IPW-based downstream estimators.
         ``pi`` holds the per-sample probability of being selected. ``xi`` holds the
@@ -135,6 +135,11 @@ class ActiveSampler:
         UserWarning
             If the ratio of the largest to the smallest uncertainty is extreme,
             indicating potential numerical instability.
+
+        References
+        ----------
+        Zrnic, Tijana, and Emmanuel J. Candès. "Active statistical inference." In Proceedings
+        of the 41st International Conference on Machine Learning, pp. 62993-63010. 2024.
         """
         _validate_is_integer(budget, "budget")
         _validate_strictly_positive(budget, "budget")
