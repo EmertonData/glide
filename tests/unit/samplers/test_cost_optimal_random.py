@@ -155,20 +155,6 @@ def test_sample_known_output_truncated_samples(fitted_sampler):
     np.testing.assert_array_equal(xi, expected_xi)
 
 
-def test_sample_never_exceeds_budget(fitted_sampler):
-    for seed in range(5):
-        _, xi = fitted_sampler.sample(n_samples=5, y_true_cost=10.0, y_proxy_cost=1.0, budget=15, random_seed=seed)
-        selected = ~np.isnan(xi)
-        actual_cost = np.nansum(xi[selected]) * 10.0 + np.sum(selected) * 1.0
-        assert actual_cost <= 15
-
-
-def test_sample_excluded_samples_have_zero_pi_and_nan_xi(fitted_sampler):
-    pi, xi = fitted_sampler.sample(n_samples=5, y_true_cost=10.0, y_proxy_cost=1.0, budget=11, random_seed=6)
-    assert np.any(np.isnan(xi))
-    assert np.all(pi[np.isnan(xi)] == 0.0)
-
-
 def test_sample_reproducibility(fitted_sampler):
     pi1, xi1 = fitted_sampler.sample(n_samples=2, y_true_cost=10.0, y_proxy_cost=1.0, budget=15, random_seed=42)
     pi2, xi2 = fitted_sampler.sample(n_samples=2, y_true_cost=10.0, y_proxy_cost=1.0, budget=15, random_seed=42)

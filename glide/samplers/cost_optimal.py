@@ -159,8 +159,9 @@ class CostOptimalSampler:
 
         Samples are randomly permuted before drawing and the inverse permutation is applied
         to the output, so the returned arrays are always in the original input order. A
-        post-draw cutoff is then applied to strictly respect the budget: samples beyond the
-        cutoff are discarded and receive ``pi = 0.0`` and ``xi = NaN``.
+        post-draw cutoff is then applied to strictly respect the budget: samples
+        beyond the cutoff are discarded by setting their entries in ``pi`` and ``xi`` to
+        ``0.0`` and ``NaN`` respectively.
 
         The two returned arrays are intended for use with IPW-based downstream estimators. ``pi``
         holds the per-sample probability of querying the expensive rater. ``xi`` holds the

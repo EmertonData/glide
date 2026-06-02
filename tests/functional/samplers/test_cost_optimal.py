@@ -1,6 +1,34 @@
 import numpy as np
+import pytest
 
 from glide.samplers import CostOptimalRandomSampler, CostOptimalSampler
+
+
+@pytest.fixture
+def sampler() -> CostOptimalSampler:
+    return CostOptimalSampler().fit(np.array([1.0, 2.0]))
+
+
+def test_total_cost_never_exceeds_budget(sampler):
+    n_samples = 50
+    y_true_cost = 10.0
+    y_proxy_cost = 1.0
+    budget = 150
+    n_trials = 500
+
+    uncertainties = np.linspace(0.1, 1.0, n_samples)
+
+    for random_seed in range(n_trials):
+        _, xi = sampler.sample(
+            uncertainties,
+            y_true_cost=y_true_cost,
+            y_proxy_cost=y_proxy_cost,
+            budget=budget,
+            random_seed=random_seed,
+        )
+        included = ~np.isnan(xi)
+        actual_cost = np.sum(xi[included]) * y_true_cost + np.sum(included) * y_proxy_cost
+        assert actual_cost <= budget
 
 
 def test_cost_optimal_matches_random_sampler_for_uniform_uncertainties():

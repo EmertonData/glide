@@ -95,14 +95,14 @@ class ActiveSampler:
         Each observation receives a drawing probability π_i that minimizes the variance
         of downstream IPW-based estimators. This is equivalently done by minimizing the sum of
         ``uncertainty_i^2 / π_i`` over all observations. Probabilities are constrained to
-        ``(0, 1]`` and sum to ``budget``. The actual number of selected items is a random
-        variable with expectation equal to ``budget``.
+        ``(0, 1]`` and sum to ``budget``. The actual number of selected items is random
+        but limited to ``budget``.
 
         Samples are randomly permuted before drawing and the inverse permutation
         is applied to the output, so the returned arrays are always in the
         original input order. A post-draw cutoff is then applied to strictly
-        respect the budget: samples beyond the cutoff are discarded and receive
-        ``pi = 0.0`` and ``xi = NaN``.
+        respect the budget: samples beyond the cutoff are discarded by setting their entries
+        in ``pi`` and ``xi`` to ``0.0`` and ``NaN`` respectively.
 
         The two returned arrays are intended for use with IPW-based downstream estimators.
         ``pi`` holds the per-sample probability of being selected. ``xi`` holds the

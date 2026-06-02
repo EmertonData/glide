@@ -9,7 +9,7 @@ def sampler() -> ActiveSampler:
     return ActiveSampler()
 
 
-def test_sum_pi_xi_budget_properties(sampler):
+def test_sample_never_exceeds_budget(sampler):
     n_samples = 50
     budget = 10
     n_trials = 500
