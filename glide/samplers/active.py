@@ -125,8 +125,9 @@ class ActiveSampler:
         Returns
         -------
         Tuple[NDArray, NDArray]
-            [0]: array of shape ``(n_samples,)``, pi with drawing probabilities in ``(0, 1]``
-                 that sum to ``budget``
+            [0]: array of shape ``(n_samples,)``, pi with per-sample annotation
+            probabilities; positive for included samples, 0.0 for samples discarded
+            by the budget cutoff.
             [1]: array of shape ``(n_samples,)``, xi with Bernoulli selection indicators
             (``1.0`` if selected for annotation, ``0.0`` if not selected, ``NaN`` if
             discarded by the budget cutoff)

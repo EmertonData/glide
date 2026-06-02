@@ -124,12 +124,12 @@ def test_sample_delegates_to_validation(fitted_sampler):
             15,
             "budget",
             lower=11.0,
-            error_message="'budget' should be greater than y_true_cost + y_proxy_cost; got 15.",
+            error_message="'budget' should be at least y_true_cost + y_proxy_cost; got 15.",
         )
 
 
 def test_sample_budget_too_small_raises(fitted_sampler):
-    with pytest.raises(ValueError, match="'budget' should be greater than"):
+    with pytest.raises(ValueError, match="'budget' should be at least"):
         fitted_sampler.sample(n_samples=2, y_true_cost=100.0, y_proxy_cost=1.0, budget=1, random_seed=42)
 
 
@@ -148,8 +148,8 @@ def test_sample_known_output_truncated_samples(fitted_sampler):
     n_samples = 5
     pi, xi = fitted_sampler.sample(n_samples=n_samples, y_true_cost=10.0, y_proxy_cost=1.0, budget=11, random_seed=6)
 
-    expected_pi = np.array([0.0, 0.0, 0.045, 0.0, 0.045])
-    expected_xi = np.array([np.nan, np.nan, 0.0, np.nan, 0.0])
+    expected_pi = np.array([0.0, 0.0, 0.045, 0.0, 0.0])
+    expected_xi = np.array([np.nan, np.nan, 1.0, np.nan, np.nan])
 
     np.testing.assert_allclose(pi, expected_pi, atol=0.01, equal_nan=True)
     np.testing.assert_array_equal(xi, expected_xi)

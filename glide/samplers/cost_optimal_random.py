@@ -182,7 +182,7 @@ class CostOptimalRandomSampler:
             budget,
             "budget",
             lower=y_true_cost + y_proxy_cost,
-            error_message=f"'budget' should be greater than y_true_cost + y_proxy_cost; got {budget}.",
+            error_message=f"'budget' should be at least y_true_cost + y_proxy_cost; got {budget}.",
         )
 
         pi_opt = self._compute_optimal_probability(y_true_cost, y_proxy_cost)
@@ -191,7 +191,7 @@ class CostOptimalRandomSampler:
         order = rng.permutation(n_samples)
         xi_all = rng.binomial(n=1, p=pi_opt, size=n_samples).astype(float)
 
-        actual_costs = xi_all[order] * y_true_cost + y_proxy_cost
+        actual_costs = xi_all * y_true_cost + y_proxy_cost
         cumsum = np.cumsum(actual_costs)
         cutoff = np.searchsorted(cumsum, budget, side="right")
 
@@ -199,5 +199,5 @@ class CostOptimalRandomSampler:
         xi = np.full(n_samples, np.nan)
         kept_indices = order[:cutoff]
         pi[kept_indices] = pi_opt
-        xi[kept_indices] = xi_all[kept_indices]
+        xi[kept_indices] = xi_all[:cutoff]
         return pi, xi
