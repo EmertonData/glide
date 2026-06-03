@@ -9,8 +9,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 ## [Next release]
 
 ### ✨ Added
+- Image in the readme describing prediction-powered inference
+- Image in the user guide describing GLIDE's three-step workflow
 
 ### 🔄 Changed
+- Removed image from User Guide explaining PPI
 
 ### 🐛 Fixed
 
