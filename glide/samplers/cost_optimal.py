@@ -11,7 +11,7 @@ from glide.core.validation import (
     _validate_uncertainties,
     _validate_y_true_burn_in,
 )
-from glide.samplers.core import _apply_budget_cutoff, _draw_shuffled_bernoulli
+from glide.samplers.core import _build_output, _compute_cutoff_indices, _shuffle
 
 
 class CostOptimalSampler:
@@ -225,7 +225,10 @@ class CostOptimalSampler:
         gamma_star = self._compute_gamma(tau_star, uncertainties, y_true_cost, y_proxy_cost)
         pi_all = self._compute_per_sample_probabilities(tau_star, gamma_star, uncertainties)
 
-        order, xi_shuffled = _draw_shuffled_bernoulli(pi_all, random_seed)
+        rng = np.random.default_rng(random_seed)
+        (pi_shuffled,), order = _shuffle((pi_all,), rng)
+        xi_shuffled = rng.binomial(n=1, p=pi_shuffled).astype(float)
         cumulative_costs = np.cumsum(xi_shuffled * y_true_cost + y_proxy_cost)
-        pi, xi = _apply_budget_cutoff(xi_shuffled, pi_all, cumulative_costs, order, budget)
-        return pi, xi
+        kept_indices = _compute_cutoff_indices(cumulative_costs, order, budget)
+        pi_out, xi_out = _build_output(kept_indices, pi_all, xi_shuffled)
+        return pi_out, xi_out

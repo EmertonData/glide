@@ -12,7 +12,7 @@ from glide.core.validation import (
     _validate_strictly_positive,
     _validate_y_true_burn_in,
 )
-from glide.samplers.core import _apply_budget_cutoff, _draw_shuffled_bernoulli
+from glide.samplers.core import _build_output, _compute_cutoff_indices, _shuffle
 
 
 class CostOptimalRandomSampler:
@@ -90,7 +90,7 @@ class CostOptimalRandomSampler:
         _validate_has_no_nan(y_proxy, "y_proxy")
         _validate_has_no_nan(y_true, "y_true")
         if np.max(np.abs(y_true - y_proxy)) == 0:
-            raise ValueError("'y_proxy' predicts 'y_true' perfectly (zero MSE). Annotation probability will be zero")
+            raise ValueError("'y_proxy' predicts 'y_true' perfectly (zero MSE). Annotation probability would be zero")
 
         y_true_variance = np.var(y_true, ddof=1)
         mean_squared_error = np.mean((y_true - y_proxy) ** 2)
@@ -188,7 +188,10 @@ class CostOptimalRandomSampler:
         pi_opt = self._compute_optimal_probability(y_true_cost, y_proxy_cost)
 
         pi_all = np.full(n_samples, pi_opt)
-        order, xi_shuffled = _draw_shuffled_bernoulli(pi_all, random_seed)
+        rng = np.random.default_rng(random_seed)
+        (pi_shuffled,), order = _shuffle((pi_all,), rng)
+        xi_shuffled = rng.binomial(n=1, p=pi_shuffled).astype(float)
         cumulative_costs = np.cumsum(xi_shuffled * y_true_cost + y_proxy_cost)
-        pi, xi = _apply_budget_cutoff(xi_shuffled, pi_all, cumulative_costs, order, budget)
-        return pi, xi
+        kept_indices = _compute_cutoff_indices(cumulative_costs, order, budget)
+        pi_out, xi_out = _build_output(kept_indices, pi_all, xi_shuffled)
+        return pi_out, xi_out

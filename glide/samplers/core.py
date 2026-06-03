@@ -1,35 +1,28 @@
-from typing import Optional, Tuple, Union
+from typing import Tuple
 
 import numpy as np
-from numpy.random.bit_generator import SeedSequence
 from numpy.typing import NDArray
 
 
-def _draw_shuffled_bernoulli(
-    pi: NDArray,
-    random_seed: Optional[Union[int, SeedSequence]] = None,
-) -> Tuple[NDArray, NDArray]:
-    n_samples = len(pi)
-    rng = np.random.default_rng(random_seed)
-    order = rng.permutation(n_samples)
-    xi_shuffled = rng.binomial(n=1, p=pi[order]).astype(float)
-    return order, xi_shuffled
+def _shuffle(
+    arrays: Tuple[NDArray, ...],
+    rng: np.random.Generator,
+) -> Tuple[Tuple[NDArray, ...], NDArray]:
+    order = rng.permutation(len(arrays[0]))
+    shuffled = tuple(arr[order] for arr in arrays)
+    return shuffled, order
 
 
-def _apply_budget_cutoff(
-    xi_shuffled: NDArray,
-    pi: NDArray,
-    cumulative_costs: NDArray,
-    order: NDArray,
-    budget: float,
-) -> Tuple[NDArray, NDArray]:
-    n_samples = len(order)
+def _compute_cutoff_indices(cumulative_costs: NDArray, order: NDArray, budget: float) -> NDArray:
     cutoff = np.searchsorted(cumulative_costs, budget, side="right")
     kept_indices = order[:cutoff]
+    return kept_indices
 
-    pi_out = np.zeros(n_samples)
-    xi_out = np.full(n_samples, np.nan)
 
+def _build_output(kept_indices: NDArray, pi: NDArray, xi_shuffled: NDArray) -> Tuple[NDArray, NDArray]:
+    n = len(pi)
+    pi_out = np.zeros(n)
+    xi_out = np.full(n, np.nan)
     pi_out[kept_indices] = pi[kept_indices]
-    xi_out[kept_indices] = xi_shuffled[:cutoff]
+    xi_out[kept_indices] = xi_shuffled[: len(kept_indices)]
     return pi_out, xi_out

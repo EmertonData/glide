@@ -12,7 +12,7 @@ from glide.core.validation import (
     _validate_strictly_positive,
     _validate_uncertainties,
 )
-from glide.samplers.core import _apply_budget_cutoff, _draw_shuffled_bernoulli
+from glide.samplers.core import _build_output, _compute_cutoff_indices, _shuffle
 
 
 class ActiveSampler:
@@ -156,7 +156,10 @@ class ActiveSampler:
         _validate_uncertainties(uncertainties)
         pi = self._compute_probabilities(uncertainties, budget)
 
-        order, xi_shuffled = _draw_shuffled_bernoulli(pi, random_seed)
+        rng = np.random.default_rng(random_seed)
+        (pi_shuffled,), order = _shuffle((pi,), rng)
+        xi_shuffled = rng.binomial(n=1, p=pi_shuffled).astype(float)
         cumulative_costs = np.cumsum(xi_shuffled)
-        pi, xi = _apply_budget_cutoff(xi_shuffled, pi, cumulative_costs, order, budget)
-        return pi, xi
+        kept_indices = _compute_cutoff_indices(cumulative_costs, order, budget)
+        pi_out, xi_out = _build_output(kept_indices, pi, xi_shuffled)
+        return pi_out, xi_out
