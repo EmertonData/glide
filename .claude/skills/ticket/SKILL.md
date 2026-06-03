@@ -9,7 +9,7 @@ This skill produces a single markdown file in `tickets/` that a junior Python de
 
 There are four ticket types, each with its own template. The workflow is the same for all of them.
 
-This skill also handles **updating an existing ticket** that has diverged from the current code since it was written — for example when the referenced classes or files have been renamed, restructured, or the relevant logic has moved. When the user points to an existing ticket file, re-read both the ticket and the current codebase, then update the ticket in place to reflect the current state.
+This skill also handles **updating an existing ticket** that has diverged from the current code since it was written — for example when the referenced classes or files have been renamed, restructured, or the relevant logic has moved. When the user points to an existing ticket file, re-read both the ticket and the current codebase, then update the ticket in place to reflect the current state. The user may also explicitly describe the changes that have occurred (e.g. a rename, a refactor, a new module) — treat that description as the starting point for understanding what in the ticket needs updating, then verify against the codebase.
 
 ---
 
