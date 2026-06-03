@@ -69,19 +69,8 @@ This project follows [SPEC 0](https://scientific-python.org/specs/spec-0000/) fo
 ## 📄 License & Citation
 
 This project is licensed under the [Apache 2.0 License](https://raw.githubusercontent.com/EmertonData/glide/refs/heads/main/LICENSE).
-If you use Glide in your work, please cite our paper presented at the ICML 2026 Agentic Uncertainty workshop:
 
-```bibtex
-@misc{martinon2026glide,
-  author        = {Martinon, Grégoire and Merad, Ibrahim and Raki, Mohammed},
-  title         = {Industrializing Prediction-Powered Inference: The GLIDE Library for Reliable GenAI and Agentic Systems Evaluation},
-  year          = {2026},
-  eprint        = {2605.31278},
-  archivePrefix = {arXiv},
-  primaryClass  = {cs.AI},
-  doi           = {10.48550/arXiv.2605.31278},
-}
-```
+If you use GLIDE in your work, please cite us using the "Cite this repository" button on the GitHub repository page.
 
 ## 📰 Implemented Papers <a name="implemented-papers"></a>
 
