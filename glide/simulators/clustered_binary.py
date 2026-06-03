@@ -3,6 +3,7 @@ from typing import Optional, Tuple, Union
 import numpy as np
 from numpy.typing import NDArray
 
+from glide.core.validation import _validate_bounds
 from glide.simulators.binary import generate_binary_dataset
 
 
@@ -16,11 +17,10 @@ def generate_clustered_binary_dataset(
 ) -> Tuple[NDArray, NDArray, NDArray]:
     """Generate a synthetic clustered binary-label dataset for evaluation.
 
-    Draws ``n_total`` i.i.d. ``(y_true_oracle, y_proxy)`` pairs from the
+    Draws ``n_total`` i.i.d. ``(y_true, y_proxy)`` pairs from the
     joint binary distribution defined by ``true_mean``, ``proxy_mean``, and
     ``correlation``, then randomly partitions the observations into
-    ``n_clusters`` non-empty groups. Returns oracle arrays with no NaN
-    masking.
+    ``n_clusters`` non-empty groups.
 
     Parameters
     ----------
@@ -40,10 +40,8 @@ def generate_clustered_binary_dataset(
     Returns
     -------
     Tuple[NDArray, NDArray, NDArray]
-        [0]: ``y_true_oracle`` — shape ``(n_total,)``, all values in
-             ``{0.0, 1.0}``, no NaN.
-        [1]: ``y_proxy`` — shape ``(n_total,)``, all values in
-             ``{0.0, 1.0}``, no NaN.
+        [0]: ``y_true`` — shape ``(n_total,)``, values in ``{0.0, 1.0}``.
+        [1]: ``y_proxy`` — shape ``(n_total,)``, values in ``{0.0, 1.0}``.
         [2]: ``clusters`` — shape ``(n_total,)``, integer cluster
              identifiers in ``{0, 1, ..., n_clusters - 1}``.
 
@@ -55,7 +53,7 @@ def generate_clustered_binary_dataset(
         If ``proxy_mean`` is not in ``(0, 1)``.
     ValueError
         If the combination of ``true_mean``, ``proxy_mean``, and
-        ``correlation`` leads to negative joint probabilities.
+        ``correlation`` is impossible (leads to negative joint probabilities).
     ValueError
         If ``n_clusters < 2``.
     ValueError
@@ -66,7 +64,7 @@ def generate_clustered_binary_dataset(
     **Step 1 — Draw observations**
 
     Call ``generate_binary_dataset(n_total, ...)`` to obtain ``n_total``
-    i.i.d. ``(y_true_oracle, y_proxy)`` pairs from the joint binary
+    i.i.d. ``(y_true, y_proxy)`` pairs from the joint binary
     distribution defined by ``true_mean``, ``proxy_mean``, and
     ``correlation``.
 
@@ -88,20 +86,23 @@ def generate_clustered_binary_dataset(
     --------
     >>> import numpy as np
     >>> from glide.simulators import generate_clustered_binary_dataset
-    >>> y_true_oracle, y_proxy, clusters = generate_clustered_binary_dataset(
-    ...     n_total=20, n_clusters=4, random_seed=0
+    >>> y_true, y_proxy, clusters = generate_clustered_binary_dataset(
+    ...     n_total=10, n_clusters=4, random_seed=0
     ... )
-    >>> len(np.unique(clusters))
-    4
-    >>> bool(np.all(~np.isnan(y_true_oracle)))
-    True
-    >>> bool(np.all(~np.isnan(y_proxy)))
-    True
+    >>> y_true
+    array([1., 1., 1., 0., 1., 1., 0., 1., 0., 1.])
+    >>> y_proxy
+    array([1., 0., 1., 0., 1., 1., 0., 1., 0., 1.])
+    >>> clusters
+    array([3, 0, 3, 1, 0, 3, 3, 2, 0, 0])
     """
-    if n_clusters < 2:
-        raise ValueError(f"'n_clusters' must be >= 2; got {n_clusters}.")
-    if n_total < n_clusters:
-        raise ValueError(f"'n_total' must be >= 'n_clusters'; got n_total={n_total} and n_clusters={n_clusters}.")
+    _validate_bounds(n_clusters, "n_clusters", lower=2, error_message=f"'n_clusters' must be >= 2; got {n_clusters}.")
+    _validate_bounds(
+        n_total,
+        "n_total",
+        lower=n_clusters,
+        error_message=f"'n_total' must be >= 'n_clusters'; got n_total={n_total} and n_clusters={n_clusters}.",
+    )
 
     if isinstance(random_seed, np.random.SeedSequence):
         seed_sequence = random_seed
@@ -109,7 +110,7 @@ def generate_clustered_binary_dataset(
         seed_sequence = np.random.SeedSequence(random_seed)
     data_seed, partition_seed = seed_sequence.spawn(2)
 
-    y_true_oracle, y_proxy = generate_binary_dataset(
+    y_true, y_proxy = generate_binary_dataset(
         n_total=n_total,
         true_mean=true_mean,
         proxy_mean=proxy_mean,
@@ -123,4 +124,4 @@ def generate_clustered_binary_dataset(
     clusters = np.repeat(np.arange(n_clusters, dtype=np.int64), interval_lengths)
     rng.shuffle(clusters)
 
-    return y_true_oracle, y_proxy, clusters
+    return y_true, y_proxy, clusters
