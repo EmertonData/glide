@@ -1,4 +1,4 @@
-from unittest.mock import call, patch
+from unittest.mock import patch
 
 import numpy as np
 import pytest
@@ -119,10 +119,12 @@ def test_sample_delegates_to_validation(fitted_sampler, uncertainties):
         patch.object(cost_optimal_module, "_validate_strictly_positive") as mock_validate_strictly_positive,
         patch.object(cost_optimal_module, "_validate_uncertainties") as mock_validate_uncertainties,
         patch.object(cost_optimal_module, "_validate_non_constant") as mock_validate_non_constant,
+        patch.object(cost_optimal_module, "_validate_bounds") as mock_validate_bounds,
     ):
         fitted_sampler.sample(uncertainties, y_true_cost=10.0, y_proxy_cost=0.0, budget=10, random_seed=42)
 
-        mock_validate_strictly_positive.assert_has_calls([call(10.0, "y_true_cost"), call(10, "budget")])
+        mock_validate_strictly_positive.assert_called_once_with(10.0, "y_true_cost")
+
         mock_validate_uncertainties.assert_called_once()
         np.testing.assert_array_equal(mock_validate_uncertainties.call_args[0][0], uncertainties)
         mock_validate_non_constant.assert_called_once()
@@ -132,6 +134,12 @@ def test_sample_delegates_to_validation(fitted_sampler, uncertainties):
             " Provide non-constant uncertainties or set 'y_proxy_cost' to a positive value."
         )
         assert mock_validate_non_constant.call_args[0][1] == expected_msg
+        mock_validate_bounds.assert_called_once_with(
+            10,
+            "budget",
+            lower=10.0,
+            error_message="'budget' should be at least 10.0; got 10.",
+        )
 
 
 def test_sample_negative_y_proxy_cost(fitted_sampler, uncertainties):
@@ -140,14 +148,14 @@ def test_sample_negative_y_proxy_cost(fitted_sampler, uncertainties):
 
 
 def test_sample_budget_too_small_raises(fitted_sampler, uncertainties):
-    with pytest.raises(ValueError, match="'budget' is too small"):
+    with pytest.raises(ValueError, match="'budget' should be at least"):
         fitted_sampler.sample(uncertainties, y_true_cost=10.0, y_proxy_cost=1.0, budget=1, random_seed=42)
 
 
 def test_sample_known_output(fitted_sampler, uncertainties):
-    pi, xi = fitted_sampler.sample(uncertainties, y_true_cost=10.0, y_proxy_cost=1.0, budget=10, random_seed=42)
+    pi, xi = fitted_sampler.sample(uncertainties, y_true_cost=10.0, y_proxy_cost=1.0, budget=20, random_seed=42)
 
-    expected_pi = np.array([0.049, 0.197])
+    expected_pi = np.array([0.049, 0.196])
     expected_xi = np.array([0.0, 0.0])
 
     np.testing.assert_allclose(pi, expected_pi, atol=0.001)
@@ -155,7 +163,7 @@ def test_sample_known_output(fitted_sampler, uncertainties):
 
 
 def test_sample_known_output_truncated_samples(fitted_sampler, uncertainties):
-    pi, xi = fitted_sampler.sample(uncertainties, y_true_cost=10.0, y_proxy_cost=1.0, budget=2, random_seed=42)
+    pi, xi = fitted_sampler.sample(uncertainties, y_true_cost=10.0, y_proxy_cost=1.0, budget=11, random_seed=2)
 
     expected_pi = np.array([0.049, 0.0])
 

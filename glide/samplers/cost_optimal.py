@@ -5,11 +5,13 @@ from numpy.random.bit_generator import SeedSequence
 from numpy.typing import NDArray
 
 from glide.core.validation import (
+    _validate_bounds,
     _validate_non_constant,
     _validate_strictly_positive,
     _validate_uncertainties,
     _validate_y_true_burn_in,
 )
+from glide.samplers.core import _build_output, _compute_cutoff_indices, _shuffle
 
 
 class CostOptimalSampler:
@@ -44,15 +46,13 @@ class CostOptimalSampler:
     ...     uncertainties,
     ...     y_true_cost=10.0,
     ...     y_proxy_cost=1.0,
-    ...     budget=5,
+    ...     budget=20,
     ...     random_seed=0
     ... )
-    >>> float(pi[0])  # doctest: +ELLIPSIS
-    0.025...
-    >>> xi[0]
-    np.float64(0.0)
-    >>> np.isnan(xi[-1])
-    np.True_
+    >>> pi
+    array([0.02514447, 0.10057789, 0.02514447, 0.10057789])
+    >>> xi
+    array([0., 0., 0., 1.])
     """
 
     def fit(self, y_true: NDArray) -> "CostOptimalSampler":
@@ -155,13 +155,17 @@ class CostOptimalSampler:
 
         Per-sample annotation probabilities are derived from the supplied uncertainty
         scores (root mean squared errors) and the true label variance estimated by ``fit()``.
-        When the budget is tight, samples beyond a certain index in the input array are
-        excluded from sampling and receive a probability of zero.
+
+        Samples are randomly permuted before drawing and the inverse permutation is applied
+        to the output, so the returned arrays are always in the original input order. A
+        post-draw cutoff is then applied to strictly respect the budget: samples
+        beyond the cutoff are discarded by setting their entries in ``pi`` and ``xi`` to
+        ``0.0`` and ``NaN`` respectively.
 
         The two returned arrays are intended for use with IPW-based downstream estimators. ``pi``
         holds the per-sample probability of querying the expensive rater. ``xi`` holds the
-        annotation indicators for selected samples, with NaN marking unselected samples that
-        should be discarded before running an estimator.
+        annotation indicators for selected samples, with NaN marking samples excluded by the
+        budget cutoff.
 
         Parameters
         ----------
@@ -173,7 +177,7 @@ class CostOptimalSampler:
         y_proxy_cost : float
             Cost of one proxy label. Must be non-negative.
         budget : float
-            Total annotation budget in cost units. Must be strictly positive.
+            Total annotation budget in cost units. Must be at least ``y_true_cost + y_proxy_cost``.
         random_seed : int or SeedSequence or None, optional
             Random seed passed to ``numpy.random.default_rng`` for reproducibility.
             Pass ``None`` (the default) to use a non-deterministic seed.
@@ -184,8 +188,8 @@ class CostOptimalSampler:
             [0]: array of shape ``(n_samples,)``, ``pi`` with per-sample annotation probabilities
             for selected samples and ``0.0`` for unselected samples.
             [1]: array of shape ``(n_samples,)``, ``xi`` with Bernoulli indicators:
-            ``1.0`` if the true label was requested, ``0.0`` if only the proxy
-            was used, ``NaN`` if the sample was not selected.
+            ``1.0`` if selected for annotation, ``0.0`` if not selected,
+            ``NaN`` if excluded by the budget cutoff.
 
         Raises
         ------
@@ -193,10 +197,9 @@ class CostOptimalSampler:
             If ``fit()`` has not been called before ``sample()``.
         ValueError
             - If ``y_true_cost`` is not strictly positive or ``y_proxy_cost`` is negative.
-            - If ``budget`` is not strictly positive.
             - If any uncertainty value is NaN or non-positive.
             - If all uncertainty values are equal and ``y_proxy_cost`` is zero.
-            - If ``budget`` is too small to afford a single sample.
+            - If ``budget < y_true_cost + y_proxy_cost``.
 
         """
         if not hasattr(self, "_y_true_variance"):
@@ -210,29 +213,22 @@ class CostOptimalSampler:
                 "All uncertainty values are equal and 'y_proxy_cost' is zero."
                 " Provide non-constant uncertainties or set 'y_proxy_cost' to a positive value.",
             )
-        _validate_strictly_positive(budget, "budget")
         _validate_uncertainties(uncertainties)
+        _validate_bounds(
+            budget,
+            "budget",
+            lower=y_true_cost + y_proxy_cost,
+            error_message=f"'budget' should be at least {y_true_cost + y_proxy_cost}; got {budget}.",
+        )
 
         tau_star = self._find_optimal_threshold(uncertainties, y_true_cost, y_proxy_cost)
         gamma_star = self._compute_gamma(tau_star, uncertainties, y_true_cost, y_proxy_cost)
         pi_all = self._compute_per_sample_probabilities(tau_star, gamma_star, uncertainties)
 
-        cumulative_costs = np.cumsum(y_true_cost * pi_all + y_proxy_cost)
-        n_affordable = np.searchsorted(cumulative_costs, budget, side="right")
-        if n_affordable < 1:
-            raise ValueError(
-                f"'budget' is too small to afford a single sample; got {budget}."
-                " Increase 'budget' or reduce 'y_true_cost'."
-            )
-
-        n_samples = len(uncertainties)
-        cutoff = min(n_affordable, n_samples)
-
         rng = np.random.default_rng(random_seed)
-
-        pi = np.zeros(n_samples)
-        xi = np.full(n_samples, np.nan)
-        pi[:cutoff] = pi_all[:cutoff]
-        xi[:cutoff] = rng.binomial(n=1, p=pi_all[:cutoff], size=cutoff).astype(float)
-
-        return pi, xi
+        pi_shuffled, order = _shuffle(pi_all, rng)
+        xi_shuffled = rng.binomial(n=1, p=pi_shuffled).astype(float)
+        cumulative_costs = np.cumsum(xi_shuffled * y_true_cost + y_proxy_cost)
+        kept_indices = _compute_cutoff_indices(cumulative_costs, order, budget)
+        pi_out, xi_out = _build_output(kept_indices, pi_shuffled, xi_shuffled)
+        return pi_out, xi_out
