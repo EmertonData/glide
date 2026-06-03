@@ -69,7 +69,6 @@ Read `.github/PULL_REQUEST_TEMPLATE.md` to get the current template structure, t
 
 - **Lint, type-check, coverage, docstrings, docs build:** tick if the diff touches Python code; leave unchecked for docs-only or config-only changes.
 - **API Reference enriched:** tick if the PR adds or modifies public API (new classes, functions, or changed signatures). If this box applies but cannot be ticked because the API reference has not been updated, tell the user explicitly and ask them to add the missing documentation before the PR is merged.
-- **New estimator PRs:** a PR adding a new estimator is only complete when it also includes a scientific validation notebook, a user guide section, a tutorial, and a README update linking the relevant literature. If any of these are missing, flag it to the user before creating the PR.
 
 Always check "I have read `CONTRIBUTING.md`" and always check the LLM box (since this skill uses Claude).
 
