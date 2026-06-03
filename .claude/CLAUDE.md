@@ -162,6 +162,21 @@ Remove debug cells, dead code, and stray blank lines before merging. This applie
 
 Information should appear exactly once. If two classes share logic (e.g., a validation raise), extract it rather than duplicating. If two doc sections say the same thing, remove one.
 
+### Commit Messages
+
+Use Conventional Commits prefixes:
+
+- `feat:` — new feature
+- `fix:` — bug fix
+- `doc:` — documentation only
+- `ref:` — code restructuring, no behaviour change
+- `test:` — adding or fixing tests
+- `chore:` — maintenance tasks (config, tooling, dependencies, CI)
+- `perf:` — performance improvement
+- `style:` — formatting, no logic change
+- `build:` — build system or dependency changes
+- `ci:` — CI/CD pipeline changes
+
 ### Consistency and Propagation
 
 Before adding a new class, function, or module, find the nearest equivalent already in the codebase and verify that the new code mirrors it in structure, naming, and block ordering. When a good pattern appears in new code that the existing code lacks, propagate it to the existing code in the same PR. When a rename or refactor touches one site, grep for all other sites that use the old name and update them before considering the work done.
