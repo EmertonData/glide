@@ -30,9 +30,9 @@ class ClusterSampler:
     >>> from glide.samplers import ClusterSampler
     >>> clusters = np.array(["A", "A", "B", "B"], dtype=object)
     >>> sampler = ClusterSampler()
-    >>> xi = sampler.sample(clusters, n_clusters=2, random_seed=0)
+    >>> xi = sampler.sample(clusters, n_clusters=1, random_seed=0)
     >>> xi
-    array([1, 1, 1, 1])
+    array([0, 0, 1, 1])
     """
 
     def _validate(self, clusters: NDArray, n_clusters: int, strategy: str) -> None:
@@ -43,7 +43,7 @@ class ClusterSampler:
         if n_clusters > n_total_clusters:
             raise ValueError(
                 f"'n_clusters' must not exceed the number of unique clusters; "
-                f"got n_clusters={n_clusters} but clusters contains {n_total_clusters} unique clusters."
+                f"got n_clusters={n_clusters} but there are only {n_total_clusters} unique clusters."
             )
 
     def sample(
@@ -84,9 +84,9 @@ class ClusterSampler:
         Raises
         ------
         ValueError
-            If ``n_clusters`` is not a strictly positive integer, if ``n_clusters``
-            exceeds the number of unique clusters in ``clusters``, or if ``strategy``
-            is not recognised.
+            - If ``n_clusters`` is not a strictly positive integer.
+            - If ``n_clusters`` exceeds the number of unique clusters in ``clusters``.
+            - If ``strategy`` is not recognised.
         """
         self._validate(clusters, n_clusters, strategy)
 
@@ -96,7 +96,7 @@ class ClusterSampler:
         if strategy == "uniform":
             selected_clusters = rng.choice(unique_clusters, size=n_clusters, replace=False)
         else:
-            probabilities = cluster_sizes / cluster_sizes.sum()
+            probabilities = cluster_sizes / len(clusters)
             selected_clusters = rng.choice(unique_clusters, size=n_clusters, replace=False, p=probabilities)
 
         xi = np.isin(clusters, selected_clusters).astype(int)
