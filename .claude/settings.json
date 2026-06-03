@@ -1,7 +1,12 @@
 {
   "permissions": {
     "allow": [
-      "Bash(python3)"
+      "Bash(python3)",
+      "Bash(uv run *)",
+      "Bash(make *)",
+      "Bash(git status)",
+      "Bash(git diff*)",
+      "Bash(git log*)"
     ]
   },
   "enabledPlugins": {
