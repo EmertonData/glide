@@ -1,0 +1,111 @@
+from unittest.mock import patch
+
+import numpy as np
+import pytest
+
+import glide.simulators.clustered_binary as clustered_binary_module
+from glide.simulators import generate_clustered_binary_dataset
+
+
+def test_generate_clustered_binary_dataset_structure_and_counts():
+    y_true_oracle, y_proxy, clusters = generate_clustered_binary_dataset(n_total=4, n_clusters=2, random_seed=0)
+    assert isinstance(y_true_oracle, np.ndarray)
+    assert isinstance(y_proxy, np.ndarray)
+    assert isinstance(clusters, np.ndarray)
+    assert len(y_true_oracle) == 4
+    assert len(y_proxy) == 4
+    assert len(clusters) == 4
+    assert clusters.dtype == np.int64
+    assert np.isin(y_true_oracle, [0.0, 1.0]).all()
+    assert np.isin(y_proxy, [0.0, 1.0]).all()
+    assert not np.any(np.isnan(y_true_oracle))
+    assert not np.any(np.isnan(y_proxy))
+    assert len(np.unique(clusters)) == 2
+    assert set(np.unique(clusters)) == {0, 1}
+
+
+def test_generate_clustered_binary_dataset_n_clusters_below_minimum_raises():
+    with pytest.raises(ValueError, match=r"'n_clusters' must be >= 2; got 1\."):
+        generate_clustered_binary_dataset(n_total=10, n_clusters=1)
+
+
+def test_generate_clustered_binary_dataset_n_total_below_n_clusters_raises():
+    with pytest.raises(
+        ValueError,
+        match=r"'n_total' must be >= 'n_clusters'; got n_total=3 and n_clusters=5\.",
+    ):
+        generate_clustered_binary_dataset(n_total=3, n_clusters=5)
+
+
+def test_generate_clustered_binary_dataset_invalid_true_mean_raises():
+    with pytest.raises(ValueError, match=r"'true_mean' must be in \(0, 1\)"):
+        generate_clustered_binary_dataset(n_total=4, n_clusters=2, true_mean=1.5)
+
+
+def test_generate_clustered_binary_dataset_invalid_proxy_mean_raises():
+    with pytest.raises(ValueError, match=r"'proxy_mean' must be in \(0, 1\)"):
+        generate_clustered_binary_dataset(n_total=4, n_clusters=2, proxy_mean=0.0)
+
+
+def test_generate_clustered_binary_dataset_impossible_correlation_raises():
+    with pytest.raises(
+        ValueError,
+        match=r"Impossible combination of 'true_mean'=0\.7, 'proxy_mean'=0\.6, and 'correlation'=0\.95",
+    ):
+        generate_clustered_binary_dataset(n_total=4, n_clusters=2, true_mean=0.7, proxy_mean=0.6, correlation=0.95)
+
+
+def test_generate_clustered_binary_dataset_reproducibility():
+    y_true1, y_proxy1, clusters1 = generate_clustered_binary_dataset(n_total=6, n_clusters=2, random_seed=7)
+    y_true2, y_proxy2, clusters2 = generate_clustered_binary_dataset(n_total=6, n_clusters=2, random_seed=7)
+    np.testing.assert_allclose(y_true1, y_true2)
+    np.testing.assert_allclose(y_proxy1, y_proxy2)
+    np.testing.assert_array_equal(clusters1, clusters2)
+
+
+def test_generate_clustered_binary_dataset_different_seed_results_differ():
+    y_true1, y_proxy1, clusters1 = generate_clustered_binary_dataset(n_total=10, n_clusters=2, random_seed=0)
+    y_true2, y_proxy2, clusters2 = generate_clustered_binary_dataset(n_total=10, n_clusters=2, random_seed=1)
+    assert not np.array_equal(y_true1, y_true2) or not np.array_equal(clusters1, clusters2)
+
+
+def test_generate_clustered_binary_dataset_delegates_to_generate_binary_dataset():
+    mock_return = (np.array([1.0, 0.0, 1.0, 1.0]), np.array([1.0, 0.0, 0.0, 1.0]))
+    with patch.object(
+        clustered_binary_module, "generate_binary_dataset", return_value=mock_return
+    ) as mock_generate_binary_dataset:
+        generate_clustered_binary_dataset(
+            n_total=4, n_clusters=2, true_mean=0.7, proxy_mean=0.6, correlation=0.8, random_seed=0
+        )
+        mock_generate_binary_dataset.assert_called_once()
+        call_kwargs = mock_generate_binary_dataset.call_args.kwargs
+        assert call_kwargs["n_total"] == 4
+        assert call_kwargs["true_mean"] == 0.7
+        assert call_kwargs["proxy_mean"] == 0.6
+        assert call_kwargs["correlation"] == 0.8
+        assert isinstance(call_kwargs["random_seed"], np.random.SeedSequence)
+
+
+def test_generate_clustered_binary_dataset_minimum_sizes():
+    y_true_oracle, y_proxy, clusters = generate_clustered_binary_dataset(n_total=2, n_clusters=2, random_seed=0)
+    assert len(y_true_oracle) == 2
+    assert len(clusters) == 2
+    assert len(np.unique(clusters)) == 2
+
+
+def test_generate_clustered_binary_dataset_seed_sequence_input():
+    seed = np.random.SeedSequence(42)
+    y_true1, y_proxy1, clusters1 = generate_clustered_binary_dataset(n_total=4, n_clusters=2, random_seed=seed)
+    seed = np.random.SeedSequence(42)
+    y_true2, y_proxy2, clusters2 = generate_clustered_binary_dataset(n_total=4, n_clusters=2, random_seed=seed)
+    np.testing.assert_allclose(y_true1, y_true2)
+    np.testing.assert_allclose(y_proxy1, y_proxy2)
+    np.testing.assert_array_equal(clusters1, clusters2)
+
+
+def test_generate_clustered_binary_dataset_equal_n_total_and_n_clusters():
+    y_true_oracle, y_proxy, clusters = generate_clustered_binary_dataset(n_total=3, n_clusters=3, random_seed=0)
+    assert len(clusters) == 3
+    assert len(np.unique(clusters)) == 3
+    for cluster_id in range(3):
+        assert np.sum(clusters == cluster_id) == 1

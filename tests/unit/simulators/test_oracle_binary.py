@@ -40,7 +40,7 @@ def test_generate_binary_dataset_with_oracle_sampling_reproducibility():
     np.testing.assert_array_equal(uncertainty1, uncertainty2)
 
 
-def test_generate_binary_dataset_with_oracle_sampling_none_seed_is_nondeterministic():
-    y_true1, y_proxy1, _ = generate_binary_dataset_with_oracle_sampling(n_total=10)
-    y_true2, y_proxy2, _ = generate_binary_dataset_with_oracle_sampling(n_total=10)
+def test_generate_binary_dataset_with_oracle_sampling_different_seed_results_differ():
+    y_true1, y_proxy1, _ = generate_binary_dataset_with_oracle_sampling(n_total=10, random_seed=0)
+    y_true2, y_proxy2, _ = generate_binary_dataset_with_oracle_sampling(n_total=10, random_seed=1)
     assert not np.array_equal(y_true1, y_true2) or not np.array_equal(y_proxy1, y_proxy2)
