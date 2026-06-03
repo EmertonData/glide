@@ -23,6 +23,7 @@ def _build_output(kept_indices: NDArray, pi_shuffled: NDArray, xi_shuffled: NDAr
     n = len(pi_shuffled)
     pi_out = np.zeros(n)
     xi_out = np.full(n, np.nan)
-    pi_out[kept_indices] = pi_shuffled[: len(kept_indices)]
-    xi_out[kept_indices] = xi_shuffled[: len(kept_indices)]
+    n_kept = len(kept_indices)
+    pi_out[kept_indices] = pi_shuffled[:n_kept]
+    xi_out[kept_indices] = xi_shuffled[:n_kept]
     return pi_out, xi_out
