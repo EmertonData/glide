@@ -29,3 +29,9 @@ def test_generate_gaussian_dataset_reproducibility():
     y_true2, y_proxy2 = generate_gaussian_dataset(n_labeled=1, n_unlabeled=2, random_seed=7)
     np.testing.assert_allclose(y_true1, y_true2, equal_nan=True)
     np.testing.assert_allclose(y_proxy1, y_proxy2)
+
+
+def test_generate_gaussian_dataset_none_seed_is_nondeterministic():
+    y_true1, y_proxy1 = generate_gaussian_dataset(n_labeled=5, n_unlabeled=5)
+    y_true2, y_proxy2 = generate_gaussian_dataset(n_labeled=5, n_unlabeled=5)
+    assert not np.array_equal(y_true1, y_true2, equal_nan=True) or not np.array_equal(y_proxy1, y_proxy2)

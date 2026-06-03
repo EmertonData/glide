@@ -35,3 +35,9 @@ def test_generate_binary_dataset_reproducibility():
     y_true2, y_proxy2 = generate_binary_dataset(n_total=3, random_seed=7)
     np.testing.assert_allclose(y_true1, y_true2)
     np.testing.assert_allclose(y_proxy1, y_proxy2)
+
+
+def test_generate_binary_dataset_different_seed_results_differ():
+    y_true1, y_proxy1 = generate_binary_dataset(n_total=10, random_seed=0)
+    y_true2, y_proxy2 = generate_binary_dataset(n_total=10, random_seed=1)
+    assert (not np.array_equal(y_true1, y_true2)) or (not np.array_equal(y_proxy1, y_proxy2))

@@ -73,3 +73,13 @@ def test_generate_stratified_binary_dataset_reproducibility():
     np.testing.assert_allclose(y_true1, y_true2)
     np.testing.assert_allclose(y_proxy1, y_proxy2)
     np.testing.assert_array_equal(groups1, groups2)
+
+
+def test_generate_stratified_binary_dataset_none_seed_is_nondeterministic():
+    y_true1, y_proxy1, _ = generate_stratified_binary_dataset(
+        n_total=[5, 5], true_mean=[0.6, 0.8], proxy_mean=[0.5, 0.7], correlation=[0.75, 0.75]
+    )
+    y_true2, y_proxy2, _ = generate_stratified_binary_dataset(
+        n_total=[5, 5], true_mean=[0.6, 0.8], proxy_mean=[0.5, 0.7], correlation=[0.75, 0.75]
+    )
+    assert not np.array_equal(y_true1, y_true2) or not np.array_equal(y_proxy1, y_proxy2)
