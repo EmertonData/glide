@@ -119,7 +119,8 @@ def generate_clustered_binary_dataset(
     )
 
     rng = np.random.default_rng(partition_seed)
-    cut_positions = np.sort(rng.choice(np.arange(1, n_total), size=n_clusters - 1, replace=False))
+
+    cut_positions = np.sort(rng.choice(n_total - 1, size=n_clusters - 1, replace=False) + 1)
     interval_lengths = np.diff(np.hstack([[0], cut_positions, [n_total]]))
     clusters = np.repeat(np.arange(n_clusters, dtype=np.int64), interval_lengths)
     rng.shuffle(clusters)

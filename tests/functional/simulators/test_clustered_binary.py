@@ -22,4 +22,4 @@ def test_generate_clustered_binary_dataset_empirical_means_and_correlation():
     assert np.mean(y_true) == pytest.approx(true_mean, abs=0.03)
     assert np.mean(y_proxy) == pytest.approx(proxy_mean, abs=0.03)
     assert np.corrcoef(y_true, y_proxy)[0, 1] == pytest.approx(correlation, abs=0.05)
-    assert np.max(clusters) == n_clusters - 1
+    np.testing.assert_array_equal(np.unique(clusters), np.arange(n_clusters))
