@@ -24,7 +24,11 @@
 
 GLIDE is a Python library for **rigorous evaluation of GenAI systems** using hybrid human/proxy annotations.
 
-GLIDE implements methods from the field of **prediction-powered inference** — the science of system evaluation that combines a small set of labeled data with a large set of unlabeled (or proxy-labeled) data to produce valid, debiased estimates. See the [implemented papers](#implemented-papers) below.
+GLIDE implements methods from the field of **prediction-powered inference** — the science of system evaluation that combines a small set of labeled data with a large set of proxy-labeled data to produce valid, debiased estimates. See the [implemented papers](#implemented-papers) below.
+
+<p align="center">
+  <img src="https://raw.githubusercontent.com/EmertonData/glide/refs/heads/main/docs/assets/schema-PPI-readme.png" alt="Prediction-powered inference schema" width="60%">
+</p>
 
 ## 🤔 Why GLIDE?
 
@@ -94,4 +98,4 @@ Follow our [LinkedIn newsletter](https://www.linkedin.com/build-relation/newslet
 
 Developed at [Emerton Data](https://www.emerton-data.com/).
 
-<img src="https://raw.githubusercontent.com/EmertonData/glide/refs/heads/main/docs/assets/logo-ed.jpg" alt="Emerton Data" width="250">
+<img src="https://raw.githubusercontent.com/EmertonData/glide/refs/heads/main/docs/assets/logo-ed.jpg" alt="Emerton Data" width="20%">

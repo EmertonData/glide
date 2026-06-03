@@ -9,7 +9,7 @@ If you are new to GLIDE, read the [Evaluation Workflow](../user_guide/evaluation
 The workflow breaks into three sequential phases: **Sampling** (deciding which items to send for human annotation), **Annotation** (collecting human labels), and **Estimation** (computing debiased statistics from the combined human and proxy data). The decision tree below guides you through each phase.
 
 <p align="center">
-  <img src="../assets/which-estimators-to-use.png" alt="Decision tree for choosing a GLIDE sampler and estimator" width="700">
+  <img src="../assets/which-estimators-to-use.png" alt="Decision tree for choosing a GLIDE sampler and estimator" width="60%">
 </p>
 
 ---
