@@ -3,13 +3,17 @@
 ```markdown
 # [Refactoring title: what is changing and why]
 
+## TODO
+
+- [ ] <!-- placeholder for refinement actions: update, split, convert to issue, etc. -->
+
 ## Background
 
-[2–3 paragraphs. Explain what the current code does (with file and line pointers), why it needs to change (inconsistency, duplication, API mismatch, naming confusion), and what the goal state looks like. Be concrete — name the specific classes, methods, or files involved. A developer who has never touched this code should understand both the current problem and the intended result.]
+[1–2 tight paragraphs. Name the specific files, classes, and methods involved. State the current problem (inconsistency, duplication, naming confusion) and the goal state in one sentence each. Skip context that the Implementation section already makes obvious.]
 
 ## Design choices
 
-[How the refactored code will be structured. What gets renamed, moved, merged, or split. Explain the reasoning behind each choice. If an alternative was considered and rejected, say why. Keep it honest — "we chose X over Y because Z" is more useful than just "we chose X".
+[1 paragraph max, strictly synthetic. What gets renamed, moved, merged, or split, and the key reason for each choice. One sentence per decision is enough — "chose X over Y because Z".
 
 **On extractions:** when shared logic is pulled into a new function or module, callers should call it directly — not wrap it in a one-liner delegate method. One-liner delegates duplicate test surface and add indirection without any benefit. Remove the original method and update every caller to use the new function.]
 

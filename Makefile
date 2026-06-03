@@ -72,10 +72,10 @@ build:
 	uv build
 
 bump-major:
-	uv version --bump major
+	uv run bump-my-version bump major
 
 bump-minor:
-	uv version --bump minor
+	uv run bump-my-version bump minor
 
 bump-patch:
-	uv version --bump patch
+	uv run bump-my-version bump patch

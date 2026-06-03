@@ -134,6 +134,7 @@ Only add a comment when the *why* is non-obvious: a hidden constraint, a subtle 
 ### Documentation
 
 - MkDocs with mkdocstrings; docs must build without warnings
+- Always specify image widths as a percentage (e.g. `width="80%"`), never as fixed pixels.
 - Update `CHANGELOG.md` for any user-facing changes (Keep a Changelog format, SemVer)
 - Always add elements to the "Added" or "Changed" sections of `CHANGELOG.md` at the top of the existing list
 - Keep the `CHANGELOG.md` user-friendly and concise

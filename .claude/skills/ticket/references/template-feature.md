@@ -3,15 +3,17 @@
 ```markdown
 # [Feature title: algorithm name and brief purpose]
 
+## TODO
+
+- [ ] <!-- placeholder for refinement actions: update, split, convert to issue, etc. -->
+
 ## Background
 
-[2–4 paragraphs. Answer: what problem does this solve, what is the core mathematical idea, why does it matter for GLIDE's goal of evaluating GenAI systems with hybrid annotations, and what assumptions does it make.
-
-Write as if explaining to a smart developer who just graduated: comfortable with Python and NumPy, but no statistics background. Use plain analogies. Introduce any formula with a sentence like "In math notation this is written as..." before showing it. Never assume the reader has seen the paper.]
+[2–3 tight sentences per paragraph, 2 paragraphs max. Answer: what problem does this solve, what is the core mathematical idea, and why it matters for GLIDE. Write for a developer with no statistics background — define any term that is not common Python knowledge. One formula at most, introduced with "In math notation this is written as...". Never summarise the full paper.]
 
 ## Design choices
 
-[2–3 paragraphs. Cover: where in the codebase this lives and why, how it relates to existing classes (inherits from X, mirrors Y, extends Z), any deliberate departures from the paper (scope restrictions, Python-idiomatic adaptations), and key interface decisions (constructor arguments, method names, return types). Explain the reasoning behind each choice — developers should understand the intent, not just the rule.]
+[1–2 paragraphs, strictly synthetic. Cover only: where in the codebase this lives and why, how it relates to existing classes (inherits from X, mirrors Y), and any key interface decisions. One sentence of reasoning per choice is enough. Skip anything the code already makes obvious.]
 
 ## Implementation
 

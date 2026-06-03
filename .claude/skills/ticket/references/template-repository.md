@@ -3,6 +3,10 @@
 ```markdown
 # [Repository title: what is being improved and why]
 
+## TODO
+
+- [ ] <!-- placeholder for refinement actions: update, split, convert to issue, etc. -->
+
 ## Background
 
 [1–2 paragraphs. What is the current problem or gap: a missing CI check, a slow test suite, a flaky pipeline, an outdated dependency, missing pre-commit hooks. Be concrete — link to the relevant config files, CI runs, or failing steps. Explain the impact (e.g. "coverage is not enforced on PRs", "the type-checker runs but its output is ignored", "notebook outputs are committed to the repository").]
