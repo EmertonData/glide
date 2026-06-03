@@ -161,5 +161,5 @@ class ActiveSampler:
         xi_shuffled = rng.binomial(n=1, p=pi_shuffled).astype(float)
         cumulative_costs = np.cumsum(xi_shuffled)
         kept_indices = _compute_cutoff_indices(cumulative_costs, order, budget)
-        pi_out, xi_out = _build_output(kept_indices, pi, xi_shuffled)
+        pi_out, xi_out = _build_output(kept_indices, pi_shuffled, xi_shuffled)
         return pi_out, xi_out

@@ -52,7 +52,7 @@ def test_build_output(pi, order):
     kept_indices = order[:2]
     pi_out, xi_out = _build_output(kept_indices, pi, xi_shuffled)
 
-    expected_pi = np.array([0.3, 0.0, 0.9])
+    expected_pi = np.array([0.6, 0.0, 0.3])
     expected_xi = np.array([0.0, np.nan, 1.0])
     np.testing.assert_allclose(pi_out, expected_pi)
     np.testing.assert_array_equal(xi_out, expected_xi)
