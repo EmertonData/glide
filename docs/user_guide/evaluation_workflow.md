@@ -14,21 +14,9 @@ GLIDE addresses this by combining large pools of cheap proxy labels with small s
 
 The workflow has three stages:
 
-```
-Large proxy-labeled dataset
-         │
-         ▼
-  [1] Sampler — which samples to annotate?
-         │
-         ▼
-  [2] Human annotation of selected samples
-         │
-         ▼
-  [3] Estimator — what is the metric?
-         │
-         ▼
-  Point estimate + confidence interval
-```
+<p align="center">
+  <img src="../../assets/glide-workflow.png" alt="GLIDE's workflow" width="90%">
+</p>
 
 ### Do you need a sampler?
 
