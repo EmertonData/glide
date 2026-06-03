@@ -11,6 +11,7 @@
   <a href="https://github.com/EmertonData/glide/commits/master"><img src="https://img.shields.io/github/commits-since/EmertonData/glide/latest" alt="Commits"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-Apache%202.0-blue" alt="License"></a>
   <a href="https://www.linkedin.com/build-relation/newsletter-follow?entityUrn=7453423077557952512"><img src="https://img.shields.io/badge/Follow-LinkedIn-0A66C2" alt="LinkedIn"></a>
+  <a href="https://arxiv.org/abs/2605.31278"><img src="https://img.shields.io/badge/arXiv-2605.31278-b31b1b" alt="arXiv"></a>
 </p>
 
 <p align="center">
@@ -24,7 +25,11 @@
 
 GLIDE is a Python library for **rigorous evaluation of GenAI systems** using hybrid human/proxy annotations.
 
-GLIDE implements methods from the field of **prediction-powered inference** — the science of system evaluation that combines a small set of labeled data with a large set of unlabeled (or proxy-labeled) data to produce valid, debiased estimates. See the [implemented papers](#implemented-papers) below.
+GLIDE implements methods from the field of **prediction-powered inference** — the science of system evaluation that combines a small set of labeled data with a large set of proxy-labeled data to produce valid, debiased estimates. See the [implemented papers](#implemented-papers) below.
+
+<p align="center">
+  <img src="https://raw.githubusercontent.com/EmertonData/glide/refs/heads/main/docs/assets/schema-PPI-readme.png" alt="Prediction-powered inference schema" width="60%">
+</p>
 
 ## 🤔 Why GLIDE?
 
@@ -64,13 +69,17 @@ This project follows [SPEC 0](https://scientific-python.org/specs/spec-0000/) fo
 ## 📄 License & Citation
 
 This project is licensed under the [Apache 2.0 License](https://raw.githubusercontent.com/EmertonData/glide/refs/heads/main/LICENSE).
-If you use Glide in your research, please cite:
+If you use Glide in your work, please cite our paper presented at the ICML 2026 Agentic Uncertainty workshop:
 
 ```bibtex
-@software{glide,
-  title  = {GLIDE: Generated Label Inference \& Debiasing Engine},
-  year   = {2026},
-  url    = {https://github.com/EmertonData/glide},
+@misc{martinon2026glide,
+  author        = {Martinon, Grégoire and Merad, Ibrahim and Raki, Mohammed},
+  title         = {Industrializing Prediction-Powered Inference: The GLIDE Library for Reliable GenAI and Agentic Systems Evaluation},
+  year          = {2026},
+  eprint        = {2605.31278},
+  archivePrefix = {arXiv},
+  primaryClass  = {cs.AI},
+  doi           = {10.48550/arXiv.2605.31278},
 }
 ```
 
@@ -94,4 +103,4 @@ Follow our [LinkedIn newsletter](https://www.linkedin.com/build-relation/newslet
 
 Developed at [Emerton Data](https://www.emerton-data.com/).
 
-<img src="https://raw.githubusercontent.com/EmertonData/glide/refs/heads/main/docs/assets/logo-ed.jpg" alt="Emerton Data" width="250">
+<img src="https://raw.githubusercontent.com/EmertonData/glide/refs/heads/main/docs/assets/logo-ed.jpg" alt="Emerton Data" width="20%">
