@@ -3,7 +3,7 @@
 
 - [ ] Check that `main` contains all intended changes for the release.
 - [ ] Checkout `main` and pull latest changes: `git checkout main && git pull origin main` and create a branch for the new release.
-- [ ] Use one of `make bump-major` or `make bump-minor` or `make bump-patch` to update the version number in the pyproject.toml.
+- [ ] Use one of `make bump-major` or `make bump-minor` or `make bump-patch` to update the version number in `pyproject.toml` and `CITATION.cff`.
 - [ ] Update `CHANGELOG.md`:
     * Move all entries from `[Next release]` into a new version section `[X.Y.Z] – YYYY-MM-DD`
     * Add a `💛 Contributors` line thanking everyone who contributed
