@@ -9,6 +9,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 ## [Next release]
 
 ### ✨ Added
+- `UniformClusterSampler` for cluster-level annotation selection using uniform sampling
 - Image in the readme describing prediction-powered inference
 - Image in the user guide describing GLIDE's three-step workflow
 
