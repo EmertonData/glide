@@ -7,6 +7,8 @@ description: Opens a pull request for the current branch on the GLIDE repository
 
 This skill creates a pull request on the GLIDE repository for the branch the user is currently on. It produces a correctly filled-in PR template, updates the changelog if the change is user-facing, attaches accurate labels, and calls `gh pr create` to open the PR.
 
+> **Note:** Some instructions here reference specific template sections and checklist items as they existed when this skill was written. If you notice a mismatch between these instructions and the actual `.github/PULL_REQUEST_TEMPLATE.md`, let the user know before creating the PR.
+
 The user may create the PR before they are ready for review (e.g., to share a work-in-progress). The skill handles both cases: a fully ready PR with all checklist boxes ticked, and a draft/partial PR with only the boxes that genuinely apply.
 
 ---
@@ -39,11 +41,9 @@ Before proceeding, you need two things from the user. Ask them together in one m
 
 Derive the title from the issue/ticket the user pointed to. Fetch the issue body if it's a GitHub issue (`gh issue view <N>`). Aim for a short imperative title (under 70 characters) that describes what the PR *does*, consistent with the pattern in recent PRs (e.g., "Add constrained optimization to ActiveSampler", "Fix decision tree figure").
 
-If the branch only partially addresses the ticket, prefix the title with "WIP:" to signal it is not yet complete.
-
 ### Step 3 — Decide whether a CHANGELOG update is needed
 
-A CHANGELOG update is needed when the change is **user-facing**: new public API, changed behaviour, removed or renamed public symbols, or fixed bugs that affected users. It is not needed for pure refactoring, CI changes, internal reorganisation, or documentation-only changes.
+A CHANGELOG update is needed when the change is **user-facing**: new public API, changed behaviour, removed or renamed public symbols, or fixed bugs that affected users. It is not needed for pure refactoring, CI changes or internal reorganisation changes.
 
 If a CHANGELOG update is needed and the user has not already added one:
 1. Add a bullet to the correct section (`Added`, `Changed`, or `Fixed`) under `## [Next release]` in `CHANGELOG.md`. Keep it concise and user-facing (what changed, not how).
@@ -51,110 +51,37 @@ If a CHANGELOG update is needed and the user has not already added one:
 
 If the user already updated CHANGELOG, just verify the entry is under `## [Next release]`.
 
+If necessary, update the contributors section under `## [Next release]` with user's github username.
+
 ### Step 4 — Fill in the PR template
 
-Produce the PR body using this exact structure:
+Read `.github/PULL_REQUEST_TEMPLATE.md` to get the current template structure, then fill it in as follows.
 
-```
-### Description
-
-- What does this PR do?
-<one or two sentences from the diff — clear, concrete, no waffle>
-- Which issue does it close? (use `Closes #<number>`)
-<see guidance below>
-- Any noteworthy implementation decisions or trade-offs?
-<only if the user provided something — otherwise leave the line blank>
-
-### Checklist
-
-Quality gates that must be satisfied before requesting a review:
-
-- [x] I have read `CONTRIBUTING.md`
-- [x or space] `make lint` passes
-- [x or space] `make type-check` passes
-- [x or space] `make tests` passes
-- [x or space] `make coverage` reports 100% coverage
-- [x or space] `make test-notebooks` passes
-- [x or space] New public API has numpy-style docstrings
-- [x or space] New public API is inserted in the API reference section of the documentation
-- [x or space] Docs build without warnings (`make doc`)
-- [x or space] `CHANGELOG.md` updated if the change is user-facing
-
-### LLM usage
-
-Disclose if an LLM was used in writing this PR:
-- [ ] No LLM used
-- [x] I used an LLM and I went through and validated all the code myself
-```
+**Description section:** Write one or two concrete sentences summarising what the PR does, derived from the diff. Link the issue using the guidance below. Include noteworthy implementation decisions only if the user explicitly provided them — do not infer or fill this yourself.
 
 **Issue linking:**
 - GitHub issue → `Closes #<N>`
 - Project board item only → `Handles this [ticket](<url>)` (same style as PR #233)
 - Both → `Handles this [ticket](<url>) Closes #<N>`
-- No issue → leave the bullet empty or write "N/A"
+- No issue → leave blank or write "N/A"
 
-**Checklist logic:**
+**Checklist:** Do not run quality-gate commands yourself — the user is responsible for those. Use the following rules to decide which boxes to tick:
 
-Run the following commands before filling in the checklist and tick the box if and only if the command exits successfully:
-
-```bash
-make pre-commit
-make tests
-make coverage
-```
-
-`make pre-commit` runs all pre-commit hooks via `prek`: ruff formatting (`ruff-format`), ruff linting (`ruff --fix`), type checking (`ty check`), notebook output stripping (`nbstripout`), and notebook format normalization. The first four hooks apply corrections in-place — if the first run fails because files were modified, re-run immediately; it should pass the second time. Only report a genuine failure if the second run also fails (or if `ty check` or the mkdocs-execute check failed with an actual error).
-
-For checklist box mapping: `make lint` maps to the ruff hooks in `make pre-commit`; `make type-check` maps to the `ty` hook. Tick both boxes if `make pre-commit` exits cleanly.
-
-Run them sequentially. If a command fails, do not tick its box — and tell the user what failed so they can fix it before requesting review.
-
-For `make test-notebooks`: only run it if notebooks were modified in the diff. Notebook tests can be slow, so skip them when notebooks are untouched.
-
-For the remaining boxes, use the diff and your judgment:
-
-| Box | Tick when |
-|---|---|
-| New public API docstrings | New public methods/classes were added and docstrings are visible in the diff |
-| API reference | New public API was added and the relevant `docs/api_reference` page was updated in the diff |
-| Docs build without warnings | Documentation files were modified and `make doc` exits cleanly; or docs are entirely untouched |
-| CHANGELOG updated | A user-facing change was made and you (or the user) added a CHANGELOG entry |
+- **Lint, type-check, coverage, docstrings, docs build:** tick if the diff touches Python code; leave unchecked for docs-only or config-only changes.
+- **API Reference enriched:** tick if the PR adds or modifies public API (new classes, functions, or changed signatures). If this box applies but cannot be ticked because the API reference has not been updated, tell the user explicitly and ask them to add the missing documentation before the PR is merged.
+- **New estimator PRs:** a PR adding a new estimator is only complete when it also includes a scientific validation notebook, a user guide section, a tutorial, and a README update linking the relevant literature. If any of these are missing, flag it to the user before creating the PR.
 
 Always check "I have read `CONTRIBUTING.md`" and always check the LLM box (since this skill uses Claude).
 
 ### Step 5 — Determine labels
 
-Apply one **type label** and one or more **component labels** as applicable.
+Fetch the current label list from GitHub:
 
-**Type labels (pick one):**
+```bash
+gh label list --limit 100
+```
 
-| Label | When |
-|---|---|
-| `feature` | New public API, new algorithm, new capability |
-| `bug` | Fixes incorrect behaviour |
-| `refactoring` | Code restructuring with no functional change |
-| `documentation` | Only docs, docstrings, notebooks, or user guide changes |
-| `repository` | CI, tooling, Makefile, GitHub config, dependencies |
-
-**Component labels (pick all that apply):**
-
-| Label | When |
-|---|---|
-| `PPI` | Touches prediction-powered inference estimators or related code |
-| `ASI` | Touches active statistical inference |
-| `classical` | Touches classical inference estimators |
-| `PTD` | Touches Predict-Then-Debias estimators |
-| `Stratified PPI` | Touches StratifiedPPIMeanEstimator |
-| `Stratified PTD` | Touches StratifiedPTDMeanEstimator |
-| `Stratified sampler` | Touches StratifiedSampler |
-| `Active sampler` | Touches ActiveSampler |
-| `Cost optimal sampler` | Touches CostOptimalSampler |
-| `Cost optimal random sampler` | Touches CostOptimalRandomSampler |
-| `Dataset` | Touches simulators or dataset generators |
-| `inference result` | Touches MeanInferenceResult or ConfidenceInterval classes |
-| `Breaking change` | Public API removed or signature changed in a breaking way |
-
-Derive component labels from the diff: look at which files under `glide/` were modified.
+From the output, pick all labels that apply to this PR. Use the label names and descriptions returned by the CLI to decide relevance — do not rely on hardcoded assumptions. Apply every label that fits; there is no cap.
 
 ### Step 6 — Push and create the PR
 
@@ -192,7 +119,6 @@ If you updated CHANGELOG, also tell the user: *"I updated CHANGELOG.md — you'l
 ## Important constraints
 
 - Never fill in "Any noteworthy implementation decisions or trade-offs?" yourself based on the diff. Only include content the user explicitly provided.
-- If the branch only partially addresses the ticket, say so clearly in the PR description and prefix the title with "WIP:".
+- Always check the "read `CONTRIBUTING.md`" box.
 - Always check the LLM box, since Claude is writing this PR.
-- Use `Closes #N` only for GitHub issues that this PR fully resolves. Use `Handles this [ticket](url)` for partial work or project-board-only items.
-- If `make lint`, `make tests`, or `make coverage` fails, report the failure clearly but still ask whether to proceed with PR creation anyway — a failing check does not block opening the PR.
+- Use `Closes #N` for GitHub issues. Use `Handles this [ticket](url)` for project-board-only items.
