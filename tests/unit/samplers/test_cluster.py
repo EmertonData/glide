@@ -17,26 +17,23 @@ def clusters() -> np.ndarray:
     return np.array(["A", "A", "B", "B", "C", "C"], dtype=object)
 
 
-# --- _validate ---
+# --- sample ---
 
 
-def test_validate_delegates_to_validation(sampler, clusters):
+def test_sample_delegates_to_validation(sampler, clusters):
     with (
         patch.object(cluster_module, "_validate_is_integer") as mock_validate_is_integer,
         patch.object(cluster_module, "_validate_strictly_positive") as mock_validate_strictly_positive,
     ):
-        sampler._validate(clusters, 2)
+        sampler.sample(clusters, n_clusters=2, random_seed=0)
 
         mock_validate_is_integer.assert_called_once_with(2, "n_clusters")
         mock_validate_strictly_positive.assert_called_once_with(2, "n_clusters")
 
 
-def test_validate_n_clusters_exceeds_unique_clusters(sampler, clusters):
+def test_sample_n_clusters_exceeds_unique_clusters(sampler, clusters):
     with pytest.raises(ValueError, match="'n_clusters' must not exceed the number of unique clusters"):
-        sampler._validate(clusters, 4)
-
-
-# --- sample ---
+        sampler.sample(clusters, n_clusters=4)
 
 
 def test_sample_returns_valid_array(sampler, clusters):

@@ -29,16 +29,6 @@ class UniformClusterSampler:
     array([0, 0, 1, 1])
     """
 
-    def _validate(self, clusters: NDArray, n_clusters: int) -> None:
-        _validate_is_integer(n_clusters, "n_clusters")
-        _validate_strictly_positive(n_clusters, "n_clusters")
-        n_total_clusters = len(np.unique(clusters))
-        if n_clusters > n_total_clusters:
-            raise ValueError(
-                f"'n_clusters' must not exceed the number of unique clusters; "
-                f"got n_clusters={n_clusters} but there are only {n_total_clusters} unique clusters."
-            )
-
     def sample(
         self,
         clusters: NDArray,
@@ -74,9 +64,16 @@ class UniformClusterSampler:
             - If ``n_clusters`` is not a strictly positive integer.
             - If ``n_clusters`` exceeds the number of unique clusters in ``clusters``.
         """
-        self._validate(clusters, n_clusters)
-
+        _validate_is_integer(n_clusters, "n_clusters")
+        _validate_strictly_positive(n_clusters, "n_clusters")
         unique_clusters = np.unique(clusters)
+        n_total_clusters = len(unique_clusters)
+        if n_clusters > n_total_clusters:
+            raise ValueError(
+                f"'n_clusters' must not exceed the number of unique clusters; "
+                f"got n_clusters={n_clusters} but there are only {n_total_clusters} unique clusters."
+            )
+
         rng = np.random.default_rng(random_seed)
         selected_clusters = rng.choice(unique_clusters, size=n_clusters, replace=False)
 
