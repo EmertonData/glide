@@ -5,11 +5,11 @@ from numpy.typing import NDArray
 
 
 def _shuffle(
-    arrays: Tuple[NDArray, ...],
+    array: NDArray,
     rng: np.random.Generator,
-) -> Tuple[Tuple[NDArray, ...], NDArray]:
-    order = rng.permutation(len(arrays[0]))
-    shuffled = tuple(arr[order] for arr in arrays)
+) -> Tuple[NDArray, NDArray]:
+    order = rng.permutation(len(array))
+    shuffled = array[order]
     return shuffled, order
 
 

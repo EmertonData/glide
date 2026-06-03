@@ -22,14 +22,13 @@ def order() -> np.ndarray:
 # --- _shuffle ---
 
 
-def test_shuffle_applies_order(pi, xi):
+def test_shuffle_applies_order(pi):
     rng = np.random.default_rng(42)
-    (pi_shuffled, xi_shuffled), order = _shuffle((pi, xi), rng)
+    pi_shuffled, order = _shuffle(pi, rng)
 
     expected_order = np.array([2, 1, 0])
     np.testing.assert_array_equal(order, expected_order)
     np.testing.assert_allclose(pi_shuffled, pi[expected_order])
-    np.testing.assert_allclose(xi_shuffled, xi[expected_order])
 
 
 # --- _compute_cutoff_indices ---

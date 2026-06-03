@@ -189,7 +189,7 @@ class CostOptimalRandomSampler:
 
         pi_all = np.full(n_samples, pi_opt)
         rng = np.random.default_rng(random_seed)
-        (pi_shuffled,), order = _shuffle((pi_all,), rng)
+        pi_shuffled, order = _shuffle(pi_all, rng)
         xi_shuffled = rng.binomial(n=1, p=pi_shuffled).astype(float)
         cumulative_costs = np.cumsum(xi_shuffled * y_true_cost + y_proxy_cost)
         kept_indices = _compute_cutoff_indices(cumulative_costs, order, budget)

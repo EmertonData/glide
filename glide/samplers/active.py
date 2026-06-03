@@ -157,7 +157,7 @@ class ActiveSampler:
         pi = self._compute_probabilities(uncertainties, budget)
 
         rng = np.random.default_rng(random_seed)
-        (pi_shuffled,), order = _shuffle((pi,), rng)
+        pi_shuffled, order = _shuffle(pi, rng)
         xi_shuffled = rng.binomial(n=1, p=pi_shuffled).astype(float)
         cumulative_costs = np.cumsum(xi_shuffled)
         kept_indices = _compute_cutoff_indices(cumulative_costs, order, budget)
