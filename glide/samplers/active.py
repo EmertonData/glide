@@ -12,6 +12,7 @@ from glide.core.validation import (
     _validate_strictly_positive,
     _validate_uncertainties,
 )
+from glide.samplers.core import _build_output, _compute_cutoff_indices, _shuffle
 
 
 class ActiveSampler:
@@ -95,13 +96,20 @@ class ActiveSampler:
         Each observation receives a drawing probability π_i that minimizes the variance
         of downstream IPW-based estimators. This is equivalently done by minimizing the sum of
         ``uncertainty_i^2 / π_i`` over all observations. Probabilities are constrained to
-        ``(0, 1]`` and sum to ``budget``. The actual number of selected items is a random
-        variable with expectation equal to ``budget``.
+        ``(0, 1]`` and sum to ``budget``. The actual number of selected items is random
+        but limited to ``budget``.
+
+        Samples are randomly permuted before drawing and the inverse permutation
+        is applied to the output, so the returned arrays are always in the
+        original input order. A post-draw cutoff is then applied to strictly
+        respect the budget: samples beyond the cutoff are discarded by setting their entries
+        in ``pi`` and ``xi`` to ``0.0`` and ``NaN`` respectively.
 
         The two returned arrays are intended for use with IPW-based downstream estimators.
         ``pi`` holds the per-sample probability of being selected. ``xi`` holds the
         selection indicators for each sample so that a value of 1 means the sample
-        should be sent for annotation and a value of 0 means it should not.
+        should be sent for annotation, a value of 0 means it was not selected, and
+        ``NaN`` means it was discarded by the budget cutoff.
 
         Parameters
         ----------
@@ -118,10 +126,11 @@ class ActiveSampler:
         Returns
         -------
         Tuple[NDArray, NDArray]
-            [0]: array of shape ``(n_samples,)``, pi with drawing probabilities in ``(0, 1]``
-                 that sum to ``budget``
-            [1]: array of shape ``(n_samples,)``, xi with Bernoulli selection indicators
-            (1 if selected for annotation, 0 otherwise)
+            [0]: array of shape ``(n_samples,)``, ``pi`` with per-sample annotation probabilities
+            for selected samples and ``0.0`` for unselected samples.
+            [1]: array of shape ``(n_samples,)``, ``xi`` with Bernoulli indicators:
+            ``1.0`` if selected for annotation, ``0.0`` if not selected,
+            ``NaN`` if excluded by the budget cutoff.
 
         Raises
         ------
@@ -145,9 +154,12 @@ class ActiveSampler:
         _validate_strictly_positive(budget, "budget")
         _validate_budget_bound(budget, len(uncertainties))
         _validate_uncertainties(uncertainties)
-        rng = np.random.default_rng(random_seed)
-
         pi = self._compute_probabilities(uncertainties, budget)
-        xi = rng.binomial(n=1, p=pi).astype(float)
 
-        return pi, xi
+        rng = np.random.default_rng(random_seed)
+        pi_shuffled, order = _shuffle(pi, rng)
+        xi_shuffled = rng.binomial(n=1, p=pi_shuffled).astype(float)
+        cumulative_costs = np.cumsum(xi_shuffled)
+        kept_indices = _compute_cutoff_indices(cumulative_costs, order, budget)
+        pi_out, xi_out = _build_output(kept_indices, pi_shuffled, xi_shuffled)
+        return pi_out, xi_out
