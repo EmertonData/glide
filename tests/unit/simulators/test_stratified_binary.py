@@ -27,7 +27,7 @@ def test_generate_stratified_binary_dataset_structure_and_counts():
     np.testing.assert_allclose(y_proxy, y_proxy_expected)
 
 
-def test_generate_stratified_binary_dataset_delegates_to_validation():
+def test_generate_stratified_binary_dataset_delegates_validation():
     n_total = [3, 3]
     true_mean = [0.5, 0.6]
     proxy_mean = [0.5, 0.6]

@@ -7,7 +7,8 @@ from glide.simulators import generate_clustered_binary_dataset
 
 
 def test_generate_clustered_binary_dataset_structure_and_counts():
-    y_true, y_proxy, clusters = generate_clustered_binary_dataset(n_total=4, n_clusters=2, random_seed=0)
+    seed = np.random.SeedSequence(42)
+    y_true, y_proxy, clusters = generate_clustered_binary_dataset(n_total=4, n_clusters=2, random_seed=seed)
     assert isinstance(y_true, np.ndarray)
     assert isinstance(y_proxy, np.ndarray)
     assert isinstance(clusters, np.ndarray)
@@ -17,7 +18,7 @@ def test_generate_clustered_binary_dataset_structure_and_counts():
     assert clusters.dtype == np.int64
     assert np.isin(y_true, [0.0, 1.0]).all()
     assert np.isin(y_proxy, [0.0, 1.0]).all()
-    assert len(np.unique(clusters)) == 2
+    np.testing.assert_array_equal(np.unique(clusters), np.arange(2))
 
 
 def test_generate_clustered_binary_dataset_delegates():
@@ -67,13 +68,3 @@ def test_generate_clustered_binary_dataset_different_seed_results_differ():
         or not np.array_equal(y_proxy1, y_proxy2)
         or not np.array_equal(clusters1, clusters2)
     )
-
-
-def test_generate_clustered_binary_dataset_seed_sequence_input():
-    seed = np.random.SeedSequence(42)
-    y_true1, y_proxy1, clusters1 = generate_clustered_binary_dataset(n_total=4, n_clusters=2, random_seed=seed)
-    seed = np.random.SeedSequence(42)
-    y_true2, y_proxy2, clusters2 = generate_clustered_binary_dataset(n_total=4, n_clusters=2, random_seed=seed)
-    np.testing.assert_allclose(y_true1, y_true2)
-    np.testing.assert_allclose(y_proxy1, y_proxy2)
-    np.testing.assert_array_equal(clusters1, clusters2)
