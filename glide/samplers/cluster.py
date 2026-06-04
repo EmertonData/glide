@@ -44,7 +44,7 @@ class UniformClusterSampler:
         Parameters
         ----------
         clusters : NDArray
-            Cluster identifiers for all observations, shape ``(n_samples,)``.
+            Array of shape ``(n_samples,)`` with cluster identifiers for all observations.
         n_clusters : int
             Number of clusters to select. Must be a strictly positive integer and must
             not exceed the number of unique clusters in ``clusters``.
