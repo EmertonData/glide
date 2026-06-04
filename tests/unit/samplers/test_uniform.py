@@ -44,3 +44,9 @@ def test_sample_is_reproducible(sampler, n_samples):
     xi1 = sampler.sample(n_samples=n_samples, budget=2, random_seed=42)
     xi2 = sampler.sample(n_samples=n_samples, budget=2, random_seed=42)
     np.testing.assert_array_equal(xi1, xi2)
+
+
+def test_sample_different_seeds_results_differ(sampler, n_samples):
+    xi1 = sampler.sample(n_samples=n_samples, budget=2, random_seed=0)
+    xi2 = sampler.sample(n_samples=n_samples, budget=2, random_seed=1)
+    assert not np.array_equal(xi1, xi2)

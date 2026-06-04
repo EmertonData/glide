@@ -50,7 +50,7 @@ branch:
 	git checkout main && git pull && git checkout -b $(name)
   
 test-notebooks:
-	@find docs -name "*.ipynb" | while read notebook; do \
+	@find docs -name "*.ipynb" ! -path "*/generated/*" | while read notebook; do \
 		echo "Testing $$notebook..."; \
 		if ! uv run papermill "$$notebook" /dev/null > /tmp/nb_$$.log 2>&1; then \
 			cat /tmp/nb_$$.log | grep -v -E "(UserWarning|Executing:|Output Notebook|warnings.warn)"; \
