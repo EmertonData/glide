@@ -20,11 +20,6 @@ def clusters() -> NDArray:
 
 
 @pytest.fixture
-def clusters_numerical() -> NDArray:
-    return np.array([0, 0, 1, 1])
-
-
-@pytest.fixture
 def estimator() -> ClusterClassicalMeanEstimator:
     return ClusterClassicalMeanEstimator()
 
@@ -32,22 +27,22 @@ def estimator() -> ClusterClassicalMeanEstimator:
 # --- _preprocess ---
 
 
-def test_preprocess_delegates_to_validation(estimator, y, clusters_numerical):
+def test_preprocess_delegates_to_validation(estimator, y, clusters):
 
     with (
         patch.object(cluster_classical_module, "_validate_equal_lengths") as mock_validate_equal_lengths,
         patch.object(cluster_classical_module, "_validate_has_no_nan") as mock_validate_has_no_nan,
         patch.object(cluster_classical_module, "_validate_bounds") as mock_validate_bounds,
     ):
-        estimator._preprocess(y, clusters_numerical)
+        estimator._preprocess(y, clusters)
 
         mock_validate_equal_lengths.assert_called_once()
         np.testing.assert_array_equal(mock_validate_equal_lengths.call_args[0][0], y)
-        np.testing.assert_array_equal(mock_validate_equal_lengths.call_args[0][1], clusters_numerical)
+        np.testing.assert_array_equal(mock_validate_equal_lengths.call_args[0][1], clusters)
         assert mock_validate_equal_lengths.call_args[1] == {"names": ["y", "clusters"]}
 
         mock_validate_has_no_nan.assert_called_once()
-        np.testing.assert_array_equal(mock_validate_has_no_nan.call_args[0][0], clusters_numerical)
+        np.testing.assert_array_equal(mock_validate_has_no_nan.call_args[0][0], clusters)
         assert mock_validate_has_no_nan.call_args[0][1] == "clusters"
 
         mock_validate_bounds.assert_called_once_with(

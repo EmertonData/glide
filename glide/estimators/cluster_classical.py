@@ -39,8 +39,7 @@ class ClusterClassicalMeanEstimator:
         clusters: NDArray,
     ) -> Tuple[NDArray, NDArray, int]:
         _validate_equal_lengths(y, clusters, names=["y", "clusters"])
-        if np.issubdtype(clusters.dtype, np.number):
-            _validate_has_no_nan(clusters, "clusters")
+        _validate_has_no_nan(clusters, "clusters")
         not_nan_mask = ~np.isnan(y)
         y_valid = y[not_nan_mask]
         clusters_valid = clusters[not_nan_mask]
@@ -64,22 +63,22 @@ class ClusterClassicalMeanEstimator:
     ) -> ClassicalMeanInferenceResult:
         """Estimate the population mean using the cluster classical estimator.
 
-        Aggregates observations into cluster-level means weighted by cluster
-        size, then applies the CLT to the cluster sums as sampling units:
+        Computes within-cluster sums and uses them as sampling units to apply
+        the CLT:
 
-            theta = sum_l  (n_l * mu_l) / N
+            theta = (1 / N) * sum_l u_l
             sigma2 = L * Var(u_l, ddof=1) / N^2
 
-        where ``u_l = n_l * mu_l`` are the cluster sums, ``L`` is the number
-        of clusters, and ``N = sum_l n_l`` is the total number of observations.
-        NaN values in ``y`` are dropped before making the computations. Clusters
-        that contain only NaN are not used.
+        where ``u_l = sum_{i in l} y_i`` are the cluster sums, ``L`` is the
+        number of clusters, and ``N = sum_l n_l`` is the total number of
+        observations. NaN values in ``y`` are dropped before making the
+        computations. Clusters that contain only NaN are not used.
 
         Parameters
         ----------
         y : NDArray
             Array of observations, shape ``(n_samples,)``. NaN values are
-            treated as missing and dropped per cluster.
+            treated as missing and dropped.
         clusters : NDArray
             Array of cluster identifiers, shape ``(n_samples,)``.
             Unique values define the clusters.
@@ -99,7 +98,7 @@ class ClusterClassicalMeanEstimator:
         ------
         ValueError
             - If ``y`` and ``clusters`` do not have the same length.
-            - If ``clusters`` has a numeric dtype and contains NaN values.
+            - If ``clusters`` contains NaN values (numeric dtype) or None values (non-numeric dtype).
             - If fewer than 2 clusters have at least one non-NaN observation.
         """
         y_valid, cluster_indices, n_valid_clusters = self._preprocess(y, clusters)

@@ -11,8 +11,12 @@ def _validate_non_constant(array: NDArray, error_message: str) -> None:
 
 
 def _validate_has_no_nan(array: NDArray, name: str) -> None:
-    if np.isnan(array).any():
-        raise ValueError(f"'{name}' contains NaN values.")
+    if np.issubdtype(array.dtype, np.number):
+        if np.isnan(array).any():
+            raise ValueError(f"'{name}' contains NaN values.")
+    else:
+        if any(v is None for v in array):
+            raise ValueError(f"'{name}' contains None values.")
 
 
 def _get_non_zero_mask(values: NDArray, warning_message: Optional[str] = None) -> NDArray:
