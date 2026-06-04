@@ -219,25 +219,25 @@ To ensure the cutoff does not depend on the input order, the samples can be shuf
 
 ## Uniform Cluster Sampler
 
-The `UniformClusterSampler` is designed for datasets where observations are grouped into **clusters**: samples within a cluster are correlated (for example, multiple items from the same document, conversation, or recording session), while samples from different clusters are independent.
+The `UniformClusterSampler` is designed for datasets where observations are grouped into **clusters**: samples within a cluster are correlated (for example, a collection of sentences clustered into paragraphs), while samples from different clusters are independent.
 
-Annotation happens at the **cluster level**: either all observations in a cluster are annotated together or none are. The sampler selects $b$ clusters from the $K$ available clusters uniformly without replacement. Every cluster has equal probability of being chosen, regardless of its size.
+Annotation happens at the **cluster level**: either all observations in a cluster are annotated together or none are. The sampler selects $b$ clusters from the $L$ available clusters uniformly without replacement. Every cluster has equal probability of being chosen, regardless of its size.
 
-Let $X_1, \dots, X_N$ denote the $N$ observations, partitioned into $K$ clusters $C_1, \dots, C_K$. These are disjoint subsets of $\{1, \dots, N\}$ satisfying $\bigcup_{k=1}^{K} C_k = \{1, \dots, N\}$ and $C_i \cap C_j = \emptyset$ for $i \neq j$. For a given draw of $b$ clusters, the probability that cluster $C_k$ is selected is:
+Let $X_1, \dots, X_N$ denote the $N$ observations, partitioned into $L$ clusters $C_1, \dots, C_L$. These are disjoint subsets of $\{1, \dots, N\}$ satisfying $\bigcup_{l=1}^{L} C_l = \{1, \dots, N\}$ and $C_i \cap C_j = \emptyset$ for $i \neq j$. For a given draw of $b$ clusters, the probability that cluster $C_l$ is selected is:
 
-$$p_k = \frac{b}{K}$$
+$$p_l = \frac{b}{L}$$
 
 Because cluster selection is uniform and size-independent, larger clusters contribute more observations in expectation but do not receive a higher inclusion probability than smaller ones.
 
 ### Sampling procedure
 
-The sampler draws $b$ clusters from $C_1, \dots, C_K$ uniformly at random without replacement. Denoting by $k(i)$ the unique cluster index such that $i \in C_{k(i)}$, the selection indicator for observation $X_i$ is:
+The sampler draws $b$ clusters from $C_1, \dots, C_L$ uniformly at random without replacement. Denoting by $l(i)$ the unique cluster index such that $i \in C_{l(i)}$, the selection indicator for observation $X_i$ is:
 
-$$\xi_i = \mathbf{1}[C_{k(i)} \text{ was selected}]$$
+$$\xi_i = \mathbf{1}[C_{l(i)} \text{ was selected}]$$
 
 All observations in a selected cluster share the same indicator value of 1; observations in non-selected clusters receive 0.
 
-Downstream estimators that assume uniform annotation rates, such as Classical and PPI estimators, are the natural choice for data collected with this sampler.
+Data collected with this sampler is compatible with estimators that handle clustered data and assume uniform annotation rates over clusters, see [Estimators](estimators.md) for examples.
 
 ---
 
