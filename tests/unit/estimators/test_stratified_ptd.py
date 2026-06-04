@@ -72,6 +72,15 @@ def test_estimate_reproducibility(estimator, y_true, y_proxy, groups):
     assert result_a.confidence_interval.upper_bound == result_b.confidence_interval.upper_bound
 
 
+def test_estimate_different_seeds_results_differ(estimator, y_true, y_proxy, groups):
+    result_a = estimator.estimate(y_true, y_proxy, groups, n_bootstrap=5, random_seed=0)
+    result_b = estimator.estimate(y_true, y_proxy, groups, n_bootstrap=5, random_seed=1)
+    assert (
+        result_a.confidence_interval.lower_bound != result_b.confidence_interval.lower_bound
+        or result_a.confidence_interval.upper_bound != result_b.confidence_interval.upper_bound
+    )
+
+
 # --- __str__ / __repr__ ---
 
 

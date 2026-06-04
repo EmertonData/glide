@@ -67,6 +67,12 @@ def test_sample_is_reproducible(sampler, uncertainties):
     np.testing.assert_array_equal(xi1, xi2)
 
 
+def test_sample_different_seeds_results_differ(sampler, uncertainties):
+    pi1, xi1 = sampler.sample(uncertainties, budget=5, random_seed=0)
+    pi2, xi2 = sampler.sample(uncertainties, budget=5, random_seed=1)
+    assert (not np.array_equal(pi1, pi2)) or (not np.array_equal(xi1, xi2))
+
+
 def test_sample_delegates_to_validation(sampler, uncertainties):
     with (
         patch.object(active_module, "_validate_is_integer") as mock_validate_is_integer,

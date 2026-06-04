@@ -161,3 +161,10 @@ def test_sample_reproducibility(fitted_sampler):
 
     np.testing.assert_array_equal(pi1, pi2)
     np.testing.assert_array_equal(xi1, xi2)
+
+
+def test_sample_different_seeds_results_differ(fitted_sampler_high_MSE):
+    pi1, xi1 = fitted_sampler_high_MSE.sample(n_samples=5, y_true_cost=10.0, y_proxy_cost=1.0, budget=15, random_seed=0)
+    pi2, xi2 = fitted_sampler_high_MSE.sample(n_samples=5, y_true_cost=10.0, y_proxy_cost=1.0, budget=15, random_seed=1)
+
+    assert (not np.array_equal(pi1, pi2)) or (not np.array_equal(xi1, xi2))
