@@ -1,3 +1,5 @@
+from unittest.mock import call, patch
+
 import numpy as np
 import pytest
 
@@ -17,16 +19,14 @@ def sampler() -> UniformSampler:
 # --- sample ---
 
 
-@pytest.mark.parametrize("bad_n_samples", [0.0, True, -1, 1.5])
-def test_sample_invalid_n_samples(sampler, bad_n_samples):
-    with pytest.raises(ValueError, match="n_samples"):
-        sampler.sample(n_samples=bad_n_samples, budget=1, random_seed=0)
-
-
-@pytest.mark.parametrize("bad_budget", [0.0, True, -1, 1.5])
-def test_sample_invalid_budget(sampler, n_samples, bad_budget):
-    with pytest.raises(ValueError, match="budget"):
-        sampler.sample(n_samples=n_samples, budget=bad_budget, random_seed=0)
+def test_sample_delegates_validation(sampler):
+    with (
+        patch("glide.samplers.uniform._validate_is_integer") as mock_validate_is_integer,
+        patch("glide.samplers.uniform._validate_strictly_positive") as mock_validate_strictly_positive,
+    ):
+        sampler.sample(n_samples=2, budget=1, random_seed=0)
+    mock_validate_is_integer.assert_has_calls([call(2, "n_samples"), call(1, "budget")])
+    mock_validate_strictly_positive.assert_has_calls([call(2, "n_samples"), call(1, "budget")])
 
 
 def test_sample_budget_exceeds_n_samples(sampler, n_samples):
