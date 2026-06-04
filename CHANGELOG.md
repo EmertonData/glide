@@ -18,6 +18,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - Removed image from User Guide explaining PPI
 
 ### 🐛 Fixed
+- Fixed broken quickstart link in README (replaced relative path with absolute ReadTheDocs URL)
 
 ### 💛 Contributors
 
