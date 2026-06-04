@@ -184,4 +184,4 @@ def test_sample_different_seeds_results_differ(fitted_sampler, uncertainties):
     pi1, xi1 = fitted_sampler.sample(uncertainties, y_true_cost=1.0, y_proxy_cost=0.9, budget=20, random_seed=0)
     pi2, xi2 = fitted_sampler.sample(uncertainties, y_true_cost=1.0, y_proxy_cost=0.9, budget=20, random_seed=1)
 
-    assert (not np.array_equal(pi1, pi2)) or (not np.array_equal(xi1, xi2))
+    assert (np.array_equal(pi1, pi2)) and (not np.array_equal(xi1, xi2))

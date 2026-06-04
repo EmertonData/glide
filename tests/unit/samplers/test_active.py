@@ -70,7 +70,7 @@ def test_sample_is_reproducible(sampler, uncertainties):
 def test_sample_different_seeds_results_differ(sampler, uncertainties):
     pi1, xi1 = sampler.sample(uncertainties, budget=5, random_seed=0)
     pi2, xi2 = sampler.sample(uncertainties, budget=5, random_seed=1)
-    assert (not np.array_equal(pi1, pi2)) or (not np.array_equal(xi1, xi2))
+    assert (np.array_equal(pi1, pi2)) and (not np.array_equal(xi1, xi2))
 
 
 def test_sample_delegates_to_validation(sampler, uncertainties):
