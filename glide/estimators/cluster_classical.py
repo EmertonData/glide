@@ -1,5 +1,3 @@
-from typing import List
-
 import numpy as np
 from numpy.typing import NDArray
 
@@ -80,34 +78,29 @@ class ClusterClassicalMeanEstimator:
             - If fewer than 2 clusters have at least one non-NaN observation.
         """
         _validate_equal_lengths(y, clusters, names=["y", "clusters"])
+        not_nan_mask = ~np.isnan(y)
+        y_valid, clusters_valid = y[not_nan_mask], clusters[not_nan_mask]
 
-        cluster_means: List[float] = []
-        cluster_sizes: List[int] = []
+        unique_clusters, sizes = np.unique_counts(clusters_valid)
+        n_valid_clusters = len(unique_clusters)
+        if n_valid_clusters < 2:
+            raise ValueError(f"Need at least 2 clusters with non-NaN observations; got {n_valid_clusters}.")
 
-        for cluster_id in np.unique(clusters):
-            cluster_mask = clusters == cluster_id
-            cluster_y = y[cluster_mask]
-            cluster_y_valid = cluster_y[~np.isnan(cluster_y)]
-            if len(cluster_y_valid) == 0:
-                continue
-            cluster_means.append(np.mean(cluster_y_valid))
-            cluster_sizes.append(len(cluster_y_valid))
+        sums = np.zeros(n_valid_clusters)
 
-        n_clusters = len(cluster_means)
-        if n_clusters < 2:
-            raise ValueError(f"Need at least 2 clusters with non-NaN observations; got {n_clusters}.")
+        for i, cluster_id in enumerate(unique_clusters):
+            cluster_mask = clusters_valid == cluster_id
+            cluster_y_valid = y_valid[cluster_mask]
+            sums[i] = np.sum(cluster_y_valid)
 
-        means = np.array(cluster_means)
-        sizes = np.array(cluster_sizes)
-        cluster_sums = sizes * means
-        total_size = np.sum(sizes)
+        total_size = len(y_valid)
 
-        weighted_mean = np.sum(cluster_sums) / total_size
-        var = n_clusters * np.var(cluster_sums, ddof=1) / total_size**2
+        mean = np.sum(sums) / total_size
+        var = n_valid_clusters * np.var(sums, ddof=1) / total_size**2
         std = np.sqrt(var)
 
         ci = CLTConfidenceInterval(
-            mean=weighted_mean,
+            mean=mean,
             std=std,
             confidence_level=confidence_level,
         )
