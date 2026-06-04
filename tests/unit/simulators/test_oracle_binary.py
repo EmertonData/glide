@@ -1,3 +1,5 @@
+from unittest.mock import call, patch
+
 import numpy as np
 import pytest
 
@@ -14,14 +16,17 @@ def test_generate_binary_dataset_with_oracle_sampling_structure_and_counts():
     assert np.all(uncertainty > 0)
 
 
-def test_generate_binary_dataset_with_oracle_sampling_invalid_true_mean_raises():
-    with pytest.raises(ValueError, match=r"'true_mean' must be in \(0, 1\)"):
-        generate_binary_dataset_with_oracle_sampling(n_total=10, true_mean=1.5)
-
-
-def test_generate_binary_dataset_with_oracle_sampling_invalid_proxy_mean_raises():
-    with pytest.raises(ValueError, match=r"'proxy_mean' must be in \(0, 1\)"):
-        generate_binary_dataset_with_oracle_sampling(n_total=10, proxy_mean=0.0)
+def test_generate_binary_dataset_with_oracle_sampling_delegates_validation():
+    with patch("glide.simulators.oracle_binary._validate_bounds") as mock_validate_bounds:
+        generate_binary_dataset_with_oracle_sampling(
+            n_total=2, true_mean=0.7, proxy_mean=0.6, correlation=0.8, random_seed=0
+        )
+    mock_validate_bounds.assert_has_calls(
+        [
+            call(0.7, "true_mean", lower=0, upper=1, left_inclusive=False, right_inclusive=False),
+            call(0.6, "proxy_mean", lower=0, upper=1, left_inclusive=False, right_inclusive=False),
+        ]
+    )
 
 
 def test_generate_binary_dataset_with_oracle_sampling_impossible_correlation_raises():
@@ -38,3 +43,9 @@ def test_generate_binary_dataset_with_oracle_sampling_reproducibility():
     np.testing.assert_array_equal(y_true_oracle1, y_true_oracle2)
     np.testing.assert_array_equal(y_proxy1, y_proxy2)
     np.testing.assert_array_equal(uncertainty1, uncertainty2)
+
+
+def test_generate_binary_dataset_with_oracle_sampling_different_seed_results_differ():
+    y_true1, y_proxy1, _ = generate_binary_dataset_with_oracle_sampling(n_total=10, random_seed=0)
+    y_true2, y_proxy2, _ = generate_binary_dataset_with_oracle_sampling(n_total=10, random_seed=1)
+    assert not np.array_equal(y_true1, y_true2) or not np.array_equal(y_proxy1, y_proxy2)
