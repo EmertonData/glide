@@ -6,7 +6,10 @@
       "Bash(make *)",
       "Bash(git status)",
       "Bash(git diff*)",
-      "Bash(git log*)"
+      "Bash(git log*)",
+      "Bash(gh issue list*)",
+      "Bash(gh label list*)",
+      "Bash(gh pr list*)"
     ]
   },
   "enabledPlugins": {
