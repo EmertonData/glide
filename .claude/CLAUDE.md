@@ -30,15 +30,17 @@ Run a single test file: `uv run pytest tests/unit/test_foo.py -vsx`
 
 The package has multiple layers:
 
-**`glide/estimators/`** — Public API. Statistical estimators (classical, PPI, ASI, IPW, PTD, and their stratified variants).
+**`glide/estimators/`** — Public API. Statistical estimators (classical, PPI, ASI, IPW, PTD, and their stratified variants). Core computation modules (`ppi_core.py`, `ptd_core.py`, `stratified_core.py`) hold shared internals.
 
 **`glide/confidence_intervals/`** — Confidence interval implementations depending on statistical methods.
 
-**`glide/samplers/`** — Sampler object implementations for various strategies.
+**`glide/samplers/`** — Sampler object implementations (uniform, stratified, cost-optimal, cost-optimal-random, active).
 
-**`glide/mean_inference_results/`** — Result dataclasses returned by estimators (e.g. `MeanInferenceResult`).
+**`glide/mean_inference_results/`** — Result dataclasses returned by estimators. `base.py` defines `MeanInferenceResult`; `classical.py` and `prediction_powered.py` extend it.
 
-**`glide/utils.py`** — Shared internal helpers (e.g. `compute_effective_sample_size`).
+**`glide/core/`** — Centralized parameter validation helpers (`validation.py`). Import from here rather than duplicating checks across modules.
+
+**`glide/scientific_validation.py`** — `run_monte_carlo()` utility used by deep-dive validation notebooks.
 
 **`glide/simulators/`** — Synthetic dataset generators and annotation simulators for testing and validation.
 
@@ -132,6 +134,7 @@ Only add a comment when the *why* is non-obvious: a hidden constraint, a subtle 
 ### Documentation
 
 - MkDocs with mkdocstrings; docs must build without warnings
+- Always specify image widths as a percentage (e.g. `width="80%"`), never as fixed pixels.
 - Update `CHANGELOG.md` for any user-facing changes (Keep a Changelog format, SemVer)
 - Always add elements to the "Added" or "Changed" sections of `CHANGELOG.md` at the top of the existing list
 - Keep the `CHANGELOG.md` user-friendly and concise

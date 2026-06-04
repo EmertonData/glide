@@ -10,8 +10,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### ✨ Added
 - `generate_clustered_binary_dataset` simulator for generating binary datasets with randomly sized clusters.
+- Image in the readme describing prediction-powered inference
+- Image in the user guide describing GLIDE's three-step workflow
 
 ### 🔄 Changed
+- Removed image from User Guide explaining PPI
 
 ### 🐛 Fixed
 

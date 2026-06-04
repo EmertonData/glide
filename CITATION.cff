@@ -1,0 +1,32 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+type: software
+title: "GLIDE: Generated Label Inference & Debiasing Engine"
+authors:
+  - family-names: Martinon
+    given-names: "Grégoire"
+  - family-names: Merad
+    given-names: Ibrahim
+  - family-names: Raki
+    given-names: Mohammed
+repository-code: "https://github.com/EmertonData/glide"
+url: "https://glide-py.readthedocs.io"
+license: Apache-2.0
+version: 0.6.0
+date-released: 2026-06-01
+preferred-citation:
+  type: article
+  title: "Industrializing Prediction-Powered Inference: The GLIDE Library for Reliable GenAI and Agentic Systems Evaluation"
+  authors:
+    - family-names: Martinon
+      given-names: "Grégoire"
+    - family-names: Merad
+      given-names: Ibrahim
+    - family-names: Raki
+      given-names: Mohammed
+  year: 2026
+  url: "https://arxiv.org/abs/2605.31278"
+  doi: "10.48550/arXiv.2605.31278"
+  identifiers:
+    - type: other
+      value: "arXiv:2605.31278"
