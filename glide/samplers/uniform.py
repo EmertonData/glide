@@ -4,6 +4,8 @@ import numpy as np
 from numpy.random.bit_generator import SeedSequence
 from numpy.typing import NDArray
 
+from glide.core.validation import _validate_is_integer, _validate_strictly_positive
+
 
 class UniformSampler:
     """Sampler that draws observations uniformly without replacement from the pool.
@@ -55,10 +57,10 @@ class UniformSampler:
             If ``n_samples`` or ``budget`` is not a strictly positive integer,
             or if ``budget`` exceeds ``n_samples``.
         """
-        if (not isinstance(n_samples, (int, np.integer))) or isinstance(n_samples, bool) or n_samples <= 0:
-            raise ValueError(f"'n_samples' must be a strictly positive integer; got {n_samples!r}.")
-        if (not isinstance(budget, (int, np.integer))) or isinstance(budget, bool) or budget <= 0:
-            raise ValueError(f"'budget' must be a strictly positive integer; got {budget!r}.")
+        _validate_is_integer(n_samples, "n_samples")
+        _validate_strictly_positive(n_samples, "n_samples")
+        _validate_is_integer(budget, "budget")
+        _validate_strictly_positive(budget, "budget")
         if budget > n_samples:
             raise ValueError(f"'budget' must not exceed 'n_samples'; got budget={budget} but n_samples={n_samples}.")
 
