@@ -4,10 +4,7 @@ import numpy as np
 from numpy.random.bit_generator import SeedSequence
 from numpy.typing import NDArray
 
-from glide.core.validation import (
-    _validate_is_integer,
-    _validate_strictly_positive,
-)
+from glide.core.validation import _validate_bounds, _validate_is_integer, _validate_strictly_positive
 
 
 class UniformClusterSampler:
@@ -68,11 +65,13 @@ class UniformClusterSampler:
         _validate_strictly_positive(n_clusters, "n_clusters")
         unique_clusters = np.unique(clusters)
         n_total_clusters = len(unique_clusters)
-        if n_clusters > n_total_clusters:
-            raise ValueError(
-                f"'n_clusters' must not exceed the number of unique clusters; "
-                f"got n_clusters={n_clusters} but there are only {n_total_clusters} unique clusters."
-            )
+        _validate_bounds(
+            n_clusters,
+            "n_clusters",
+            upper=n_total_clusters,
+            error_message=f"'n_clusters' must not exceed the number of unique clusters; "
+            f"got n_clusters={n_clusters} but there are only {n_total_clusters} unique clusters.",
+        )
 
         rng = np.random.default_rng(random_seed)
         selected_clusters = rng.choice(unique_clusters, size=n_clusters, replace=False)

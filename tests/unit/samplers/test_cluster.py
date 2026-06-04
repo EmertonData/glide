@@ -24,29 +24,26 @@ def test_sample_delegates_to_validation(sampler, clusters):
     with (
         patch.object(cluster_module, "_validate_is_integer") as mock_validate_is_integer,
         patch.object(cluster_module, "_validate_strictly_positive") as mock_validate_strictly_positive,
+        patch.object(cluster_module, "_validate_bounds") as mock_validate_bounds,
     ):
         sampler.sample(clusters, n_clusters=2, random_seed=0)
 
         mock_validate_is_integer.assert_called_once_with(2, "n_clusters")
         mock_validate_strictly_positive.assert_called_once_with(2, "n_clusters")
-
-
-def test_sample_n_clusters_exceeds_unique_clusters(sampler, clusters):
-    with pytest.raises(ValueError, match="'n_clusters' must not exceed the number of unique clusters"):
-        sampler.sample(clusters, n_clusters=4)
-
-
-def test_sample_returns_valid_array(sampler, clusters):
-    xi = sampler.sample(clusters, n_clusters=2, random_seed=0)
-    assert isinstance(xi, np.ndarray)
-    assert xi.shape == (len(clusters),)
-    assert np.isin(xi, [0, 1]).all()
+        mock_validate_bounds.assert_called_once_with(
+            2,
+            "n_clusters",
+            upper=3,
+            error_message="'n_clusters' must not exceed the number of unique clusters; "
+            "got n_clusters=2 but there are only 3 unique clusters.",
+        )
 
 
 def test_sample_known_output(sampler, clusters):
     xi = sampler.sample(clusters, n_clusters=2, random_seed=0)
 
     expected_xi = np.array([0, 0, 1, 1, 1, 1])
+    assert isinstance(xi, np.ndarray)
     np.testing.assert_array_equal(xi, expected_xi)
 
 
