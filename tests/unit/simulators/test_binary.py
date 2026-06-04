@@ -1,3 +1,5 @@
+from unittest.mock import call, patch
+
 import numpy as np
 import pytest
 
@@ -8,18 +10,21 @@ def test_generate_binary_dataset_structure_and_counts():
     y_true, y_proxy = generate_binary_dataset(n_total=3, random_seed=0)
     assert isinstance(y_true, np.ndarray)
     assert isinstance(y_proxy, np.ndarray)
+    assert np.isin(y_true, [0.0, 1.0]).all()
+    assert np.isin(y_proxy, [0.0, 1.0]).all()
     assert len(y_true) == 3
     assert len(y_proxy) == 3
 
 
-def test_generate_binary_dataset_invalid_true_mean_raises():
-    with pytest.raises(ValueError, match=r"'true_mean' must be in \(0, 1\)"):
-        generate_binary_dataset(n_total=2, true_mean=1.5)
-
-
-def test_generate_binary_dataset_invalid_proxy_mean_raises():
-    with pytest.raises(ValueError, match=r"'proxy_mean' must be in \(0, 1\)"):
-        generate_binary_dataset(n_total=2, proxy_mean=0.0)
+def test_generate_binary_dataset_delegates_validation():
+    with patch("glide.simulators.binary._validate_bounds") as mock_validate_bounds:
+        generate_binary_dataset(n_total=2, true_mean=0.7, proxy_mean=0.6, correlation=0.8, random_seed=0)
+    mock_validate_bounds.assert_has_calls(
+        [
+            call(0.7, "true_mean", lower=0, upper=1, left_inclusive=False, right_inclusive=False),
+            call(0.6, "proxy_mean", lower=0, upper=1, left_inclusive=False, right_inclusive=False),
+        ]
+    )
 
 
 def test_generate_binary_dataset_impossible_correlation_raises():
@@ -35,3 +40,9 @@ def test_generate_binary_dataset_reproducibility():
     y_true2, y_proxy2 = generate_binary_dataset(n_total=3, random_seed=7)
     np.testing.assert_allclose(y_true1, y_true2)
     np.testing.assert_allclose(y_proxy1, y_proxy2)
+
+
+def test_generate_binary_dataset_different_seed_results_differ():
+    y_true1, y_proxy1 = generate_binary_dataset(n_total=10, random_seed=0)
+    y_true2, y_proxy2 = generate_binary_dataset(n_total=10, random_seed=1)
+    assert (not np.array_equal(y_true1, y_true2)) or (not np.array_equal(y_proxy1, y_proxy2))

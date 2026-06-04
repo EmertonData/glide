@@ -1,5 +1,6 @@
+from unittest.mock import patch
+
 import numpy as np
-import pytest
 
 from glide.simulators import generate_gaussian_dataset
 
@@ -14,14 +15,10 @@ def test_generate_gaussian_dataset_structure_and_counts():
     np.testing.assert_allclose(y_proxy, np.array([0.76352425, 0.17291449, 1.32929515]))
 
 
-def test_generate_gaussian_dataset_invalid_positive_correlation_raises():
-    with pytest.raises(ValueError, match="'correlation' must be in"):
-        generate_gaussian_dataset(n_labeled=1, n_unlabeled=1, correlation=1.5)
-
-
-def test_generate_gaussian_dataset_invalid_negative_correlation_raises():
-    with pytest.raises(ValueError, match="'correlation' must be in"):
-        generate_gaussian_dataset(n_labeled=1, n_unlabeled=1, correlation=-1.5)
+def test_generate_gaussian_dataset_delegates_validation():
+    with patch("glide.simulators.gaussian._validate_bounds") as mock_validate_bounds:
+        generate_gaussian_dataset(n_labeled=1, n_unlabeled=1, correlation=0.8, random_seed=0)
+    mock_validate_bounds.assert_called_once_with(0.8, "correlation", lower=-1, upper=1)
 
 
 def test_generate_gaussian_dataset_reproducibility():
@@ -29,3 +26,9 @@ def test_generate_gaussian_dataset_reproducibility():
     y_true2, y_proxy2 = generate_gaussian_dataset(n_labeled=1, n_unlabeled=2, random_seed=7)
     np.testing.assert_allclose(y_true1, y_true2, equal_nan=True)
     np.testing.assert_allclose(y_proxy1, y_proxy2)
+
+
+def test_generate_gaussian_dataset_different_seed_results_differ():
+    y_true1, y_proxy1 = generate_gaussian_dataset(n_labeled=5, n_unlabeled=5, random_seed=0)
+    y_true2, y_proxy2 = generate_gaussian_dataset(n_labeled=5, n_unlabeled=5, random_seed=1)
+    assert not np.array_equal(y_true1, y_true2, equal_nan=True) or not np.array_equal(y_proxy1, y_proxy2)
