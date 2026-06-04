@@ -11,9 +11,9 @@ from glide.estimators.stratified_ptd import StratifiedPTDMeanEstimator
 
 __all__ = [
     "ClassicalMeanEstimator",
-    "ClusterClassicalMeanEstimator",
     "StratifiedClassicalMeanEstimator",
     "IPWClassicalMeanEstimator",
+    "ClusterClassicalMeanEstimator",
     "PPIMeanEstimator",
     "StratifiedPPIMeanEstimator",
     "ASIMeanEstimator",

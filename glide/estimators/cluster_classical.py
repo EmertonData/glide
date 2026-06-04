@@ -4,7 +4,7 @@ import numpy as np
 from numpy.typing import NDArray
 
 from glide.confidence_intervals import CLTConfidenceInterval
-from glide.core.validation import _validate_bounds, _validate_equal_lengths
+from glide.core.validation import _validate_bounds, _validate_equal_lengths, _validate_has_no_nan
 from glide.mean_inference_results import ClassicalMeanInferenceResult
 
 
@@ -37,13 +37,15 @@ class ClusterClassicalMeanEstimator:
         self,
         y: NDArray,
         clusters: NDArray,
-    ) -> Tuple[NDArray, NDArray, NDArray]:
+    ) -> Tuple[NDArray, NDArray, int]:
         _validate_equal_lengths(y, clusters, names=["y", "clusters"])
+        if np.issubdtype(clusters.dtype, np.number):
+            _validate_has_no_nan(clusters, "clusters")
         not_nan_mask = ~np.isnan(y)
         y_valid = y[not_nan_mask]
         clusters_valid = clusters[not_nan_mask]
 
-        unique_valid_clusters = np.unique(clusters_valid)
+        unique_valid_clusters, cluster_indices = np.unique(clusters_valid, return_inverse=True)
         n_valid_clusters = len(unique_valid_clusters)
         _validate_bounds(
             n_valid_clusters,
@@ -51,7 +53,7 @@ class ClusterClassicalMeanEstimator:
             lower=2,
             error_message=f"Need at least 2 clusters with non-NaN observations; got {n_valid_clusters}.",
         )
-        return y_valid, clusters_valid, unique_valid_clusters
+        return y_valid, cluster_indices, n_valid_clusters
 
     def estimate(
         self,
@@ -97,22 +99,16 @@ class ClusterClassicalMeanEstimator:
         ------
         ValueError
             - If ``y`` and ``clusters`` do not have the same length.
+            - If ``clusters`` has a numeric dtype and contains NaN values.
             - If fewer than 2 clusters have at least one non-NaN observation.
         """
-        y_valid, clusters_valid, unique_valid_clusters = self._preprocess(y, clusters)
-        n_valid_clusters = len(unique_valid_clusters)
-
-        sums = np.zeros(n_valid_clusters)
-
-        for i, cluster_id in enumerate(unique_valid_clusters):
-            cluster_mask = clusters_valid == cluster_id
-            cluster_y_valid = y_valid[cluster_mask]
-            sums[i] = np.sum(cluster_y_valid)
-
+        y_valid, cluster_indices, n_valid_clusters = self._preprocess(y, clusters)
         total_size = len(y_valid)
 
-        mean = np.sum(sums) / total_size
-        var = n_valid_clusters * np.var(sums, ddof=1) / total_size**2
+        cluster_sums = np.bincount(cluster_indices, weights=y_valid)
+
+        mean = np.sum(cluster_sums) / total_size
+        var = n_valid_clusters * np.var(cluster_sums, ddof=1) / total_size**2
         std = np.sqrt(var)
 
         ci = CLTConfidenceInterval(

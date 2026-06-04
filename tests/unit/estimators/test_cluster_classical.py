@@ -20,6 +20,11 @@ def clusters() -> NDArray:
 
 
 @pytest.fixture
+def clusters_numerical() -> NDArray:
+    return np.array([0, 0, 1, 1])
+
+
+@pytest.fixture
 def estimator() -> ClusterClassicalMeanEstimator:
     return ClusterClassicalMeanEstimator()
 
@@ -27,18 +32,23 @@ def estimator() -> ClusterClassicalMeanEstimator:
 # --- _preprocess ---
 
 
-def test_preprocess_delegates_to_validation(estimator, y, clusters):
+def test_preprocess_delegates_to_validation(estimator, y, clusters_numerical):
 
     with (
         patch.object(cluster_classical_module, "_validate_equal_lengths") as mock_validate_equal_lengths,
+        patch.object(cluster_classical_module, "_validate_has_no_nan") as mock_validate_has_no_nan,
         patch.object(cluster_classical_module, "_validate_bounds") as mock_validate_bounds,
     ):
-        estimator._preprocess(y, clusters)
+        estimator._preprocess(y, clusters_numerical)
 
         mock_validate_equal_lengths.assert_called_once()
         np.testing.assert_array_equal(mock_validate_equal_lengths.call_args[0][0], y)
-        np.testing.assert_array_equal(mock_validate_equal_lengths.call_args[0][1], clusters)
+        np.testing.assert_array_equal(mock_validate_equal_lengths.call_args[0][1], clusters_numerical)
         assert mock_validate_equal_lengths.call_args[1] == {"names": ["y", "clusters"]}
+
+        mock_validate_has_no_nan.assert_called_once()
+        np.testing.assert_array_equal(mock_validate_has_no_nan.call_args[0][0], clusters_numerical)
+        assert mock_validate_has_no_nan.call_args[0][1] == "clusters"
 
         mock_validate_bounds.assert_called_once_with(
             2,
@@ -51,10 +61,10 @@ def test_preprocess_delegates_to_validation(estimator, y, clusters):
 def test_preprocess_returns_filtered_arrays(estimator):
     y = np.array([2.0, np.nan, 4.0, np.nan, np.nan])
     clusters = np.array(["A", "A", "B", "C", "C"])
-    y_valid, clusters_valid, unique_valid_clusters = estimator._preprocess(y, clusters)
+    y_valid, cluster_indices, n_valid_clusters = estimator._preprocess(y, clusters)
+    assert n_valid_clusters == 2
     np.testing.assert_array_equal(y_valid, np.array([2.0, 4.0]))
-    np.testing.assert_array_equal(clusters_valid, np.array(["A", "B"]))
-    np.testing.assert_array_equal(unique_valid_clusters, np.array(["A", "B"]))
+    np.testing.assert_array_equal(cluster_indices, np.array([0, 1]))
 
 
 # --- estimate ---
