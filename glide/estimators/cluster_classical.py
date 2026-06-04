@@ -1,8 +1,10 @@
+from typing import Tuple
+
 import numpy as np
 from numpy.typing import NDArray
 
 from glide.confidence_intervals import CLTConfidenceInterval
-from glide.core.validation import _validate_equal_lengths
+from glide.core.validation import _validate_bounds, _validate_equal_lengths
 from glide.mean_inference_results import ClassicalMeanInferenceResult
 
 
@@ -31,6 +33,26 @@ class ClusterClassicalMeanEstimator:
     n: 4
     """
 
+    def _preprocess(
+        self,
+        y: NDArray,
+        clusters: NDArray,
+    ) -> Tuple[NDArray, NDArray, NDArray]:
+        _validate_equal_lengths(y, clusters, names=["y", "clusters"])
+        not_nan_mask = ~np.isnan(y)
+        y_valid = y[not_nan_mask]
+        clusters_valid = clusters[not_nan_mask]
+
+        unique_valid_clusters = np.unique(clusters_valid)
+        n_valid_clusters = len(unique_valid_clusters)
+        _validate_bounds(
+            n_valid_clusters,
+            "n_valid_clusters",
+            lower=2,
+            error_message=f"Need at least 2 clusters with non-NaN observations; got {n_valid_clusters}.",
+        )
+        return y_valid, clusters_valid, unique_valid_clusters
+
     def estimate(
         self,
         y: NDArray,
@@ -43,13 +65,13 @@ class ClusterClassicalMeanEstimator:
         Aggregates observations into cluster-level means weighted by cluster
         size, then applies the CLT to the cluster sums as sampling units:
 
-            theta = sum_k  (n_k * mu_k) / N
-            sigma2 = K * Var(u_k, ddof=1) / N^2
+            theta = sum_l  (n_l * mu_l) / N
+            sigma2 = L * Var(u_l, ddof=1) / N^2
 
-        where ``u_k = n_k * mu_k`` are the cluster sums, ``K`` is the number
-        of clusters, and ``N = sum_k n_k`` is the total number of observations.
-        NaN values in ``y`` are dropped per cluster before computing cluster
-        means. Clusters that contain only NaN are skipped.
+        where ``u_l = n_l * mu_l`` are the cluster sums, ``L`` is the number
+        of clusters, and ``N = sum_l n_l`` is the total number of observations.
+        NaN values in ``y`` are dropped before making the computations. Clusters
+        that contain only NaN are not used.
 
         Parameters
         ----------
@@ -77,18 +99,12 @@ class ClusterClassicalMeanEstimator:
             - If ``y`` and ``clusters`` do not have the same length.
             - If fewer than 2 clusters have at least one non-NaN observation.
         """
-        _validate_equal_lengths(y, clusters, names=["y", "clusters"])
-        not_nan_mask = ~np.isnan(y)
-        y_valid, clusters_valid = y[not_nan_mask], clusters[not_nan_mask]
-
-        unique_clusters, sizes = np.unique_counts(clusters_valid)
-        n_valid_clusters = len(unique_clusters)
-        if n_valid_clusters < 2:
-            raise ValueError(f"Need at least 2 clusters with non-NaN observations; got {n_valid_clusters}.")
+        y_valid, clusters_valid, unique_valid_clusters = self._preprocess(y, clusters)
+        n_valid_clusters = len(unique_valid_clusters)
 
         sums = np.zeros(n_valid_clusters)
 
-        for i, cluster_id in enumerate(unique_clusters):
+        for i, cluster_id in enumerate(unique_valid_clusters):
             cluster_mask = clusters_valid == cluster_id
             cluster_y_valid = y_valid[cluster_mask]
             sums[i] = np.sum(cluster_y_valid)

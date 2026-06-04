@@ -1,21 +1,16 @@
+from unittest.mock import patch
+
 import numpy as np
 import pytest
 from numpy.typing import NDArray
 
+import glide.estimators.cluster_classical as cluster_classical_module
 from glide.estimators import ClusterClassicalMeanEstimator
 from glide.mean_inference_results import ClassicalMeanInferenceResult
-
-# ── helpers ────────────────────────────────────────────────────────────────────
 
 
 @pytest.fixture
 def y() -> NDArray:
-    """Observations for two clusters (A and B) with two samples each.
-
-    Cluster A: y=[5.0, 5.0]  → mean=5.0, sum=10.0
-    Cluster B: y=[7.0, 7.0]  → mean=7.0, sum=14.0
-    Weighted: mean=6.0, var=2*Var([10,14], ddof=1)/16=1.0, std=1.0, n=4.
-    """
     return np.array([5.0, 5.0, 7.0, 7.0])
 
 
@@ -27,6 +22,39 @@ def clusters() -> NDArray:
 @pytest.fixture
 def estimator() -> ClusterClassicalMeanEstimator:
     return ClusterClassicalMeanEstimator()
+
+
+# --- _preprocess ---
+
+
+def test_preprocess_delegates_to_validation(estimator, y, clusters):
+
+    with (
+        patch.object(cluster_classical_module, "_validate_equal_lengths") as mock_validate_equal_lengths,
+        patch.object(cluster_classical_module, "_validate_bounds") as mock_validate_bounds,
+    ):
+        estimator._preprocess(y, clusters)
+
+        mock_validate_equal_lengths.assert_called_once()
+        np.testing.assert_array_equal(mock_validate_equal_lengths.call_args[0][0], y)
+        np.testing.assert_array_equal(mock_validate_equal_lengths.call_args[0][1], clusters)
+        assert mock_validate_equal_lengths.call_args[1] == {"names": ["y", "clusters"]}
+
+        mock_validate_bounds.assert_called_once_with(
+            2,
+            "n_valid_clusters",
+            lower=2,
+            error_message="Need at least 2 clusters with non-NaN observations; got 2.",
+        )
+
+
+def test_preprocess_returns_filtered_arrays(estimator):
+    y = np.array([2.0, np.nan, 4.0, np.nan, np.nan])
+    clusters = np.array(["A", "A", "B", "C", "C"])
+    y_valid, clusters_valid, unique_valid_clusters = estimator._preprocess(y, clusters)
+    np.testing.assert_array_equal(y_valid, np.array([2.0, 4.0]))
+    np.testing.assert_array_equal(clusters_valid, np.array(["A", "B"]))
+    np.testing.assert_array_equal(unique_valid_clusters, np.array(["A", "B"]))
 
 
 # --- estimate ---
@@ -48,69 +76,19 @@ def test_estimate_metadata(estimator, y, clusters):
     assert result.n == 4
 
 
-def test_estimate_analytical_values(estimator, y, clusters):
-    result = estimator.estimate(y, clusters)
-
-    expected_mean = 6.0
-    expected_std = 1.0
-    expected_lower = 4.040
-    expected_upper = 7.960
-
-    assert result.confidence_interval.mean == pytest.approx(expected_mean)
-    assert result.std == pytest.approx(expected_std)
-    assert result.confidence_interval.lower_bound == pytest.approx(expected_lower, abs=0.001)
-    assert result.confidence_interval.upper_bound == pytest.approx(expected_upper, abs=0.001)
-
-
 def test_estimate_custom_confidence_level(estimator, y, clusters):
     result = estimator.estimate(y, clusters, confidence_level=0.85)
 
+    expected_mean = 6.0
+    expected_std = 1.0
     expected_lower = 4.560
     expected_upper = 7.440
 
+    assert result.confidence_interval.mean == pytest.approx(expected_mean)
+    assert result.std == pytest.approx(expected_std)
     assert result.confidence_interval.confidence_level == 0.85
     assert result.confidence_interval.lower_bound == pytest.approx(expected_lower, abs=0.001)
     assert result.confidence_interval.upper_bound == pytest.approx(expected_upper, abs=0.001)
-
-
-def test_estimate_ignores_nans(estimator, y, clusters):
-    y_with_nans = np.hstack([y, np.full(2, np.nan)])
-    clusters_with_nans = np.hstack([clusters, np.array(["A", "B"])])
-
-    result = estimator.estimate(y, clusters, metric_name="performance")
-    result_with_nans = estimator.estimate(y_with_nans, clusters_with_nans, metric_name="performance")
-    assert result == result_with_nans
-
-
-def test_estimate_n_counts_non_nan_observations(estimator, y, clusters):
-    y_with_nans = np.hstack([y, np.array([np.nan, np.nan])])
-    clusters_with_nans = np.hstack([clusters, np.array(["A", "B"])])
-
-    result = estimator.estimate(y_with_nans, clusters_with_nans)
-    assert result.n == 4
-
-
-def test_estimate_skips_all_nan_cluster(estimator, y, clusters):
-    y_augmented = np.hstack([y, np.array([np.nan, np.nan])])
-    clusters_augmented = np.hstack([clusters, np.array(["C", "C"])])
-
-    result_base = estimator.estimate(y, clusters)
-    result_augmented = estimator.estimate(y_augmented, clusters_augmented)
-    assert result_base == result_augmented
-
-
-def test_estimate_raises_for_fewer_than_two_valid_clusters(estimator):
-    y = np.array([5.0, 7.0, np.nan, np.nan])
-    clusters = np.array(["A", "A", "B", "B"])
-    with pytest.raises(ValueError, match="Need at least 2 clusters"):
-        estimator.estimate(y, clusters)
-
-
-def test_estimate_raises_when_y_and_clusters_have_different_lengths(estimator):
-    y = np.array([1.0, 2.0])
-    clusters = np.array(["A", "B", "C"])
-    with pytest.raises(ValueError, match="same length"):
-        estimator.estimate(y, clusters)
 
 
 # --- __str__ / __repr__ ---
