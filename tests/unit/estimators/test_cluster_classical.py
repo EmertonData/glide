@@ -53,7 +53,7 @@ def test_preprocess_delegates_to_validation(estimator, y, clusters):
         )
 
 
-def test_preprocess_returns_filtered_arrays(estimator):
+def test_preprocess_known_result(estimator):
     y = np.array([2.0, np.nan, 4.0, np.nan, np.nan])
     clusters = np.array(["A", "A", "B", "C", "C"])
     y_valid, cluster_indices, n_valid_clusters = estimator._preprocess(y, clusters)
