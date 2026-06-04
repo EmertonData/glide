@@ -27,7 +27,7 @@ def test_generate_stratified_binary_dataset_structure_and_counts():
     np.testing.assert_allclose(y_proxy, y_proxy_expected)
 
 
-def test_generate_stratified_binary_dataset_delegates_to_validation():
+def test_generate_stratified_binary_dataset_delegates_validation():
     n_total = [3, 3]
     true_mean = [0.5, 0.6]
     proxy_mean = [0.5, 0.6]
@@ -73,3 +73,13 @@ def test_generate_stratified_binary_dataset_reproducibility():
     np.testing.assert_allclose(y_true1, y_true2)
     np.testing.assert_allclose(y_proxy1, y_proxy2)
     np.testing.assert_array_equal(groups1, groups2)
+
+
+def test_generate_stratified_binary_dataset_different_seed_results_differ():
+    y_true1, y_proxy1, _ = generate_stratified_binary_dataset(
+        n_total=[5, 5], true_mean=[0.6, 0.8], proxy_mean=[0.5, 0.7], correlation=[0.75, 0.75], random_seed=0
+    )
+    y_true2, y_proxy2, _ = generate_stratified_binary_dataset(
+        n_total=[5, 5], true_mean=[0.6, 0.8], proxy_mean=[0.5, 0.7], correlation=[0.75, 0.75], random_seed=1
+    )
+    assert not np.array_equal(y_true1, y_true2) or not np.array_equal(y_proxy1, y_proxy2)
