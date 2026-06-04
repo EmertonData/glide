@@ -17,3 +17,7 @@
 ---
 
 ::: glide.samplers.cost_optimal.CostOptimalSampler
+
+---
+
+::: glide.samplers.cluster.UniformClusterSampler

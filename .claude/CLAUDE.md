@@ -69,6 +69,7 @@ The package has multiple layers:
 - To assert a mock called multiple times with numpy arguments, verify each call individually via `call_args_list`.
 - Never use `assert_called_with`, `assert_any_call`, or `assert mock.call_count == N` alone.
 - Name every mock variable `mock_<mocked_function_name>`, stripping the leading underscore from private functions — BAD: `mock`, `mock_nan`, `mock_bounds`; GOOD: `mock_validate_has_no_nan`, `mock_validate_bounds`.
+- All delegation checks for a given function belong in a single `test_<function>_delegates_to_validation` test. Before adding a new delegation assertion, check whether that test already exists and extend it rather than creating a new one.
 
 ## Code Conventions
 
