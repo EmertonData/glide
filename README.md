@@ -48,7 +48,7 @@ or
 ```bash
 pip install glide-py
 ```
-And look at our practical [quickstart](getting-started/quickstart.ipynb).
+And look at our practical [quickstart](https://glide-py.readthedocs.io/en/latest/getting-started/quickstart/).
 
 ## 📚 Documentation
 
