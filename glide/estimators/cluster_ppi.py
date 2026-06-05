@@ -4,7 +4,7 @@ import numpy as np
 from numpy.typing import NDArray
 
 from glide.confidence_intervals import CLTConfidenceInterval
-from glide.estimators.classical import ClassicalMeanEstimator
+from glide.estimators import ClusterClassicalMeanEstimator
 from glide.estimators.cluster_core import (
     _compute_cluster_mean_estimate,
     _compute_cluster_std_estimate,
@@ -56,7 +56,7 @@ class ClusterPPIMeanEstimator:
     Estimator : ClusterPPIMeanEstimator
     n_true: 4
     n_proxy: 8
-    Effective Sample Size: 2
+    Effective Sample Size: 5
     """
 
     def estimate(
@@ -171,16 +171,14 @@ class ClusterPPIMeanEstimator:
             std=std,
             confidence_level=confidence_level,
         )
-        labeled_mask = ~np.isnan(y_true)
-        y_true_labeled = y_true[labeled_mask]
-        n_labeled = len(y_true_labeled)
-        classical_confidence_interval = ClassicalMeanEstimator().estimate(y_true_labeled).confidence_interval
-        effective_sample_size = floor(n_labeled * classical_confidence_interval.var / confidence_interval.var)
+
+        classical_confidence_interval = ClusterClassicalMeanEstimator().estimate(y_true, clusters).confidence_interval
+        effective_sample_size = floor(labeled_total_size * classical_confidence_interval.var / confidence_interval.var)
         result = PredictionPoweredMeanInferenceResult(
             confidence_interval=confidence_interval,
             metric_name=metric_name,
             estimator_name=self.__class__.__name__,
-            n_true=n_labeled,
+            n_true=labeled_total_size,
             n_proxy=len(y_true),
             effective_sample_size=effective_sample_size,
         )

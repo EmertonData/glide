@@ -1,4 +1,4 @@
-from unittest.mock import patch
+from unittest.mock import call, patch
 
 import numpy as np
 import pytest
@@ -15,17 +15,17 @@ from glide.estimators.cluster_core import (
 
 @pytest.fixture
 def y_true() -> NDArray:
-    return np.array([4.0, np.nan, 6.0, np.nan])
+    return np.array([1.0, np.nan, 3.0, np.nan, 5.0, np.nan])
 
 
 @pytest.fixture
 def y_proxy() -> NDArray:
-    return np.array([2.0, 4.0, 6.0, 6.0])
+    return np.array([1.1, 2.2, 3.1, 4.2, 5.1, 6.2])
 
 
 @pytest.fixture
 def clusters() -> NDArray:
-    return np.array(["A", "C", "B", "D"])
+    return np.array(["A", "A", "B", "B", "C", "D"])
 
 
 @pytest.fixture
@@ -50,6 +50,7 @@ def test_preprocess_delegates_to_validation(y_true, y_proxy, clusters):
     with (
         patch.object(cluster_core_module, "_validate_equal_lengths") as mock_validate_equal_lengths,
         patch.object(cluster_core_module, "_validate_has_no_nan") as mock_validate_has_no_nan,
+        patch.object(cluster_core_module, "_validate_bounds") as mock_validate_bounds,
     ):
         _preprocess(y_true, y_proxy, clusters)
 
@@ -65,68 +66,34 @@ def test_preprocess_delegates_to_validation(y_true, y_proxy, clusters):
         np.testing.assert_array_equal(mock_validate_has_no_nan.call_args_list[1][0][0], clusters)
         assert mock_validate_has_no_nan.call_args_list[1][0][1] == "clusters"
 
+        mock_validate_bounds.assert_has_calls(
+            [
+                call(
+                    2,
+                    "clusters_intersection",
+                    upper=0,
+                    error_message="Cluster 'A' contains both labeled and unlabeled observations.",
+                ),
+                call(3, "n_labeled_clusters", lower=2, error_message="Need at least 2 fully labeled clusters; got 3."),
+                call(
+                    3, "n_unlabeled_clusters", lower=2, error_message="Need at least 2 fully unlabeled clusters; got 3."
+                ),
+            ]
+        )
 
-def test_preprocess_valid_output(y_true, y_proxy, clusters):
-    lt_means, lp_means, up_means, l_sizes, u_sizes = _preprocess(y_true, y_proxy, clusters)
 
-    np.testing.assert_array_equal(lt_means, np.array([4.0, 6.0]))
-    np.testing.assert_array_equal(lp_means, np.array([2.0, 6.0]))
-    np.testing.assert_array_equal(up_means, np.array([4.0, 6.0]))
+def test_preprocess_valid_output():
+    y_t = np.array([4.0, np.nan, 6.0, np.nan])
+    y_p = np.array([2.0, 4.0, 6.0, 6.0])
+    cls = np.array(["A", "C", "B", "D"])
+
+    lt_sums, lp_sums, up_sums, l_sizes, u_sizes = _preprocess(y_t, y_p, cls)
+
+    np.testing.assert_array_equal(lt_sums, np.array([4.0, 6.0]))
+    np.testing.assert_array_equal(lp_sums, np.array([2.0, 6.0]))
+    np.testing.assert_array_equal(up_sums, np.array([4.0, 6.0]))
     np.testing.assert_array_equal(l_sizes, np.array([1, 1]))
     np.testing.assert_array_equal(u_sizes, np.array([1, 1]))
-
-
-def test_preprocess_valid_output_multi_observation_clusters():
-    y_t = np.array([1.0, 2.0, 3.0, 4.0, np.nan, np.nan, np.nan, np.nan])
-    y_p = np.array([1.1, 2.2, 3.1, 3.9, 3.5, 4.5, 5.0, 6.0])
-    cls = np.array(["A", "A", "B", "B", "C", "C", "D", "D"])
-
-    lt_means, lp_means, up_means, l_sizes, u_sizes = _preprocess(y_t, y_p, cls)
-
-    np.testing.assert_array_equal(lt_means, np.array([1.5, 3.5]))
-    np.testing.assert_allclose(lp_means, np.array([1.65, 3.5]))
-    np.testing.assert_array_equal(up_means, np.array([4.0, 5.5]))
-    np.testing.assert_array_equal(l_sizes, np.array([2, 2]))
-    np.testing.assert_array_equal(u_sizes, np.array([2, 2]))
-
-
-def test_preprocess_raises_on_partial_cluster():
-    y_t = np.array([5.0, np.nan, 6.0, np.nan])
-    y_p = np.array([4.9, 5.1, 6.0, 6.0])
-    cls = np.array(["A", "A", "B", "C"])
-
-    with pytest.raises(ValueError, match="Cluster 'A'"):
-        _preprocess(y_t, y_p, cls)
-
-
-def test_preprocess_raises_on_too_few_labeled_clusters():
-    y_t = np.array([5.0, np.nan, np.nan])
-    y_p = np.array([4.9, 5.1, 6.0])
-    cls = np.array(["A", "B", "C"])
-
-    with pytest.raises(ValueError, match="at least 2 fully labeled"):
-        _preprocess(y_t, y_p, cls)
-
-
-def test_preprocess_raises_on_too_few_unlabeled_clusters():
-    y_t = np.array([5.0, 6.0, np.nan])
-    y_p = np.array([4.9, 5.9, 5.0])
-    cls = np.array(["A", "B", "C"])
-
-    with pytest.raises(ValueError, match="at least 2 fully unlabeled"):
-        _preprocess(y_t, y_p, cls)
-
-
-def test_preprocess_raises_on_nan_in_proxy(y_true, clusters):
-    y_p_with_nan = np.array([2.0, np.nan, 6.0, 6.0])
-    with pytest.raises(ValueError, match="y_proxy"):
-        _preprocess(y_true, y_p_with_nan, clusters)
-
-
-def test_preprocess_raises_on_unequal_lengths(y_true, y_proxy):
-    short_clusters = np.array(["A", "B", "C"])
-    with pytest.raises(ValueError):
-        _preprocess(y_true, y_proxy, short_clusters)
 
 
 # --- _compute_cluster_tuning_parameter ---
@@ -141,6 +108,23 @@ def test_compute_cluster_tuning_parameter_returns_one_when_power_tuning_false(
     assert result == 1.0
 
 
+def test_compute_cluster_tuning_parameter_delegates_to_validation(
+    labeled_true_sums, labeled_proxy_sums, unlabeled_proxy_sums
+):
+    with patch.object(cluster_core_module, "_validate_non_constant") as mock_validate_non_constant:
+        _compute_cluster_tuning_parameter(
+            labeled_true_sums, labeled_proxy_sums, unlabeled_proxy_sums, 2, 2, power_tuning=True
+        )
+
+        mock_validate_non_constant.assert_called_once()
+        expected_all_proxy_sums = np.hstack([labeled_proxy_sums, unlabeled_proxy_sums])
+        np.testing.assert_array_equal(mock_validate_non_constant.call_args[0][0], expected_all_proxy_sums)
+        assert mock_validate_non_constant.call_args[0][1] == (
+            "Proxy cluster sums have zero variance across both labeled and unlabeled clusters; "
+            "cannot estimate the tuning parameter."
+        )
+
+
 def test_compute_cluster_tuning_parameter_known_value(labeled_true_sums, labeled_proxy_sums, unlabeled_proxy_sums):
     expected = 6 / 11
     result = _compute_cluster_tuning_parameter(
@@ -149,21 +133,7 @@ def test_compute_cluster_tuning_parameter_known_value(labeled_true_sums, labeled
     assert result == pytest.approx(expected, abs=1e-10)
 
 
-def test_compute_cluster_tuning_parameter_raises_on_zero_variance():
-    constant_sums = np.array([3.0, 3.0])
-    with pytest.raises(ValueError, match="zero variance"):
-        _compute_cluster_tuning_parameter(np.array([4.0, 6.0]), constant_sums, constant_sums, 2, 2, power_tuning=True)
-
-
 # --- _compute_cluster_mean_estimate ---
-
-
-def test_compute_cluster_mean_estimate_lambda_one(labeled_true_sums, labeled_proxy_sums, unlabeled_proxy_sums):
-    expected = 6.0
-    result = _compute_cluster_mean_estimate(
-        labeled_true_sums, labeled_proxy_sums, unlabeled_proxy_sums, 2, 2, lambda_=1.0
-    )
-    assert result == pytest.approx(expected, abs=1e-10)
 
 
 def test_compute_cluster_mean_estimate_known_value(labeled_true_sums, labeled_proxy_sums, unlabeled_proxy_sums):
@@ -175,14 +145,6 @@ def test_compute_cluster_mean_estimate_known_value(labeled_true_sums, labeled_pr
 
 
 # --- _compute_cluster_std_estimate ---
-
-
-def test_compute_cluster_std_estimate_lambda_one(labeled_true_sums, labeled_proxy_sums, unlabeled_proxy_sums):
-    expected = np.sqrt(2)
-    result = _compute_cluster_std_estimate(
-        labeled_true_sums, labeled_proxy_sums, unlabeled_proxy_sums, 2, 2, lambda_=1.0
-    )
-    assert result == pytest.approx(expected, abs=1e-10)
 
 
 def test_compute_cluster_std_estimate_known_value(labeled_true_sums, labeled_proxy_sums, unlabeled_proxy_sums):

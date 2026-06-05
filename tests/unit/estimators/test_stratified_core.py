@@ -1,18 +1,31 @@
 from unittest.mock import patch
 
 import numpy as np
+import pytest
 
 import glide.estimators.stratified_core as stratified_core_module
 from glide.estimators.stratified_core import _preprocess
 
+
+@pytest.fixture
+def y_true():
+    return np.array([5.0, 6.0, np.nan, np.nan, 5.0, 6.0, np.nan, np.nan])
+
+
+@pytest.fixture
+def y_proxy():
+    return np.array([4.9, 6.1, 5.2, 6.1, 4.9, 6.1, 5.2, 6.1])
+
+
+@pytest.fixture
+def groups():
+    return np.array(["A", "A", "A", "A", "B", "B", "B", "B"])
+
+
 # --- _preprocess ---
 
 
-def test_preprocess_returns_correct_shapes():
-    y_true = np.array([5.0, 6.0, np.nan, np.nan, 5.0, 6.0, np.nan, np.nan])
-    y_proxy = np.array([4.9, 6.1, 5.2, 6.1, 4.9, 6.1, 5.2, 6.1])
-    groups = np.array(["A", "A", "A", "A", "B", "B", "B", "B"])
-
+def test_preprocess_returns_correct_shapes(y_true, y_proxy, groups):
     strata = _preprocess(y_true, y_proxy, groups)
     assert len(strata) == 2
     for y_true_filtered, y_proxy_labeled, y_proxy_unlabeled in strata:
@@ -21,11 +34,7 @@ def test_preprocess_returns_correct_shapes():
         assert len(y_proxy_unlabeled) == 2
 
 
-def test_preprocess_delegates_to_validation():
-    y_true = np.array([5.0, 6.0, np.nan, np.nan, 5.0, 6.0, np.nan, np.nan])
-    y_proxy = np.array([4.9, 6.1, 5.2, 6.1, 4.9, 6.1, 5.2, 6.1])
-    groups = np.array(["A", "A", "A", "A", "B", "B", "B", "B"])
-
+def test_preprocess_delegates_to_validation(y_true, y_proxy, groups):
     with (
         patch.object(stratified_core_module, "_validate_equal_lengths") as mock_validate_equal_lengths,
         patch.object(stratified_core_module, "_validate_y_proxy") as mock_validate_y_proxy,

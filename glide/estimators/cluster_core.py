@@ -28,11 +28,12 @@ def _preprocess(
     unique_unlabeled_clusters, unlabeled_cluster_indices = np.unique(unlabeled_clusters, return_inverse=True)
 
     intersection = np.intersect1d(unique_labeled_clusters, unique_unlabeled_clusters, assume_unique=True)
+    bad_cluster = intersection[0] if len(intersection) else None
     _validate_bounds(
         len(intersection),
         "clusters_intersection",
         upper=0,
-        error_message=f"Cluster '{intersection[0]}' contains both labeled and unlabeled observations.",
+        error_message=f"Cluster '{bad_cluster}' contains both labeled and unlabeled observations.",
     )
 
     labeled_true_sums = np.bincount(labeled_cluster_indices, weights=y_true[labeled_mask])
