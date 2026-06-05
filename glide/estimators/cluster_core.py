@@ -13,6 +13,7 @@ def _preprocess(
 ) -> Tuple[NDArray, NDArray, NDArray, NDArray, NDArray]:
     _validate_equal_lengths(y_true, y_proxy, clusters, names=["y_true", "y_proxy", "clusters"])
     _validate_has_no_nan(y_proxy, "y_proxy")
+    _validate_has_no_nan(clusters, "clusters")
 
     labeled_true_means = []
     labeled_proxy_means = []

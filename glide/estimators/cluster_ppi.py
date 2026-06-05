@@ -28,7 +28,7 @@ class ClusterPPIMeanEstimator:
     proxy sums for variance estimation. The final confidence interval is
     CLT-based and centred on:
 
-        θ̂ = Σ_k u_k / N_L + λ * (Σ_k v_k / N_U − Σ_k s_k / N_L)
+        θ̂ = Σ_k u_k / N_L + λ * (Σ_k v_k / N_U - Σ_k s_k / N_L)
 
     where u_k = n_k * μ_k^true and s_k = n_k * μ_k^proxy are cluster sums
     for labeled clusters, v_k = n_k * μ_k^proxy are cluster sums for
@@ -76,11 +76,11 @@ class ClusterPPIMeanEstimator:
 
         The point estimate is:
 
-            θ̂ = Σ_k u_k / N_L + λ * (Σ_k v_k / N_U − Σ_k s_k / N_L)
+            θ̂ = Σ_k u_k / N_L + λ * (Σ_k v_k / N_U - Σ_k s_k / N_L)
 
         and the variance is:
 
-            Var(θ̂) = K_L * Var(u_k − λ*s_k, ddof=1) / N_L²
+            Var(θ̂) = K_L * Var(u_k - λ*s_k, ddof=1) / N_L²
                     + λ² * K_U * Var(v_k, ddof=1) / N_U²
 
         where K_L and K_U are the numbers of labeled and unlabeled clusters.
