@@ -87,7 +87,7 @@ def _compute_cluster_tuning_parameter(
     )
     cov = np.cov(labeled_true_sums, labeled_proxy_sums, ddof=1)[0, 1]
     var_proxy = np.var(all_proxy_sums, ddof=1)
-    factor = 1 + (n_unlabeled_clusters / n_labeled_clusters) / (labeled_total_size / unlabeled_total_size) ** 2
+    factor = 1 + (n_unlabeled_clusters / n_labeled_clusters) * (labeled_total_size / unlabeled_total_size) ** 2
     denominator = var_proxy * factor
     lambda_ = cov / denominator
     return lambda_

@@ -4,7 +4,7 @@ import numpy as np
 from numpy.typing import NDArray
 
 from glide.confidence_intervals import CLTConfidenceInterval
-from glide.estimators import ClusterClassicalMeanEstimator
+from glide.estimators.cluster_classical import ClusterClassicalMeanEstimator
 from glide.estimators.cluster_core import (
     _compute_cluster_mean_estimate,
     _compute_cluster_std_estimate,
@@ -17,23 +17,11 @@ from glide.mean_inference_results import PredictionPoweredMeanInferenceResult
 class ClusterPPIMeanEstimator:
     """Cluster PPI++ estimator for population mean.
 
-    Extends Prediction-Powered Inference to datasets where observations are
-    grouped into clusters and each cluster is either entirely labeled or
-    entirely unlabeled. The CLT is applied to cluster sums as the sampling
-    units, which accounts for within-cluster correlation and produces valid
-    confidence intervals under cluster sampling designs.
-
-    A single power-tuning parameter λ is estimated from the joint covariance
-    of labeled true sums and labeled proxy sums, pooled with the unlabeled
-    proxy sums for variance estimation. The final confidence interval is
-    CLT-based and centred on:
-
-        θ̂ = Σ_k u_k / N_L + λ * (Σ_k v_k / N_U - Σ_k s_k / N_L)
-
-    where u_k = n_k * μ_k^true and s_k = n_k * μ_k^proxy are cluster sums
-    for labeled clusters, v_k = n_k * μ_k^proxy are cluster sums for
-    unlabeled clusters, and N_L, N_U are the total labeled and unlabeled
-    observation counts.
+    Extends PPI++ mean estimation as in ``PPIMeanEstimator`` to datasets where
+    observations are grouped into clusters. Each cluster's true and proxy sums
+    are treated as the sampling units, which accounts for within-cluster
+    correlation and produces valid confidence intervals under cluster sampling
+    designs.
 
     References
     ----------
@@ -70,20 +58,19 @@ class ClusterPPIMeanEstimator:
     ) -> PredictionPoweredMeanInferenceResult:
         """Estimate the population mean using the Cluster PPI++ estimator.
 
-        Aggregates observations into cluster sums, computes a single
-        power-tuning parameter λ from the joint covariance of labeled
-        cluster sums, and assembles a CLT-based confidence interval.
+        Computes cluster sums for labeled and unlabeled clusters and uses them
+        as sampling units to apply a PPI++-style bias correction:
 
-        The point estimate is:
+            θ̂ = Σ_l u_l / N_L + λ * (Σ_l v_l / N_U - Σ_l s_l / N_L)
 
-            θ̂ = Σ_k u_k / N_L + λ * (Σ_k v_k / N_U - Σ_k s_k / N_L)
+            Var(θ̂) = K_L * Var(u_l - λ*s_l, ddof=1) / N_L²
+                    + λ² * K_U * Var(v_l, ddof=1) / N_U²
 
-        and the variance is:
-
-            Var(θ̂) = K_L * Var(u_k - λ*s_k, ddof=1) / N_L²
-                    + λ² * K_U * Var(v_k, ddof=1) / N_U²
-
-        where K_L and K_U are the numbers of labeled and unlabeled clusters.
+        where ``u_l`` and ``s_l`` are the true and proxy cluster sums for
+        labeled clusters, ``v_l`` are the proxy cluster sums for unlabeled
+        clusters, ``K_L`` and ``K_U`` are the numbers of labeled and unlabeled
+        clusters, and ``N_L``, ``N_U`` are the total labeled and unlabeled
+        observation counts.
 
         Labeled and unlabeled clusters are distinguished by the NaN pattern in
         ``y_true``: a cluster is labeled if every one of its ``y_true`` entries
@@ -128,8 +115,8 @@ class ClusterPPIMeanEstimator:
             - If any cluster contains both labeled and unlabeled observations.
             - If fewer than 2 clusters are fully labeled.
             - If fewer than 2 clusters are fully unlabeled.
-            - If proxy cluster sums have zero variance across both labeled and
-              unlabeled clusters and ``power_tuning=True``.
+            - If ``power_tuning=True`` and proxy cluster sums have zero variance across
+              both labeled and unlabeled clusters.
         """
         (
             labeled_true_sums,
