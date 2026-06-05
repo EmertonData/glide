@@ -5,6 +5,7 @@ from numpy.typing import NDArray
 
 from glide.core.validation import (
     _validate_equal_lengths,
+    _validate_has_no_nan,
     _validate_sample_sizes,
     _validate_y_proxy,
     _validate_y_true,
@@ -16,6 +17,7 @@ def _preprocess(
     y_proxy: NDArray,
     groups: NDArray,
 ) -> List[Tuple[NDArray, NDArray, NDArray]]:
+    _validate_has_no_nan(groups, "groups")
     _validate_equal_lengths(y_true, y_proxy, groups, names=["y_true", "y_proxy", "groups"])
     _validate_y_proxy(y_proxy)
     _validate_y_true(y_true)

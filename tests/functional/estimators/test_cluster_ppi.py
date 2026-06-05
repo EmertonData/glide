@@ -13,6 +13,8 @@ def test_single_observation_clusters_equals_ppi(power_tuning):
     cluster_result = ClusterPPIMeanEstimator().estimate(y_true, y_proxy, clusters, power_tuning=power_tuning)
     ppi_result = PPIMeanEstimator().estimate(y_true, y_proxy, power_tuning=power_tuning)
 
+    assert cluster_result.confidence_interval.mean == pytest.approx(ppi_result.confidence_interval.mean, abs=1e-10)
+    assert cluster_result.confidence_interval.std == pytest.approx(ppi_result.confidence_interval.std, abs=1e-10)
     assert cluster_result.confidence_interval.lower_bound == pytest.approx(
         ppi_result.confidence_interval.lower_bound, abs=1e-10
     )

@@ -42,8 +42,8 @@ def _preprocess(
     labeled_sizes = np.bincount(labeled_cluster_indices)
     unlabeled_sizes = np.bincount(unlabeled_cluster_indices)
 
-    n_labeled_clusters = len(labeled_true_sums)
-    n_unlabeled_clusters = len(unlabeled_proxy_sums)
+    n_labeled_clusters = len(unique_labeled_clusters)
+    n_unlabeled_clusters = len(unique_unlabeled_clusters)
 
     _validate_bounds(
         n_labeled_clusters,
@@ -88,8 +88,7 @@ def _compute_cluster_tuning_parameter(
     cov = np.cov(labeled_true_sums, labeled_proxy_sums, ddof=1)[0, 1]
     var_proxy = np.var(all_proxy_sums, ddof=1)
     factor = 1 + (n_unlabeled_clusters / n_labeled_clusters) * (labeled_total_size / unlabeled_total_size) ** 2
-    denominator = var_proxy * factor
-    lambda_ = cov / denominator
+    lambda_ = cov / (var_proxy * factor)
     return lambda_
 
 

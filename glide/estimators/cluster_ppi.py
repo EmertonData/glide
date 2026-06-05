@@ -112,6 +112,7 @@ class ClusterPPIMeanEstimator:
             - If ``y_true``, ``y_proxy``, and ``clusters`` do not all have the
               same length.
             - If any proxy value is NaN.
+            - If ``clusters`` contains NaN values (numeric dtype) or None values (non-numeric dtype).
             - If any cluster contains both labeled and unlabeled observations.
             - If fewer than 2 clusters are fully labeled.
             - If fewer than 2 clusters are fully unlabeled.
@@ -166,7 +167,7 @@ class ClusterPPIMeanEstimator:
             metric_name=metric_name,
             estimator_name=self.__class__.__name__,
             n_true=labeled_total_size,
-            n_proxy=len(y_true),
+            n_proxy=len(y_proxy),
             effective_sample_size=effective_sample_size,
         )
         return result
