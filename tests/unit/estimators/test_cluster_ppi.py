@@ -27,7 +27,7 @@ def estimator() -> ClusterPPIMeanEstimator:
     return ClusterPPIMeanEstimator()
 
 
-# --- estimate ----
+# --- estimate ---
 
 
 def test_estimate_returns_valid_inference_result(estimator, y_true, y_proxy, clusters):
