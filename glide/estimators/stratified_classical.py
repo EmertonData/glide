@@ -4,7 +4,7 @@ import numpy as np
 from numpy.typing import NDArray
 
 from glide.confidence_intervals import CLTConfidenceInterval
-from glide.core.validation import _validate_bounds, _validate_has_no_nan
+from glide.core.validation import _validate_min_samples
 from glide.mean_inference_results import ClassicalMeanInferenceResult
 
 
@@ -82,37 +82,28 @@ class StratifiedClassicalMeanEstimator:
         Raises
         ------
         ValueError
-            - If ``groups`` contains NaN values (numeric dtype) or None values (non-numeric dtype).
-            - If any stratum contains fewer than 2 non-NaN values.
+            If any stratum contains fewer than 2 non-NaN values.
         """
-        _validate_has_no_nan(groups, "groups")
         not_nan_mask = ~np.isnan(y)
-        y_valid = y[not_nan_mask]
-        n_samples = len(y_valid)
+        n_samples = np.sum(not_nan_mask)
+        weighted_mean = 0.0
+        weighted_var = 0.0
 
-        unique_strata, stratum_indices = np.unique(groups, return_inverse=True)
-        stratum_sizes = np.bincount(stratum_indices, weights=not_nan_mask)
-        min_non_nans_per_stratum = int(np.min(stratum_sizes))
+        unique_strata = np.unique(groups)
+        for i, stratum_id in enumerate(unique_strata):
+            stratum_mask = groups == stratum_id
+            y_stratum = y[stratum_mask & not_nan_mask]
+            _validate_min_samples(y_stratum, "y", stratum_id)
 
-        _validate_bounds(
-            min_non_nans_per_stratum,
-            "min_non_nans_per_stratum",
-            lower=2,
-            error_message=f"'y' must have at least 2 non-NaN values per stratum; "
-            f"got {min_non_nans_per_stratum} in stratum '{unique_strata[np.argmin(stratum_sizes)]}'.",
-        )
-
-        valid_stratum_indices = stratum_indices[not_nan_mask]
-        stratum_sums = np.bincount(valid_stratum_indices, weights=y_valid)
-        means = stratum_sums / stratum_sizes
-        var_sums = np.bincount(valid_stratum_indices, weights=(y_valid - means[valid_stratum_indices]) ** 2)
-        vars = (var_sums / (stratum_sizes - 1)) / stratum_sizes
-
-        if stratum_weights is None:
-            stratum_weights = stratum_sizes / n_samples
-
-        weighted_mean = np.sum(means * stratum_weights)
-        weighted_var = np.sum(vars * stratum_weights**2)
+            n_samples_k = len(y_stratum)
+            if stratum_weights is not None:
+                w_k = stratum_weights[i]
+            else:
+                w_k = n_samples_k / n_samples
+            mean_k = np.mean(y_stratum)
+            var_k = np.var(y_stratum, ddof=1) / n_samples_k
+            weighted_mean += w_k * mean_k
+            weighted_var += w_k**2 * var_k
 
         std = np.sqrt(weighted_var)
         ci = CLTConfidenceInterval(

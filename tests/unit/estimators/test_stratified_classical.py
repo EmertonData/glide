@@ -1,10 +1,7 @@
-from unittest.mock import patch
-
 import numpy as np
 import pytest
 from numpy.typing import NDArray
 
-import glide.estimators.stratified_classical as stratified_classical_module
 from glide.estimators import StratifiedClassicalMeanEstimator
 from glide.mean_inference_results import ClassicalMeanInferenceResult
 
@@ -82,23 +79,11 @@ def test_estimate_ignores_nans(estimator, y, groups):
     assert result == result_with_nans
 
 
-def test_estimate_delegates_to_validation(estimator, y, groups):
-    with (
-        patch.object(stratified_classical_module, "_validate_has_no_nan") as mock_validate_has_no_nan,
-        patch.object(stratified_classical_module, "_validate_bounds") as mock_validate_bounds,
-    ):
-        estimator.estimate(y, groups)
-
-        mock_validate_has_no_nan.assert_called_once()
-        np.testing.assert_array_equal(mock_validate_has_no_nan.call_args[0][0], groups)
-        assert mock_validate_has_no_nan.call_args[0][1] == "groups"
-
-        mock_validate_bounds.assert_called_once_with(
-            2.0,
-            "min_non_nans_per_stratum",
-            lower=2,
-            error_message="'y' must have at least 2 non-NaN values per stratum; got 2 in stratum 'A'.",
-        )
+def test_estimate_raises_for_stratum_with_fewer_than_two_non_nan_values(y, groups, estimator):
+    y_augmented = np.hstack([y, np.array([np.nan, 1.0])])
+    groups_augmented = np.hstack([groups, np.array(["C", "C"])])
+    with pytest.raises(ValueError):
+        estimator.estimate(y_augmented, groups_augmented)
 
 
 # --- __str__ / __repr__ ---
