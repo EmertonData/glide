@@ -1,3 +1,5 @@
+from unittest.mock import patch
+
 import numpy as np
 import pytest
 from numpy.typing import NDArray
@@ -27,9 +29,13 @@ def test_preprocess_removes_nan(estimator):
     np.testing.assert_array_equal(result, np.array([2.0, 4.0]))
 
 
-def test_preprocess_raises_when_fewer_than_two_non_nan_values(estimator):
-    with pytest.raises(ValueError):
-        estimator._preprocess(np.array([np.nan, 1.0]))
+def test_preprocess_delegate_to_validation(estimator):
+    y_valid = np.array([1.0])
+    with patch("glide.estimators.classical._validate_min_samples") as mock_validate_min_samples:
+        estimator._preprocess(y_valid)
+    mock_validate_min_samples.assert_called_once()
+    np.testing.assert_array_equal(mock_validate_min_samples.call_args[0][0], y_valid)
+    assert mock_validate_min_samples.call_args[0][1] == "y"
 
 
 # --- estimate ---

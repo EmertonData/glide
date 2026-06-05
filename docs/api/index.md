@@ -31,6 +31,7 @@
 | [`ClassicalMeanEstimator`](estimators.md#glide.estimators.classical.ClassicalMeanEstimator) | Classical sample mean without proxy labels |
 | [`StratifiedClassicalMeanEstimator`](estimators.md#glide.estimators.stratified_classical.StratifiedClassicalMeanEstimator) | Classical mean with population-proportional stratification |
 | [`IPWClassicalMeanEstimator`](estimators.md#glide.estimators.ipw_classical.IPWClassicalMeanEstimator) | Classical mean with inverse probability weighting |
+| [`ClusterClassicalMeanEstimator`](estimators.md#glide.estimators.cluster_classical.ClusterClassicalMeanEstimator) | Classical sample mean on clustered data |
 
 ### Prediction-Powered
 

@@ -1,7 +1,10 @@
+from unittest.mock import patch
+
 import numpy as np
 import pytest
 from numpy.typing import NDArray
 
+import glide.estimators.stratified_classical as stratified_classical_module
 from glide.estimators import StratifiedClassicalMeanEstimator
 from glide.mean_inference_results import ClassicalMeanInferenceResult
 
@@ -30,6 +33,26 @@ def estimator() -> StratifiedClassicalMeanEstimator:
 
 
 # --- estimate ---
+
+
+def test_estimate_delegates_to_validation(estimator, y, groups):
+    with (
+        patch.object(stratified_classical_module, "_validate_has_no_nan") as mock_validate_has_no_nan,
+        patch.object(stratified_classical_module, "_validate_min_samples") as mock_validate_min_samples,
+    ):
+        estimator.estimate(y, groups)
+
+        mock_validate_has_no_nan.assert_called_once()
+        np.testing.assert_array_equal(mock_validate_has_no_nan.call_args[0][0], groups)
+        assert mock_validate_has_no_nan.call_args[0][1] == "groups"
+
+        assert len(mock_validate_min_samples.call_args_list) == 2
+        np.testing.assert_array_equal(mock_validate_min_samples.call_args_list[0][0][0], np.array([1.0, 3.0]))
+        assert mock_validate_min_samples.call_args_list[0][0][1] == "y"
+        assert mock_validate_min_samples.call_args_list[0][0][2] == "A"
+        np.testing.assert_array_equal(mock_validate_min_samples.call_args_list[1][0][0], np.array([5.0, 7.0]))
+        assert mock_validate_min_samples.call_args_list[1][0][1] == "y"
+        assert mock_validate_min_samples.call_args_list[1][0][2] == "B"
 
 
 def test_estimate_is_valid_inference_result(estimator, y, groups):
@@ -77,13 +100,6 @@ def test_estimate_ignores_nans(estimator, y, groups):
     result = estimator.estimate(y, groups, metric_name="performance")
     result_with_nans = estimator.estimate(y_with_nans, groups_with_nans, metric_name="performance")
     assert result == result_with_nans
-
-
-def test_estimate_raises_for_stratum_with_fewer_than_two_non_nan_values(y, groups, estimator):
-    y_augmented = np.hstack([y, np.array([np.nan, 1.0])])
-    groups_augmented = np.hstack([groups, np.array(["C", "C"])])
-    with pytest.raises(ValueError):
-        estimator.estimate(y_augmented, groups_augmented)
 
 
 # --- __str__ / __repr__ ---
