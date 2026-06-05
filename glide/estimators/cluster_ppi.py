@@ -132,16 +132,13 @@ class ClusterPPIMeanEstimator:
               unlabeled clusters and ``power_tuning=True``.
         """
         (
-            labeled_y_true_means,
-            labeled_y_proxy_means,
-            unlabeled_y_proxy_means,
+            labeled_true_sums,
+            labeled_proxy_sums,
+            unlabeled_proxy_sums,
             labeled_sizes,
             unlabeled_sizes,
         ) = _preprocess(y_true, y_proxy, clusters)
 
-        labeled_true_sums = labeled_sizes * labeled_y_true_means
-        labeled_proxy_sums = labeled_sizes * labeled_y_proxy_means
-        unlabeled_proxy_sums = unlabeled_sizes * unlabeled_y_proxy_means
         labeled_total_size = np.sum(labeled_sizes)
         unlabeled_total_size = np.sum(unlabeled_sizes)
 
