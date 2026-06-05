@@ -15,7 +15,7 @@ def _validate_has_no_nan(array: NDArray, name: str) -> None:
         if np.isnan(array).any():
             raise ValueError(f"'{name}' contains NaN values.")
     else:
-        if any(v is None for v in array):
+        if None in array:
             raise ValueError(f"'{name}' contains None values.")
 
 
