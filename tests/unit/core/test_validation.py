@@ -68,6 +68,15 @@ def test_validate_has_no_nan_raises():
         _validate_has_no_nan(np.array([1.0, float("nan")]), "x")
 
 
+def test_validate_has_no_nan_valid_non_numeric():
+    _validate_has_no_nan(np.array(["a", "b"]), "x")
+
+
+def test_validate_has_no_nan_raises_none_in_non_numeric():
+    with pytest.raises(ValueError, match="'x' contains None values"):
+        _validate_has_no_nan(np.array(["a", None], dtype=object), "x")
+
+
 # --- _get_non_zero_mask ---
 
 

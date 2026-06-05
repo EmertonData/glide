@@ -12,6 +12,10 @@
 
 ---
 
+::: glide.estimators.cluster_classical.ClusterClassicalMeanEstimator
+
+---
+
 ::: glide.estimators.ppi.PPIMeanEstimator
 
 ---

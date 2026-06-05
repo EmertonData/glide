@@ -29,9 +29,10 @@ class ClassicalMeanEstimator:
     """
 
     def _preprocess(self, y: NDArray) -> NDArray:
-        y_clean = y[~np.isnan(y)]
-        _validate_min_samples(y_clean, "y")
-        return y_clean
+        not_nan_mask = ~np.isnan(y)
+        y_valid = y[not_nan_mask]
+        _validate_min_samples(y_valid, "y")
+        return y_valid
 
     def estimate(
         self,
@@ -63,10 +64,10 @@ class ClassicalMeanEstimator:
         ValueError
             If ``y`` contains fewer than 2 non-NaN values.
         """
-        y_clean = self._preprocess(y)
-        n_samples = len(y_clean)
-        mean = np.mean(y_clean)
-        std = np.std(y_clean, ddof=1) / np.sqrt(n_samples)
+        y_valid = self._preprocess(y)
+        n_samples = len(y_valid)
+        mean = np.mean(y_valid)
+        std = np.std(y_valid, ddof=1) / np.sqrt(n_samples)
         ci = CLTConfidenceInterval(
             mean=mean,
             std=std,

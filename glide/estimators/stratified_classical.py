@@ -4,7 +4,7 @@ import numpy as np
 from numpy.typing import NDArray
 
 from glide.confidence_intervals import CLTConfidenceInterval
-from glide.core.validation import _validate_min_samples
+from glide.core.validation import _validate_has_no_nan, _validate_min_samples
 from glide.mean_inference_results import ClassicalMeanInferenceResult
 
 
@@ -82,8 +82,10 @@ class StratifiedClassicalMeanEstimator:
         Raises
         ------
         ValueError
-            If any stratum contains fewer than 2 non-NaN values.
+            - If ``groups`` contains NaN values (numeric dtype) or None values (non-numeric dtype).
+            - If any stratum contains fewer than 2 non-NaN values.
         """
+        _validate_has_no_nan(groups, "groups")
         not_nan_mask = ~np.isnan(y)
         n_samples = np.sum(not_nan_mask)
         weighted_mean = 0.0
