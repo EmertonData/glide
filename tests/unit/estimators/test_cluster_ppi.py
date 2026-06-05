@@ -19,7 +19,7 @@ def y_proxy() -> NDArray:
 
 @pytest.fixture
 def clusters() -> NDArray:
-    return np.array(["A", "C", "B", "D"])
+    return np.array(["A", "B", "C", "D"])
 
 
 @pytest.fixture
