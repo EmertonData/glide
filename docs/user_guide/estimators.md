@@ -46,7 +46,7 @@ $$\hat{\theta}_{\lambda} = \frac{1}{n} \sum_{j=1}^{n} Y_j + \lambda \left[\frac{
 This combines two components:
 
 - The **human-label mean** $\frac{1}{n}\sum_{j} Y_j$, which is unbiased but high-variance due to the small labeled set.
-- A **bias correction term** that uses all $N$ proxy labels to reduce variance, scaled by $\lambda$ to control how much weight the proxy receives.
+- A **variance reduction term** that uses all $N$ proxy labels to reduce variance, scaled by $\lambda$ to control how much weight the proxy receives.
 
 At $\lambda = 1$, this recovers the original PPI estimator, which can equivalently be written as:
 
@@ -180,7 +180,7 @@ The asymptotic variance is the sample variance of the corrected labels divided b
 
 $$\hat{\sigma}^2_{\text{SE}}(\lambda) = \frac{\widehat{\text{Var}}\!\left(z(\lambda)\right)}{n}$$
 
-where $\widehat{\text{Var}}$ denotes the sample variance with $\text{ddof} = 1$. By the Central Limit Theorem (for $n$ large enough, typically $n \geq 100$), this yields a confidence interval at level $1 - \alpha$:
+where $\widehat{\text{Var}}$ denotes the sample variance. By the Central Limit Theorem (for $n$ large enough, typically $n \geq 100$), this yields a confidence interval at level $1 - \alpha$:
 
 $$\Pr\!\left(\theta^* \in \left[\hat{\theta}_{\lambda} - z_{1-\alpha/2}\,\hat{\sigma}_{\text{SE}},\; \hat{\theta}_{\lambda} + z_{1-\alpha/2}\,\hat{\sigma}_{\text{SE}}\right]\right) \geq 1 - \alpha$$
 
@@ -210,7 +210,7 @@ When the proxy is informative, $\hat{\lambda}$ is large and the IPW-corrected la
 
 Standard PPI++ assumes that observations are independent draws from the population. In practice, data often exhibits a **cluster structure**: samples are grouped into natural units (for example, dialogue turns from the same conversation, or passages from the same document), and observations within a cluster may be correlated. **Clustered PPI++** handles this case by treating cluster-level sums as the sampling units, yielding valid confidence intervals even when within-cluster dependence is strong.
 
-The data is partitioned into $L$ disjoint clusters $C_1, \dots, C_L$, with $\bigcup_{l=1}^{L} C_l = \{1, \dots, n + N\}$ and $C_i \cap C_j = \emptyset$ for $i \neq j$. Each cluster is **either fully labeled or fully unlabeled**: no cluster contains a mix of labeled and unlabeled observations. Observations from distinct clusters are independent, but no independence is assumed among observations within the same cluster. Let $K_L$ denote the number of labeled clusters and $K_U$ the number of unlabeled clusters.
+The data is partitioned into $L$ disjoint clusters $C_1, \dots, C_L$, with $\bigcup_{l=1}^{L} C_l = \{1, \dots, n + N\}$ and $C_i \cap C_j = \emptyset$ for $i \neq j$. Each cluster is **either fully labeled or fully unlabeled**: no cluster contains a mix of labeled and unlabeled observations. Observations from distinct clusters are independent, but no independence is assumed among observations within the same cluster. Let $K^{\bullet}$ denote the number of labeled clusters and $K^{\circ}$ the number of unlabeled clusters.
 
 In Clustered PPI++, each sample has the same values as in PPI++, plus a cluster identifier:
 
@@ -226,45 +226,54 @@ The cluster identifiers allow partitioning the data into cluster-level sums, whi
 
 The first step is computing **cluster sums**. For each labeled cluster $l$, the true-label sum and proxy sum are:
 
-$$u_l = \sum_{i \in C_l} Y_i, \qquad s_l = \sum_{i \in C_l} \tilde{Y}_i$$
+$$Y^{(l)} = \sum_{i \in C_l} Y_i, \qquad \tilde{Y}^{(l),\bullet} = \sum_{i \in C_l} \tilde{Y}_i$$
 
 For each unlabeled cluster $l$, the proxy sum is:
 
-$$v_l = \sum_{i \in C_l} \tilde{Y}_i$$
+$$\tilde{Y}^{(l),\circ} = \sum_{i \in C_l} \tilde{Y}_i$$
+
+We denote $\tilde{Y}^{(l)}$ the vector containing all $K^{\bullet} + K^{\circ}$ labeled and unlabeled proxy cluster sums.
 
 The Clustered PPI++ mean estimate is then:
 
-$$\hat{\theta} = \frac{\sum_{l=1}^{K_L} u_l}{n} + \lambda \left[\frac{\sum_{l=1}^{K_U} v_l}{N} - \frac{\sum_{l=1}^{K_L} s_l}{n}\right]$$
+$$\hat{\theta} = \frac{\sum_{l=1}^{K^{\bullet}} Y^{(l)}}{n} + \lambda \left[\frac{\sum_{l=1}^{K^{\circ}} \tilde{Y}^{(l),\circ}}{N} - \frac{\sum_{l=1}^{K^{\bullet}} \tilde{Y}^{(l),\bullet}}{n}\right]$$
 
-This has exactly the same structure as the PPI++ estimate: the human-label mean (expressed via cluster sums) corrected by a proxy bias term scaled by $\lambda$.
+This combines two components:
+
+- The **human-label mean** $\frac{\sum_l Y^{(l)}}{n}$, unbiased but high-variance due to the small number of labeled clusters.
+- A **variance reduction term** scaled by $\lambda$, using all proxy cluster sums to reduce variance.
+
+This mean estimate is identical in value to the PPI++ mean estimator.
 
 ### Variance and confidence intervals
 
-Because observations within a cluster are not assumed independent, the variance cannot be computed at the sample level. Instead, the rectified cluster sums $u_l - \lambda s_l$ for labeled clusters and the proxy sums $v_l$ for unlabeled clusters are treated as the independent units, and their empirical variances drive the inference:
+Because observations within a cluster are not assumed independent, the variance cannot be computed at the sample level. Instead, the rectified cluster sums $Y^{(l)} - \lambda \tilde{Y}^{(l),\bullet}$ for labeled clusters and the proxy sums $\tilde{Y}^{(l),\circ}$ for unlabeled clusters are treated as the independent units, and their empirical variances drive the inference:
 
-$$\hat{\sigma}^2(\lambda) = \frac{K_L \cdot \widehat{\text{Var}}(u_l - \lambda s_l)}{n^2} + \frac{\lambda^2 \cdot K_U \cdot \widehat{\text{Var}}(v_l)}{N^2}$$
+$$\hat{\sigma}^2(\lambda) = \frac{K^{\bullet} \cdot \widehat{\text{Var}}(Y^{(l)} - \lambda \tilde{Y}^{(l),\bullet})}{n^2} + \frac{\lambda^2 \cdot K^{\circ} \cdot \widehat{\text{Var}}(\tilde{Y}^{(l),\circ})}{N^2}$$
 
-where $\widehat{\text{Var}}$ denotes the sample variance with $\text{ddof} = 1$, computed across the $K_L$ labeled cluster sums in the first term and the $K_U$ unlabeled cluster sums in the second.
+where $\widehat{\text{Var}}$ denotes the sample variance computed across the $K^{\bullet}$ labeled cluster sums in the first term and the $K^{\circ}$ unlabeled cluster sums in the second.
 
 By the Central Limit Theorem applied to the cluster sums, this yields a confidence interval at level $1 - \alpha$:
 
 $$\Pr\!\left(\theta^* \in \left[\hat{\theta} - z_{1-\alpha/2}\,\hat{\sigma}(\lambda),\; \hat{\theta} + z_{1-\alpha/2}\,\hat{\sigma}(\lambda)\right]\right) \geq 1 - \alpha$$
 
-where $z_{1-\alpha/2}$ is the standard normal quantile (e.g. $z_{0.975} = 1.96$ for a 95% two-sided confidence interval). Validity requires a sufficient number of clusters (typically $K_L, K_U \geq 30$), not a sufficient number of individual observations within clusters.
+where $z_{1-\alpha/2}$ is the standard normal quantile (e.g. $z_{0.975} = 1.96$ for a 95% two-sided confidence interval).
 
 ### Power-tuning
 
-As in PPI++, the optimal $\lambda$ minimizes $\hat{\sigma}^2(\lambda)$. Solving analytically, with the proxy cluster sums pooled across labeled and unlabeled clusters for the variance estimate, gives:
+As in PPI++, the optimal $\lambda$ minimizes $\hat{\sigma}^2(\lambda)$. Solving analytically gives:
 
-$$\hat{\lambda} = \frac{\widehat{\text{Cov}}_{K_L}(u_l,\, s_l)}{\widehat{\text{Var}}_{K_L + K_U}(s_l,\, v_l) \cdot \left(1 + \dfrac{K_U}{K_L} \cdot \dfrac{n^2}{N^2}\right)}$$
+$$\hat{\lambda} = \frac{\widehat{\text{Cov}}_{K^{\bullet}}(Y^{(l)},\, \tilde{Y}^{(l),\bullet})}{\left(1 + \dfrac{K^{\circ}}{K^{\bullet}} \cdot \dfrac{n^2}{N^2}\right) \widehat{\text{Var}}{K^{\bullet} + K^{\circ}}(\tilde{Y}^{(l)})}$$
 
 where:
 
-- $\widehat{\text{Cov}}_{K_L}(u_l, s_l)$ is the sample covariance between true and proxy cluster sums, computed on the $K_L$ labeled clusters,
-- $\widehat{\text{Var}}_{K_L + K_U}(s_l, v_l)$ is the sample variance of all $K_L + K_U$ proxy cluster sums pooled together,
-- the factor $1 + \frac{K_U}{K_L} \cdot \frac{n^2}{N^2}$ corrects for the different numbers of clusters and total observation counts in the labeled and unlabeled partitions.
+- $\widehat{\text{Cov}}_{K^{\bullet}}(Y^{(l)}, \tilde{Y}^{(l),\bullet})$ is the sample covariance between true and proxy cluster sums, computed on the $K^{\bullet}$ labeled clusters,
+- $\widehat{\text{Var}}_{K^{\bullet} + K^{\circ}}(\tilde{Y}^{(l)})$ is the sample variance over all $K^{\bullet} + K^{\circ}$ proxy cluster sums,
+- the factor $1 + \frac{K^{\circ}}{K^{\bullet}} \cdot \frac{n^2}{N^2}$ corrects for the different numbers of clusters and total observation counts in the labeled and unlabeled partitions.
 
-When the proxy is informative, $\hat{\lambda}$ is close to 1 and the bias correction narrows the confidence interval. When the proxy is uninformative, $\hat{\lambda}$ shrinks toward 0, falling back to the classical cluster mean. It is standard to use the optimal $\hat{\lambda}$ in practice.
+When the proxy is informative, $\hat{\lambda}$ is close to 1 and the variance reduction narrows the confidence interval. When the proxy is uninformative, $\hat{\lambda}$ shrinks toward 0, falling back to the classical cluster mean. It is standard to use the optimal $\hat{\lambda}$ in practice.
+
+When every cluster is a singleton, $K_L = n$ and $K_U = N$, and the variance and power-tuning formulas reduce exactly to their PPI++ counterparts, recovering the full PPI++ procedure.
 
 ---
 
