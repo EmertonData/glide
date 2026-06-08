@@ -159,3 +159,14 @@ def _validate_min_samples(values: NDArray, name: str, stratum_id: Optional[Hasha
                 f"got {len(values)} in stratum '{stratum_id}'."
             )
         raise ValueError(f"'{name}' must have at least 2 non-NaN values; got {len(values)}.")
+
+
+def _validate_unique_clusters(unique_labeled_clusters: NDArray, unique_unlabeled_clusters: NDArray) -> None:
+    intersection = np.intersect1d(unique_labeled_clusters, unique_unlabeled_clusters, assume_unique=True)
+    bad_cluster = intersection[0] if len(intersection) else None
+    _validate_bounds(
+        len(intersection),
+        "clusters_intersection",
+        upper=0,
+        error_message=f"Cluster '{bad_cluster}' contains both labeled and unlabeled observations.",
+    )

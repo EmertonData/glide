@@ -117,6 +117,7 @@ class StratifiedPTDMeanEstimator:
         Raises
         ------
         ValueError
+            - If ``groups`` contains NaN values (numeric dtype) or None values (non-numeric dtype).
             - If ``y_true``, ``y_proxy``, and ``groups`` do not all have the same length.
             - If any proxy value is NaN.
             - If all proxy values within a stratum are identical (zero variance), which would

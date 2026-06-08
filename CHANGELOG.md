@@ -9,6 +9,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 ## [Next release]
 
 ### ✨ Added
+- `ClusterPPIMeanEstimator` for prediction-powered inference on clustered data
 - `ClusterClassicalMeanEstimator` for cluster-sampling-aware classical mean estimation with CLT-based confidence intervals.
 - `UniformClusterSampler` for cluster-level annotation selection using uniform sampling
 - `generate_clustered_binary_dataset` simulator for generating binary datasets with randomly sized clusters.

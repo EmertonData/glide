@@ -28,6 +28,10 @@
 
 ---
 
+::: glide.estimators.cluster_ppi.ClusterPPIMeanEstimator
+
+---
+
 ::: glide.estimators.ptd.PTDMeanEstimator
 
 ---
