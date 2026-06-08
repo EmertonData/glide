@@ -74,7 +74,7 @@ If you use GLIDE in your work, please cite us using the "Cite this repository" b
 
 ## 📚 Implemented Algorithms <a name="implemented-algorithms"></a>
 
-| Name | Class | Reference Paper | Original Implementation |
+| Name | Class | Reference Paper(s) | Original Implementation |
 |------|-------|-----------------|------------------------|
 | Prediction-Powered Inference | `estimators.PPIMeanEstimator` (with `power_tuning=False`) | [[1]](#ref-1) | [Link](https://github.com/aangelopoulos/ppi_py/) |
 | PPI++ | `estimators.PPIMeanEstimator` | [[2]](#ref-2) | [Link](https://github.com/aangelopoulos/ppi_py/tree/ppi++) |
