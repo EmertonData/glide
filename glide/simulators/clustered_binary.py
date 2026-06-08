@@ -125,9 +125,4 @@ def generate_clustered_binary_dataset(
     clusters = np.repeat(np.arange(n_clusters, dtype=np.int64), interval_lengths)
     rng.shuffle(clusters)
 
-    for unique_cluster in np.unique(clusters):
-        mask = clusters == unique_cluster
-        value = rng.choice(y_true[mask])
-        y_true[mask] = value
-
     return y_true, y_proxy, clusters

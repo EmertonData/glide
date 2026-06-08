@@ -9,7 +9,7 @@ from glide.core.validation import (
     _validate_bounds,
     _validate_equal_lengths,
     _validate_has_no_nan,
-    _validate_labeled_unlabeled_clusters,
+    _validate_unique_clusters,
 )
 from glide.estimators.cluster_classical import ClusterClassicalMeanEstimator
 from glide.estimators.cluster_core import (
@@ -70,7 +70,7 @@ class ClusterPPIMeanEstimator:
         unique_labeled_clusters, labeled_cluster_indices = np.unique(labeled_clusters, return_inverse=True)
         unique_unlabeled_clusters, unlabeled_cluster_indices = np.unique(unlabeled_clusters, return_inverse=True)
 
-        _validate_labeled_unlabeled_clusters(unique_labeled_clusters, unique_unlabeled_clusters)
+        _validate_unique_clusters(unique_labeled_clusters, unique_unlabeled_clusters)
 
         labeled_true_sums = np.bincount(labeled_cluster_indices, weights=y_true[labeled_mask])
         labeled_proxy_sums = np.bincount(labeled_cluster_indices, weights=y_proxy[labeled_mask])
