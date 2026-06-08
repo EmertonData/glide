@@ -37,9 +37,7 @@ def test_preprocess_delegates_to_validation(estimator, y_true, y_proxy, clusters
     with (
         patch.object(cluster_ppi_module, "_validate_equal_lengths") as mock_validate_equal_lengths,
         patch.object(cluster_ppi_module, "_validate_has_no_nan") as mock_validate_has_no_nan,
-        patch.object(
-            cluster_ppi_module, "_validate_labeled_unlabeled_clusters"
-        ) as mock_validate_labeled_unlabeled_clusters,
+        patch.object(cluster_ppi_module, "_validate_unique_clusters") as mock_validate_unique_clusters,
         patch.object(cluster_ppi_module, "_validate_bounds") as mock_validate_bounds,
     ):
         estimator._preprocess(y_true, y_proxy, clusters)
@@ -56,9 +54,9 @@ def test_preprocess_delegates_to_validation(estimator, y_true, y_proxy, clusters
         np.testing.assert_array_equal(mock_validate_has_no_nan.call_args_list[1][0][0], clusters)
         assert mock_validate_has_no_nan.call_args_list[1][0][1] == "clusters"
 
-        mock_validate_labeled_unlabeled_clusters.assert_called_once()
-        np.testing.assert_array_equal(mock_validate_labeled_unlabeled_clusters.call_args[0][0], np.array(["A", "C"]))
-        np.testing.assert_array_equal(mock_validate_labeled_unlabeled_clusters.call_args[0][1], np.array(["B", "D"]))
+        mock_validate_unique_clusters.assert_called_once()
+        np.testing.assert_array_equal(mock_validate_unique_clusters.call_args[0][0], np.array(["A", "C"]))
+        np.testing.assert_array_equal(mock_validate_unique_clusters.call_args[0][1], np.array(["B", "D"]))
 
         mock_validate_bounds.assert_has_calls(
             [

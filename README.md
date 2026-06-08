@@ -25,7 +25,7 @@
 
 GLIDE is a Python library for **rigorous evaluation of GenAI systems** using hybrid human/proxy annotations.
 
-GLIDE implements methods from the field of **prediction-powered inference** — the science of system evaluation that combines a small set of labeled data with a large set of proxy-labeled data to produce valid, debiased estimates. See the [implemented papers](#implemented-papers) below.
+GLIDE implements methods from the field of **prediction-powered inference** — the science of system evaluation that combines a small set of labeled data with a large set of proxy-labeled data to produce valid, debiased estimates. See the [implemented algorithms](#implemented-algorithms) below.
 
 <p align="center">
   <img src="https://raw.githubusercontent.com/EmertonData/glide/refs/heads/main/docs/assets/schema-PPI-readme.png" alt="Prediction-powered inference schema" width="60%">
@@ -72,17 +72,34 @@ This project is licensed under the [Apache 2.0 License](https://raw.githubuserco
 
 If you use GLIDE in your work, please cite us using the "Cite this repository" button on the GitHub repository page.
 
-## 📰 Implemented Papers <a name="implemented-papers"></a>
+## 📚 Implemented Algorithms <a name="implemented-algorithms"></a>
 
-| Year | Title | Venue | Original Implementation | GLIDE class |
-|------|-------|-------|------|----------------|
-| 2023 | [Prediction-powered inference](https://www.science.org/doi/10.1126/science.adi6000) |Science|[Link](https://github.com/aangelopoulos/ppi_py/)| estimators.PPIMeanEstimator (with `power_tuning=False`) |
-| 2023 | [PPI++: Efficient Prediction-Powered Inference](https://arxiv.org/abs/2311.01453) |Preprint|[Link](https://github.com/aangelopoulos/ppi_py/tree/ppi++)| estimators.PPIMeanEstimator |
-| 2024 | [Stratified Prediction-Powered Inference for Hybrid Language Model Evaluation](https://proceedings.neurips.cc/paper_files/paper/2024/hash/c9fcd02e6445c7dfbad6986abee53d0d-Abstract-Conference.html) |NeurIPS'24|NA| estimators.StratifiedPPIMeanEstimator |
-| 2024 | [A framework for efficient model evaluation through stratification, sampling, and estimation](https://link.springer.com/chapter/10.1007/978-3-031-73223-2_9) |ECCV'24|[Link](https://github.com/amazon-science/ssepy)| samplers.StratifiedSampler, estimators.StratifiedPPIMeanEstimator |
-| 2024 | [Active Statistical Inference](https://dl.acm.org/doi/10.5555/3692070.3694680) |ICML'24|[Link](https://github.com/tijana-zrnic/active-inference)| samplers.ActiveSampler, estimators.ASIMeanEstimator |
-| 2025 | [Can Unconfident LLM Annotations Be Used for Confident Conclusions?](https://aclanthology.org/2025.naacl-long.179/) |NAACL'25|[Link](https://github.com/kristinagligoric/confidence-driven-inference)| samplers.ActiveSampler, estimators.ASIMeanEstimator |
-| 2025 | [Prediction-Powered Inference with Imputed Covariates and Nonuniform Sampling](https://arxiv.org/abs/2501.18577) |Preprint|[Link](https://github.com/DanKluger/PTDBoot)| estimators.PTDMeanEstimator, estimators.StratifiedPTDMeanEstimator, estimators.IPWPTDMeanEstimator |
+| Name | Class | Reference Paper | Original Implementation |
+|------|-------|-----------------|------------------------|
+| Prediction-Powered Inference | `estimators.PPIMeanEstimator` (with `power_tuning=False`) | [[1]](#ref-1) | [Link](https://github.com/aangelopoulos/ppi_py/) |
+| PPI++ | `estimators.PPIMeanEstimator` | [[2]](#ref-2) | [Link](https://github.com/aangelopoulos/ppi_py/tree/ppi++) |
+| Stratified Prediction-Powered Inference | `estimators.StratifiedPPIMeanEstimator` | [[3]](#ref-3) | — |
+| Stratified Sampling | `samplers.StratifiedSampler` | [[4]](#ref-4) | [Link](https://github.com/amazon-science/ssepy) |
+| Active Statistical Inference | `estimators.ASIMeanEstimator` | [[5]](#ref-5), [[6]](#ref-6) | [Link](https://github.com/tijana-zrnic/active-inference) |
+| Active Sampling | `samplers.ActiveSampler` | [[5]](#ref-5), [[6]](#ref-6) | [Link](https://github.com/kristinagligoric/confidence-driven-inference) |
+| Predict-Then-Debias | `estimators.PTDMeanEstimator`, `estimators.StratifiedPTDMeanEstimator`, `estimators.IPWPTDMeanEstimator` | [[7]](#ref-7) | [Link](https://github.com/DanKluger/PTDBoot) |
+| Cluster Prediction-Powered Inference | `estimators.ClusterPPIMeanEstimator` | — | [Link](https://github.com/davidbroska/ppi_py) |
+
+### References
+
+<a id="ref-1"></a>[1] <a href="https://www.science.org/doi/10.1126/science.adi6000">Angelopoulos, Anastasios N., Stephen Bates, Clara Fannjiang, Michael I. Jordan, and Tijana Zrnic. "Prediction-powered inference." Science 382, no. 6671 (2023): 669-674.</a>
+
+<a id="ref-2"></a>[2] <a href="https://arxiv.org/abs/2311.01453">Angelopoulos, Anastasios N., John C. Duchi, and Tijana Zrnic. "PPI++: Efficient prediction-powered inference." arXiv preprint arXiv:2311.01453 (2023).</a>
+
+<a id="ref-3"></a>[3] <a href="https://proceedings.neurips.cc/paper_files/paper/2024/hash/c9fcd02e6445c7dfbad6986abee53d0d-Abstract-Conference.html">Fisch, Adam, Joshua Maynez, R. Alex Hofer, Bhuwan Dhingra, Amir Globerson, and William W. Cohen. "Stratified prediction-powered inference for effective hybrid evaluation of language models." Advances in Neural Information Processing Systems 37 (2024): 111489-111514.</a>
+
+<a id="ref-4"></a>[4] <a href="https://link.springer.com/chapter/10.1007/978-3-031-73223-2_9">Fogliato, Riccardo, Pratik Patil, Mathew Monfort, and Pietro Perona. "A framework for efficient model evaluation through stratification, sampling, and estimation." In European Conference on Computer Vision, pp. 140-158. Cham: Springer Nature Switzerland, 2024.</a>
+
+<a id="ref-5"></a>[5] <a href="https://dl.acm.org/doi/10.5555/3692070.3694680">Zrnic, Tijana, and Emmanuel J. Candès. "Active statistical inference." In Proceedings of the 41st International Conference on Machine Learning, pp. 62993-63010. 2024.</a>
+
+<a id="ref-6"></a>[6] <a href="https://aclanthology.org/2025.naacl-long.179/">Gligorić, Kristina, Tijana Zrnic, Cinoo Lee, Emmanuel Candes, and Dan Jurafsky. "Can unconfident LLM annotations be used for confident conclusions?" In Proceedings of the 2025 Conference of the Nations of the Americas Chapter of the Association for Computational Linguistics: Human Language Technologies (Volume 1: Long Papers), pp. 3514-3533. 2025.</a>
+
+<a id="ref-7"></a>[7] <a href="https://arxiv.org/abs/2501.18577">Kluger, Dan M., Kerri Lu, Tijana Zrnic, Sherrie Wang, and Stephen Bates. "Prediction-powered inference with imputed covariates and nonuniform sampling." arXiv preprint arXiv:2501.18577 (2025).</a>
 
 ## 📬 Stay Updated
 

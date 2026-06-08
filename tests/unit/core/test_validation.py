@@ -13,7 +13,6 @@ from glide.core.validation import (
     _validate_equal_lengths,
     _validate_has_no_nan,
     _validate_label_prob_consistency,
-    _validate_labeled_unlabeled_clusters,
     _validate_literal,
     _validate_min_samples,
     _validate_non_constant,
@@ -22,6 +21,7 @@ from glide.core.validation import (
     _validate_sample_sizes,
     _validate_strictly_positive,
     _validate_uncertainties,
+    _validate_unique_clusters,
     _validate_y_proxy,
     _validate_y_true,
     _validate_y_true_burn_in,
@@ -374,13 +374,13 @@ def test_validate_min_samples_too_few_with_stratum():
         _validate_min_samples(np.array([1.0]), "y", stratum_id="A")
 
 
-# --- _validate_labeled_unlabeled_clusters ---
+# --- _validate_unique_clusters ---
 
 
-def test_validate_labeled_unlabeled_clusters_valid():
-    _validate_labeled_unlabeled_clusters(np.array(["A", "B"]), np.array(["C", "D"]))
+def test_validate_unique_clusters_valid():
+    _validate_unique_clusters(np.array(["A", "B"]), np.array(["C", "D"]))
 
 
-def test_validate_labeled_unlabeled_clusters_raises_on_intersection():
+def test_validate_unique_clusters_raises_on_intersection():
     with pytest.raises(ValueError, match="Cluster 'A' contains both labeled and unlabeled observations."):
-        _validate_labeled_unlabeled_clusters(np.array(["A", "B"]), np.array(["A", "C"]))
+        _validate_unique_clusters(np.array(["A", "B"]), np.array(["A", "C"]))
