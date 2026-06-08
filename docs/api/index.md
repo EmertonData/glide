@@ -40,6 +40,7 @@
 | [`PPIMeanEstimator`](estimators.md#glide.estimators.ppi.PPIMeanEstimator) | Combines labeled data with proxy predictions |
 | [`StratifiedPPIMeanEstimator`](estimators.md#glide.estimators.stratified_ppi.StratifiedPPIMeanEstimator) | PPI with per-stratum optimal weighting |
 | [`ASIMeanEstimator`](estimators.md#glide.estimators.asi.ASIMeanEstimator) | Active statistical inference with non-uniform sampling |
+| [`ClusterPPIMeanEstimator`](estimators.md#glide.estimators.cluster_ppi.ClusterPPIMeanEstimator) | PPI for clustered data |
 | [`PTDMeanEstimator`](estimators.md#glide.estimators.ptd.PTDMeanEstimator) | Predict-then-debias with bootstrap confidence intervals |
 | [`StratifiedPTDMeanEstimator`](estimators.md#glide.estimators.stratified_ptd.StratifiedPTDMeanEstimator) | PTD with per-stratum optimal weighting |
 | [`IPWPTDMeanEstimator`](estimators.md#glide.estimators.ipw_ptd.IPWPTDMeanEstimator) | PTD with inverse probability weighting |
