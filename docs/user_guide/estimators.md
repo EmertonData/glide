@@ -206,6 +206,68 @@ When the proxy is informative, $\hat{\lambda}$ is large and the IPW-corrected la
 
 ---
 
+## Clustered Prediction-Powered Inference
+
+Standard PPI++ assumes that observations are independent draws from the population. In practice, data often exhibits a **cluster structure**: samples are grouped into natural units (for example, dialogue turns from the same conversation, or passages from the same document), and observations within a cluster may be correlated. **Clustered PPI++** handles this case by treating cluster-level sums as the sampling units, yielding valid confidence intervals even when within-cluster dependence is strong.
+
+The data is partitioned into $L$ disjoint clusters $C_1, \dots, C_L$, with $\bigcup_{l=1}^{L} C_l = \{1, \dots, n + N\}$ and $C_i \cap C_j = \emptyset$ for $i \neq j$. Each cluster is **either fully labeled or fully unlabeled**: no cluster contains a mix of labeled and unlabeled observations. Observations from distinct clusters are independent, but no independence is assumed among observations within the same cluster. Let $K_L$ denote the number of labeled clusters and $K_U$ the number of unlabeled clusters.
+
+In Clustered PPI++, each sample has the same values as in PPI++, plus a cluster identifier:
+
+| Value | Present for | Description |
+|---|---|---|
+| $\tilde{Y}_i$ | All $n+N$ samples | Proxy label |
+| $Y_j$ | Labeled samples only ($n \ll N$) | Ground-truth label |
+| $c_i$ | All $n+N$ samples | Cluster identifier |
+
+The cluster identifiers allow partitioning the data into cluster-level sums, which replace individual observations as the sampling units used for inference.
+
+### Mean estimation
+
+The first step is computing **cluster sums**. For each labeled cluster $l$, the true-label sum and proxy sum are:
+
+$$u_l = \sum_{i \in C_l} Y_i, \qquad s_l = \sum_{i \in C_l} \tilde{Y}_i$$
+
+For each unlabeled cluster $l$, the proxy sum is:
+
+$$v_l = \sum_{i \in C_l} \tilde{Y}_i$$
+
+The Clustered PPI++ mean estimate is then:
+
+$$\hat{\theta} = \frac{\sum_{l=1}^{K_L} u_l}{n} + \lambda \left[\frac{\sum_{l=1}^{K_U} v_l}{N} - \frac{\sum_{l=1}^{K_L} s_l}{n}\right]$$
+
+This has exactly the same structure as the PPI++ estimate: the human-label mean (expressed via cluster sums) corrected by a proxy bias term scaled by $\lambda$.
+
+### Variance and confidence intervals
+
+Because observations within a cluster are not assumed independent, the variance cannot be computed at the sample level. Instead, the rectified cluster sums $u_l - \lambda s_l$ for labeled clusters and the proxy sums $v_l$ for unlabeled clusters are treated as the independent units, and their empirical variances drive the inference:
+
+$$\hat{\sigma}^2(\lambda) = \frac{K_L \cdot \widehat{\text{Var}}(u_l - \lambda s_l)}{n^2} + \frac{\lambda^2 \cdot K_U \cdot \widehat{\text{Var}}(v_l)}{N^2}$$
+
+where $\widehat{\text{Var}}$ denotes the sample variance with $\text{ddof} = 1$, computed across the $K_L$ labeled cluster sums in the first term and the $K_U$ unlabeled cluster sums in the second.
+
+By the Central Limit Theorem applied to the cluster sums, this yields a confidence interval at level $1 - \alpha$:
+
+$$\Pr\!\left(\theta^* \in \left[\hat{\theta} - z_{1-\alpha/2}\,\hat{\sigma}(\lambda),\; \hat{\theta} + z_{1-\alpha/2}\,\hat{\sigma}(\lambda)\right]\right) \geq 1 - \alpha$$
+
+where $z_{1-\alpha/2}$ is the standard normal quantile (e.g. $z_{0.975} = 1.96$ for a 95% two-sided confidence interval). Validity requires a sufficient number of clusters (typically $K_L, K_U \geq 30$), not a sufficient number of individual observations within clusters.
+
+### Power-tuning
+
+As in PPI++, the optimal $\lambda$ minimizes $\hat{\sigma}^2(\lambda)$. Solving analytically, with the proxy cluster sums pooled across labeled and unlabeled clusters for the variance estimate, gives:
+
+$$\hat{\lambda} = \frac{\widehat{\text{Cov}}_{K_L}(u_l,\, s_l)}{\widehat{\text{Var}}_{K_L + K_U}(s_l,\, v_l) \cdot \left(1 + \dfrac{K_U}{K_L} \cdot \dfrac{n^2}{N^2}\right)}$$
+
+where:
+
+- $\widehat{\text{Cov}}_{K_L}(u_l, s_l)$ is the sample covariance between true and proxy cluster sums, computed on the $K_L$ labeled clusters,
+- $\widehat{\text{Var}}_{K_L + K_U}(s_l, v_l)$ is the sample variance of all $K_L + K_U$ proxy cluster sums pooled together,
+- the factor $1 + \frac{K_U}{K_L} \cdot \frac{n^2}{N^2}$ corrects for the different numbers of clusters and total observation counts in the labeled and unlabeled partitions.
+
+When the proxy is informative, $\hat{\lambda}$ is close to 1 and the bias correction narrows the confidence interval. When the proxy is uninformative, $\hat{\lambda}$ shrinks toward 0, falling back to the classical cluster mean. It is standard to use the optimal $\hat{\lambda}$ in practice.
+
+---
+
 ## Predict-Then-Debias (PTD)
 
 **Predict-Then-Debias (PTD)** [[7](#ref-7)] constructs a confidence interval from the **empirical distribution of bootstrap estimates** rather than a normal approximation, making it reliable when $n$ is small or residuals are non-Gaussian. GLIDE implements Algorithm 3 from [[7](#ref-7)], which works on a uniformly drawn labeled sample and includes a speedup that avoids resampling the unlabeled data during the bootstrap.
