@@ -1,3 +1,5 @@
+from unittest.mock import patch
+
 import numpy as np
 import pytest
 from numpy.typing import NDArray
@@ -25,6 +27,17 @@ def y_proxy_unlabeled() -> NDArray:
 
 
 # --- _compute_tuning_parameter ---
+
+
+def test_compute_tuning_parameter_delegates_to_validation(y_true, y_proxy_labeled, y_proxy_unlabeled):
+    with patch("glide.estimators.ppi_core._validate_non_constant") as mock_validate_non_constant:
+        _compute_tuning_parameter(y_true, y_proxy_labeled, y_proxy_unlabeled, power_tuning=True)
+    mock_validate_non_constant.assert_called_once()
+    expected_y_proxy_all = np.hstack([y_proxy_labeled, y_proxy_unlabeled])
+    np.testing.assert_array_equal(mock_validate_non_constant.call_args[0][0], expected_y_proxy_all)
+    assert mock_validate_non_constant.call_args[0][1] == (
+        "Proxy labels have zero variance; cannot estimate the tuning parameter."
+    )
 
 
 def test_compute_tuning_parameter_returns_one_when_power_tuning_false(y_true, y_proxy_labeled, y_proxy_unlabeled):

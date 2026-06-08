@@ -23,18 +23,6 @@ def groups():
 
 
 # --- _preprocess ---
-
-
-def test_preprocess_valid_output(y_true, y_proxy, groups):
-    strata = _preprocess(y_true, y_proxy, groups)
-
-    assert len(strata) == 2
-    for y_true_filtered, y_proxy_labeled, y_proxy_unlabeled in strata:
-        np.testing.assert_array_equal(y_true_filtered, np.array([5.0, 6.0]))
-        np.testing.assert_array_equal(y_proxy_labeled, np.array([4.9, 6.1]))
-        np.testing.assert_array_equal(y_proxy_unlabeled, np.array([5.2, 6.1]))
-
-
 def test_preprocess_delegates_to_validation(y_true, y_proxy, groups):
     with (
         patch.object(stratified_core_module, "_validate_has_no_nan") as mock_validate_has_no_nan,
@@ -68,3 +56,13 @@ def test_preprocess_delegates_to_validation(y_true, y_proxy, groups):
         labeled_mask_b = ~np.isnan(y_true[groups == "B"])
         np.testing.assert_array_equal(mock_validate_sample_sizes.call_args_list[1][0][0], labeled_mask_b)
         assert mock_validate_sample_sizes.call_args_list[1][0][1] == "B"
+
+
+def test_preprocess_valid_output(y_true, y_proxy, groups):
+    strata = _preprocess(y_true, y_proxy, groups)
+
+    assert len(strata) == 2
+    for y_true_filtered, y_proxy_labeled, y_proxy_unlabeled in strata:
+        np.testing.assert_array_equal(y_true_filtered, np.array([5.0, 6.0]))
+        np.testing.assert_array_equal(y_proxy_labeled, np.array([4.9, 6.1]))
+        np.testing.assert_array_equal(y_proxy_unlabeled, np.array([5.2, 6.1]))

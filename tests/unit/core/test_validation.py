@@ -13,6 +13,7 @@ from glide.core.validation import (
     _validate_equal_lengths,
     _validate_has_no_nan,
     _validate_label_prob_consistency,
+    _validate_labeled_unlabeled_clusters,
     _validate_literal,
     _validate_min_samples,
     _validate_non_constant,
@@ -371,3 +372,15 @@ def test_validate_min_samples_too_few():
 def test_validate_min_samples_too_few_with_stratum():
     with pytest.raises(ValueError, match="per stratum; got 1 in stratum 'A'"):
         _validate_min_samples(np.array([1.0]), "y", stratum_id="A")
+
+
+# --- _validate_labeled_unlabeled_clusters ---
+
+
+def test_validate_labeled_unlabeled_clusters_valid():
+    _validate_labeled_unlabeled_clusters(np.array(["A", "B"]), np.array(["C", "D"]))
+
+
+def test_validate_labeled_unlabeled_clusters_raises_on_intersection():
+    with pytest.raises(ValueError, match="Cluster 'A' contains both labeled and unlabeled observations."):
+        _validate_labeled_unlabeled_clusters(np.array(["A", "B"]), np.array(["A", "C"]))

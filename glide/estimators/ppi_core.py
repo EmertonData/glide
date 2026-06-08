@@ -1,6 +1,8 @@
 import numpy as np
 from numpy.typing import NDArray
 
+from glide.core.validation import _validate_non_constant
+
 
 def _compute_tuning_parameter(
     y_true: NDArray,
@@ -13,9 +15,14 @@ def _compute_tuning_parameter(
     n_labeled = len(y_true)
     n_unlabeled = len(y_proxy_unlabeled)
     y_proxy_all = np.hstack([y_proxy_labeled, y_proxy_unlabeled])
+    _validate_non_constant(
+        y_proxy_all,
+        "Proxy labels have zero variance; cannot estimate the tuning parameter.",
+    )
     cov = np.cov(y_true, y_proxy_labeled, ddof=1)[0, 1]
     var = np.var(y_proxy_all, ddof=1)
-    lambda_ = cov / ((1 + n_labeled / n_unlabeled) * var)
+    factor = 1 + n_labeled / n_unlabeled
+    lambda_ = cov / (factor * var)
     return lambda_
 
 

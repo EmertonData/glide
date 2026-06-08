@@ -83,7 +83,6 @@ If you use GLIDE in your work, please cite us using the "Cite this repository" b
 | 2024 | [Active Statistical Inference](https://dl.acm.org/doi/10.5555/3692070.3694680) |ICML'24|[Link](https://github.com/tijana-zrnic/active-inference)| samplers.ActiveSampler, estimators.ASIMeanEstimator |
 | 2025 | [Can Unconfident LLM Annotations Be Used for Confident Conclusions?](https://aclanthology.org/2025.naacl-long.179/) |NAACL'25|[Link](https://github.com/kristinagligoric/confidence-driven-inference)| samplers.ActiveSampler, estimators.ASIMeanEstimator |
 | 2025 | [Prediction-Powered Inference with Imputed Covariates and Nonuniform Sampling](https://arxiv.org/abs/2501.18577) |Preprint|[Link](https://github.com/DanKluger/PTDBoot)| estimators.PTDMeanEstimator, estimators.StratifiedPTDMeanEstimator, estimators.IPWPTDMeanEstimator |
-| 2025 | [Cluster-Robust Prediction-Powered Inference](https://github.com/davidbroska/ppi_py/blob/main/ClusterPPI/mean.py) |Preprint|[Link](https://github.com/davidbroska/ppi_py)| estimators.ClusterPPIMeanEstimator |
 
 ## 📬 Stay Updated
 

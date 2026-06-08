@@ -32,15 +32,6 @@ def estimator() -> PPIMeanEstimator:
 # --- _preprocess ---
 
 
-def test_preprocess_valid_output(estimator, y_arrays):
-    y_true_all, y_proxy_all = y_arrays
-    y_true, y_proxy_labeled, y_proxy_unlabeled = estimator._preprocess(y_true_all, y_proxy_all)
-    assert len(y_true) == 2
-    assert len(y_proxy_labeled) == 2
-    assert len(y_proxy_unlabeled) == 2
-    assert not np.any(np.isnan(y_true))
-
-
 def test_preprocess_delegates_to_validation(estimator):
     y_true = np.array([1.0, 2.0, np.nan, np.nan])
     y_proxy = np.array([1.0, 2.0, 3.0, 4.0])
@@ -59,6 +50,15 @@ def test_preprocess_delegates_to_validation(estimator):
         mock_validate_sample_sizes.assert_called_once()
         labeled_mask_arg = mock_validate_sample_sizes.call_args[0][0]
         np.testing.assert_array_equal(labeled_mask_arg, np.array([True, True, False, False]))
+
+
+def test_preprocess_valid_output(estimator, y_arrays):
+    y_true_all, y_proxy_all = y_arrays
+    y_true, y_proxy_labeled, y_proxy_unlabeled = estimator._preprocess(y_true_all, y_proxy_all)
+    assert len(y_true) == 2
+    assert len(y_proxy_labeled) == 2
+    assert len(y_proxy_unlabeled) == 2
+    assert not np.any(np.isnan(y_true))
 
 
 # --- estimate ---
