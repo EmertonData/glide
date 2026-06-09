@@ -12,10 +12,9 @@ class ClusterClassicalMeanEstimator:
     """Cluster classical estimator for population mean.
 
     Extends mean estimation as in ``ClassicalMeanEstimator`` to datasets where
-    observations are grouped into clusters. Each cluster's size-weighted
-    contribution is treated as the sampling unit, which accounts for
-    within-cluster correlation and produces valid confidence intervals under
-    cluster sampling designs.
+    observations are grouped into clusters. Each cluster's mean is treated as
+    the sampling unit, which accounts for within-cluster correlation and
+    produces valid confidence intervals under cluster sampling designs.
 
     Examples
     --------
@@ -63,16 +62,15 @@ class ClusterClassicalMeanEstimator:
     ) -> ClassicalMeanInferenceResult:
         """Estimate the population mean using the cluster classical estimator.
 
-        Computes within-cluster sums and uses them as sampling units to apply
+        Computes within-cluster means and uses them as sampling units to apply
         the CLT:
 
-            theta = (1 / N) * sum_l u_l
-            sigma2 = L * Var(u_l, ddof=1) / N^2
+            theta = (1 / L) * sum_l m_l
+            sigma2 = Var(m_l, ddof=1) / L
 
-        where ``u_l = sum_{i in l} y_i`` are the cluster sums, ``L`` is the
-        number of clusters, and ``N = sum_l n_l`` is the total number of
-        observations. NaN values in ``y`` are dropped before making the
-        computations. Clusters that contain only NaN are not used.
+        where ``m_l = (1/n_l) * sum_{i in l} y_i`` are the cluster means and
+        ``L`` is the number of clusters. NaN values in ``y`` are dropped before
+        making the computations. Clusters that contain only NaN are not used.
 
         Parameters
         ----------
@@ -105,9 +103,11 @@ class ClusterClassicalMeanEstimator:
         total_size = len(y_valid)
 
         cluster_sums = np.bincount(cluster_indices, weights=y_valid)
+        cluster_sizes = np.bincount(cluster_indices)
+        cluster_means = cluster_sums / cluster_sizes
 
-        mean = np.sum(cluster_sums) / total_size
-        var = n_valid_clusters * np.var(cluster_sums, ddof=1) / total_size**2
+        mean = float(np.mean(cluster_means))
+        var = np.var(cluster_means, ddof=1) / n_valid_clusters
         std = np.sqrt(var)
 
         ci = CLTConfidenceInterval(
