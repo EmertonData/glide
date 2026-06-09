@@ -41,7 +41,7 @@ def test_generate_clustered_binary_dataset_delegates():
                     lower=2,
                     error_message="'n_total' must be >= 'n_clusters'; got n_total=4 and n_clusters=2.",
                 ),
-                call(0.5, "within_cluster_diversity", lower=0, upper=1),
+                call(0.9, "within_cluster_diversity", lower=0, upper=1),
             ]
         )
         mock_generate_binary_dataset.assert_called_once()
