@@ -10,6 +10,7 @@ def test_generate_clustered_binary_dataset_empirical_means_and_correlation():
     true_mean = 0.7
     proxy_mean = 0.6
     correlation = 0.8
+    within_cluster_diversity = 0.5
 
     y_true, y_proxy, clusters = generate_clustered_binary_dataset(
         n_total=n_total,
@@ -17,9 +18,10 @@ def test_generate_clustered_binary_dataset_empirical_means_and_correlation():
         true_mean=true_mean,
         proxy_mean=proxy_mean,
         correlation=correlation,
+        within_cluster_diversity=within_cluster_diversity,
         random_seed=42,
     )
     assert np.mean(y_true) == pytest.approx(true_mean, abs=0.03)
     assert np.mean(y_proxy) == pytest.approx(proxy_mean, abs=0.03)
-    assert np.corrcoef(y_true, y_proxy)[0, 1] == pytest.approx(correlation, abs=0.05)
+    assert np.corrcoef(y_true, y_proxy)[0, 1] == pytest.approx(within_cluster_diversity * correlation, abs=0.05)
     np.testing.assert_array_equal(np.unique(clusters), np.arange(n_clusters))
