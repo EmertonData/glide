@@ -106,12 +106,12 @@ class ClusterClassicalMeanEstimator:
         cluster_sizes = np.bincount(cluster_indices)
         cluster_means = cluster_sums / cluster_sizes
 
-        mean = np.mean(cluster_means)
+        mean = float(np.mean(cluster_means))
         var = np.var(cluster_means, ddof=1) / n_valid_clusters
         std = np.sqrt(var)
 
         ci = CLTConfidenceInterval(
-            mean=float(mean),
+            mean=mean,
             std=std,
             confidence_level=confidence_level,
         )

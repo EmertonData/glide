@@ -116,12 +116,12 @@ class ClusterPPIMeanEstimator:
 
             θ̂ = mean(u_l) + λ * (mean(v_l) - mean(s_l))
 
-            Var(θ̂) = Var(u_l - λ*s_l, ddof=1) / K_L
-                    + λ² * Var(v_l, ddof=1) / K_U
+            Var(θ̂) = Var(u_l - λ*s_l, ddof=1) / M_L
+                    + λ² * Var(v_l, ddof=1) / M_U
 
         where ``u_l`` and ``s_l`` are the true and proxy cluster means for
         labeled clusters, ``v_l`` are the proxy cluster means for unlabeled
-        clusters, and ``K_L``, ``K_U`` are the numbers of labeled and unlabeled
+        clusters, and ``M_L``, ``M_U`` are the numbers of labeled and unlabeled
         clusters.
 
         Labeled and unlabeled clusters are distinguished by the NaN pattern in

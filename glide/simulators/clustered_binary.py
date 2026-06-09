@@ -98,6 +98,9 @@ def generate_clustered_binary_dataset(
     labels replaced by a uniform resample from those originals. Setting
     within_cluster_diversity to 0 produces clusters where all observations
     share a single label value; setting it to 1 leaves the dataset unchanged.
+    As a result, when ``within_cluster_diversity < 1``, the empirical correlation
+    between true and proxy labels in the output will generally differ from
+    the ``correlation`` input.
 
     Examples
     --------
