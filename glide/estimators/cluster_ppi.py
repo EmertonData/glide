@@ -54,7 +54,7 @@ class ClusterPPIMeanEstimator:
         y_true: NDArray,
         y_proxy: NDArray,
         clusters: NDArray,
-    ) -> Tuple[NDArray, NDArray, NDArray, int]:
+    ) -> Tuple[NDArray, NDArray, NDArray]:
         _validate_equal_lengths(y_true, y_proxy, clusters, names=["y_true", "y_proxy", "clusters"])
         _validate_has_no_nan(y_proxy, "y_proxy")
         _validate_has_no_nan(clusters, "clusters")
@@ -98,7 +98,6 @@ class ClusterPPIMeanEstimator:
             labeled_true_means,
             labeled_proxy_means,
             unlabeled_proxy_means,
-            int(np.sum(labeled_sizes)),
         )
 
     def estimate(
@@ -176,7 +175,6 @@ class ClusterPPIMeanEstimator:
             labeled_true_means,
             labeled_proxy_means,
             unlabeled_proxy_means,
-            labeled_total_size,
         ) = self._preprocess(y_true, y_proxy, clusters)
 
         _lambda = _compute_tuning_parameter(
@@ -190,6 +188,7 @@ class ClusterPPIMeanEstimator:
             confidence_level=confidence_level,
         )
 
+        labeled_total_size = np.sum(~np.isnan(y_true))
         classical_confidence_interval = ClusterClassicalMeanEstimator().estimate(y_true, clusters).confidence_interval
         effective_sample_size = floor(labeled_total_size * classical_confidence_interval.var / confidence_interval.var)
         result = PredictionPoweredMeanInferenceResult(
