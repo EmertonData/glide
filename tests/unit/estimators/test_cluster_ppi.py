@@ -69,13 +69,14 @@ def test_preprocess_delegates_to_validation(estimator, y_true, y_proxy, clusters
 
 
 def test_preprocess_valid_output(estimator, y_true, y_proxy, clusters):
-    lt_sums, lp_sums, up_sums, l_sizes, u_sizes = estimator._preprocess(y_true, y_proxy, clusters)
+    labeled_true_means, labeled_proxy_means, unlabeled_proxy_means, labeled_total_size = estimator._preprocess(
+        y_true, y_proxy, clusters
+    )
 
-    np.testing.assert_array_equal(lt_sums, np.array([4.0, 6.0]))
-    np.testing.assert_array_equal(lp_sums, np.array([2.0, 6.0]))
-    np.testing.assert_array_equal(up_sums, np.array([4.0, 6.0]))
-    np.testing.assert_array_equal(l_sizes, np.array([1, 1]))
-    np.testing.assert_array_equal(u_sizes, np.array([1, 1]))
+    np.testing.assert_array_equal(labeled_true_means, np.array([4.0, 6.0]))
+    np.testing.assert_array_equal(labeled_proxy_means, np.array([2.0, 6.0]))
+    np.testing.assert_array_equal(unlabeled_proxy_means, np.array([4.0, 6.0]))
+    assert labeled_total_size == 2
 
 
 # --- estimate ---

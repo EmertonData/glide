@@ -17,6 +17,7 @@ def test_generate_clustered_binary_dataset_empirical_means_and_correlation():
         true_mean=true_mean,
         proxy_mean=proxy_mean,
         correlation=correlation,
+        within_cluster_diversity=1,
         random_seed=42,
     )
     assert np.mean(y_true) == pytest.approx(true_mean, abs=0.03)

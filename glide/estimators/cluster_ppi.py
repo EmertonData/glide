@@ -12,11 +12,7 @@ from glide.core.validation import (
     _validate_unique_clusters,
 )
 from glide.estimators.cluster_classical import ClusterClassicalMeanEstimator
-from glide.estimators.cluster_core import (
-    _compute_cluster_mean_estimate,
-    _compute_cluster_std_estimate,
-    _compute_cluster_tuning_parameter,
-)
+from glide.estimators.ppi_core import _compute_mean_estimate, _compute_std_estimate, _compute_tuning_parameter
 from glide.mean_inference_results import PredictionPoweredMeanInferenceResult
 
 
@@ -24,7 +20,7 @@ class ClusterPPIMeanEstimator:
     """Cluster PPI++ estimator for population mean.
 
     Extends PPI++ mean estimation as in ``PPIMeanEstimator`` to datasets where
-    observations are grouped into clusters. Each cluster's true and proxy sums
+    observations are grouped into clusters. Each cluster's true and proxy means
     are treated as the sampling units, which accounts for within-cluster
     correlation and produces valid confidence intervals under cluster sampling
     designs.
@@ -58,7 +54,7 @@ class ClusterPPIMeanEstimator:
         y_true: NDArray,
         y_proxy: NDArray,
         clusters: NDArray,
-    ) -> Tuple[NDArray, NDArray, NDArray, NDArray, NDArray]:
+    ) -> Tuple[NDArray, NDArray, NDArray, int]:
         _validate_equal_lengths(y_true, y_proxy, clusters, names=["y_true", "y_proxy", "clusters"])
         _validate_has_no_nan(y_proxy, "y_proxy")
         _validate_has_no_nan(clusters, "clusters")
@@ -78,6 +74,10 @@ class ClusterPPIMeanEstimator:
         labeled_sizes = np.bincount(labeled_cluster_indices)
         unlabeled_sizes = np.bincount(unlabeled_cluster_indices)
 
+        labeled_true_means = labeled_true_sums / labeled_sizes
+        labeled_proxy_means = labeled_proxy_sums / labeled_sizes
+        unlabeled_proxy_means = unlabeled_proxy_sums / unlabeled_sizes
+
         n_labeled_clusters = len(unique_labeled_clusters)
         n_unlabeled_clusters = len(unique_unlabeled_clusters)
 
@@ -95,11 +95,10 @@ class ClusterPPIMeanEstimator:
         )
 
         return (
-            labeled_true_sums,
-            labeled_proxy_sums,
-            unlabeled_proxy_sums,
-            labeled_sizes,
-            unlabeled_sizes,
+            labeled_true_means,
+            labeled_proxy_means,
+            unlabeled_proxy_means,
+            int(np.sum(labeled_sizes)),
         )
 
     def estimate(
@@ -113,19 +112,18 @@ class ClusterPPIMeanEstimator:
     ) -> PredictionPoweredMeanInferenceResult:
         """Estimate the population mean using the Cluster PPI++ estimator.
 
-        Computes cluster sums for labeled and unlabeled clusters and uses them
+        Computes cluster means for labeled and unlabeled clusters and uses them
         as sampling units to apply a PPI++-style bias correction:
 
-            θ̂ = Σ_l u_l / N_L + λ * (Σ_l v_l / N_U - Σ_l s_l / N_L)
+            θ̂ = mean(u_l) + λ * (mean(v_l) - mean(s_l))
 
-            Var(θ̂) = K_L * Var(u_l - λ*s_l, ddof=1) / N_L²
-                    + λ² * K_U * Var(v_l, ddof=1) / N_U²
+            Var(θ̂) = Var(u_l - λ*s_l, ddof=1) / K_L
+                    + λ² * Var(v_l, ddof=1) / K_U
 
-        where ``u_l`` and ``s_l`` are the true and proxy cluster sums for
-        labeled clusters, ``v_l`` are the proxy cluster sums for unlabeled
-        clusters, ``K_L`` and ``K_U`` are the numbers of labeled and unlabeled
-        clusters, and ``N_L``, ``N_U`` are the total labeled and unlabeled
-        observation counts.
+        where ``u_l`` and ``s_l`` are the true and proxy cluster means for
+        labeled clusters, ``v_l`` are the proxy cluster means for unlabeled
+        clusters, and ``K_L``, ``K_U`` are the numbers of labeled and unlabeled
+        clusters.
 
         Labeled and unlabeled clusters are distinguished by the NaN pattern in
         ``y_true``: a cluster is labeled if every one of its ``y_true`` entries
@@ -150,7 +148,7 @@ class ClusterPPIMeanEstimator:
             Target coverage for the confidence interval. Defaults to ``0.95``.
         power_tuning : bool, optional
             If ``True`` (default), estimate the optimal power-tuning parameter
-            λ from the pooled cluster-level proxy sum variances. If ``False``,
+            λ from the pooled cluster-level proxy mean variances. If ``False``,
             use λ = 1.0.
 
         Returns
@@ -171,44 +169,21 @@ class ClusterPPIMeanEstimator:
             - If any cluster contains both labeled and unlabeled observations.
             - If fewer than 2 clusters are fully labeled.
             - If fewer than 2 clusters are fully unlabeled.
-            - If ``power_tuning=True`` and proxy cluster sums have zero variance across
+            - If ``power_tuning=True`` and proxy cluster means have zero variance across
               both labeled and unlabeled clusters.
         """
         (
-            labeled_true_sums,
-            labeled_proxy_sums,
-            unlabeled_proxy_sums,
-            labeled_sizes,
-            unlabeled_sizes,
+            labeled_true_means,
+            labeled_proxy_means,
+            unlabeled_proxy_means,
+            labeled_total_size,
         ) = self._preprocess(y_true, y_proxy, clusters)
 
-        labeled_total_size = np.sum(labeled_sizes)
-        unlabeled_total_size = np.sum(unlabeled_sizes)
-
-        lambda_ = _compute_cluster_tuning_parameter(
-            labeled_true_sums,
-            labeled_proxy_sums,
-            unlabeled_proxy_sums,
-            labeled_total_size,
-            unlabeled_total_size,
-            power_tuning,
+        _lambda = _compute_tuning_parameter(
+            labeled_true_means, labeled_proxy_means, unlabeled_proxy_means, power_tuning
         )
-        mean = _compute_cluster_mean_estimate(
-            labeled_true_sums,
-            labeled_proxy_sums,
-            unlabeled_proxy_sums,
-            labeled_total_size,
-            unlabeled_total_size,
-            lambda_,
-        )
-        std = _compute_cluster_std_estimate(
-            labeled_true_sums,
-            labeled_proxy_sums,
-            unlabeled_proxy_sums,
-            labeled_total_size,
-            unlabeled_total_size,
-            lambda_,
-        )
+        mean = _compute_mean_estimate(labeled_true_means, labeled_proxy_means, unlabeled_proxy_means, _lambda)
+        std = _compute_std_estimate(labeled_true_means, labeled_proxy_means, unlabeled_proxy_means, _lambda)
         confidence_interval = CLTConfidenceInterval(
             mean=mean,
             std=std,
