@@ -79,6 +79,7 @@ nav:
     - Standard annotation budget (PPI++): tutorials/ppi.ipynb
     - Stratified data (Stratified PPI++): tutorials/stratified_ppi.ipynb
     - Uncertainty scores available (ASI): tutorials/asi.ipynb
+    - Clustered data (Clustered PPI++): tutorials/cluster_ppi.ipynb
     - Cost estimates available (Cost-Optimal Random Sampling): tutorials/cost_optimal_random.ipynb
     - Cost and uncertainty scores available (Cost-Optimal Sampling): tutorials/cost_optimal.ipynb
   - Deep Dive:
