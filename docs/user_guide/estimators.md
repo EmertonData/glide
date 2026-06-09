@@ -208,7 +208,7 @@ When the proxy is informative, $\hat{\lambda}$ is large and the IPW-corrected la
 
 ## Clustered Prediction-Powered Inference
 
-Standard PPI++ assumes that observations are independent draws from the population. In practice, data often exhibits a **cluster structure**: samples are grouped into natural units (for example, phrases from the same paragraph), and observations within a cluster may be correlated. **Clustered PPI++** handles this case by treating cluster-level sums as the sampling units, yielding valid confidence intervals even when within-cluster dependence is strong.
+Standard PPI++ assumes that observations are independent draws from the population. In practice, data often exhibits a **cluster structure**: samples are grouped into natural units (for example, phrases from the same paragraph), and observations within a cluster may be correlated. **Clustered PPI++** handles this case by reducing each cluster to its mean and treating the resulting cluster means as independent observations, so that PPI++ can be applied directly to them. This yields valid confidence intervals even when within-cluster dependence is strong.
 
 The data is partitioned into $L$ disjoint clusters $C_1, \dots, C_L$, with $\bigcup_{l=1}^{L} C_l = \{1, \dots, n + N\}$ and $C_i \cap C_j = \emptyset$ for $i \neq j$. Each cluster is **either fully labeled or fully unlabeled**: no cluster contains a mix of labeled and unlabeled observations. Observations from distinct clusters are independent, but no independence is assumed among observations within the same cluster. Let $L^{\bullet}$ denote the number of labeled clusters and $L^{\circ}$ the number of unlabeled clusters.
 
@@ -220,40 +220,38 @@ In Clustered PPI++, each sample has the same values as in PPI++, plus a cluster 
 | $Y_j$ | Labeled samples only ($n \ll N$) | Ground-truth label |
 | $c_i$ | All $n+N$ samples | Cluster identifier |
 
-The cluster identifiers allow partitioning the data into cluster-level sums, which replace individual observations as the sampling units used for inference.
+The cluster identifiers allow partitioning the data into cluster-level means, which replace individual observations as the sampling units used for inference.
 
 ### Mean estimation
 
-The first step is computing **cluster sums**. For each labeled cluster $l$, the true-label sum and proxy sum are:
+The first step is computing **cluster means**. For each labeled cluster $l$, the true-label mean and proxy mean are:
 
-$$Y^{(l)} = \sum_{i \in C_l} Y_i, \qquad \tilde{Y}^{(l),\bullet} = \sum_{i \in C_l} \tilde{Y}_i$$
+$$\bar{Y}^{(l)} = \frac{1}{|C_l|}\sum_{i \in C_l} Y_i, \qquad \bar{\tilde{Y}}^{(l),\bullet} = \frac{1}{|C_l|}\sum_{i \in C_l} \tilde{Y}_i$$
 
-For each unlabeled cluster $l$, the proxy sum is:
+For each unlabeled cluster $m$, the proxy mean is:
 
-$$\tilde{Y}^{(l),\circ} = \sum_{i \in C_l} \tilde{Y}_i$$
+$$\bar{\tilde{Y}}^{(m),\circ} = \frac{1}{|C_m|}\sum_{i \in C_m} \tilde{Y}_i$$
 
-We denote $\tilde{Y}^{(l)}$ the vector containing all $L^{\bullet} + L^{\circ}$ labeled and unlabeled proxy cluster sums.
+We denote $\bar{\tilde{Y}}^{(l)}$ the vector containing all $L^{\bullet} + L^{\circ}$ labeled and unlabeled proxy cluster means.
 
-The Clustered PPI++ mean estimate is then:
+The Clustered PPI++ mean estimate is exactly the PPI++ mean estimator applied to the cluster means, with $L^{\bullet}$ labeled and $L^{\circ}$ unlabeled observations:
 
-$$\hat{\theta} = \frac{1}{n}\sum_{l=1}^{L^{\bullet}} Y^{(l)} + \lambda \left[\frac{1}{N}\sum_{m=1}^{L^{\circ}} \tilde{Y}^{(m),\circ} - \frac{1}{n}\sum_{l=1}^{L^{\bullet}} \tilde{Y}^{(l),\bullet}\right]$$
+$$\hat{\theta} = \frac{1}{L^{\bullet}}\sum_{l=1}^{L^{\bullet}} \bar{Y}^{(l)} + \lambda \left[\frac{1}{L^{\circ}}\sum_{m=1}^{L^{\circ}} \bar{\tilde{Y}}^{(m),\circ} - \frac{1}{L^{\bullet}}\sum_{l=1}^{L^{\bullet}} \bar{\tilde{Y}}^{(l),\bullet}\right]$$
 
 This combines two components:
 
-- The **human-label mean** $\frac{1}{n}\sum_l Y^{(l)}$, unbiased but high-variance due to the small number of labeled clusters.
-- A **variance reduction term** scaled by $\lambda$, using all proxy cluster sums to reduce variance.
-
-This mean estimate is numerically identical to the PPI++ mean estimator, but the formulation makes explicit that cluster sums are the sampling unit, which directly shapes the variance estimation below.
+- The **human-label cluster mean** $\frac{1}{L^{\bullet}}\sum_l \bar{Y}^{(l)}$, unbiased but high-variance due to the small number of labeled clusters.
+- A **variance reduction term** scaled by $\lambda$, using all proxy cluster means to reduce variance.
 
 ### Variance and confidence intervals
 
-Because observations within a cluster are not assumed independent, the variance cannot be computed at the sample level. Instead, the rectified cluster sums $Y^{(l)} - \lambda \tilde{Y}^{(l),\bullet}$ for labeled clusters and the proxy sums $\tilde{Y}^{(l),\circ}$ for unlabeled clusters are treated as the independent units, and their empirical variances drive the inference:
+Because observations within a cluster are not assumed independent, the variance cannot be computed at the individual sample level. Instead, the cluster means are treated as the independent units, and the variance formula is exactly the PPI++ variance applied to them:
 
-$$\hat{\sigma}^2(\lambda) = \frac{L^{\bullet}}{n^2} \widehat{\text{Var}}(Y^{(l)} - \lambda \tilde{Y}^{(l),\bullet}) + \frac{\lambda^2 L^{\circ}}{N^2} \widehat{\text{Var}}(\tilde{Y}^{(m),\circ})$$
+$$\hat{\sigma}^2(\lambda) = \frac{1}{L^{\bullet}}\widehat{\text{Var}}\Big(\bar{Y}^{(l)} - \lambda \bar{\tilde{Y}}^{(l),\bullet}\Big) + \frac{\lambda^2}{L^{\circ}}\widehat{\text{Var}}\Big(\bar{\tilde{Y}}^{(m),\circ}\Big)$$
 
-where $\widehat{\text{Var}}$ denotes the sample variance computed across the $L^{\bullet}$ labeled cluster sums in the first term and the $L^{\circ}$ unlabeled cluster sums in the second.
+where $\widehat{\text{Var}}$ denotes the sample variance computed across the $L^{\bullet}$ labeled cluster means in the first term and the $L^{\circ}$ unlabeled cluster means in the second.
 
-By the Central Limit Theorem applied to the cluster sums, this yields a confidence interval at level $1 - \alpha$:
+By the Central Limit Theorem applied to the cluster means, this yields a confidence interval at level $1 - \alpha$:
 
 $$\Pr\!\left(\theta^* \in \left[\hat{\theta} - z_{1-\alpha/2}\,\hat{\sigma}(\lambda),\; \hat{\theta} + z_{1-\alpha/2}\,\hat{\sigma}(\lambda)\right]\right) \geq 1 - \alpha$$
 
@@ -261,19 +259,18 @@ where $z_{1-\alpha/2}$ is the standard normal quantile (e.g. $z_{0.975} = 1.96$ 
 
 ### Power-tuning
 
-As in PPI++, the optimal $\lambda$ minimizes $\hat{\sigma}^2(\lambda)$. Solving analytically gives:
+As in PPI++, the optimal $\lambda$ minimizes $\hat{\sigma}^2(\lambda)$. The same closed-form formula applies, with cluster means as observations:
 
-$$\hat{\lambda} = \frac{\widehat{\text{Cov}}_{L^{\bullet}}(Y^{(l)},\, \tilde{Y}^{(l),\bullet})}{\left(1 + \dfrac{L^{\circ}}{L^{\bullet}} \cdot \dfrac{n^2}{N^2}\right) \widehat{\text{Var}}_{L^{\bullet} + L^{\circ}}(\tilde{Y}^{(l)})}$$
+$$\hat{\lambda} = \frac{\widehat{\text{Cov}}_{L^{\bullet}}(\bar{Y}^{(l)},\, \bar{\tilde{Y}}^{(l),\bullet})}{\left(1 + \dfrac{L^{\bullet}}{L^{\circ}}\right) \widehat{\text{Var}}_{L^{\bullet} + L^{\circ}}(\bar{\tilde{Y}}^{(l)})}$$
 
 where:
 
-- $\widehat{\text{Cov}}_{L^{\bullet}}(Y^{(l)}, \tilde{Y}^{(l),\bullet})$ is the sample covariance between true and proxy cluster sums, computed on the $L^{\bullet}$ labeled clusters,
-- $\widehat{\text{Var}}_{L^{\bullet} + L^{\circ}}(\tilde{Y}^{(l)})$ is the sample variance over all $L^{\bullet} + L^{\circ}$ proxy cluster sums,
-- the factor $1 + \frac{L^{\circ}}{L^{\bullet}} \cdot \frac{n^2}{N^2}$ corrects for the different numbers of clusters and total observation counts in the labeled and unlabeled partitions.
+- $\widehat{\text{Cov}}_{L^{\bullet}}(\bar{Y}^{(l)}, \bar{\tilde{Y}}^{(l),\bullet})$ is the sample covariance between true and proxy cluster means, computed on the $L^{\bullet}$ labeled clusters,
+- $\widehat{\text{Var}}_{L^{\bullet} + L^{\circ}}(\bar{\tilde{Y}}^{(l)})$ is the sample variance over all $L^{\bullet} + L^{\circ}$ proxy cluster means.
 
 When the proxy is informative, $\hat{\lambda}$ is close to 1 and the variance reduction narrows the confidence interval. When the proxy is uninformative, $\hat{\lambda}$ shrinks toward 0, falling back to the classical cluster mean. It is standard to use the optimal $\hat{\lambda}$ in practice.
 
-When every cluster is a singleton, $L^{\bullet} = n$ and $L^{\circ} = N$, and the variance and power-tuning formulas reduce exactly to their PPI++ counterparts, recovering the full PPI++ procedure.
+When every cluster is a singleton, $L^{\bullet} = n$ and $L^{\circ} = N$, and all formulas reduce exactly to their PPI++ counterparts, recovering the full PPI++ procedure.
 
 ---
 
