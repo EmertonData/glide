@@ -38,7 +38,7 @@ For each result extract: arXiv ID, title, authors, submission date.
 
 ## Step 3 — Parallel author searches
 
-In a **single message**, fire all 9 WebFetch calls simultaneously:
+In a **single message**, fire all 10 WebFetch calls simultaneously:
 
 1. `https://arxiv.org/search/?searchtype=author&query=Angelopoulos,+Anastasios&start=0&order=-announced_date_first`
 2. `https://arxiv.org/search/?searchtype=author&query=Cand%C3%A8s,+Emmanuel&start=0&order=-announced_date_first`
@@ -49,6 +49,7 @@ In a **single message**, fire all 9 WebFetch calls simultaneously:
 7. `https://arxiv.org/search/?searchtype=author&query=Lei,+Lihua&start=0&order=-announced_date_first`
 8. `https://arxiv.org/search/?searchtype=author&query=Song,+Yilin&start=0&order=-announced_date_first`
 9. `https://arxiv.org/search/?searchtype=author&query=Jordan,+Michael&start=0&order=-announced_date_first`
+10. `https://arxiv.org/search/?searchtype=author&query=Romano,+Yaniv&start=0&order=-announced_date_first`
 
 For each result extract: arXiv ID, title, authors, submission date.
 
@@ -97,6 +98,7 @@ Flag if any of the following authors appear in the author list. Always verify th
 | Lihua Lei | |
 | Yilin Song | verify first name carefully |
 | Michael Jordan | statistics/ML only — not the basketball player |
+| Yaniv Romano | |
 
 ## Step 6 — Output
 
