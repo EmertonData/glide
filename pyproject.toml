@@ -59,7 +59,7 @@ dev = [
     "ty>=0.0.43",
 ]
 doc = [
-    "datasets>=4.8.5",
+    "datasets>=5.0.0",
     "matplotlib>=3.10.9",
     "mkdocs>=1.6.1",
     "mkdocs-jupyter>=0.26.3",
