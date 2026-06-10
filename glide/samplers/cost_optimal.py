@@ -46,7 +46,7 @@ class CostOptimalSampler:
     ...     uncertainties,
     ...     y_true_cost=10.0,
     ...     y_proxy_cost=1.0,
-    ...     budget=20,
+    ...     total_cost=20,
     ...     random_seed=0
     ... )
     >>> pi
@@ -147,7 +147,7 @@ class CostOptimalSampler:
         uncertainties: NDArray,
         y_true_cost: float,
         y_proxy_cost: float,
-        budget: float,
+        total_cost: float,
         random_seed: Optional[Union[int, SeedSequence]] = None,
     ) -> Tuple[NDArray, NDArray]:
         """Compute sampling probabilities and draw annotation indicators under the cost
@@ -158,14 +158,14 @@ class CostOptimalSampler:
 
         Samples are randomly permuted before drawing and the inverse permutation is applied
         to the output, so the returned arrays are always in the original input order. A
-        post-draw cutoff is then applied to strictly respect the budget: samples
+        post-draw cutoff is then applied to strictly respect the total cost: samples
         beyond the cutoff are discarded by setting their entries in ``pi`` and ``xi`` to
         ``0.0`` and ``NaN`` respectively.
 
         The two returned arrays are intended for use with IPW-based downstream estimators. ``pi``
         holds the per-sample probability of querying the expensive rater. ``xi`` holds the
         annotation indicators for selected samples, with NaN marking samples excluded by the
-        budget cutoff.
+        cost cutoff.
 
         Parameters
         ----------
@@ -176,7 +176,7 @@ class CostOptimalSampler:
             Cost of one true label. Must be strictly positive.
         y_proxy_cost : float
             Cost of one proxy label. Must be non-negative.
-        budget : float
+        total_cost : float
             Total annotation budget in cost units. Must be at least ``y_true_cost + y_proxy_cost``.
         random_seed : int or SeedSequence or None, optional
             Random seed passed to ``numpy.random.default_rng`` for reproducibility.
@@ -189,7 +189,7 @@ class CostOptimalSampler:
             for selected samples and ``0.0`` for unselected samples.
             [1]: array of shape ``(n_samples,)``, ``xi`` with Bernoulli indicators:
             ``1.0`` if selected for annotation, ``0.0`` if not selected,
-            ``NaN`` if excluded by the budget cutoff.
+            ``NaN`` if excluded by the cost cutoff.
 
         Raises
         ------
@@ -199,7 +199,7 @@ class CostOptimalSampler:
             - If ``y_true_cost`` is not strictly positive or ``y_proxy_cost`` is negative.
             - If any uncertainty value is NaN or non-positive.
             - If all uncertainty values are equal and ``y_proxy_cost`` is zero.
-            - If ``budget < y_true_cost + y_proxy_cost``.
+            - If ``total_cost < y_true_cost + y_proxy_cost``.
 
         """
         if not hasattr(self, "_y_true_variance"):
@@ -215,10 +215,10 @@ class CostOptimalSampler:
             )
         _validate_uncertainties(uncertainties)
         _validate_bounds(
-            budget,
-            "budget",
+            total_cost,
+            "total_cost",
             lower=y_true_cost + y_proxy_cost,
-            error_message=f"'budget' should be at least {y_true_cost + y_proxy_cost}; got {budget}.",
+            error_message=f"'total_cost' should be at least {y_true_cost + y_proxy_cost}; got {total_cost}.",
         )
 
         tau_star = self._find_optimal_threshold(uncertainties, y_true_cost, y_proxy_cost)
@@ -229,6 +229,6 @@ class CostOptimalSampler:
         pi_shuffled, order = _shuffle(pi_all, rng)
         xi_shuffled = rng.binomial(n=1, p=pi_shuffled).astype(float)
         cumulative_costs = np.cumsum(xi_shuffled * y_true_cost + y_proxy_cost)
-        kept_indices = _compute_cutoff_indices(cumulative_costs, order, budget)
+        kept_indices = _compute_cutoff_indices(cumulative_costs, order, total_cost)
         pi_out, xi_out = _build_output(kept_indices, pi_shuffled, xi_shuffled)
         return pi_out, xi_out

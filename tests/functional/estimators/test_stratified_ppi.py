@@ -148,7 +148,7 @@ def test_neyman_allocation_yields_narrower_ci_than_proportional():
     def pipeline(strategy: Literal["proportional", "neyman"]):
         # Sample using stratified sampler
         xi = StratifiedSampler().sample(
-            y_proxy_full, groups_full, budget=budget, strategy=strategy, random_seed=random_seed
+            y_proxy_full, groups_full, n_samples=budget, strategy=strategy, random_seed=random_seed
         )
 
         # Reconstruct PPI dataset: restore y_true only for sampled elements

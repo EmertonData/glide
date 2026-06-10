@@ -16,30 +16,30 @@ class UniformSampler:
     --------
     >>> from glide.samplers import UniformSampler
     >>> sampler = UniformSampler()
-    >>> xi = sampler.sample(n_samples=2, budget=1, random_seed=0)
+    >>> xi = sampler.sample(n_total=2, n_samples=1, random_seed=0)
     >>> xi
     array([0., 1.])
     """
 
     def sample(
         self,
+        n_total: int,
         n_samples: int,
-        budget: int,
         random_seed: Optional[Union[int, SeedSequence]] = None,
     ) -> NDArray:
         """Sample observations uniformly at random without replacement.
 
-        Selects exactly ``budget`` observations from a pool of ``n_samples``
+        Selects exactly ``n_samples`` observations from a pool of ``n_total``
         without replacement.
 
         Parameters
         ----------
-        n_samples : int
+        n_total : int
             Total number of observations in the pool. Must be a strictly
             positive integer.
-        budget : int
+        n_samples : int
             Exact number of observations to select. Must be a strictly
-            positive integer and must not exceed ``n_samples``.
+            positive integer and must not exceed ``n_total``.
         random_seed : int or SeedSequence or None, optional
             Random seed passed to ``numpy.random.default_rng`` for
             reproducibility. Pass ``None`` (the default) to use a
@@ -48,26 +48,26 @@ class UniformSampler:
         Returns
         -------
         NDArray
-            Array of shape ``(n_samples,)`` with selection indicators
+            Array of shape ``(n_total,)`` with selection indicators
             (1 if selected for annotation, 0 otherwise).
 
         Raises
         ------
         ValueError
-            If ``n_samples`` or ``budget`` is not a strictly positive integer,
-            or if ``budget`` exceeds ``n_samples``.
+            If ``n_total`` or ``n_samples`` is not a strictly positive integer,
+            or if ``n_samples`` exceeds ``n_total``.
         """
+        _validate_is_integer(n_total, "n_total")
+        _validate_strictly_positive(n_total, "n_total")
         _validate_is_integer(n_samples, "n_samples")
         _validate_strictly_positive(n_samples, "n_samples")
-        _validate_is_integer(budget, "budget")
-        _validate_strictly_positive(budget, "budget")
-        if budget > n_samples:
-            raise ValueError(f"'budget' must not exceed 'n_samples'; got budget={budget} but n_samples={n_samples}.")
+        if n_samples > n_total:
+            raise ValueError(f"'n_samples' must not exceed 'n_total'; got n_samples={n_samples} but n_total={n_total}.")
 
         rng = np.random.default_rng(random_seed)
 
-        selected_indices = rng.choice(n_samples, size=budget, replace=False)
-        xi = np.zeros(n_samples)
+        selected_indices = rng.choice(n_total, size=n_samples, replace=False)
+        xi = np.zeros(n_total)
         xi[selected_indices] = 1.0
 
         return xi

@@ -7,8 +7,8 @@ from numpy.typing import NDArray
 from scipy.optimize import Bounds, LinearConstraint, minimize
 
 from glide.core.validation import (
-    _validate_budget_bound,
     _validate_is_integer,
+    _validate_n_samples_bound,
     _validate_strictly_positive,
     _validate_uncertainties,
 )
@@ -41,14 +41,14 @@ class ActiveSampler:
     >>> from glide.samplers import ActiveSampler
     >>> uncertainties = np.array([0.1, 0.4])
     >>> sampler = ActiveSampler()
-    >>> pi, xi = sampler.sample(uncertainties, budget=1, random_seed=0)
+    >>> pi, xi = sampler.sample(uncertainties, n_samples=1, random_seed=0)
     >>> pi
     array([0.2, 0.8])
     >>> xi
     array([0., 1.])
     """
 
-    def _compute_probabilities(self, uncertainties: NDArray, budget: int) -> NDArray:
+    def _compute_probabilities(self, uncertainties: NDArray, n_samples: int) -> NDArray:
         uncertainty_ratio = np.max(uncertainties) / np.min(uncertainties)
         if uncertainty_ratio > 1e3:
             warnings.warn(
@@ -56,7 +56,7 @@ class ActiveSampler:
                 "this may cause numerical instability.",
                 UserWarning,
             )
-        naive_pi = budget * uncertainties / uncertainties.sum()
+        naive_pi = n_samples * uncertainties / uncertainties.sum()
         if np.max(naive_pi) <= 1.0:
             return naive_pi
 
@@ -72,13 +72,13 @@ class ActiveSampler:
             return gradient
 
         bounds = Bounds(lb=np.zeros(n), ub=np.ones(n))
-        budget_constraint = LinearConstraint(np.ones((1, n)), lb=budget, ub=budget)
+        n_samples_constraint = LinearConstraint(np.ones((1, n)), lb=n_samples, ub=n_samples)
         optimization_result = minimize(
             objective,
             naive_pi,
             method="trust-constr",
             jac=jacobian,
-            constraints=[budget_constraint],
+            constraints=[n_samples_constraint],
             bounds=bounds,
             options={"maxiter": 100},
         )
@@ -88,7 +88,7 @@ class ActiveSampler:
     def sample(
         self,
         uncertainties: NDArray,
-        budget: int,
+        n_samples: int,
         random_seed: Optional[Union[int, SeedSequence]] = None,
     ) -> Tuple[NDArray, NDArray]:
         """Sample observations with probability proportional to uncertainty.
@@ -96,8 +96,8 @@ class ActiveSampler:
         Each observation receives a drawing probability π_i that minimizes the variance
         of downstream IPW-based estimators. This is equivalently done by minimizing the sum of
         ``uncertainty_i^2 / π_i`` over all observations. Probabilities are constrained to
-        ``(0, 1]`` and sum to ``budget``. The actual number of selected items is random
-        but limited to ``budget``.
+        ``(0, 1]`` and sum to ``n_samples``. The actual number of selected items is random
+        but limited to ``n_samples``.
 
         Samples are randomly permuted before drawing and the inverse permutation
         is applied to the output, so the returned arrays are always in the
@@ -114,8 +114,8 @@ class ActiveSampler:
         Parameters
         ----------
         uncertainties : NDArray
-            Array of shape ``(n_samples,)`` with strictly positive uncertainty scores.
-        budget : int
+            Array of shape ``(n_total,)`` with strictly positive uncertainty scores.
+        n_samples : int
             Expected total number of annotations to collect. Must be a strictly
             positive integer and must not exceed ``len(uncertainties)``.
         random_seed : int or SeedSequence or None, optional
@@ -126,16 +126,16 @@ class ActiveSampler:
         Returns
         -------
         Tuple[NDArray, NDArray]
-            [0]: array of shape ``(n_samples,)``, ``pi`` with per-sample annotation probabilities
+            [0]: array of shape ``(n_total,)``, ``pi`` with per-sample annotation probabilities
             for selected samples and ``0.0`` for unselected samples.
-            [1]: array of shape ``(n_samples,)``, ``xi`` with Bernoulli indicators:
+            [1]: array of shape ``(n_total,)``, ``xi`` with Bernoulli indicators:
             ``1.0`` if selected for annotation, ``0.0`` if not selected,
             ``NaN`` if excluded by the budget cutoff.
 
         Raises
         ------
         ValueError
-            If ``budget`` is not a strictly positive integer, if ``budget``
+            If ``n_samples`` is not a strictly positive integer, if ``n_samples``
             exceeds ``len(uncertainties)``, or if any uncertainty value is NaN,
             zero, or negative.
 
@@ -150,16 +150,16 @@ class ActiveSampler:
         Zrnic, Tijana, and Emmanuel J. Candès. "Active statistical inference." In Proceedings
         of the 41st International Conference on Machine Learning, pp. 62993-63010. 2024.
         """
-        _validate_is_integer(budget, "budget")
-        _validate_strictly_positive(budget, "budget")
-        _validate_budget_bound(budget, len(uncertainties))
+        _validate_is_integer(n_samples, "n_samples")
+        _validate_strictly_positive(n_samples, "n_samples")
+        _validate_n_samples_bound(n_samples, len(uncertainties))
         _validate_uncertainties(uncertainties)
-        pi = self._compute_probabilities(uncertainties, budget)
+        pi = self._compute_probabilities(uncertainties, n_samples)
 
         rng = np.random.default_rng(random_seed)
         pi_shuffled, order = _shuffle(pi, rng)
         xi_shuffled = rng.binomial(n=1, p=pi_shuffled).astype(float)
         cumulative_costs = np.cumsum(xi_shuffled)
-        kept_indices = _compute_cutoff_indices(cumulative_costs, order, budget)
+        kept_indices = _compute_cutoff_indices(cumulative_costs, order, n_samples)
         pi_out, xi_out = _build_output(kept_indices, pi_shuffled, xi_shuffled)
         return pi_out, xi_out

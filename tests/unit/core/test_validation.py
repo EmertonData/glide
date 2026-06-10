@@ -9,12 +9,12 @@ from glide.core.validation import (
     _get_non_zero_mask,
     _validate_binary_or_nan,
     _validate_bounds,
-    _validate_budget_bound,
     _validate_equal_lengths,
     _validate_has_no_nan,
     _validate_label_prob_consistency,
     _validate_literal,
     _validate_min_samples,
+    _validate_n_samples_bound,
     _validate_non_constant,
     _validate_non_empty,
     _validate_probabilities,
@@ -304,14 +304,16 @@ def test_validate_probabilities_delegates():
         assert mock_validate_bounds.call_args[1]["error_message"] == "Probabilities must be in [0, 1]."
 
 
-# --- _validate_budget_bound ---
+# --- _validate_n_samples_bound ---
 
 
-def test_validate_budget_bound_delegates():
+def test_validate_n_samples_bound_delegates():
     with patch("glide.core.validation._validate_bounds") as mock_validate_bounds:
-        _validate_budget_bound(3, n_max=5)
-        expected_msg = "'budget' must not exceed the number of samples; got budget=3 but the dataset has 5 elements."
-        mock_validate_bounds.assert_called_once_with(3, "budget", upper=5, error_message=expected_msg)
+        _validate_n_samples_bound(3, n_max=5)
+        expected_msg = (
+            "'n_samples' must not exceed the number of samples; got n_samples=3 but the dataset has 5 elements."
+        )
+        mock_validate_bounds.assert_called_once_with(3, "n_samples", upper=5, error_message=expected_msg)
 
 
 # --- _validate_literal ---

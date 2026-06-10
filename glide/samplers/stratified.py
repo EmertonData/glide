@@ -4,9 +4,9 @@ import numpy as np
 from numpy.typing import NDArray
 
 from glide.core.validation import (
-    _validate_budget_bound,
     _validate_is_integer,
     _validate_literal,
+    _validate_n_samples_bound,
     _validate_strictly_positive,
     _validate_y_proxy,
 )
@@ -28,7 +28,7 @@ class StratifiedSampler:
 
     Both allocators use largest-remainder rounding (Hamilton's method) to allocate budget
     across strata. Per-stratum sample sizes are capped at stratum size, so total allocated
-    budget Σ n_h ≤ budget (may be less if strata are small). The sampler is typically used
+    n_samples Σ n_h ≤ n_samples (may be less if strata are small). The sampler is typically used
     upstream of statistical estimators to plan annotation effort.
 
     References
@@ -45,16 +45,16 @@ class StratifiedSampler:
     >>> y_proxy = np.array([0.8, 0.9, 0.85, 0.88, 2.4 , 2.5 , 2.45, 2.48])
     >>> groups = np.array(["A", "A", "A", "A", "B", "B", "B", "B"], dtype=object)
     >>> sampler = StratifiedSampler()
-    >>> xi = sampler.sample(y_proxy, groups, budget=4, random_seed=1)
+    >>> xi = sampler.sample(y_proxy, groups, n_samples=4, random_seed=1)
     >>> xi
     array([0, 1, 1, 0, 1, 0, 1, 0])
     """
 
-    def _validate(self, y_proxy: NDArray, groups: NDArray, budget: int, strategy: str) -> None:
+    def _validate(self, y_proxy: NDArray, groups: NDArray, n_samples: int, strategy: str) -> None:
         _validate_literal(strategy, "strategy", ["proportional", "neyman"])
-        _validate_is_integer(budget, "budget")
-        _validate_strictly_positive(budget, "budget")
-        _validate_budget_bound(budget, len(y_proxy))
+        _validate_is_integer(n_samples, "n_samples")
+        _validate_strictly_positive(n_samples, "n_samples")
+        _validate_n_samples_bound(n_samples, len(y_proxy))
         _validate_y_proxy(y_proxy)
         for stratum_id in np.unique(groups):
             stratum_mask = groups == stratum_id
@@ -63,7 +63,7 @@ class StratifiedSampler:
     def _apply_largest_remainder_rounding(
         self,
         raw_allocation: Dict[Hashable, float],
-        budget: int,
+        n_samples: int,
     ) -> Dict[Hashable, int]:
         allocation = {}
         remainders = {}
@@ -75,7 +75,7 @@ class StratifiedSampler:
             remainders[stratum_id] = remainder
 
         current_sum = sum(allocation.values())
-        remaining_slots = budget - current_sum
+        remaining_slots = n_samples - current_sum
 
         sorted_strata = sorted(remainders.items(), key=lambda x: x[1], reverse=True)
         for stratum_id, _ in sorted_strata[:remaining_slots]:
@@ -87,7 +87,7 @@ class StratifiedSampler:
         self,
         y_proxy: NDArray,
         groups: NDArray,
-        budget: int,
+        n_samples: int,
     ) -> Dict[Hashable, int]:
 
         unique_strata = np.unique(groups)
@@ -107,9 +107,9 @@ class StratifiedSampler:
 
         raw_allocation = {}
         for stratum_id in unique_strata:
-            raw_allocation[stratum_id] = budget * weights[stratum_id] / total_weight
+            raw_allocation[stratum_id] = n_samples * weights[stratum_id] / total_weight
 
-        allocation = self._apply_largest_remainder_rounding(raw_allocation, budget)
+        allocation = self._apply_largest_remainder_rounding(raw_allocation, n_samples)
 
         for stratum_id in allocation:
             allocation[stratum_id] = min(allocation[stratum_id], stratum_sizes[stratum_id])
@@ -119,7 +119,7 @@ class StratifiedSampler:
     def _proportional_allocation(
         self,
         groups: NDArray,
-        budget: int,
+        n_samples: int,
     ) -> Dict[Hashable, int]:
 
         unique_strata = np.unique(groups)
@@ -130,10 +130,10 @@ class StratifiedSampler:
         for stratum_id in unique_strata:
             stratum_mask = groups == stratum_id
             stratum_size = stratum_mask.sum()
-            raw_allocation[stratum_id] = budget * stratum_size / total_size
+            raw_allocation[stratum_id] = n_samples * stratum_size / total_size
             stratum_sizes[stratum_id] = stratum_size
 
-        allocation = self._apply_largest_remainder_rounding(raw_allocation, budget)
+        allocation = self._apply_largest_remainder_rounding(raw_allocation, n_samples)
 
         for stratum_id in allocation:
             allocation[stratum_id] = min(allocation[stratum_id], stratum_sizes[stratum_id])
@@ -144,7 +144,7 @@ class StratifiedSampler:
         self,
         y_proxy: NDArray,
         groups: NDArray,
-        budget: int,
+        n_samples: int,
         strategy: Literal["proportional", "neyman"] = "neyman",
         random_seed: Optional[int] = None,
     ) -> NDArray:
@@ -159,12 +159,12 @@ class StratifiedSampler:
         Parameters
         ----------
         y_proxy : NDArray
-            Proxy labels for all samples, shape ``(n_samples,)``. Must be 1-dimensional.
+            Proxy labels for all samples, shape ``(n_total,)``. Must be 1-dimensional.
         groups : NDArray
-            Stratum identifiers for all samples, shape ``(n_samples,)``.
+            Stratum identifiers for all samples, shape ``(n_total,)``.
             Must be 1-dimensional with same length as y_proxy.
-        budget : int
-            Target annotation budget. Must be positive. Mandatory.
+        n_samples : int
+            Target number of annotations. Must be positive. Mandatory.
         strategy : str, optional
             Allocation strategy: "neyman" (default) or "proportional".
             "neyman": assigns more budget to higher-variance strata.
@@ -175,23 +175,23 @@ class StratifiedSampler:
         Returns
         -------
         NDArray
-            Selection indicators of shape ``(n_samples,)``: 1 if the sample was selected
+            Selection indicators of shape ``(n_total,)``: 1 if the sample was selected
             for annotation, 0 otherwise.
 
         Raises
         ------
         ValueError
             - If ``strategy`` is not a recognized allocation strategy.
-            - If ``budget`` is not a strictly positive integer.
-            - If ``budget`` is too low and results in zero allocations for some stratum.
-            - If ``budget`` exceeds the total number of samples in the input.
+            - If ``n_samples`` is not a strictly positive integer.
+            - If ``n_samples`` is too low and results in zero allocations for some stratum.
+            - If ``n_samples`` exceeds the total number of samples in the input.
         """
-        self._validate(y_proxy, groups, budget, strategy)
+        self._validate(y_proxy, groups, n_samples, strategy)
 
         if strategy == "proportional":
-            allocation = self._proportional_allocation(groups, budget)
+            allocation = self._proportional_allocation(groups, n_samples)
         else:
-            allocation = self._neyman_allocation(y_proxy, groups, budget)
+            allocation = self._neyman_allocation(y_proxy, groups, n_samples)
 
         for stratum_id, n_h in allocation.items():
             if n_h < 2:

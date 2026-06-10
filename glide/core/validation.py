@@ -113,12 +113,12 @@ def _validate_probabilities(values: NDArray) -> None:
     _validate_bounds(values, "Probabilities", lower=0, upper=1, error_message="Probabilities must be in [0, 1].")
 
 
-def _validate_budget_bound(budget: int, n_max: int) -> None:
+def _validate_n_samples_bound(n_samples: int, n_max: int) -> None:
     _validate_bounds(
-        budget,
-        "budget",
+        n_samples,
+        "n_samples",
         upper=n_max,
-        error_message=f"'budget' must not exceed the number of samples; got budget={budget} but the dataset "
+        error_message=f"'n_samples' must not exceed the number of samples; got n_samples={n_samples} but the dataset "
         f"has {n_max} elements.",
     )
 

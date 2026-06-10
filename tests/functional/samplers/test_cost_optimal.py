@@ -13,7 +13,7 @@ def test_total_cost_never_exceeds_budget(sampler):
     n_samples = 50
     y_true_cost = 10.0
     y_proxy_cost = 1.0
-    budget = 150
+    total_cost = 150
     n_trials = 500
 
     uncertainties = np.linspace(0.1, 1.0, n_samples)
@@ -23,12 +23,12 @@ def test_total_cost_never_exceeds_budget(sampler):
             uncertainties,
             y_true_cost=y_true_cost,
             y_proxy_cost=y_proxy_cost,
-            budget=budget,
+            total_cost=total_cost,
             random_seed=random_seed,
         )
         included = ~np.isnan(xi)
         actual_cost = np.sum(xi[included]) * y_true_cost + np.sum(included) * y_proxy_cost
-        assert actual_cost <= budget
+        assert actual_cost <= total_cost
 
 
 def test_cost_optimal_matches_random_sampler_for_uniform_uncertainties():
@@ -38,7 +38,7 @@ def test_cost_optimal_matches_random_sampler_for_uniform_uncertainties():
     uniform_uncertainties = np.full(n_samples, 0.1)
     y_true_cost = 10.0
     y_proxy_cost = 1.0
-    budget = 500
+    total_cost = 500
 
     random_seed = 0
 
@@ -47,7 +47,7 @@ def test_cost_optimal_matches_random_sampler_for_uniform_uncertainties():
         n_samples=n_samples,
         y_true_cost=y_true_cost,
         y_proxy_cost=y_proxy_cost,
-        budget=budget,
+        total_cost=total_cost,
         random_seed=random_seed,
     )
 
@@ -56,7 +56,7 @@ def test_cost_optimal_matches_random_sampler_for_uniform_uncertainties():
         uniform_uncertainties,
         y_true_cost=y_true_cost,
         y_proxy_cost=y_proxy_cost,
-        budget=budget,
+        total_cost=total_cost,
         random_seed=random_seed,
     )
 

@@ -23,35 +23,35 @@ def sampler() -> ActiveSampler:
 
 def test_compute_probabilities_warns_on_extreme_ratio(sampler):
     with pytest.warns(UserWarning, match="Extreme uncertainty ratio"):
-        sampler._compute_probabilities(np.array([0.001, 1.001]), budget=1)
+        sampler._compute_probabilities(np.array([0.001, 1.001]), n_samples=1)
 
 
 def test_compute_probabilities_no_saturation(sampler):
-    pi = sampler._compute_probabilities(np.array([0.1, 1.0]), budget=1)
+    pi = sampler._compute_probabilities(np.array([0.1, 1.0]), n_samples=1)
     np.testing.assert_allclose(pi, np.array([0.090909, 0.90909]), atol=1e-5)
 
 
 def test_compute_probabilities_with_saturation(sampler):
-    pi = sampler._compute_probabilities(np.array([0.01, 1.0, 9.0]), budget=2)
+    pi = sampler._compute_probabilities(np.array([0.01, 1.0, 9.0]), n_samples=2)
     np.testing.assert_allclose(pi, np.array([1 / 101, 100 / 101, 1.0]), atol=1e-5)
 
 
 # --- sample ---
 
 
-@pytest.mark.parametrize("bad_budget", [0.0, True, -1, 1.5])
-def test_sample_invalid_budget(sampler, uncertainties, bad_budget):
-    with pytest.raises(ValueError, match="budget"):
-        sampler.sample(uncertainties, budget=bad_budget, random_seed=0)
+@pytest.mark.parametrize("bad_n_samples", [0.0, True, -1, 1.5])
+def test_sample_invalid_n_samples(sampler, uncertainties, bad_n_samples):
+    with pytest.raises(ValueError, match="n_samples"):
+        sampler.sample(uncertainties, n_samples=bad_n_samples, random_seed=0)
 
 
-def test_sample_budget_exceeds_length(sampler, uncertainties):
-    with pytest.raises(ValueError, match="budget"):
-        sampler.sample(uncertainties, budget=len(uncertainties) + 1, random_seed=0)
+def test_sample_n_samples_exceeds_length(sampler, uncertainties):
+    with pytest.raises(ValueError, match="n_samples"):
+        sampler.sample(uncertainties, n_samples=len(uncertainties) + 1, random_seed=0)
 
 
 def test_sample_valid_output(sampler, uncertainties):
-    pi, xi = sampler.sample(uncertainties, budget=5, random_seed=42)
+    pi, xi = sampler.sample(uncertainties, n_samples=5, random_seed=42)
     expected_pi = np.array(
         [0.11111111, 0.22222222, 0.33333333, 0.44444444, 0.55555556, 0.66666667, 0.77777778, 0.88888889, 0.0]
     )
@@ -61,15 +61,15 @@ def test_sample_valid_output(sampler, uncertainties):
 
 
 def test_sample_is_reproducible(sampler, uncertainties):
-    pi1, xi1 = sampler.sample(uncertainties, budget=5, random_seed=42)
-    pi2, xi2 = sampler.sample(uncertainties, budget=5, random_seed=42)
+    pi1, xi1 = sampler.sample(uncertainties, n_samples=5, random_seed=42)
+    pi2, xi2 = sampler.sample(uncertainties, n_samples=5, random_seed=42)
     np.testing.assert_array_equal(pi1, pi2)
     np.testing.assert_array_equal(xi1, xi2)
 
 
 def test_sample_different_seeds_results_differ(sampler, uncertainties):
-    pi1, xi1 = sampler.sample(uncertainties, budget=5, random_seed=0)
-    pi2, xi2 = sampler.sample(uncertainties, budget=5, random_seed=1)
+    pi1, xi1 = sampler.sample(uncertainties, n_samples=5, random_seed=0)
+    pi2, xi2 = sampler.sample(uncertainties, n_samples=5, random_seed=1)
     assert (np.array_equal(pi1, pi2)) and (not np.array_equal(xi1, xi2))
 
 
@@ -77,13 +77,13 @@ def test_sample_delegates_to_validation(sampler, uncertainties):
     with (
         patch.object(active_module, "_validate_is_integer") as mock_validate_is_integer,
         patch.object(active_module, "_validate_strictly_positive") as mock_validate_strictly_positive,
-        patch.object(active_module, "_validate_budget_bound") as mock_validate_budget_bound,
+        patch.object(active_module, "_validate_n_samples_bound") as mock_validate_n_samples_bound,
         patch.object(active_module, "_validate_uncertainties") as mock_validate_uncertainties,
     ):
-        sampler.sample(uncertainties, budget=5, random_seed=0)
+        sampler.sample(uncertainties, n_samples=5, random_seed=0)
 
-        mock_validate_is_integer.assert_called_once_with(5, "budget")
-        mock_validate_strictly_positive.assert_called_once_with(5, "budget")
-        mock_validate_budget_bound.assert_called_once_with(5, len(uncertainties))
+        mock_validate_is_integer.assert_called_once_with(5, "n_samples")
+        mock_validate_strictly_positive.assert_called_once_with(5, "n_samples")
+        mock_validate_n_samples_bound.assert_called_once_with(5, len(uncertainties))
         mock_validate_uncertainties.assert_called_once()
         np.testing.assert_array_equal(mock_validate_uncertainties.call_args[0][0], uncertainties)
