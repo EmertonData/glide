@@ -902,7 +902,7 @@ dev = [
     { name = "prek", specifier = ">=0.3.4" },
     { name = "pytest", specifier = ">=9.0.2" },
     { name = "pytest-coverage", specifier = ">=0.0" },
-    { name = "ruff", specifier = ">=0.15.15" },
+    { name = "ruff", specifier = ">=0.15.16" },
     { name = "ty", specifier = ">=0.0.43" },
 ]
 doc = [
