@@ -903,7 +903,7 @@ dev = [
     { name = "pytest", specifier = ">=9.0.2" },
     { name = "pytest-coverage", specifier = ">=0.0" },
     { name = "ruff", specifier = ">=0.15.15" },
-    { name = "ty", specifier = ">=0.0.43" },
+    { name = "ty", specifier = ">=0.0.46" },
 ]
 doc = [
     { name = "datasets", specifier = ">=5.0.0" },
