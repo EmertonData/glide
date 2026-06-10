@@ -906,7 +906,7 @@ dev = [
     { name = "ty", specifier = ">=0.0.43" },
 ]
 doc = [
-    { name = "datasets", specifier = ">=4.8.5" },
+    { name = "datasets", specifier = ">=5.0.0" },
     { name = "matplotlib", specifier = ">=3.10.9" },
     { name = "mkdocs", specifier = ">=1.6.1" },
     { name = "mkdocs-jupyter", specifier = ">=0.26.3" },
