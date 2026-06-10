@@ -56,10 +56,10 @@ dev = [
     "pytest>=9.0.2",
     "pytest-coverage>=0.0",
     "ruff>=0.15.16",
-    "ty>=0.0.43",
+    "ty>=0.0.46",
 ]
 doc = [
-    "datasets>=4.8.5",
+    "datasets>=5.0.0",
     "matplotlib>=3.10.9",
     "mkdocs>=1.6.1",
     "mkdocs-jupyter>=0.26.3",
