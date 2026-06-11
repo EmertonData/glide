@@ -46,7 +46,7 @@ class CostOptimalSampler:
     ...     uncertainties,
     ...     y_true_cost=10.0,
     ...     y_proxy_cost=1.0,
-    ...     cost_limit=20,
+    ...     max_cost=20,
     ...     random_seed=0
     ... )
     >>> pi
@@ -147,7 +147,7 @@ class CostOptimalSampler:
         uncertainties: NDArray,
         y_true_cost: float,
         y_proxy_cost: float,
-        cost_limit: float,
+        max_cost: float,
         random_seed: Optional[Union[int, SeedSequence]] = None,
     ) -> Tuple[NDArray, NDArray]:
         """Compute sampling probabilities and draw annotation indicators under the cost
@@ -158,7 +158,7 @@ class CostOptimalSampler:
 
         Samples are randomly permuted before drawing and the inverse permutation is applied
         to the output, so the returned arrays are always in the original input order. A
-        post-draw cutoff is then applied to strictly respect the cost limit: samples
+        post-draw cutoff is then applied to strictly respect the maximum cost: samples
         beyond the cutoff are discarded by setting their entries in ``pi`` and ``xi`` to
         ``0.0`` and ``NaN`` respectively.
 
@@ -176,8 +176,8 @@ class CostOptimalSampler:
             Cost of one true label. Must be strictly positive.
         y_proxy_cost : float
             Cost of one proxy label. Must be non-negative.
-        cost_limit : float
-            Total annotation budget in cost units. Must be at least ``y_true_cost + y_proxy_cost``.
+        max_cost : float
+            Maximum total annotation cost. Must be at least ``y_true_cost + y_proxy_cost``.
         random_seed : int or SeedSequence or None, optional
             Random seed passed to ``numpy.random.default_rng`` for reproducibility.
             Pass ``None`` (the default) to use a non-deterministic seed.
@@ -199,7 +199,7 @@ class CostOptimalSampler:
             - If ``y_true_cost`` is not strictly positive or ``y_proxy_cost`` is negative.
             - If any uncertainty value is NaN or non-positive.
             - If all uncertainty values are equal and ``y_proxy_cost`` is zero.
-            - If ``cost_limit < y_true_cost + y_proxy_cost``.
+            - If ``max_cost < y_true_cost + y_proxy_cost``.
 
         """
         if not hasattr(self, "_y_true_variance"):
@@ -215,10 +215,10 @@ class CostOptimalSampler:
             )
         _validate_uncertainties(uncertainties)
         _validate_bounds(
-            cost_limit,
-            "cost_limit",
+            max_cost,
+            "max_cost",
             lower=y_true_cost + y_proxy_cost,
-            error_message=f"'cost_limit' should be at least {y_true_cost + y_proxy_cost}; got {cost_limit}.",
+            error_message=f"'max_cost' should be at least {y_true_cost + y_proxy_cost}; got {max_cost}.",
         )
 
         tau_star = self._find_optimal_threshold(uncertainties, y_true_cost, y_proxy_cost)
@@ -229,6 +229,6 @@ class CostOptimalSampler:
         pi_shuffled, order = _shuffle(pi_all, rng)
         xi_shuffled = rng.binomial(n=1, p=pi_shuffled).astype(float)
         cumulative_costs = np.cumsum(xi_shuffled * y_true_cost + y_proxy_cost)
-        kept_indices = _compute_cutoff_indices(cumulative_costs, order, cost_limit)
+        kept_indices = _compute_cutoff_indices(cumulative_costs, order, max_cost)
         pi_out, xi_out = _build_output(kept_indices, pi_shuffled, xi_shuffled)
         return pi_out, xi_out

@@ -41,7 +41,7 @@ class CostOptimalRandomSampler:
     ...     n_samples=2,
     ...     y_true_cost=10.0,
     ...     y_proxy_cost=1.0,
-    ...     cost_limit=15,
+    ...     max_cost=15,
     ...     random_seed=42
     ... )
     >>> pi
@@ -121,7 +121,7 @@ class CostOptimalRandomSampler:
         n_samples: int,
         y_true_cost: float,
         y_proxy_cost: float,
-        cost_limit: float,
+        max_cost: float,
         random_seed: Optional[Union[int, SeedSequence]] = None,
     ) -> Tuple[NDArray, NDArray]:
         """Sample observations with cost-optimal allocation between raters.
@@ -131,7 +131,7 @@ class CostOptimalRandomSampler:
 
         Samples are randomly permuted before drawing and the inverse permutation is applied
         to the output, so the returned arrays are always in the original input order. A
-        post-draw cutoff is then applied to strictly respect the cost limit: samples beyond the
+        post-draw cutoff is then applied to strictly respect the maximum cost: samples beyond the
         cutoff are discarded by setting their entries in ``pi`` and ``xi`` to ``0.0`` and
         ``NaN`` respectively.
 
@@ -148,8 +148,8 @@ class CostOptimalRandomSampler:
             Per-sample cost of the expensive rater (H). Must be strictly positive.
         y_proxy_cost : float
             Per-sample cost of the cheap rater (G). Must be strictly positive.
-        cost_limit : float
-            Total annotation budget in cost units. Must be at least ``y_true_cost + y_proxy_cost``.
+        max_cost : float
+            Maximum total annotation cost. Must be at least ``y_true_cost + y_proxy_cost``.
         random_seed : int or SeedSequence or None, optional
             Random seed passed to ``numpy.random.default_rng`` for reproducibility.
             Pass ``None`` (the default) to use a non-deterministic seed.
@@ -170,7 +170,7 @@ class CostOptimalRandomSampler:
         ValueError
             - If ``n_samples`` is not a strictly positive integer.
             - If ``y_true_cost`` or ``y_proxy_cost`` is not strictly positive.
-            - If ``cost_limit < y_true_cost + y_proxy_cost``.
+            - If ``max_cost < y_true_cost + y_proxy_cost``.
         """
         if not hasattr(self, "_y_true_variance") or not hasattr(self, "_mean_squared_error"):
             raise RuntimeError("Call fit() before sample().")
@@ -179,10 +179,10 @@ class CostOptimalRandomSampler:
         _validate_strictly_positive(y_true_cost, "y_true_cost")
         _validate_strictly_positive(y_proxy_cost, "y_proxy_cost")
         _validate_bounds(
-            cost_limit,
-            "cost_limit",
+            max_cost,
+            "max_cost",
             lower=y_true_cost + y_proxy_cost,
-            error_message=f"'cost_limit' should be at least {y_true_cost + y_proxy_cost}; got {cost_limit}.",
+            error_message=f"'max_cost' should be at least {y_true_cost + y_proxy_cost}; got {max_cost}.",
         )
 
         pi_opt = self._compute_optimal_probability(y_true_cost, y_proxy_cost)
@@ -192,6 +192,6 @@ class CostOptimalRandomSampler:
         pi_shuffled, order = _shuffle(pi_all, rng)
         xi_shuffled = rng.binomial(n=1, p=pi_shuffled).astype(float)
         cumulative_costs = np.cumsum(xi_shuffled * y_true_cost + y_proxy_cost)
-        kept_indices = _compute_cutoff_indices(cumulative_costs, order, cost_limit)
+        kept_indices = _compute_cutoff_indices(cumulative_costs, order, max_cost)
         pi_out, xi_out = _build_output(kept_indices, pi_shuffled, xi_shuffled)
         return pi_out, xi_out
