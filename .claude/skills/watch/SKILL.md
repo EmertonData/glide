@@ -53,21 +53,55 @@ In a **single message**, fire all 10 WebFetch calls simultaneously:
 
 For each result extract: arXiv ID, title, authors, submission date.
 
-## Step 4 — Filter by time window
+## Step 4 — Scholar citation lookup
 
-From all papers gathered in Steps 1–3, keep only those whose submission date falls within the computed window. When a paper's date is ambiguous from search results alone, fetch `https://arxiv.org/abs/XXXX.XXXXX` to confirm.
+**Goal**: find papers published within the time window that cite any of the reference papers listed in `README.md`.
+
+### 4a — Read README references
+
+Read `README.md` and extract every entry in the `### References` section. For each entry, record its short label (e.g. `[1]`) and full title + first author (e.g. "Prediction-powered inference — Angelopoulos et al.").
+
+### 4b — Resolve Scholar cluster IDs in parallel
+
+In a **single message**, fire one WebFetch call per reference paper to:
+
+`https://scholar.google.com/scholar?q=<url-encoded title and first author>&hl=en`
+
+From each result, extract the href of the "Cited by N" link for the matching paper. That href contains the Scholar cluster ID in the form `cites=XXXXXXXXXXXXXXXXX`. Record the cluster ID for each paper (skip papers where no match is found).
+
+### 4c — Fetch citing papers in parallel
+
+In a **single message**, fire one WebFetch call per resolved cluster ID to:
+
+`https://scholar.google.com/scholar?cites=<ID>&as_sdt=2005&sciodt=0,5&hl=en&scisbd=1`
+
+(`scisbd=1` sorts by date, most recent first.)
+
+From each result, extract all visible entries: title, authors, publication year, and any arXiv or DOI link. Also note which README reference `[N]` each result came from.
+
+### 4d — Add to candidate pool
+
+For each citing paper found in 4c:
+- If it carries an arXiv ID, add it to the candidate pool with the label `cites:[N]` so that Step 5 can verify its exact date.
+- If it has no arXiv ID, check whether its publication year falls within the time window's year range. If yes, add it to the pool directly as a **non-arXiv citing paper** and skip the Step 5 date check (Scholar does not expose the exact submission date for non-arXiv papers).
+
+Deduplicate: if the same arXiv ID or title was already gathered in Steps 1–3, do not add a duplicate — just annotate the existing entry with `cites:[N]`.
+
+## Step 5 — Filter by time window
+
+From all papers gathered in Steps 1–4, keep only those whose submission date falls within the computed window. When a paper's date is ambiguous from search results alone, fetch `https://arxiv.org/abs/XXXX.XXXXX` to confirm. Non-arXiv citing papers added in Step 4d bypass this check (they are kept as-is, with year-only date precision noted in the output).
 
 Deduplicate across sources: if the same arXiv ID appears multiple times (e.g., once from the recent listing and once from a topic search), count it once.
 
-Always exclude arXiv:2605.31278 (the GLIDE paper itself — Martinon, Merad, Raki) unless a distinct new version or a follow-up paper appears.
+Always exclude arXiv:2605.31278 (the GLIDE paper itself) unless a distinct new version or a follow-up paper appears.
 
-## Step 5 — Flag matching papers
+## Step 6 — Flag matching papers
 
 Flag a paper if it meets **any** of the following criteria.
 
 ### Topic match
 
-Check the title first; fetch the abstract page only when the title is ambiguous. Flag if the title or abstract mentions any of:
+For every candidate paper that survived Step 5, spawn one sub-agent per paper (using the Agent tool) to fetch `https://arxiv.org/abs/XXXX.XXXXX` and evaluate topic relevance. Fire all sub-agents in a **single message** so the fetches run in parallel. Each sub-agent returns only: `{ topic_match: bool, matched_phrase: str | null }` — the caller already holds the arXiv ID and title. Flag if the title or abstract mentions any of:
 
 - Prediction-powered inference (PPI, PPI++)
 - Active statistical inference / active inference (statistical sense — not reinforcement learning)
@@ -85,40 +119,34 @@ When flagging for topic, quote the specific matching phrase from the title or ab
 
 ### Author match
 
-Flag if any of the following authors appear in the author list. Always verify the first name before flagging — last-name-only matches are not enough, especially for common names like Jordan or Song.
+Flag if any of the Step 3 authors appear in the author list. Always verify the full first name before flagging — last-name-only matches are not enough, especially for common names like Jordan or Song. Note: Kristina Gligoric is also spelled Gligorić; Michael Jordan should be statistics/ML only.
 
-| Author | Notes |
-|--------|-------|
-| Anastasios Angelopoulos | |
-| Emmanuel Candès | |
-| Tijana Zrnic | |
-| Dan Kluger | |
-| Stephen Bates | |
-| Kristina Gligoric | also spelled Gligorić |
-| Lihua Lei | |
-| Yilin Song | verify first name carefully |
-| Michael Jordan | statistics/ML only — not the basketball player |
-| Yaniv Romano | |
+### Scholar citation match
 
-## Step 6 — Output
+Flag if the paper was found in Step 4 as citing a README reference paper. Note which reference it cites.
+
+## Step 7 — Output
 
 For each flagged paper:
 
 ```
-[arXiv:XXXX.XXXXX] Title
+[arXiv:XXXX.XXXXX] Title            (use [non-arXiv] if no arXiv ID)
 Authors: ...
-Reason flagged: <topic match: "exact phrase" | author match: "Author Name">
-Link: https://arxiv.org/abs/XXXX.XXXXX
+Reason flagged: <topic match: "exact phrase" | author match: "Author Name" | cites README [N]: "Short paper title">
+Link: https://arxiv.org/abs/XXXX.XXXXX  (or DOI/URL for non-arXiv papers)
 ```
 
-If a paper qualifies on both grounds, list both reasons on the same line separated by "; ".
+If a paper qualifies on multiple grounds, list all reasons on the same line separated by "; ".
+
+For non-arXiv citing papers, append `(date: YYYY — exact day unavailable)` after the link.
 
 Close with the summary line — always include it, even if nothing matched:
 
 ```
 Flagged N paper(s) out of M total scanned, covering YYYY-MM-DD – YYYY-MM-DD.
+(of which K found via Scholar citation lookup)
 ```
 
 ## Coverage note
 
-The stat/recent listing with `show=2000` is sufficient to cover the full 1–7 day window: the stat section receives fewer than 200 papers per day, so a week's worth sits comfortably under 2000 entries. The listing is therefore the primary source of coverage; the topic and author searches serve as a complementary signal to catch papers from adjacent categories (cs.LG, econ.EM, etc.) that are cross-listed or not primarily filed under stat. When M cannot be determined precisely (because WebFetch summarizes large pages), give a best-effort estimate and note this briefly.
+The stat/recent listing with `show=2000` is sufficient to cover the full 1–7 day window: the stat section receives fewer than 200 papers per day, so a week's worth sits comfortably under 2000 entries. The listing is therefore the primary source of coverage; the topic and author searches serve as a complementary signal to catch papers from adjacent categories (cs.LG, econ.EM, etc.) that are cross-listed or not primarily filed under stat. The Scholar citation lookup (Step 4) is a separate signal that catches papers in any field that build on the README references but would not surface through arXiv keyword or author searches. When M cannot be determined precisely (because WebFetch summarizes large pages), give a best-effort estimate and note this briefly.
