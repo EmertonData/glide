@@ -11,11 +11,11 @@ def sampler() -> CostOptimalRandomSampler:
     return CostOptimalRandomSampler().fit(y_true, y_proxy)
 
 
-def test_total_cost_never_exceeds_budget(sampler):
+def test_total_cost_never_exceeds_max_cost(sampler):
     n_samples = 50
     y_true_cost = 10.0
     y_proxy_cost = 1.0
-    budget = 150
+    max_cost = 150
     n_trials = 500
 
     for random_seed in range(n_trials):
@@ -23,9 +23,9 @@ def test_total_cost_never_exceeds_budget(sampler):
             n_samples=n_samples,
             y_true_cost=y_true_cost,
             y_proxy_cost=y_proxy_cost,
-            budget=budget,
+            max_cost=max_cost,
             random_seed=random_seed,
         )
         included = ~np.isnan(xi)
         actual_cost = np.sum(xi[included]) * y_true_cost + np.sum(included) * y_proxy_cost
-        assert actual_cost <= budget
+        assert actual_cost <= max_cost

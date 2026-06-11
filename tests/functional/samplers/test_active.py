@@ -10,13 +10,13 @@ def sampler() -> ActiveSampler:
 
 
 def test_sample_never_exceeds_budget(sampler):
-    n_samples = 50
-    budget = 10
+    n_total = 50
+    n_samples = 10
     n_trials = 500
 
-    uncertainties = np.ones(n_samples)
+    uncertainties = np.ones(n_total)
 
     for random_seed in range(n_trials):
-        pi, xi = sampler.sample(uncertainties, budget=budget, random_seed=random_seed)
-        assert np.sum(pi) <= budget
-        assert np.nansum(xi) <= budget
+        pi, xi = sampler.sample(uncertainties, n_samples=n_samples, random_seed=random_seed)
+        assert np.sum(pi) <= n_samples
+        assert np.nansum(xi) <= n_samples

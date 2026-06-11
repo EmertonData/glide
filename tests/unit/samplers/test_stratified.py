@@ -27,12 +27,12 @@ def groups() -> np.ndarray:
 
 def test_proportional_allocation_proportional_to_N_h(sampler):
     groups = np.array(["A", "A", "B", "B"], dtype=object)
-    budget = 4
+    n_samples = 4
     total = len(groups)
 
-    allocation = sampler._proportional_allocation(groups, budget)
+    allocation = sampler._proportional_allocation(groups, n_samples)
 
-    expected_ratio = budget / total
+    expected_ratio = n_samples / total
     for stratum_id, n_h in allocation.items():
         N_h = (groups == stratum_id).sum()
         actual_ratio = n_h / N_h
@@ -49,27 +49,27 @@ def test_sample_returns_valid_array(sampler, y_proxy, groups):
     assert np.isin(xi, [0, 1]).all()
 
 
-def test_sample_invalid_budget_zero(sampler, y_proxy, groups):
+def test_sample_invalid_n_samples_zero(sampler, y_proxy, groups):
     with pytest.raises(ValueError):
         sampler.sample(y_proxy, groups, 0)
 
 
-def test_sample_invalid_budget_negative(sampler, y_proxy, groups):
+def test_sample_invalid_n_samples_negative(sampler, y_proxy, groups):
     with pytest.raises(ValueError):
         sampler.sample(y_proxy, groups, -1)
 
 
-def test_sample_invalid_budget_float(sampler, y_proxy, groups):
+def test_sample_invalid_n_samples_float(sampler, y_proxy, groups):
     with pytest.raises((ValueError, TypeError)):
         sampler.sample(y_proxy, groups, 1.5)
 
 
-def test_sample_invalid_budget_boolean(sampler, y_proxy, groups):
+def test_sample_invalid_n_samples_boolean(sampler, y_proxy, groups):
     with pytest.raises((ValueError, TypeError)):
         sampler.sample(y_proxy, groups, True)
 
 
-def test_sample_budget_exceeds_dataset_length(sampler, y_proxy, groups):
+def test_sample_n_samples_exceeds_dataset_length(sampler, y_proxy, groups):
     with pytest.raises(ValueError):
         sampler.sample(y_proxy, groups, len(y_proxy) + 1)
 
@@ -128,14 +128,14 @@ def test_sample_delegates_to_validation(sampler, y_proxy, groups):
     with (
         patch.object(stratified_module, "_validate_is_integer") as mock_validate_is_integer,
         patch.object(stratified_module, "_validate_strictly_positive") as mock_validate_strictly_positive,
-        patch.object(stratified_module, "_validate_budget_bound") as mock_validate_budget_bound,
+        patch.object(stratified_module, "_validate_n_samples_bound") as mock_validate_n_samples_bound,
         patch.object(stratified_module, "_validate_y_proxy") as mock_validate_y_proxy,
     ):
         sampler.sample(y_proxy, groups, 4, random_seed=0)
 
-        mock_validate_is_integer.assert_called_once_with(4, "budget")
-        mock_validate_strictly_positive.assert_called_once_with(4, "budget")
-        mock_validate_budget_bound.assert_called_once_with(4, len(y_proxy))
+        mock_validate_is_integer.assert_called_once_with(4, "n_samples")
+        mock_validate_strictly_positive.assert_called_once_with(4, "n_samples")
+        mock_validate_n_samples_bound.assert_called_once_with(4, len(y_proxy))
 
         assert mock_validate_y_proxy.call_count == 3
         np.testing.assert_array_equal(mock_validate_y_proxy.call_args_list[0][0][0], y_proxy)
