@@ -81,3 +81,53 @@ h3, h4, h5, h6 {
   font-size: 0.85em;
   line-height: 1.5;
 }
+
+/* Decision-tree Mermaid diagram: pin it to a fixed light rendering in both
+   light and dark mode. Material themes Mermaid through these CSS variables and
+   flips them with the palette; redefining them on the .mermaid container
+   cascades into the injected SVG <style>, so the diagram looks identical in
+   either mode. The classDef fills/strokes in the diagram itself still win. */
+.mermaid {
+  --md-mermaid-label-fg-color: #1a1a1a;
+  --md-mermaid-label-bg-color: transparent;
+  --md-mermaid-edge-color: #555555;
+  --md-mermaid-node-fg-color: #3a8a8c;
+  --md-mermaid-node-bg-color: #cfe7e8;
+  text-align: center;
+  background-color: #ffffff;
+  border-radius: 6px;
+  padding: 1rem 0;
+}
+
+/* Stretch the diagram to the full content width so it reads large. */
+.mermaid svg {
+  width: 100% !important;
+  max-width: 100% !important;
+  height: auto;
+  margin: 0 auto;
+}
+
+/* The Yes/No edge labels look cleaner without an opaque background; let the
+   subgraph colour (or the white gap) show through. */
+.mermaid .edgeLabel,
+.mermaid .edgeLabel p,
+.mermaid .labelBkg {
+  background-color: transparent !important;
+}
+
+/* Force both subgraph background bands to span the full diagram width so the
+   Sampling and Estimation sections align, instead of each sizing to its own
+   content. Percentages on SVG geometry resolve against the viewBox. */
+.mermaid g.cluster rect {
+  x: 0 !important;
+  width: 100% !important;
+}
+
+/* Keep the subgraph titles dark on the coloured bands. Their larger, bold size
+   is set inline in the diagram labels (via a styled span) rather than here,
+   because Mermaid sizes the title box from the label markup, not from CSS, so a
+   CSS-only enlargement would clip. */
+.mermaid .cluster-label .nodeLabel,
+.mermaid .cluster-label p {
+  color: #1a1a1a !important;
+}

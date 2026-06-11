@@ -17,12 +17,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - Image in the user guide describing GLIDE's three-step workflow
 
 ### 🔄 Changed
+- Replaced the static sampler/estimator selection image with an inline Mermaid decision tree in the tutorials overview, and extended it (and the selection guide) with the clustered-data path leading to the cluster sampler and Clustered PPI++.
 - Removed image from User Guide explaining PPI
 
 ### 🐛 Fixed
 - Fixed broken quickstart link in README (replaced relative path with absolute ReadTheDocs URL)
 
 ### 💛 Contributors
+- @gmartinon-ed
 
 ## [0.6.0] – 2026-06-01
 
