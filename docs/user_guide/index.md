@@ -1,6 +1,6 @@
-# Evaluation Workflow
+# Overview
 
-This page explains how to plan and execute a rigorous evaluation with GLIDE, from raw data to a valid, unbiased metric estimate.
+This guide covers the mathematical foundations of each stage of GLIDE's evaluation workflow, from sampling to estimation.
 
 ---
 
@@ -28,17 +28,9 @@ A sampler is useful when you still need to **allocate an annotation budget** and
 
 ## Stage 1: Sampling
 
-You start with a fully proxy-labeled dataset. The sampler's job is to assign a sampling probability $\pi_i$ to each sample and to select $b$ samples for human annotation where $b$ represents an annotation budget to be allocated. The probabilities $\pi_i$ are needed by the downstream estimator to correct for non-uniform selection.
-
-### Guided sampling
+You start with a fully proxy-labeled dataset. The sampler's job is to decide which samples to send for human annotation, returning a binary selection indicator $\xi_i$ for each sample. Samplers that use non-uniform selection also compute a drawing probability $\pi_i$ per sample, which the downstream estimator uses to correct for sampling bias.
 
 Samplers can exploit the structure of the data or auxiliary information to allocate the annotation budget more efficiently. For example, a sampler may use predefined strata to ensure balanced coverage across subgroups, or it may rely on per-instance auxiliary signals (such as proxy label uncertainty) to focus annotation on the most informative samples.
-
-### Choosing a sampler
-
-GLIDE provides multiple samplers. The choice depends on the structure of your data, for example, whether it can be split into naturally defined groups (language, domain, topic, ...) or whether per-sample uncertainty scores are available. See [Samplers](samplers.md) for a full description of each option.
-
-Samplers compute drawing probabilities for each sample. These are used to select samples for human annotation by setting an indicator value for each element. The probabilities and indicator values are directly used by downstream estimators.
 
 ---
 
@@ -56,29 +48,9 @@ Once all selected samples have been labeled, you have everything needed to run t
 
 Once human labels $Y_i$ have been collected for samples with $\xi_i = 1$, the estimator combines them with the proxy labels to produce an unbiased mean estimate and a confidence interval.
 
-### Choosing an estimator
+---
 
-The right estimator depends on how the labeled subset was drawn:
+## In this guide
 
-| How were labels collected? | Recommended estimator |
-|---|---|
-| Uniform random sample (no sampler used) | [PPI++](estimators.md#prediction-powered-inference-ppi) |
-| Stratified sampling via `StratifiedSampler` with proportional allocation | [Stratified PPI++](estimators.md#stratified-ppi) |
-| Non-uniform sampling via `ActiveSampler` or `StratifiedSampler` with Neyman allocation | [ASI](estimators.md#active-statistical-inference-asi) |
-| No proxy labels available; human labels only | [Classical](estimators.md) |
-
-See [Estimators](estimators.md) for a full description of each option.
-
-## Full workflow example
-
-Here is a concrete end-to-end sequence for a scenario where the data has natural strata (e.g., languages) and you want to allocate an annotation budget of $b = 200$:
-
-1. **Proxy-label all $N$ samples** with your automated judge.
-2. **Run `StratifiedSampler`** with Neyman allocation and $b = 200$. This sets $\pi_i$ and $\xi_i$ for every sample with $\xi_i = 1$ for 200 samples at most.
-3. **Collect human annotations** $Y_i$ for each sample where $\xi_i = 1$ through your annotation process.
-4. **Run `StratifiedPPI`** on the full dataset where each sample has a proxy $\tilde{Y}_i$, and the ground truths $Y_i$ are present for labeled samples. 
-5. **Read** the point estimate $\hat{\theta}$ and the confidence interval $[\hat{\theta} - \delta, \hat{\theta} + \delta]$ for a desired confidence level.
-
-If instead labels already exist for a uniform random subset, skip steps 2–3 and run Stratified PPI++ directly.
-
-See also the [Stratified PPI tutorial](../tutorials/stratified_ppi.ipynb) for a worked example.
+- [Samplers](samplers.md) — mathematical foundations of the available samplers in the library.
+- [Estimators](estimators.md) — mathematical foundations of the available estimators in the library.

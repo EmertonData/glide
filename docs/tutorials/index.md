@@ -2,7 +2,7 @@
 
 This section collects end-to-end tutorials for each combination of sampler and estimator available in GLIDE. Each tutorial walks through a complete path from sampling to annotation to estimation on a simulated dataset, so you can follow along with the use case that best matches your own.
 
-If you are new to GLIDE, read the [Evaluation Workflow](../user_guide/evaluation_workflow.md) first: it explains the three-stage pipeline and the role of each component. The guidance below helps you pick the right sampler and estimator for each stage of that workflow.
+If you are new to GLIDE, read the [User Guide](../user_guide/index.md) first: it explains the three-stage pipeline and the role of each component. The guidance below helps you pick the right sampler and estimator for each stage of that workflow.
 
 ## Choosing the right sampler and estimator
 
