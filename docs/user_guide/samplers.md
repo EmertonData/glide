@@ -1,6 +1,6 @@
 # Samplers
 
-Samplers sit **upstream of the estimators**: they decide *which* samples to send for human annotation. The simplest approach, implemented by `UniformSampler`, draws a budget $b$ of observations uniformly without replacement from a pool of $n$ samples and returns a binary selection vector $\xi \in \{0,1\}^n$. It is the appropriate baseline when no auxiliary signal is available.
+Samplers sit **upstream of the estimators**: they decide *which* samples to send for human annotation. The simplest approach, implemented by `UniformSampler`, draws $n$ observations uniformly without replacement from a pool of $N$ samples and returns a binary selection vector $\xi \in \{0,1\}^N$. It is the appropriate baseline when no auxiliary signal is available.
 
 When auxiliary signals are available, choosing samples strategically can substantially reduce the annotation budget needed to reach a target confidence-interval width. Other samplers (for example, `ActiveSampler`) go further: in addition to $\xi_i$, they compute a **drawing probability** $\pi_i$ for each sample, which allows downstream estimators to apply Inverse Probability Weighting (IPW) and correct for non-uniform sampling bias.
 
@@ -20,21 +20,21 @@ The ultimate purpose is to estimate the mean $\mathbb{E}[Y]$ of ground truths $Y
 
 When the dataset is naturally partitioned into **strata** (groups such as language, domain, or topic), the `StratifiedSampler` allocates the annotation budget across strata before performing per-stratum Bernoulli sampling. It supports two allocation strategies: **proportional** (baseline) and **Neyman** (default, variance-optimal).
 
-Let $K$ denote the number of strata. Stratum $h$ contains $N_h$ samples. The total dataset size is $N = \sum_{h=1}^{K} N_h$ and the annotation budget is $b$.
+Let $K$ denote the number of strata. Stratum $h$ contains $N_h$ samples. The total dataset size is $N = \sum_{h=1}^{K} N_h$ and the annotation count is $n$.
 
 ### Proportional allocation
 
 Proportional allocation assigns budget to each stratum in proportion to its size:
 
-$$n_h^{\text{prop}} = b \cdot \frac{N_h}{N}$$
+$$n_h^{\text{prop}} = n \cdot \frac{N_h}{N}$$
 
-This yields the same sampling probability $\pi_i = b / N$ for every sample, regardless of stratum. It is equivalent to simple random sampling and serves as a baseline.
+This yields the same sampling probability $\pi_i = n / N$ for every sample, regardless of stratum. It is equivalent to simple random sampling and serves as a baseline.
 
 ### Neyman allocation
 
 Neyman allocation assigns more budget to strata with **higher proxy variance**, reducing the asymptotic variance of downstream estimators [[1](#ref-1)]. The raw allocation for stratum $h$ is:
 
-$$n_h^{\text{ney}} = b \cdot \frac{N_h\, \hat{\sigma}_h}{\displaystyle\sum_{k=1}^{K} N_k\, \hat{\sigma}_k}$$
+$$n_h^{\text{ney}} = n \cdot \frac{N_h\, \hat{\sigma}_h}{\displaystyle\sum_{k=1}^{K} N_k\, \hat{\sigma}_k}$$
 
 where $\hat{\sigma}_h$ is the sample standard deviation of the proxy labels within stratum $h$. Strata where the proxy is more dispersed receive a larger slice of the budget, because annotation effort there reduces total variance most efficiently.
 
@@ -42,7 +42,7 @@ When proxy variance is uniform across strata, Neyman allocation reduces to propo
 
 ### Rounding
 
-Both formulas produce fractional per-stratum counts. GLIDE resolves this with **largest-remainder rounding** (Hamilton's method): each stratum first receives $\lfloor n_h \rfloor$ slots, then the strata with the largest fractional remainders $n_h - \lfloor n_h \rfloor$ receive one extra slot each until the total reaches $b$. Per-stratum allocations are additionally capped at $N_h$, so the total allocated budget may be slightly less than $b$ when some strata are very small or have very high variance relatively to others.
+Both formulas produce fractional per-stratum counts. GLIDE resolves this with **largest-remainder rounding** (Hamilton's method): each stratum first receives $\lfloor n_h \rfloor$ slots, then the strata with the largest fractional remainders $n_h - \lfloor n_h \rfloor$ receive one extra slot each until the total reaches $n$. Per-stratum allocations are additionally capped at $N_h$, so the total allocated count may be slightly less than $n$ when some strata are very small or have very high variance relatively to others.
 
 ### Sampling probabilities and procedure
 
@@ -52,7 +52,7 @@ $$\pi_i = \min\!\left(\frac{n_h}{N_h},\; 1\right)$$
 
 Each item is then independently selected via a Bernoulli trial:
 
-$$\xi_i \sim \mathrm{Bernoulli}(\pi_i), \quad i = 1, \ldots, n$$
+$$\xi_i \sim \mathrm{Bernoulli}(\pi_i), \quad i = 1, \ldots, N$$
 
 Each item receives values $(\pi_i, \xi_i)$. Samples with $\xi_i = 1$ are sent for human annotation.
 
@@ -72,9 +72,9 @@ The sampling probabilities are chosen to minimise this quantity. Because it depe
 
 $$\mathrm{minimize} \sum_i \frac{u_i^2}{\pi_i}$$
 
-subject to $\pi_i \in (0, 1]$ for all $i$ and $\sum_i \pi_i = b$. When all resulting probabilities are valid ($\tilde{\pi}_i \leq 1$), the closed-form solution is:
+subject to $\pi_i \in (0, 1]$ for all $i$ and $\sum_i \pi_i = n$. When all resulting probabilities are valid ($\tilde{\pi}_i \leq 1$), the closed-form solution is:
 
-$$\tilde{\pi}_i = b \cdot \frac{u_i}{\sum_{j=1}^{n} u_j}$$
+$$\tilde{\pi}_i = n \cdot \frac{u_i}{\sum_{j=1}^{N} u_j}$$
 
 
 When some uncertainty scores are large enough to push $\tilde{\pi}_i$ above 1, numerical optimisation finds the optimal solution satisfying the constraints.
@@ -89,7 +89,7 @@ $$\xi_i \sim \mathrm{Bernoulli}(\pi_i)$$
 
 The draws are independent across samples. Each sample receives values $(\pi_i, \xi_i)$; samples with $\xi_i = 1$ are sent for human annotation.
 
-Because the draws are random, the total number of selected samples equals the budget only in expectation. To prevent overshooting, the $\xi_i$ draws can be performed one by one, stopping as soon as the budget is reached. Samples not drawn when the budget is exhausted receive $\pi_i = 0$ and $\xi_i = \mathrm{NaN}$, indicating no Bernoulli draw was performed.
+Because the draws are random, the total number of selected samples equals $n$ only in expectation. To prevent overshooting, the $\xi_i$ draws can be performed one by one, stopping as soon as the annotation limit is reached. Samples not drawn when the annotation limit is exhausted receive $\pi_i = 0$ and $\xi_i = \mathrm{NaN}$, indicating no Bernoulli draw was performed.
 
 To ensure the cutoff does not depend on the input order, the samples can be shuffled before the draws begin and the results are returned in the original order.
 
@@ -147,7 +147,7 @@ Since the proxy is queried for every processed sample, the actual cost of sample
 
 $$\mathbb{E}[\text{cost}_i] = c_{\tilde{y}} + c_y \cdot \pi^*$$
 
-The draws can be performed one by one, accumulating the actual cost of each sample until the budget $b$ is exhausted. Samples not reached when the budget runs out receive $\pi_i = 0$ and $\xi_i = \mathrm{NaN}$, indicating no draw was performed.
+The draws can be performed one by one, accumulating the actual cost of each sample until the maximum cost is reached. Samples not reached when the maximum cost is exhausted receive $\pi_i = 0$ and $\xi_i = \mathrm{NaN}$, indicating no draw was performed.
 
 To ensure the cutoff does not depend on the input order, the samples can be shuffled before the draws begin and the results are returned in the original order.
 
@@ -211,7 +211,7 @@ where $\xi_i = 1$ means the sample additionally receives ground truth annotation
 
 $$\mathbb{E}[\text{cost}_i] = c_{\tilde{y}} + c_y \cdot \pi_i$$
 
-The draws can be performed one by one, accumulating the actual cost of each sample until the budget $b$ is exhausted. Samples not reached when the budget runs out receive $\pi_i = 0$ and $\xi_i = \mathrm{NaN}$, indicating no draw was performed.
+The draws can be performed one by one, accumulating the actual cost of each sample until the maximum cost is reached. Samples not reached when the maximum cost is exhausted receive $\pi_i = 0$ and $\xi_i = \mathrm{NaN}$, indicating no draw was performed.
 
 To ensure the cutoff does not depend on the input order, the samples can be shuffled before the draws begin and the results are returned in the original order.
 
@@ -221,17 +221,17 @@ To ensure the cutoff does not depend on the input order, the samples can be shuf
 
 The `UniformClusterSampler` is designed for datasets where observations are grouped into **clusters**: samples within a cluster are correlated (for example, a collection of sentences clustered into paragraphs), while samples from different clusters are independent.
 
-Annotation happens at the **cluster level**: either all observations in a cluster are annotated together or none are. The sampler selects $b$ clusters from the $L$ available clusters uniformly without replacement. Every cluster has equal probability of being chosen, regardless of its size.
+Annotation happens at the **cluster level**: either all observations in a cluster are annotated together or none are. The sampler selects $\ell$ clusters from the $L$ available clusters uniformly without replacement. Every cluster has equal probability of being chosen, regardless of its size.
 
-Let $X_1, \dots, X_N$ denote the $N$ observations, partitioned into $L$ clusters $C_1, \dots, C_L$. These are disjoint subsets of $\{1, \dots, N\}$ satisfying $\bigcup_{l=1}^{L} C_l = \{1, \dots, N\}$ and $C_i \cap C_j = \emptyset$ for $i \neq j$. For a given draw of $b$ clusters, the probability that cluster $C_l$ is selected is:
+Let $X_1, \dots, X_N$ denote the $N$ observations, partitioned into $L$ clusters $C_1, \dots, C_L$. These are disjoint subsets of $\{1, \dots, N\}$ satisfying $\bigcup_{l=1}^{L} C_l = \{1, \dots, N\}$ and $C_i \cap C_j = \emptyset$ for $i \neq j$. For a given draw of $\ell$ clusters, the probability that cluster $C_l$ is selected is:
 
-$$p_l = \frac{b}{L}$$
+$$p_l = \frac{\ell}{L}$$
 
 Because cluster selection is uniform and size-independent, larger clusters contribute more observations in expectation but do not receive a higher inclusion probability than smaller ones.
 
 ### Sampling procedure
 
-The sampler draws $b$ clusters from $C_1, \dots, C_L$ uniformly at random without replacement. Denoting by $l(i)$ the unique cluster index such that $i \in C_{l(i)}$, the selection indicator for observation $X_i$ is:
+The sampler draws $\ell$ clusters from $C_1, \dots, C_L$ uniformly at random without replacement. Denoting by $l(i)$ the unique cluster index such that $i \in C_{l(i)}$, the selection indicator for observation $X_i$ is:
 
 $$\xi_i = \mathbf{1}[C_{l(i)} \text{ was selected}]$$
 

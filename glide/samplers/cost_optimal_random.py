@@ -41,7 +41,7 @@ class CostOptimalRandomSampler:
     ...     n_samples=2,
     ...     y_true_cost=10.0,
     ...     y_proxy_cost=1.0,
-    ...     budget=15,
+    ...     max_cost=15,
     ...     random_seed=42
     ... )
     >>> pi
@@ -121,7 +121,7 @@ class CostOptimalRandomSampler:
         n_samples: int,
         y_true_cost: float,
         y_proxy_cost: float,
-        budget: float,
+        max_cost: float,
         random_seed: Optional[Union[int, SeedSequence]] = None,
     ) -> Tuple[NDArray, NDArray]:
         """Sample observations with cost-optimal allocation between raters.
@@ -131,14 +131,14 @@ class CostOptimalRandomSampler:
 
         Samples are randomly permuted before drawing and the inverse permutation is applied
         to the output, so the returned arrays are always in the original input order. A
-        post-draw cutoff is then applied to strictly respect the budget: samples beyond the
+        post-draw cutoff is then applied to strictly respect the maximum cost: samples beyond the
         cutoff are discarded by setting their entries in ``pi`` and ``xi`` to ``0.0`` and
         ``NaN`` respectively.
 
         The two returned arrays are intended for use with IPW-based downstream estimators. ``pi``
         holds the per-sample probability of querying the expensive rater. ``xi`` holds the
         annotation indicators for selected samples, with NaN marking samples excluded by the
-        budget cutoff.
+        cost cutoff.
 
         Parameters
         ----------
@@ -148,8 +148,8 @@ class CostOptimalRandomSampler:
             Per-sample cost of the expensive rater (H). Must be strictly positive.
         y_proxy_cost : float
             Per-sample cost of the cheap rater (G). Must be strictly positive.
-        budget : float
-            Total annotation budget in cost units. Must be at least ``y_true_cost + y_proxy_cost``.
+        max_cost : float
+            Maximum total annotation cost. Must be at least ``y_true_cost + y_proxy_cost``.
         random_seed : int or SeedSequence or None, optional
             Random seed passed to ``numpy.random.default_rng`` for reproducibility.
             Pass ``None`` (the default) to use a non-deterministic seed.
@@ -161,7 +161,7 @@ class CostOptimalRandomSampler:
             for selected samples and ``0.0`` for unselected samples.
             [1]: array of shape ``(n_samples,)``, ``xi`` with Bernoulli indicators:
             ``1.0`` if selected for annotation, ``0.0`` if not selected,
-            ``NaN`` if excluded by the budget cutoff.
+            ``NaN`` if excluded by the cost cutoff.
 
         Raises
         ------
@@ -170,7 +170,7 @@ class CostOptimalRandomSampler:
         ValueError
             - If ``n_samples`` is not a strictly positive integer.
             - If ``y_true_cost`` or ``y_proxy_cost`` is not strictly positive.
-            - If ``budget < y_true_cost + y_proxy_cost``.
+            - If ``max_cost < y_true_cost + y_proxy_cost``.
         """
         if not hasattr(self, "_y_true_variance") or not hasattr(self, "_mean_squared_error"):
             raise RuntimeError("Call fit() before sample().")
@@ -179,10 +179,10 @@ class CostOptimalRandomSampler:
         _validate_strictly_positive(y_true_cost, "y_true_cost")
         _validate_strictly_positive(y_proxy_cost, "y_proxy_cost")
         _validate_bounds(
-            budget,
-            "budget",
+            max_cost,
+            "max_cost",
             lower=y_true_cost + y_proxy_cost,
-            error_message=f"'budget' should be at least {y_true_cost + y_proxy_cost}; got {budget}.",
+            error_message=f"'max_cost' should be at least {y_true_cost + y_proxy_cost}; got {max_cost}.",
         )
 
         pi_opt = self._compute_optimal_probability(y_true_cost, y_proxy_cost)
@@ -192,6 +192,6 @@ class CostOptimalRandomSampler:
         pi_shuffled, order = _shuffle(pi_all, rng)
         xi_shuffled = rng.binomial(n=1, p=pi_shuffled).astype(float)
         cumulative_costs = np.cumsum(xi_shuffled * y_true_cost + y_proxy_cost)
-        kept_indices = _compute_cutoff_indices(cumulative_costs, order, budget)
+        kept_indices = _compute_cutoff_indices(cumulative_costs, order, max_cost)
         pi_out, xi_out = _build_output(kept_indices, pi_shuffled, xi_shuffled)
         return pi_out, xi_out
