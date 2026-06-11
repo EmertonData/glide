@@ -21,9 +21,7 @@ If there are any uncommitted or untracked changes, warn the user and stop until 
 
 ## Step 2 — Determine bump type
 
-If the user passed `major`, `minor`, or `patch` as an argument to the skill, use that. Otherwise ask:
-
-> "Which version bump does this release require: `major`, `minor`, or `patch`?"
+If the user passed `major`, `minor`, or `patch` as an argument to the skill, use that. Otherwise default to `minor`.
 
 ## Step 3 — Pull latest main
 
