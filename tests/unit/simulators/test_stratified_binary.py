@@ -20,8 +20,8 @@ def test_generate_stratified_binary_dataset_structure_and_counts():
     assert len(y_true) == 6
     assert len(y_proxy) == 6
     assert len(groups) == 6
-    y_true_expected = [1.0, 0.0, 1.0, 1.0, 1.0, 1.0]
-    y_proxy_expected = [1.0, 0.0, 1.0, 1.0, 0.0, 1.0]
+    y_true_expected = [0.0, 1.0, 0.0, 1.0, 1.0, 1.0]
+    y_proxy_expected = [0.0, 1.0, 0.0, 1.0, 1.0, 1.0]
     np.testing.assert_array_equal(groups, [0, 0, 0, 1, 1, 1])
     np.testing.assert_allclose(y_true, y_true_expected)
     np.testing.assert_allclose(y_proxy, y_proxy_expected)

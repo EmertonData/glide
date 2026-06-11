@@ -78,18 +78,22 @@ def generate_binary_dataset(
     max(-p_t * p_p, p_t + p_p - p_t * p_p - 1) <= correlation * D <= min(p_t * (1 - p_p), p_p * (1 - p_t))
     ```
 
-    **Step 2 — Sampling outcome pairs**
+    **Step 2 — Conditional probabilities**
 
-    The four outcomes ``(y_true=0, y_proxy=0)``, ``(y_true=0, y_proxy=1)``,
-    ``(y_true=1, y_proxy=0)``, ``(y_true=1, y_proxy=1)`` are encoded as
-    integers 0–3 with probabilities ``[p00, p01, p10, p11]``.  All ``n_total``
-    pairs are drawn in one call via ``numpy.random.Generator.choice``.
+    ```
+    p11 = correlation * D + p_t * p_p
+    p01 = p_p - p11
 
-    **Step 3 — Decoding labels from integers**
+    P(y_proxy = 1 | y_true = 1) = p11 / p_t
+    P(y_proxy = 1 | y_true = 0) = p01 / (1 - p_t)
+    ```
 
-    The integer encoding satisfies ``y_true = outcome // 2`` and
-    ``y_proxy = outcome % 2``, so both labels are recovered with cheap
-    integer arithmetic.
+    **Step 3 — Two-stage generation**
+
+    ```
+    y_true_i ~ Bernoulli(p_t)
+    y_proxy_i | y_true_i ~ Bernoulli(P(y_proxy = 1 | y_true_i))
+    ```
 
     References
     ----------
@@ -112,16 +116,11 @@ def generate_binary_dataset(
     _validate_bounds(true_mean, "true_mean", lower=0, upper=1, left_inclusive=False, right_inclusive=False)
     _validate_bounds(proxy_mean, "proxy_mean", lower=0, upper=1, left_inclusive=False, right_inclusive=False)
 
-    rng = np.random.default_rng(seed=random_seed)
-
     p_t = true_mean
     p_p = proxy_mean
 
-    # std product of the variable pair will be used multiple times
     D = np.sqrt(p_t * p_p * (1 - p_t) * (1 - p_p))
 
-    # some combinations of true_mean, proxy_mean and correlation are impossible
-    # and lead to negative probabilities, raise an error if this is the case
     min_possible_correlation = max(-p_t * p_p, p_p + p_t - 1 - p_t * p_p) / D
     max_possible_correlation = min(p_t * (1 - p_p), p_p * (1 - p_t)) / D
     if correlation < min_possible_correlation or correlation > max_possible_correlation:
@@ -132,20 +131,15 @@ def generate_binary_dataset(
             f", {max_possible_correlation:.3f})."
         )
 
-    # we will generate pairs values (true, proxy) with true and proxy equal to 0 or 1
-    # probability of outcome (1, 1)
-    p11 = correlation * D + p_t * p_p
-    p00 = 1 - p_t - p_p + p11
-    p01 = p_p - p11
-    p10 = p_t - p11
-    # probabilities of outcomes (0, 0), (0, 1), (1, 0), (1, 1)
-    probs = [p00, p01, p10, p11]
+    rng = np.random.default_rng(seed=random_seed)
+    y_true = rng.binomial(1, p_t, size=n_total).astype(float)
 
-    # generate the outcome pairs as integers between 0 and 3 inclusive
-    samples = rng.choice(4, p=probs, size=n_total)
-    # extract the true and proxy values via integer division and modulo 2
-    # we have 0 = (0, 0), 1 = (0, 1), 2 = (1, 0), 3 = (1, 1)
-    y_true = (samples // 2).astype(float)
-    y_proxy = (samples % 2).astype(float)
+    p11 = correlation * D + p_t * p_p
+    p01 = p_p - p11
+    cond_prob_given_1 = p11 / p_t
+    cond_prob_given_0 = p01 / (1 - p_t)
+
+    cond_probs = np.where(y_true.astype(bool), cond_prob_given_1, cond_prob_given_0)
+    y_proxy = rng.binomial(1, cond_probs).astype(float)
 
     return y_true, y_proxy
