@@ -27,8 +27,7 @@ def test_ipw_mean_matches_expected():
     rng = np.random.default_rng(seed=1)
 
     y_true, _ = generate_gaussian_dataset(
-        n_labeled=n,
-        n_unlabeled=0,
+        n_total=n,
         true_mean=true_mean,
         true_std=true_std,
         random_seed=0,
@@ -54,7 +53,7 @@ def test_uniform_sampling_probability_matches_classical():
     """
     n_labeled = 40
 
-    y_true, _ = generate_gaussian_dataset(n_labeled=n_labeled, n_unlabeled=0, random_seed=0)
+    y_true, _ = generate_gaussian_dataset(n_total=n_labeled, random_seed=0)
     sampling_probability = np.ones(n_labeled)
 
     ipw_result = IPWClassicalMeanEstimator().estimate(y_true, sampling_probability)

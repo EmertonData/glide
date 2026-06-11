@@ -8,7 +8,7 @@ import numpy as np
 import pytest
 
 from glide.estimators import ASIMeanEstimator, PPIMeanEstimator
-from glide.simulators import generate_gaussian_dataset
+from glide.simulators import generate_gaussian_dataset, simulate_annotation
 
 # ── tests ──────────────────────────────────────────────────────────────────────
 
@@ -30,15 +30,16 @@ def test_equal_probabilities_match_simple_ppi():
     proxy_std = 0.1
     random_seed = 0
 
-    y_true, y_proxy = generate_gaussian_dataset(
-        n_labeled=n_labeled,
-        n_unlabeled=n_unlabeled,
+    y_true_oracle, y_proxy = generate_gaussian_dataset(
+        n_total=n_labeled + n_unlabeled,
         true_mean=true_mean,
         true_std=true_std,
         proxy_mean=proxy_mean,
         proxy_std=proxy_std,
         random_seed=random_seed,
     )
+    xi = np.hstack([np.ones(n_labeled), np.zeros(n_unlabeled)])
+    y_true = simulate_annotation(y_true_oracle, xi)
     pi = pi_value * np.ones(n_labeled + n_unlabeled)
 
     asi_result = ASIMeanEstimator().estimate(y_true, y_proxy, pi)
