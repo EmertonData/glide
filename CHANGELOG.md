@@ -17,6 +17,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - Image in the user guide describing GLIDE's three-step workflow
 
 ### 🔄 Changed
+- Renamed `budget` parameter to `n_samples` in `UniformSampler.sample`, `StratifiedSampler.sample`, and `ActiveSampler.sample`. Renamed `n_samples` (pool size) to `n_total` in `UniformSampler.sample`.
+- Renamed `budget` parameter to `max_cost` in `CostOptimalSampler.sample` and `CostOptimalRandomSampler.sample` to make clear it represents a cost amount, not a count.
 - Removed image from User Guide explaining PPI
 
 ### 🐛 Fixed
