@@ -1,6 +1,6 @@
 ---
 name: release
-description: Automates the GLIDE release process end-to-end: bumps the version, edits CHANGELOG, opens a release PR, triggers TestPyPI, creates the git tag, and creates the GitHub release. Use whenever the user says "make a release", "cut a release", "release a new version", "ship a new version", "publish a release", "tag the release", "publish to PyPI", or invokes /release with an optional bump type (major/minor/patch). Invoke even when phrased informally ("time to ship", "let's cut a patch", "push a new version").
+description: Automates the GLIDE release process end-to-end: bumps the version, edits CHANGELOG, opens a release PR, triggers TestPyPI, creates the git tag, and creates the GitHub release. Use whenever the user says "make a release", "release a new version", "ship a new version", "publish a release", "publish to PyPI", or invokes /release with an optional bump type (major/minor/patch).
 ---
 
 ## Overview
@@ -73,7 +73,7 @@ git checkout -b release/v<NEW_VERSION>
 ### A6. Bump version files
 
 ```bash
-make bump-major   # or bump-minor or bump-patch
+make bump-minor   # or bump-major or bump-patch
 ```
 
 Verify the new version in `pyproject.toml` matches what you computed in A4. If it doesn't match, stop and report.
