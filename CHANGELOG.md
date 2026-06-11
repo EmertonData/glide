@@ -17,7 +17,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - Image in the user guide describing GLIDE's three-step workflow
 
 ### 🔄 Changed
-- Added the clustered-data path (cluster sampler, Clustered PPI++) to the sampler/estimator selection guide in the tutorials overview
 - Removed image from User Guide explaining PPI
 
 ### 🐛 Fixed
