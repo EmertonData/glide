@@ -101,7 +101,7 @@ def test_compute_optimal_probability_pi_known_value(fitted_sampler):
 
 def test_sample_raises_if_fit_not_called(sampler):
     with pytest.raises(RuntimeError, match="Call fit\\(\\) before sample"):
-        sampler.sample(n_samples=2, y_true_cost=10.0, y_proxy_cost=1.0, total_cost=5, random_seed=42)
+        sampler.sample(n_samples=2, y_true_cost=10.0, y_proxy_cost=1.0, cost_limit=5, random_seed=42)
 
 
 def test_sample_delegates_to_validation(fitted_sampler):
@@ -110,7 +110,7 @@ def test_sample_delegates_to_validation(fitted_sampler):
         patch.object(cost_optimal_random_module, "_validate_strictly_positive") as mock_validate_strictly_positive,
         patch.object(cost_optimal_random_module, "_validate_bounds") as mock_validate_bounds,
     ):
-        fitted_sampler.sample(n_samples=2, y_true_cost=10.0, y_proxy_cost=1.0, total_cost=10, random_seed=42)
+        fitted_sampler.sample(n_samples=2, y_true_cost=10.0, y_proxy_cost=1.0, cost_limit=10, random_seed=42)
 
         mock_validate_is_integer.assert_called_once_with(2, "n_samples")
         mock_validate_strictly_positive.assert_has_calls(
@@ -122,21 +122,21 @@ def test_sample_delegates_to_validation(fitted_sampler):
         )
         mock_validate_bounds.assert_called_once_with(
             10,
-            "total_cost",
+            "cost_limit",
             lower=11.0,
-            error_message="'total_cost' should be at least 11.0; got 10.",
+            error_message="'cost_limit' should be at least 11.0; got 10.",
         )
 
 
-def test_sample_total_cost_too_small_raises(fitted_sampler):
-    with pytest.raises(ValueError, match="'total_cost' should be at least"):
-        fitted_sampler.sample(n_samples=2, y_true_cost=100.0, y_proxy_cost=1.0, total_cost=1, random_seed=42)
+def test_sample_cost_limit_too_small_raises(fitted_sampler):
+    with pytest.raises(ValueError, match="'cost_limit' should be at least"):
+        fitted_sampler.sample(n_samples=2, y_true_cost=100.0, y_proxy_cost=1.0, cost_limit=1, random_seed=42)
 
 
 def test_sample_known_output(fitted_sampler):
     n_samples = 2
     pi, xi = fitted_sampler.sample(
-        n_samples=n_samples, y_true_cost=10.0, y_proxy_cost=1.0, total_cost=15, random_seed=42
+        n_samples=n_samples, y_true_cost=10.0, y_proxy_cost=1.0, cost_limit=15, random_seed=42
     )
 
     expected_pi = np.array([0.045, 0.045])
@@ -149,7 +149,7 @@ def test_sample_known_output(fitted_sampler):
 def test_sample_known_output_truncated_samples(fitted_sampler):
     n_samples = 5
     pi, xi = fitted_sampler.sample(
-        n_samples=n_samples, y_true_cost=10.0, y_proxy_cost=1.0, total_cost=11, random_seed=6
+        n_samples=n_samples, y_true_cost=10.0, y_proxy_cost=1.0, cost_limit=11, random_seed=6
     )
 
     expected_pi = np.array([0.0, 0.0, 0.045, 0.0, 0.0])
@@ -160,8 +160,8 @@ def test_sample_known_output_truncated_samples(fitted_sampler):
 
 
 def test_sample_reproducibility(fitted_sampler):
-    pi1, xi1 = fitted_sampler.sample(n_samples=2, y_true_cost=10.0, y_proxy_cost=1.0, total_cost=15, random_seed=42)
-    pi2, xi2 = fitted_sampler.sample(n_samples=2, y_true_cost=10.0, y_proxy_cost=1.0, total_cost=15, random_seed=42)
+    pi1, xi1 = fitted_sampler.sample(n_samples=2, y_true_cost=10.0, y_proxy_cost=1.0, cost_limit=15, random_seed=42)
+    pi2, xi2 = fitted_sampler.sample(n_samples=2, y_true_cost=10.0, y_proxy_cost=1.0, cost_limit=15, random_seed=42)
 
     np.testing.assert_array_equal(pi1, pi2)
     np.testing.assert_array_equal(xi1, xi2)
@@ -169,10 +169,10 @@ def test_sample_reproducibility(fitted_sampler):
 
 def test_sample_different_seeds_results_differ(fitted_sampler_high_MSE):
     pi1, xi1 = fitted_sampler_high_MSE.sample(
-        n_samples=5, y_true_cost=10.0, y_proxy_cost=1.0, total_cost=15, random_seed=0
+        n_samples=5, y_true_cost=10.0, y_proxy_cost=1.0, cost_limit=15, random_seed=0
     )
     pi2, xi2 = fitted_sampler_high_MSE.sample(
-        n_samples=5, y_true_cost=10.0, y_proxy_cost=1.0, total_cost=15, random_seed=1
+        n_samples=5, y_true_cost=10.0, y_proxy_cost=1.0, cost_limit=15, random_seed=1
     )
 
     assert (np.array_equal(pi1, pi2)) and (not np.array_equal(xi1, xi2))
