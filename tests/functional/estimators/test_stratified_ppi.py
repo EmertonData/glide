@@ -26,7 +26,9 @@ def test_two_equal_strata_matches_ppi():
     n_labeled, n_unlabeled = 3, 4
 
     # Generate base numpy arrays
-    y_true, y_proxy = generate_gaussian_dataset(n_labeled=n_labeled, n_unlabeled=n_unlabeled, random_seed=0)
+    y_true_oracle, y_proxy = generate_gaussian_dataset(n_total=n_labeled + n_unlabeled, random_seed=0)
+    xi = np.hstack([np.ones(n_labeled), np.zeros(n_unlabeled)])
+    y_true = simulate_annotation(y_true_oracle, xi)
 
     # Per-stratum PPI reference (single copy)
     result_single = PPIMeanEstimator().estimate(y_true, y_proxy)
@@ -56,7 +58,9 @@ def test_single_stratum_matches_ppi():
     n_labeled, n_unlabeled = 5, 8
     random_seed = 7
 
-    y_true, y_proxy = generate_gaussian_dataset(n_labeled, n_unlabeled, random_seed=random_seed)
+    y_true_oracle, y_proxy = generate_gaussian_dataset(n_total=n_labeled + n_unlabeled, random_seed=random_seed)
+    xi = np.hstack([np.ones(n_labeled), np.zeros(n_unlabeled)])
+    y_true = simulate_annotation(y_true_oracle, xi)
     groups = np.full(len(y_true), "A")
 
     stratified_result = StratifiedPPIMeanEstimator().estimate(y_true, y_proxy, groups)
@@ -76,13 +80,16 @@ def test_stratified_ppi_narrower_ci_with_heterogeneous_strata():
     n_labeled, n_unlabeled = 5, 6
 
     # Stratum A: low proxy noise
-    y_true_a, y_proxy_a = generate_gaussian_dataset(
-        n_labeled=n_labeled, n_unlabeled=n_unlabeled, true_mean=0.6, true_std=0.1, random_seed=random_seed
+    y_true_oracle_a, y_proxy_a = generate_gaussian_dataset(
+        n_total=n_labeled + n_unlabeled, true_mean=0.6, true_std=0.1, random_seed=random_seed
     )
+    xi = np.hstack([np.ones(n_labeled), np.zeros(n_unlabeled)])
+    y_true_a = simulate_annotation(y_true_oracle_a, xi)
     # Stratum B: high proxy noise → lower lambda is optimal
-    y_true_b, y_proxy_b = generate_gaussian_dataset(
-        n_labeled=n_labeled, n_unlabeled=n_unlabeled, true_mean=0.4, true_std=1.5, random_seed=random_seed
+    y_true_oracle_b, y_proxy_b = generate_gaussian_dataset(
+        n_total=n_labeled + n_unlabeled, true_mean=0.4, true_std=1.5, random_seed=random_seed
     )
+    y_true_b = simulate_annotation(y_true_oracle_b, xi)
 
     # Build data arrays
     y_true_pooled = np.hstack([y_true_a, y_true_b])
@@ -111,7 +118,6 @@ def test_neyman_allocation_yields_narrower_ci_than_proportional():
 
     # Common parameters
     n_labeled_per_stratum = 200
-    n_unlabeled = 0
     true_mean = 0.5
     proxy_mean = 0.5
     low_std = 0.2
@@ -119,8 +125,7 @@ def test_neyman_allocation_yields_narrower_ci_than_proportional():
 
     # Stratum A: low variance (std_A = 0.2)
     y_true_a, y_proxy_a = generate_gaussian_dataset(
-        n_labeled=n_labeled_per_stratum,
-        n_unlabeled=n_unlabeled,
+        n_total=n_labeled_per_stratum,
         true_mean=true_mean,
         true_std=low_std,
         proxy_mean=proxy_mean,
@@ -130,8 +135,7 @@ def test_neyman_allocation_yields_narrower_ci_than_proportional():
 
     # Stratum B: high variance (std_B = 2.0, ratio 10:1)
     y_true_b, y_proxy_b = generate_gaussian_dataset(
-        n_labeled=n_labeled_per_stratum,
-        n_unlabeled=n_unlabeled,
+        n_total=n_labeled_per_stratum,
         true_mean=true_mean,
         true_std=high_std,
         proxy_mean=proxy_mean,
