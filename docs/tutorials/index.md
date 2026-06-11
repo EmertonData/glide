@@ -9,7 +9,7 @@ If you are new to GLIDE, read the [Evaluation Workflow](../user_guide/evaluation
 The workflow breaks into three sequential phases: **Sampling** (deciding which items to send for human annotation), **Annotation** (collecting human labels), and **Estimation** (computing debiased statistics from the combined human and proxy data). The decision tree below guides you through each phase.
 
 <p align="center">
-  <img src="../assets/which-estimators-to-use.png" alt="Decision tree for choosing a GLIDE sampler and estimator" width="80%">
+  <img src="../assets/glide-decision-tree.png" alt="Decision tree for choosing a GLIDE sampler and estimator" width="80%">
 </p>
 
 ---
@@ -58,4 +58,4 @@ Use the table below to find the tutorial that matches your situation.
 | Yes | No | No | No | Cost-optimal random | PPI++ | [Cost estimates available (Cost-Optimal Random Sampling)](cost_optimal_random.ipynb) |
 | Yes | Yes | No | No | Cost-optimal | ASI | [Cost and uncertainty scores available (Cost-Optimal Sampling)](cost_optimal.ipynb) |
 
-If your data contains fewer than 50 human labels: use the PTD variant of the estimators above (`PTDMeanEstimator` for PPI++, `StratifiedPTDMeanEstimator` for Stratified PPI++ and `IPWPTDMeanEstimator` for ASI). In the stratified case, the `StratifiedPTDMeanEstimator` should be used whenever one of the strata has fewer than 50 labels. The tutorial workflow for the respective estimators is identical; only the estimator class changes.
+If your data contains fewer than 50 human labels: use the PTD variant of the estimators above (`PTDMeanEstimator` for PPI++, `StratifiedPTDMeanEstimator` for Stratified PPI++, `ClusteredPTDMeanEstimator` for Clustered PPI++, and `IPWPTDMeanEstimator` for ASI). In the stratified case, the `StratifiedPTDMeanEstimator` should be used whenever one of the strata has fewer than 50 labels. The tutorial workflow for the respective estimators is identical; only the estimator class changes.
