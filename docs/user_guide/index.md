@@ -52,5 +52,5 @@ Once human labels $Y_i$ have been collected for samples with $\xi_i = 1$, the es
 
 ## In this guide
 
-- [Samplers](samplers.md) — mathematical foundations of each available sampler, including stratified, cost-optimal, and uncertainty-aware strategies
-- [Estimators](estimators.md) — mathematical foundations of each available estimator, including PPI++, Stratified PPI++, ASI, Classical, and their PTD variants
+- [Samplers](samplers.md) — mathematical foundations of the available samplers in the library.
+- [Estimators](estimators.md) — mathematical foundations of the available estimators in the library.

@@ -1,6 +1,6 @@
 # Estimators
 
-GLIDE provides three estimators that each combine proxy labels and a small human-annotated subset to produce an unbiased mean estimate and a confidence interval. The right choice depends on how the labeled subset was collected (see the [User Guide](index.md) for guidance).
+GLIDE provides three estimators that each combine proxy labels and a small human-annotated subset to produce an unbiased mean estimate and a confidence interval. The right choice depends on how the labeled subset was collected.
 
 ---
 
