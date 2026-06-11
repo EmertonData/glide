@@ -35,7 +35,7 @@ git checkout main && git pull origin main
 make bump-minor   # or bump-major or bump-patch
 ```
 
-Read `NEW_VERSION` from the command output. Use it in all subsequent steps.
+Then read `NEW_VERSION` from the `version = "X.Y.Z"` line under `[project]` in `pyproject.toml`. Use it in all subsequent steps.
 
 ## Step 5 — Create the release branch
 
