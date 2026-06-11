@@ -17,7 +17,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - Image in the user guide describing GLIDE's three-step workflow
 
 ### 🔄 Changed
-- Replaced the  decision tree image with an inline Mermaid graph in the tutorials overview
+- Added the clustered-data path (cluster sampler, Clustered PPI++) to the sampler/estimator selection guide in the tutorials overview
 - Removed image from User Guide explaining PPI
 
 ### 🐛 Fixed
@@ -84,7 +84,7 @@ Thank you to everyone who contributed to this release: @gmartinon-ed, @imerad, @
 - Code of conduct
 - Issue templates
 - Doctest for `glide.io.to_json`
-  
+
 ### 🔄 Changed
 - Removed dataset container object `Dataset`
 - Improved efficiency of `BootstrapConfidenceInterval.test_null_hypothesis()` from O(n) to O(log n) using binary search on sorted bootstrap samples
