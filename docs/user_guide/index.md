@@ -28,7 +28,7 @@ A sampler is useful when you still need to **allocate an annotation budget** and
 
 ## Stage 1: Sampling
 
-You start with a fully proxy-labeled dataset. The sampler's job is to assign a sampling probability $\pi_i$ to each sample and to select $b$ samples for human annotation where $b$ represents an annotation budget to be allocated. The probabilities $\pi_i$ are needed by the downstream estimator to correct for non-uniform selection.
+You start with a fully proxy-labeled dataset. The sampler's job is to decide which samples to send for human annotation, returning a binary selection indicator $\xi_i$ for each sample. Samplers that use non-uniform selection also compute a drawing probability $\pi_i$ per sample, which the downstream estimator uses to correct for sampling bias.
 
 Samplers can exploit the structure of the data or auxiliary information to allocate the annotation budget more efficiently. For example, a sampler may use predefined strata to ensure balanced coverage across subgroups, or it may rely on per-instance auxiliary signals (such as proxy label uncertainty) to focus annotation on the most informative samples.
 
