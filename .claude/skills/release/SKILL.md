@@ -7,40 +7,11 @@ description: Automates the GLIDE release process end-to-end: bumps the version, 
 
 This skill drives the full GLIDE release process with minimal human action. There are two human gates: merging the release PR (after CI passes) and confirming the TestPyPI installation. Everything else is automated.
 
-The skill detects where in the process things stand and picks up from the right phase.
+The skill runs as a single linear flow within one conversation. When it reaches the merge gate, it pauses and explicitly tells the user to come back to this same conversation after merging.
 
 ---
 
-## Step 1 — Detect current state
-
-Run these commands to understand current state:
-
-```bash
-git fetch origin
-git describe --tags --abbrev=0 2>/dev/null || echo "NO_TAG"
-gh pr list --state open --head "release/" --json title,url,headRefName
-git show origin/main:pyproject.toml | head -5
-```
-
-**Routing logic:**
-
-- If there is an open PR whose head branch starts with `release/`: the release branch was created but the PR is not yet merged → tell the user to merge it and re-invoke. Do not proceed further.
-- If `origin/main` has a version **newer** than the latest tag, OR the latest tag is `NO_TAG` and `origin/main` has any non-zero version: the release PR has already been merged → go to **Phase B**.
-- Otherwise: no release is in flight → go to **Phase A**.
-
----
-
-## Phase A — Create the release branch
-
-### A0. Confirm all intended changes are on main
-
-Before touching anything, ask the user:
-
-> "Before I start: please confirm that `main` contains all the changes intended for this release. Any PR that isn't merged yet won't be included. Good to go?"
-
-Wait for confirmation.
-
-### A1. Check for a clean working tree
+## Step 1 — Check for a clean working tree
 
 ```bash
 git status --short
@@ -48,37 +19,33 @@ git status --short
 
 If there are any uncommitted or untracked changes, warn the user and stop until they resolve it.
 
-### A2. Determine bump type
+## Step 2 — Determine bump type
 
 If the user passed `major`, `minor`, or `patch` as an argument to the skill, use that. Otherwise ask:
 
 > "Which version bump does this release require: `major`, `minor`, or `patch`?"
 
-### A3. Pull latest main
+## Step 3 — Pull latest main
 
 ```bash
 git checkout main && git pull origin main
 ```
 
-### A4. Compute the new version without modifying files
-
-Read the current version from `pyproject.toml` (the `version = "X.Y.Z"` line under `[project]`) and derive the new version by incrementing the appropriate component. Do this in your head — do not run any bump command yet.
-
-### A5. Create the release branch
-
-```bash
-git checkout -b release/v<NEW_VERSION>
-```
-
-### A6. Bump version files
+## Step 4 — Bump version files
 
 ```bash
 make bump-minor   # or bump-major or bump-patch
 ```
 
-Verify the new version in `pyproject.toml` matches what you computed in A4. If it doesn't match, stop and report.
+Read `NEW_VERSION` from the command output. Use it in all subsequent steps.
 
-### A7. Update CHANGELOG.md
+## Step 5 — Create the release branch
+
+```bash
+git checkout -b release/v<NEW_VERSION>
+```
+
+## Step 6 — Update CHANGELOG.md
 
 Read the full current `CHANGELOG.md`. Then:
 
@@ -109,55 +76,61 @@ Read the full current `CHANGELOG.md`. Then:
 
 Write the updated file back to disk.
 
-### A8. Commit
+4. **Simplify the new changelog section** before showing it to the user:
+   - Combine entries that refer to the same feature into a single bullet point.
+   - Remove any remaining duplicates.
+   - Rewrite technical or jargon-heavy entries into plain, user-friendly language — focus on what changed and why it matters to the user, not implementation details.
+   - Drop empty subsections (e.g., a `### 🐛 Fixed` heading with no bullets).
+
+   Present the simplified section to the user and ask:
+
+   > "Here is the changelog section for `vX.Y.Z`:
+   >
+   > <SECTION CONTENT>
+   >
+   > Does this look good, or would you like any changes?"
+
+   Wait for approval. Apply any requested edits and re-present until the user confirms. Then write the final version to disk.
+
+## Step 7 — Commit, push, and open a PR
 
 ```bash
 git add pyproject.toml CITATION.cff CHANGELOG.md
 git commit -m "chore: bump version to v<NEW_VERSION> and update changelog"
-```
-
-### A9. Push and open a PR
-
-Push the branch:
-
-```bash
 git push -u origin release/v<NEW_VERSION>
 ```
 
-Fetch the repo URL dynamically:
+Ask the user:
 
-```bash
-gh repo view --json url -q .url
-```
+> "Do you have a release ticket URL to link in the PR? (paste it or say no)"
 
-Create the PR with `gh pr create`:
+Then invoke the `create-pr` skill with the following context:
 
 - **Title:** `Release v<NEW_VERSION>`
-- **Body:** paste the changelog section for `[X.Y.Z]` verbatim (the lines you just moved). No issue to close — omit the `Closes` line.
-- **Labels:** attach the `release` label if it exists (`gh label list --limit 100`); otherwise no label.
+- **Body:** the approved changelog section for `[X.Y.Z]` verbatim (the lines moved in Step 6). If the user provided a ticket URL, include a `Closes <URL>` line; otherwise omit it.
+- **Labels:** `release`
 - Do **not** assign reviewers.
 
-Print the PR URL for the user, then say:
+Once the PR is open, say:
 
-> "The release PR is open at <URL>. Once CI passes, merge it, then run `/release` again to continue with tagging and publishing."
+> "The release PR is open at <URL>. Once CI passes, merge it, then **come back to this conversation** and tell me it's merged so I can continue with tagging and publishing."
+
+**Stop here and wait.** Do not proceed until the user returns to this conversation and confirms the PR has been merged.
 
 ---
 
-## Phase B — Tag, publish, and create GitHub release
+## Step 8 — Confirm merge and proceed
 
-This phase runs after the release PR has been merged into `main`.
-
-### B1. Confirm with user
-
-Fetch the repo URL:
+When the user returns and says the PR is merged, confirm by checking:
 
 ```bash
 REPO_URL=$(gh repo view --json url -q .url)
+git fetch origin
 ```
 
-Show the user:
+Then say:
 
-> "Detected version `vX.Y.Z` on `main` (previous tag: `vA.B.C`). I'll now:
+> "I'll now:
 > 1. Trigger the TestPyPI workflow
 > 2. Create and push the tag after you confirm the TestPyPI build
 > 3. Create the GitHub release
@@ -166,7 +139,7 @@ Show the user:
 
 Wait for confirmation before continuing.
 
-### B2. Trigger and monitor the TestPyPI workflow
+## Step 9 — Trigger and monitor the TestPyPI workflow
 
 Trigger the workflow, wait a few seconds for it to register, then grab the run ID and watch it to completion:
 
@@ -179,7 +152,7 @@ gh run watch "$RUN_ID" --exit-status
 
 `gh run watch` streams live output and exits non-zero if the run fails. If it fails, stop and show the user the failure URL (`${REPO_URL}/actions/runs/${RUN_ID}`) before proceeding.
 
-### B3. Verify TestPyPI installation
+## Step 10 — Verify TestPyPI installation
 
 Once the workflow passes, verify the package is installable from TestPyPI:
 
@@ -193,7 +166,7 @@ echo "Installed version: $INSTALLED"
 
 Check that `$INSTALLED` matches `v<NEW_VERSION>`. If it does not match or the install fails, stop and report before proceeding.
 
-### B4. Pull latest main and create the tag
+## Step 11 — Pull latest main and create the tag
 
 ```bash
 git checkout main && git pull origin main
@@ -203,19 +176,22 @@ git push origin v<NEW_VERSION>
 
 Tell the user the tag has been pushed and the PyPI publish workflow is now running.
 
-### B5. Monitor the PyPI publish workflow
+## Step 12 — Monitor the PyPI publish workflow
 
-Wait for the tag-triggered workflow run to appear, then watch it:
+Poll until the tag-triggered workflow run appears (timeout after 60 seconds), then watch it:
 
 ```bash
-sleep 10
-RUN_ID=$(gh run list --workflow=release.yml --limit 1 --json databaseId -q '.[0].databaseId')
+DEADLINE=$((SECONDS + 60))
+until RUN_ID=$(gh run list --workflow=release.yml --branch v<NEW_VERSION> --limit 1 --json databaseId -q '.[0].databaseId') && [ -n "$RUN_ID" ]; do
+  [ $SECONDS -ge $DEADLINE ] && { echo "Timed out waiting for workflow run."; exit 1; }
+  sleep 5
+done
 gh run watch "$RUN_ID" --exit-status
 ```
 
 If it fails, report the failure URL (`${REPO_URL}/actions/runs/${RUN_ID}`) and stop.
 
-### B6. Verify PyPI installation
+## Step 13 — Verify PyPI installation
 
 Once the publish workflow passes, verify the package is installable from PyPI:
 
@@ -229,7 +205,7 @@ echo "Installed version: $INSTALLED"
 
 Check that `$INSTALLED` matches `v<NEW_VERSION>`. If it does not, report and stop.
 
-### B7. Create the GitHub release
+## Step 14 — Create the GitHub release
 
 Extract the relevant section from `CHANGELOG.md` on `main` (the `## [X.Y.Z]` block — everything between that header and the next `## [` header).
 
@@ -253,5 +229,4 @@ Print the release URL and report that the release is complete.
 - Never create a tag before both the TestPyPI workflow has passed (verified via `gh run watch`) and the installation from TestPyPI has succeeded.
 - If any command fails (e.g., `make bump-*`, `gh workflow run`), stop and report the error to the user before proceeding.
 - The workflow file is `release.yml` — use this exact filename with `gh workflow run`.
-- When re-invoked after a partial Phase A, always re-run Step 1 state detection to avoid creating duplicate branches or tags.
 - Derive the GitHub repo URL dynamically with `gh repo view --json url -q .url` — never hardcode it.
