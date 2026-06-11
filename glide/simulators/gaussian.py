@@ -37,8 +37,8 @@ def generate_gaussian_dataset(
     Returns
     -------
     Tuple[NDArray, NDArray]
-        [0]: array of shape ``(n_total,)``, oracle true labels with no NaN
-        [1]: array of shape ``(n_total,)``, proxy labels with no NaN
+        [0]: array of shape ``(n_total,)``, oracle true labels
+        [1]: array of shape ``(n_total,)``, proxy labels
 
     Notes
     -----
@@ -120,7 +120,7 @@ def generate_gaussian_dataset(
     >>> y_true, y_proxy = generate_gaussian_dataset(n_total=8, random_seed=42)
     >>> len(y_true)
     8
-    >>> int(np.sum(~np.isnan(y_true)))
+    >>> len(y_proxy)
     8
     """
     _validate_bounds(correlation, "correlation", lower=-1, upper=1)
@@ -130,7 +130,7 @@ def generate_gaussian_dataset(
 
     Y = lin_transform @ rng.standard_normal(size=(2, n_total))
 
-    y_true = true_mean + Y[0, :].copy()
+    y_true = true_mean + Y[0, :]
     y_proxy = proxy_mean + Y[1, :]
 
     return y_true, y_proxy

@@ -17,6 +17,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - Image in the user guide describing GLIDE's three-step workflow
 
 ### 🔄 Changed
+- `generate_gaussian_dataset` now accepts `n_total` instead of `n_labeled` and `n_unlabeled`.
 - Removed image from User Guide explaining PPI
 
 ### 🐛 Fixed
