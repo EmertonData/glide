@@ -311,7 +311,7 @@ def test_validate_n_samples_bound_delegates():
     with patch("glide.core.validation._validate_bounds") as mock_validate_bounds:
         _validate_n_samples_bound(3, n_max=5)
         expected_msg = (
-            "'n_samples' must not exceed the number of samples; got n_samples=3 but the dataset has 5 elements."
+            "'n_samples' must not exceed the total sample count; got n_samples=3 but there are only 5 elements."
         )
         mock_validate_bounds.assert_called_once_with(3, "n_samples", upper=5, error_message=expected_msg)
 

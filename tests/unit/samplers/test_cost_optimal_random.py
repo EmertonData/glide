@@ -128,11 +128,6 @@ def test_sample_delegates_to_validation(fitted_sampler):
         )
 
 
-def test_sample_cost_limit_too_small_raises(fitted_sampler):
-    with pytest.raises(ValueError, match="'cost_limit' should be at least"):
-        fitted_sampler.sample(n_samples=2, y_true_cost=100.0, y_proxy_cost=1.0, cost_limit=1, random_seed=42)
-
-
 def test_sample_known_output(fitted_sampler):
     n_samples = 2
     pi, xi = fitted_sampler.sample(

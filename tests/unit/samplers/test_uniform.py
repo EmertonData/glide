@@ -23,15 +23,12 @@ def test_sample_delegates_validation(sampler):
     with (
         patch("glide.samplers.uniform._validate_is_integer") as mock_validate_is_integer,
         patch("glide.samplers.uniform._validate_strictly_positive") as mock_validate_strictly_positive,
+        patch("glide.samplers.uniform._validate_n_samples_bound") as mock_validate_n_samples_bound,
     ):
         sampler.sample(n_total=2, n_samples=1, random_seed=0)
     mock_validate_is_integer.assert_has_calls([call(2, "n_total"), call(1, "n_samples")])
     mock_validate_strictly_positive.assert_has_calls([call(2, "n_total"), call(1, "n_samples")])
-
-
-def test_sample_n_samples_exceeds_n_total(sampler, n_total):
-    with pytest.raises(ValueError, match="n_samples"):
-        sampler.sample(n_total=n_total, n_samples=n_total + 1, random_seed=0)
+    mock_validate_n_samples_bound.assert_called_once_with(1, 2)
 
 
 def test_sample_valid_output(sampler):

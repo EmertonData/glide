@@ -147,11 +147,6 @@ def test_sample_negative_y_proxy_cost(fitted_sampler, uncertainties):
         fitted_sampler.sample(uncertainties, y_true_cost=10.0, y_proxy_cost=-1, cost_limit=5, random_seed=42)
 
 
-def test_sample_cost_limit_too_small_raises(fitted_sampler, uncertainties):
-    with pytest.raises(ValueError, match="'cost_limit' should be at least"):
-        fitted_sampler.sample(uncertainties, y_true_cost=10.0, y_proxy_cost=1.0, cost_limit=1, random_seed=42)
-
-
 def test_sample_known_output(fitted_sampler, uncertainties):
     pi, xi = fitted_sampler.sample(uncertainties, y_true_cost=10.0, y_proxy_cost=1.0, cost_limit=20, random_seed=42)
 

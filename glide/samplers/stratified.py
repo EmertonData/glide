@@ -13,10 +13,10 @@ from glide.core.validation import (
 
 
 class StratifiedSampler:
-    """Sampler for per-stratum annotation budget allocation.
+    """Sampler for per-stratum annotation allocation.
 
     This class implements stratified sampling strategies that determine how many samples
-    to annotate in each stratum, given a fixed annotation budget and proxy labels for
+    to annotate in each stratum, given a target annotation count (``n_samples``) and proxy labels for
     all samples (provided as numpy arrays). It supports two allocation strategies:
 
     - **Proportional allocation** (baseline): Allocates budget proportionally to stratum
@@ -26,9 +26,9 @@ class StratifiedSampler:
       proxy variance, minimising the asymptotic variance of downstream estimators.
       Particularly effective when proxy variance varies substantially across strata.
 
-    Both allocators use largest-remainder rounding (Hamilton's method) to allocate budget
-    across strata. Per-stratum sample sizes are capped at stratum size, so total allocated
-    n_samples Σ n_h ≤ n_samples (may be less if strata are small). The sampler is typically used
+    Both allocators use largest-remainder rounding (Hamilton's method) to allocate ``n_samples``
+    across strata. Per-stratum sample sizes are capped at stratum size, so total allocated count
+    Σ n_h ≤ n_samples (may be less if strata are small). The sampler is typically used
     upstream of statistical estimators to plan annotation effort.
 
     References
@@ -197,7 +197,7 @@ class StratifiedSampler:
             if n_h < 2:
                 raise ValueError(
                     f"Stratum '{stratum_id}' has fewer than two allocations. All strata must receive at least "
-                    f"two annotation slots. Consider increasing the budget or using bigger strata."
+                    f"two annotation slots. Consider increasing 'n_samples' or using bigger strata."
                 )
 
             stratum_mask = groups == stratum_id

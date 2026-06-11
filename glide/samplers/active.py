@@ -102,14 +102,14 @@ class ActiveSampler:
         Samples are randomly permuted before drawing and the inverse permutation
         is applied to the output, so the returned arrays are always in the
         original input order. A post-draw cutoff is then applied to strictly
-        respect the budget: samples beyond the cutoff are discarded by setting their entries
+        respect the ``n_samples`` limit: samples beyond the cutoff are discarded by setting their entries
         in ``pi`` and ``xi`` to ``0.0`` and ``NaN`` respectively.
 
         The two returned arrays are intended for use with IPW-based downstream estimators.
         ``pi`` holds the per-sample probability of being selected. ``xi`` holds the
         selection indicators for each sample so that a value of 1 means the sample
         should be sent for annotation, a value of 0 means it was not selected, and
-        ``NaN`` means it was discarded by the budget cutoff.
+        ``NaN`` means it was discarded by the cutoff.
 
         Parameters
         ----------
@@ -130,7 +130,7 @@ class ActiveSampler:
             for selected samples and ``0.0`` for unselected samples.
             [1]: array of shape ``(n_total,)``, ``xi`` with Bernoulli indicators:
             ``1.0`` if selected for annotation, ``0.0`` if not selected,
-            ``NaN`` if excluded by the budget cutoff.
+            ``NaN`` if excluded by the cutoff.
 
         Raises
         ------

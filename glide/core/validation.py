@@ -118,8 +118,8 @@ def _validate_n_samples_bound(n_samples: int, n_max: int) -> None:
         n_samples,
         "n_samples",
         upper=n_max,
-        error_message=f"'n_samples' must not exceed the number of samples; got n_samples={n_samples} but the dataset "
-        f"has {n_max} elements.",
+        error_message=f"'n_samples' must not exceed the total sample count; got n_samples={n_samples} but there "
+        f"are only {n_max} elements.",
     )
 
 

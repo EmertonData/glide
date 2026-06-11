@@ -4,7 +4,7 @@ import numpy as np
 from numpy.random.bit_generator import SeedSequence
 from numpy.typing import NDArray
 
-from glide.core.validation import _validate_is_integer, _validate_strictly_positive
+from glide.core.validation import _validate_is_integer, _validate_n_samples_bound, _validate_strictly_positive
 
 
 class UniformSampler:
@@ -61,8 +61,7 @@ class UniformSampler:
         _validate_strictly_positive(n_total, "n_total")
         _validate_is_integer(n_samples, "n_samples")
         _validate_strictly_positive(n_samples, "n_samples")
-        if n_samples > n_total:
-            raise ValueError(f"'n_samples' must not exceed 'n_total'; got n_samples={n_samples} but n_total={n_total}.")
+        _validate_n_samples_bound(n_samples, n_total)
 
         rng = np.random.default_rng(random_seed)
 
