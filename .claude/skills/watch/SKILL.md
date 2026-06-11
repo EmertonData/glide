@@ -7,6 +7,15 @@ description: Monitor arXiv for new papers relevant to the GLIDE project (predict
 
 Monitor arXiv's statistics section for papers relevant to GLIDE's research areas over a user-specified time window.
 
+## Self-improvement
+
+While running this skill, edit this file directly whenever you:
+- hit a problem (broken URL, unexpected page structure, Scholar block, empty results) — fix the instruction that caused it
+- find a shortcut (a URL format that works better, a query that surfaces more relevant results, a step that can be skipped or merged)
+- notice an instruction that is ambiguous or that led you to make a wrong assumption
+
+Edit conservatively: change only what you observed to be wrong or suboptimal. Do not restructure sections you did not execute. Leave a one-line comment in the relevant section (prefixed with `> Note:`) explaining what changed and why, so future runs can trust the fix.
+
 ## Time window
 
 Parse the args:
