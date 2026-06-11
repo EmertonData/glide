@@ -37,9 +37,9 @@ arXiv IDs use `YYMM.NNNNN` format — the YYMM prefix encodes the submission yea
 
 ## Step 1 — Fetch the stat listing(s)
 
-**Short window (≤ 2 days / last announced batch):** fetch `https://arxiv.org/list/stat/recent?skip=0&show=2000` and extract all paper entries: arXiv ID, title, and authors.
+**Short window (≤ 3 days / last announced batch):** fetch `https://arxiv.org/list/stat/recent?skip=0&show=2000` and extract all paper entries: arXiv ID, title, and authors. The listing covers approximately 3 announcement days in practice; treat the full listing as the batch window.
 
-**Longer window (> 2 days):** for each month in scope (from the Date range section above), fetch `https://arxiv.org/list/stat/YYYY-MM?skip=0&show=5000` — where `YYYY-MM` is the four-digit year and two-digit month (e.g., `2025-02` for February 2025). If the window spans multiple months, fire all fetches in a **single message**. Extract all paper entries: arXiv ID, title, authors, and submission date. Date filtering to the exact window happens in Step 5.
+**Longer window (> 3 days):** for each month in scope (from the Date range section above), fetch `https://arxiv.org/list/stat/YYYY-MM?skip=0&show=5000` — where `YYYY-MM` is the four-digit year and two-digit month (e.g., `2025-02` for February 2025). If the window spans multiple months, fire all fetches in a **single message**. Extract all paper entries: arXiv ID, title, authors, and submission date. Date filtering to the exact window happens in Step 5.
 
 ## Step 2 — Parallel topic searches
 
@@ -176,4 +176,4 @@ Flagged N paper(s) out of M total scanned, covering YYYY-MM-DD – YYYY-MM-DD.
 
 ## Coverage note
 
-For short windows (≤ 2 days), the `stat/recent` listing with `show=2000` is the primary source; the stat section receives fewer than 200 papers per day, so it comfortably covers 1–2 announcement days. For longer windows, the monthly `stat/YYMM` listings are used instead — `show=5000` covers a full month of stat submissions. In both cases, the topic and author searches (Steps 2–3) serve as a complementary signal to catch papers from adjacent categories (cs.LG, econ.EM, etc.) that are cross-listed or not primarily filed under stat. The Scholar citation lookup (Step 4) is a separate signal for papers in any field that build on the README references. When M cannot be determined precisely (because WebFetch summarizes large pages), give a best-effort estimate and note this briefly.
+For short windows (≤ 3 days / last announced batch), the `stat/recent` listing with `show=2000` is the primary source; in practice it covers approximately 3 announcement days (~150–200 papers total). For longer windows, the monthly `stat/YYMM` listings are used instead — `show=5000` covers a full month of stat submissions. In both cases, the topic and author searches (Steps 2–3) serve as a complementary signal to catch papers from adjacent categories (cs.LG, econ.EM, etc.) that are cross-listed or not primarily filed under stat. The Scholar citation lookup (Step 4) is a separate signal for papers in any field that build on the README references. When M cannot be determined precisely (because WebFetch summarizes large pages), give a best-effort estimate and note this briefly.
