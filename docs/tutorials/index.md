@@ -100,7 +100,7 @@ If your proxy model outputs a confidence score or probability alongside each lab
 If your data partitions naturally into groups (by language, domain, question type, etc.) and you expect the proxy model to behave differently across groups, a stratified sampling strategy ensures that each group is represented in the annotated set.
 
 **4. Is your dataset structured into clusters?**
-If your samples are grouped into clusters of correlated items (turns within a conversation, sentences within a paragraph, etc.) that must be annotated together as a unit, a clustered sampling strategy draws whole clusters rather than individual samples and defines the annotation budget in terms of clusters. This keeps the statistical inference valid in the presence of within-cluster correlation.
+If your samples are grouped into clusters of correlated items (sentences within a paragraph, turns within a conversation, etc.) that must be annotated together as a unit, a clustered sampling strategy draws whole clusters rather than individual samples and defines the annotation budget in terms of clusters. This keeps the statistical inference valid in the presence of within-cluster correlation.
 
 ## Phase 2: Annotation
 
@@ -130,4 +130,4 @@ Use the table below to find the tutorial that matches your situation.
 | Yes | No | No | No | Cost-optimal random | PPI++ | [Cost estimates available (Cost-Optimal Random Sampling)](cost_optimal_random.ipynb) |
 | Yes | Yes | No | No | Cost-optimal | ASI | [Cost and uncertainty scores available (Cost-Optimal Sampling)](cost_optimal.ipynb) |
 
-If your data contains fewer than 50 human labels: use the PTD variant of the estimators above (`PTDMeanEstimator` for PPI++, `StratifiedPTDMeanEstimator` for Stratified PPI++ and `IPWPTDMeanEstimator` for ASI). In the stratified case, the `StratifiedPTDMeanEstimator` should be used whenever one of the strata has fewer than 50 labels. The tutorial workflow for the respective estimators is identical; only the estimator class changes. Clustered PPI++ has no bootstrap variant: the clustered path applies regardless of the number of human labels, with the annotation budget counted in clusters.
+If your data contains fewer than 50 human labels: use the PTD variant of the estimators above (`PTDMeanEstimator` for PPI++, `StratifiedPTDMeanEstimator` for Stratified PPI++ and `IPWPTDMeanEstimator` for ASI). In the stratified case, the `StratifiedPTDMeanEstimator` should be used whenever one of the strata has fewer than 50 labels. The tutorial workflow for the respective estimators is identical; only the estimator class changes.
