@@ -8,7 +8,7 @@ import numpy as np
 import pytest
 
 from glide.estimators import PTDMeanEstimator, StratifiedPTDMeanEstimator
-from glide.simulators import generate_gaussian_dataset
+from glide.simulators import generate_gaussian_dataset, simulate_annotation
 
 # ── tests ──────────────────────────────────────────────────────────────────────
 
@@ -25,7 +25,9 @@ def test_two_equal_strata_matches_ptd():
     n_bootstrap = 2000
 
     # Generate base numpy arrays
-    y_true, y_proxy = generate_gaussian_dataset(n_labeled, n_unlabeled, random_seed=random_seed)
+    y_true_oracle, y_proxy = generate_gaussian_dataset(n_total=n_labeled + n_unlabeled, random_seed=random_seed)
+    xi = np.hstack([np.ones(n_labeled), np.zeros(n_unlabeled)])
+    y_true = simulate_annotation(y_true_oracle, xi)
 
     # Per-stratum PTD reference (single copy)
     result_single = PTDMeanEstimator().estimate(y_true, y_proxy, n_bootstrap=n_bootstrap, random_seed=random_seed)
@@ -58,7 +60,9 @@ def test_single_stratum_matches_ptd():
     random_seed = 7
     n_bootstrap = 2000
 
-    y_true, y_proxy = generate_gaussian_dataset(n_labeled, n_unlabeled, random_seed=random_seed)
+    y_true_oracle, y_proxy = generate_gaussian_dataset(n_total=n_labeled + n_unlabeled, random_seed=random_seed)
+    xi = np.hstack([np.ones(n_labeled), np.zeros(n_unlabeled)])
+    y_true = simulate_annotation(y_true_oracle, xi)
     groups = np.full(len(y_true), "A")
 
     stratified_result = StratifiedPTDMeanEstimator().estimate(
@@ -79,14 +83,17 @@ def test_stratified_ptd_narrower_ci_with_heterogeneous_strata():
     random_seed = 42
     n_labeled, n_unlabeled = 5, 6
 
+    xi = np.hstack([np.ones(n_labeled), np.zeros(n_unlabeled)])
     # Stratum A: low proxy noise
-    y_true_a, y_proxy_a = generate_gaussian_dataset(
-        n_labeled, n_unlabeled, true_mean=0.6, true_std=0.1, random_seed=random_seed
+    y_true_oracle_a, y_proxy_a = generate_gaussian_dataset(
+        n_total=n_labeled + n_unlabeled, true_mean=0.6, true_std=0.1, random_seed=random_seed
     )
+    y_true_a = simulate_annotation(y_true_oracle_a, xi)
     # Stratum B: high proxy noise → lower lambda is optimal
-    y_true_b, y_proxy_b = generate_gaussian_dataset(
-        n_labeled, n_unlabeled, true_mean=0.4, true_std=1.5, random_seed=random_seed
+    y_true_oracle_b, y_proxy_b = generate_gaussian_dataset(
+        n_total=n_labeled + n_unlabeled, true_mean=0.4, true_std=1.5, random_seed=random_seed
     )
+    y_true_b = simulate_annotation(y_true_oracle_b, xi)
 
     # Build data arrays
     y_true_pooled = np.hstack([y_true_a, y_true_b])

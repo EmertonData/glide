@@ -10,7 +10,7 @@ import pytest
 from glide.estimators.asi import ASIMeanEstimator
 from glide.estimators.ipw_ptd import IPWPTDMeanEstimator
 from glide.estimators.ptd import PTDMeanEstimator
-from glide.simulators import generate_gaussian_dataset
+from glide.simulators import generate_gaussian_dataset, simulate_annotation
 
 # ── tests ──────────────────────────────────────────────────────────────────────
 
@@ -25,15 +25,16 @@ def test_deterministic_probabilities_match_simple_ptd():
     proxy_std = 0.1
     random_seed = 0
 
-    y_true, y_proxy = generate_gaussian_dataset(
-        n_labeled=n_labeled,
-        n_unlabeled=n_unlabeled,
+    y_true_oracle, y_proxy = generate_gaussian_dataset(
+        n_total=n_labeled + n_unlabeled,
         true_mean=true_mean,
         true_std=true_std,
         proxy_mean=proxy_mean,
         proxy_std=proxy_std,
         random_seed=random_seed,
     )
+    xi = np.hstack([np.ones(n_labeled), np.zeros(n_unlabeled)])
+    y_true = simulate_annotation(y_true_oracle, xi)
     pi = (~np.isnan(y_true)).astype(float)
 
     ipw_ptd_result = IPWPTDMeanEstimator().estimate(y_true, y_proxy, pi, random_seed=random_seed)
@@ -67,8 +68,7 @@ def test_large_sample_matches_asi():
     rng = np.random.default_rng(seed=random_seed)
 
     y_true, y_proxy = generate_gaussian_dataset(
-        n_labeled=n_samples,
-        n_unlabeled=0,
+        n_total=n_samples,
         true_mean=true_mean,
         true_std=true_std,
         proxy_mean=proxy_mean,

@@ -22,7 +22,7 @@ def test_two_equal_strata_matches_classical():
     """
     n_labeled = 4
 
-    y_single, _ = generate_gaussian_dataset(n_labeled=n_labeled, n_unlabeled=0, random_seed=0)
+    y_single, _ = generate_gaussian_dataset(n_total=n_labeled, random_seed=0)
 
     classical_single = ClassicalMeanEstimator().estimate(y_single)
 
@@ -50,15 +50,13 @@ def test_stratified_classical_narrower_ci_with_heterogeneous_strata():
     n_labeled = 8
 
     y_a, _ = generate_gaussian_dataset(
-        n_labeled=n_labeled,
-        n_unlabeled=0,
+        n_total=n_labeled,
         true_mean=0.0,
         true_std=0.1,
         random_seed=random_seed,
     )
     y_b, _ = generate_gaussian_dataset(
-        n_labeled=n_labeled,
-        n_unlabeled=0,
+        n_total=n_labeled,
         true_mean=1.0,
         true_std=0.1,
         random_seed=random_seed,
