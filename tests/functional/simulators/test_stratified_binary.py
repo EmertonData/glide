@@ -15,7 +15,7 @@ def test_generate_stratified_binary_dataset_empirical_means_and_correlation_per_
         true_mean=true_mean,
         proxy_mean=proxy_mean,
         correlation=correlation,
-        random_seed=0,
+        random_seed=4,
     )
 
     for stratum_id in range(len(n_total)):

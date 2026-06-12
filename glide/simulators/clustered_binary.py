@@ -111,9 +111,9 @@ def generate_clustered_binary_dataset(
     ...     n_total=10, n_clusters=4, random_seed=0
     ... )
     >>> y_true
-    array([1., 1., 0., 0., 0., 1., 0., 1., 0., 1.])
+    array([0., 1., 1., 1., 1., 1., 1., 0., 1., 1.])
     >>> y_proxy
-    array([1., 0., 1., 0., 0., 1., 0., 1., 0., 1.])
+    array([0., 1., 1., 0., 1., 1., 1., 0., 1., 1.])
     >>> clusters
     array([3, 0, 3, 1, 0, 3, 3, 2, 0, 0])
     """

@@ -10,10 +10,10 @@ def test_generate_binary_dataset_structure_and_counts():
     y_true, y_proxy = generate_binary_dataset(n_total=3, random_seed=0)
     assert isinstance(y_true, np.ndarray)
     assert isinstance(y_proxy, np.ndarray)
+    assert y_true.shape == (3,)
+    assert y_proxy.shape == (3,)
     assert np.isin(y_true, [0.0, 1.0]).all()
     assert np.isin(y_proxy, [0.0, 1.0]).all()
-    assert len(y_true) == 3
-    assert len(y_proxy) == 3
 
 
 def test_generate_binary_dataset_delegates_validation():

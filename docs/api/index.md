@@ -9,6 +9,7 @@
 | [`generate_binary_dataset_with_oracle_sampling`](simulators.md#glide.simulators.generate_binary_dataset_with_oracle_sampling) | Binary dataset with oracle sampling probabilities |
 | [`generate_gaussian_dataset`](simulators.md#glide.simulators.generate_gaussian_dataset) | Synthetic Gaussian dataset |
 | [`generate_clustered_binary_dataset`](simulators.md#glide.simulators.generate_clustered_binary_dataset) | Synthetic clustered binary-label dataset |
+| [`generate_multi_binary_dataset`](simulators.md#glide.simulators.generate_multi_binary_dataset) | Synthetic binary-label dataset with multiple proxies |
 | [`simulate_annotation`](simulators.md#glide.simulators.simulate_annotation) | Simulate annotation in the simulation lifecycle |
 
 ## Samplers
