@@ -80,6 +80,9 @@ def generate_binary_dataset(
 
     **Step 2 — Conditional probabilities**
 
+    The joint probability ``p11`` determines the conditional probability of
+    ``y_proxy`` given each value of ``y_true``:
+
     ```
     p11 = correlation * D + p_t * p_p
     p01 = p_p - p11
@@ -89,6 +92,11 @@ def generate_binary_dataset(
     ```
 
     **Step 3 — Two-stage generation**
+
+    ``y_true`` is sampled first for all ``n_total`` observations from a
+    ``Bernoulli(p_t)`` distribution.  For each observation, the corresponding
+    conditional probability from Step 2 is selected, and ``y_proxy`` is then
+    drawn from that conditional Bernoulli distribution:
 
     ```
     y_true_i ~ Bernoulli(p_t)
