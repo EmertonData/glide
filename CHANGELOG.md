@@ -9,24 +9,28 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 ## [Next release]
 
 ### ✨ Added
-- `ClusterPPIMeanEstimator` for prediction-powered inference on clustered data
-- `ClusterClassicalMeanEstimator` for cluster-sampling-aware classical mean estimation with CLT-based confidence intervals.
-- `UniformClusterSampler` for cluster-level annotation selection using uniform sampling
-- `generate_clustered_binary_dataset` simulator for generating binary datasets with randomly sized clusters.
-- Image in the readme describing prediction-powered inference
-- Image in the user guide describing GLIDE's three-step workflow
+
+### 🔄 Changed
+
+### 🐛 Fixed
+
+### 💛 Contributors
+
+## [0.7.0] – 2026-06-12
+
+### ✨ Added
+- Cluster-level inference support: `ClusterPPIMeanEstimator`, `ClusterClassicalMeanEstimator`, `UniformClusterSampler`, and `generate_clustered_binary_dataset` for end-to-end prediction-powered inference on clustered data.
+- Diagrams in the README and user guide illustrating prediction-powered inference and GLIDE's three-step workflow.
 
 ### 🔄 Changed
 - `generate_gaussian_dataset` now accepts `n_total` instead of `n_labeled` and `n_unlabeled`.
-- Renamed `budget` parameter to `n_samples` in `UniformSampler.sample`, `StratifiedSampler.sample`, and `ActiveSampler.sample`. Renamed `n_samples` (pool size) to `n_total` in `UniformSampler.sample`.
-- Renamed `budget` parameter to `max_cost` in `CostOptimalSampler.sample` and `CostOptimalRandomSampler.sample` to make clear it represents a cost amount, not a count.
-- Removed image from User Guide explaining PPI
+- Renamed sampler parameters for clarity: `budget` → `n_samples` in `UniformSampler`, `StratifiedSampler`, and `ActiveSampler`; `budget` → `max_cost` in `CostOptimalSampler` and `CostOptimalRandomSampler`.
 
 ### 🐛 Fixed
-- Fixed broken quickstart link in README (replaced relative path with absolute ReadTheDocs URL)
+- Fixed broken quickstart link in README.
 
 ### 💛 Contributors
-- Thank you to everyone who contributed to this release: @gmartinon-ed, @imerad
+Thank you to everyone who contributed to this release: @gmartinon-ed, @imerad
 
 ## [0.6.0] – 2026-06-01
 
