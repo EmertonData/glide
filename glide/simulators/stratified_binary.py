@@ -1,4 +1,4 @@
-from typing import List, Optional, Tuple
+from typing import List, Optional, Tuple, Union
 
 import numpy as np
 from numpy.typing import NDArray
@@ -8,10 +8,10 @@ from glide.simulators.binary import generate_binary_dataset
 
 
 def generate_stratified_binary_dataset(
-    n_total: List[int],
-    true_mean: List[float],
-    proxy_mean: List[float],
-    correlation: List[float],
+    n_total: Union[List[int], NDArray],
+    true_mean: Union[List[float], NDArray],
+    proxy_mean: Union[List[float], NDArray],
+    correlation: Union[List[float], NDArray],
     random_seed: Optional[int] = None,
 ) -> Tuple[NDArray, NDArray, NDArray]:
     """Generate a synthetic stratified binary-label oracle dataset.
@@ -22,16 +22,16 @@ def generate_stratified_binary_dataset(
 
     Parameters
     ----------
-    n_total : List[int]
+    n_total : list of int or NDArray of shape (K,)
         Total number of samples per stratum. All samples have both true and proxy labels.
         Length must equal number of strata.
-    true_mean : List[float]
+    true_mean : list of float or NDArray of shape (K,)
         Expected mean value of the true labels per stratum.
         Length must equal number of strata.
-    proxy_mean : List[float]
+    proxy_mean : list of float or NDArray of shape (K,)
         Expected mean value of the proxy labels per stratum.
         Length must equal number of strata.
-    correlation : List[float]
+    correlation : list of float or NDArray of shape (K,)
         Pearson correlation between true and proxy per stratum.
         Length must equal number of strata.
     random_seed : int, optional

@@ -9,11 +9,11 @@ from glide.core.validation import _validate_bounds, _validate_equal_lengths
 def generate_multi_binary_dataset(
     n_total: int,
     true_mean: float,
-    proxy_means: List[float],
-    correlations: List[float],
+    proxy_means: Union[List[float], NDArray],
+    correlations: Union[List[float], NDArray],
     random_seed: Optional[Union[int, np.random.SeedSequence]] = None,
 ) -> Tuple[NDArray, NDArray]:
-    """Generate a synthetic binary oracle dataset with M proxy models.
+    """Generate a synthetic binary oracle dataset with multiple proxy models.
 
     Parameters
     ----------
@@ -21,10 +21,10 @@ def generate_multi_binary_dataset(
         Total number of samples.
     true_mean : float
         Expected mean value of the true labels. Must be in (0, 1).
-    proxy_means : List[float]
+    proxy_means : list of float or NDArray of shape (M,)
         Expected mean value of each proxy label. Length M determines the number of proxies.
         Each value must be in (0, 1).
-    correlations : List[float]
+    correlations : list of float or NDArray of shape (M,)
         Pearson correlation between the true label and each proxy label. Length must equal
         ``len(proxy_means)``. Each value must yield a valid joint binary distribution
         given ``true_mean`` and the corresponding ``proxy_means`` entry.
@@ -106,18 +106,17 @@ def generate_multi_binary_dataset(
     --------
     >>> import numpy as np
     >>> from glide.simulators import generate_multi_binary_dataset
-    >>> y_true, y_proxies = generate_multi_binary_dataset(8, 0.7, [0.6, 0.5], [0.7, 0.6], random_seed=42)
-    >>> len(y_true)
-    8
-    >>> y_proxies.shape
-    (8, 2)
-    >>> bool(np.all(np.isin(y_true, [0.0, 1.0])))
-    True
-    >>> bool(np.all(np.isin(y_proxies, [0.0, 1.0])))
-    True
+    >>> y_true, y_proxies = generate_multi_binary_dataset(4, 0.7, [0.6, 0.5], [0.7, 0.6], random_seed=42)
+    >>> y_true
+    array([0., 1., 0., 1.])
+    >>> y_proxies
+    array([[0., 1.],
+           [1., 0.],
+           [0., 0.],
+           [1., 0.]])
     """
-    proxy_means_arr = np.array(proxy_means, dtype=float)
-    correlations_arr = np.array(correlations, dtype=float)
+    proxy_means_arr = np.asarray(proxy_means, dtype=float)
+    correlations_arr = np.asarray(correlations, dtype=float)
 
     _validate_equal_lengths(proxy_means_arr, correlations_arr, names=["proxy_means", "correlations"])
     _validate_bounds(true_mean, "true_mean", lower=0, upper=1, left_inclusive=False, right_inclusive=False)
