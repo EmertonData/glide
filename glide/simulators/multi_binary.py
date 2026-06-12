@@ -1,7 +1,7 @@
-from typing import List, Optional, Tuple, Union
+from typing import Optional, Tuple, Union
 
 import numpy as np
-from numpy.typing import NDArray
+from numpy.typing import ArrayLike, NDArray
 
 from glide.core.validation import _validate_bounds, _validate_equal_lengths
 
@@ -9,8 +9,8 @@ from glide.core.validation import _validate_bounds, _validate_equal_lengths
 def generate_multi_binary_dataset(
     n_total: int,
     true_mean: float,
-    proxy_means: Union[List[float], NDArray],
-    correlations: Union[List[float], NDArray],
+    proxy_means: ArrayLike,
+    correlations: ArrayLike,
     random_seed: Optional[Union[int, np.random.SeedSequence]] = None,
 ) -> Tuple[NDArray, NDArray]:
     """Generate a synthetic binary oracle dataset with multiple proxy models.
@@ -21,10 +21,10 @@ def generate_multi_binary_dataset(
         Total number of samples.
     true_mean : float
         Expected mean value of the true labels. Must be in (0, 1).
-    proxy_means : list of float or NDArray of shape (M,)
-        Expected mean value of each proxy label. Length M determines the number of proxies.
+    proxy_means : list of float or NDArray of shape (n_proxies,)
+        Expected mean value of each proxy label. The length determines the number of proxies.
         Each value must be in (0, 1).
-    correlations : list of float or NDArray of shape (M,)
+    correlations : list of float or NDArray of shape (n_proxies,)
         Pearson correlation between the true label and each proxy label. Length must equal
         ``len(proxy_means)``. Each value must yield a valid joint binary distribution
         given ``true_mean`` and the corresponding ``proxy_means`` entry.
@@ -35,7 +35,7 @@ def generate_multi_binary_dataset(
     -------
     Tuple[NDArray, NDArray]
         [0]: array of shape ``(n_total,)``, y_true containing ground-truth labels.
-        [1]: array of shape ``(n_total, M)``, y_proxies where column m contains
+        [1]: array of shape ``(n_total, n_proxies)``, y_proxies where column m contains
              proxy labels with mean ``proxy_means[m]`` and correlation ``correlations[m]``
              with y_true.
 
@@ -87,7 +87,7 @@ def generate_multi_binary_dataset(
     proxy_{m,i} | y_true_i ~ Bernoulli(P(proxy_m = 1 | y_true_i))
     ```
 
-    All M proxies are generated in a single vectorised call over the ``(n_total, M)``
+    All proxies are generated in a single vectorised call over the ``(n_total, n_proxies)``
     matrix of conditional probabilities. The proxies are conditionally independent given
     y_true, so they have positive marginal correlation with each other only through the
     shared y_true.
@@ -115,25 +115,25 @@ def generate_multi_binary_dataset(
            [0., 0.],
            [1., 0.]])
     """
-    proxy_means_arr = np.asarray(proxy_means, dtype=float)
+    p_p = np.asarray(proxy_means, dtype=float)
     correlations_arr = np.asarray(correlations, dtype=float)
 
-    _validate_equal_lengths(proxy_means_arr, correlations_arr, names=["proxy_means", "correlations"])
+    _validate_equal_lengths(p_p, correlations_arr, names=["proxy_means", "correlations"])
     _validate_bounds(true_mean, "true_mean", lower=0, upper=1, left_inclusive=False, right_inclusive=False)
 
-    for m, p_p in enumerate(proxy_means_arr):
-        _validate_bounds(p_p, f"proxy_means[{m}]", lower=0, upper=1, left_inclusive=False, right_inclusive=False)
+    for m, proxy_mean in enumerate(p_p):
+        _validate_bounds(proxy_mean, f"proxy_means[{m}]", lower=0, upper=1, left_inclusive=False, right_inclusive=False)
 
     p_t = true_mean
-    D = np.sqrt(p_t * proxy_means_arr * (1 - p_t) * (1 - proxy_means_arr))
-    min_correlations = np.maximum(-p_t * proxy_means_arr, proxy_means_arr + p_t - 1 - p_t * proxy_means_arr) / D
-    max_correlations = np.minimum(p_t * (1 - proxy_means_arr), proxy_means_arr * (1 - p_t)) / D
+    D = np.sqrt(p_t * p_p * (1 - p_t) * (1 - p_p))
+    min_correlations = np.maximum(-p_t * p_p, p_p + p_t - 1 - p_t * p_p) / D
+    max_correlations = np.minimum(p_t * (1 - p_p), p_p * (1 - p_t)) / D
 
-    for m, (rho, lo, hi, p_p) in enumerate(zip(correlations_arr, min_correlations, max_correlations, proxy_means_arr)):
+    for m, (rho, lo, hi, proxy_mean) in enumerate(zip(correlations_arr, min_correlations, max_correlations, p_p)):
         if rho < lo or rho > hi:
             raise ValueError(
                 f"Proxy {m}: impossible combination of 'true_mean'={true_mean!r}, "
-                f"'proxy_means[{m}]'={p_p!r}, and 'correlations[{m}]'={rho!r}: "
+                f"'proxy_means[{m}]'={proxy_mean!r}, and 'correlations[{m}]'={rho!r}: "
                 f"leads to negative joint probabilities; "
                 f"possible 'correlations[{m}]' values are in the range ({lo:.3f}, {hi:.3f})."
             )
@@ -141,8 +141,8 @@ def generate_multi_binary_dataset(
     rng = np.random.default_rng(seed=random_seed)
     y_true = rng.binomial(1, p_t, size=n_total).astype(float)
 
-    p11 = correlations_arr * D + p_t * proxy_means_arr
-    p01 = proxy_means_arr - p11
+    p11 = correlations_arr * D + p_t * p_p
+    p01 = p_p - p11
     cond_prob_given_1 = p11 / p_t
     cond_prob_given_0 = p01 / (1 - p_t)
 

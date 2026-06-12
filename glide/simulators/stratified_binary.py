@@ -1,17 +1,17 @@
-from typing import List, Optional, Tuple, Union
+from typing import Optional, Tuple
 
 import numpy as np
-from numpy.typing import NDArray
+from numpy.typing import ArrayLike, NDArray
 
 from glide.core.validation import _validate_equal_lengths, _validate_non_empty
 from glide.simulators.binary import generate_binary_dataset
 
 
 def generate_stratified_binary_dataset(
-    n_total: Union[List[int], NDArray],
-    true_mean: Union[List[float], NDArray],
-    proxy_mean: Union[List[float], NDArray],
-    correlation: Union[List[float], NDArray],
+    n_total: ArrayLike,
+    true_mean: ArrayLike,
+    proxy_mean: ArrayLike,
+    correlation: ArrayLike,
     random_seed: Optional[int] = None,
 ) -> Tuple[NDArray, NDArray, NDArray]:
     """Generate a synthetic stratified binary-label oracle dataset.
