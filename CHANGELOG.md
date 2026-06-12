@@ -26,6 +26,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - Fixed broken quickstart link in README (replaced relative path with absolute ReadTheDocs URL)
 
 ### 💛 Contributors
+- Thank you to everyone who contributed to this release: @gmartinon-ed, @imerad
 
 ## [0.6.0] – 2026-06-01
 
@@ -85,7 +86,7 @@ Thank you to everyone who contributed to this release: @gmartinon-ed, @imerad, @
 - Code of conduct
 - Issue templates
 - Doctest for `glide.io.to_json`
-  
+
 ### 🔄 Changed
 - Removed dataset container object `Dataset`
 - Improved efficiency of `BootstrapConfidenceInterval.test_null_hypothesis()` from O(n) to O(log n) using binary search on sorted bootstrap samples
