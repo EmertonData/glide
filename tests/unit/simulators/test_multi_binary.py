@@ -26,6 +26,7 @@ def test_generate_multi_binary_dataset_delegates_to_validation():
     np.testing.assert_array_equal(mock_validate_equal_lengths.call_args[0][0], np.array([0.6, 0.5]))
     np.testing.assert_array_equal(mock_validate_equal_lengths.call_args[0][1], np.array([0.5, 0.4]))
     assert mock_validate_equal_lengths.call_args[1]["names"] == ["proxy_means", "correlations"]
+    assert mock_validate_bounds.call_count == 3
     mock_validate_bounds.assert_has_calls(
         [
             call(0.7, "true_mean", lower=0, upper=1, left_inclusive=False, right_inclusive=False),

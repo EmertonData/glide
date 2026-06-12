@@ -132,7 +132,7 @@ def generate_multi_binary_dataset(
     for m, (rho, lo, hi, p_p) in enumerate(zip(correlations_arr, min_correlations, max_correlations, proxy_means_arr)):
         if rho < lo or rho > hi:
             raise ValueError(
-                f"proxy {m}: impossible combination of 'true_mean'={true_mean!r}, "
+                f"Proxy {m}: impossible combination of 'true_mean'={true_mean!r}, "
                 f"'proxy_means[{m}]'={p_p!r}, and 'correlations[{m}]'={rho!r}: "
                 f"leads to negative joint probabilities; "
                 f"possible 'correlations[{m}]' values are in the range ({lo:.3f}, {hi:.3f})."
@@ -148,6 +148,7 @@ def generate_multi_binary_dataset(
 
     is_true_one = y_true[:, np.newaxis].astype(bool)
     cond_probs = np.where(is_true_one, cond_prob_given_1, cond_prob_given_0)
+    cond_probs = np.clip(cond_probs, 0.0, 1.0)
     y_proxies = rng.binomial(1, cond_probs).astype(float)
 
     return y_true, y_proxies
