@@ -37,7 +37,7 @@ def test_generate_multi_binary_dataset_delegates_to_validation():
 
 
 def test_generate_multi_binary_dataset_impossible_correlation_raises():
-    with pytest.raises(ValueError, match=r"proxy 1:"):
+    with pytest.raises(ValueError, match=r"Proxy 1:"):
         generate_multi_binary_dataset(4, 0.7, [0.6, 0.6], [0.5, 0.95])
 
 
