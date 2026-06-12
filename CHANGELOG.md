@@ -9,6 +9,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 ## [Next release]
 
 ### ✨ Added
+- `generate_multi_binary_dataset` simulator for generating binary oracle datasets with multiple proxies.
 - `ClusterPPIMeanEstimator` for prediction-powered inference on clustered data
 - `ClusterClassicalMeanEstimator` for cluster-sampling-aware classical mean estimation with CLT-based confidence intervals.
 - `UniformClusterSampler` for cluster-level annotation selection using uniform sampling
