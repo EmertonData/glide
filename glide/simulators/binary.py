@@ -148,6 +148,7 @@ def generate_binary_dataset(
     cond_prob_given_0 = p01 / (1 - p_t)
 
     cond_probs = np.where(y_true.astype(bool), cond_prob_given_1, cond_prob_given_0)
+    cond_probs = np.clip(cond_probs, 0.0, 1.0)
     y_proxy = rng.binomial(1, cond_probs).astype(float)
 
     return y_true, y_proxy
