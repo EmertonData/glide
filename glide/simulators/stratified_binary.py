@@ -77,14 +77,19 @@ def generate_stratified_binary_dataset(
     >>> bool(np.all(np.isin(y_proxy, [0.0, 1.0])))
     True
     """
-    _validate_non_empty(n_total, "n_total")
-    num_strata = len(n_total)
+    n_total_arr = np.asarray(n_total, dtype=int)
+    true_mean_arr = np.asarray(true_mean, dtype=float)
+    proxy_mean_arr = np.asarray(proxy_mean, dtype=float)
+    correlation_arr = np.asarray(correlation, dtype=float)
+
+    _validate_non_empty(n_total_arr, "n_total")
+    num_strata = len(n_total_arr)
 
     _validate_equal_lengths(
-        np.array(n_total),
-        np.array(true_mean),
-        np.array(proxy_mean),
-        np.array(correlation),
+        n_total_arr,
+        true_mean_arr,
+        proxy_mean_arr,
+        correlation_arr,
         names=["n_total", "true_mean", "proxy_mean", "correlation"],
     )
 
@@ -98,10 +103,10 @@ def generate_stratified_binary_dataset(
 
     for stratum_id in range(num_strata):
         y_true_k, y_proxy_k = generate_binary_dataset(
-            n_total=n_total[stratum_id],
-            true_mean=true_mean[stratum_id],
-            proxy_mean=proxy_mean[stratum_id],
-            correlation=correlation[stratum_id],
+            n_total=n_total_arr[stratum_id],
+            true_mean=true_mean_arr[stratum_id],
+            proxy_mean=proxy_mean_arr[stratum_id],
+            correlation=correlation_arr[stratum_id],
             random_seed=seeds[stratum_id],
         )
         y_true_per_stratum.append(y_true_k)
