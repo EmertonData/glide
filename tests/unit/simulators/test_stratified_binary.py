@@ -44,7 +44,9 @@ def test_generate_stratified_binary_dataset_delegates_validation():
             correlation=correlation,
         )
 
-        mock_validate_non_empty.assert_called_once_with(n_total, "n_total")
+        mock_validate_non_empty.assert_called_once()
+        np.testing.assert_array_equal(mock_validate_non_empty.call_args[0][0], np.array(n_total, dtype=int))
+        assert mock_validate_non_empty.call_args[0][1] == "n_total"
 
         mock_validate_equal_lengths.assert_called_once()
         np.testing.assert_array_equal(mock_validate_equal_lengths.call_args[0][0], np.array(n_total))
