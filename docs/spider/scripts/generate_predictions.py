@@ -3,7 +3,6 @@ import json
 import random
 import time
 from collections import Counter
-from datetime import datetime
 from pathlib import Path
 from typing import Callable, Dict, List, Optional, Set
 
@@ -137,8 +136,9 @@ def main() -> None:
     parser.add_argument(
         "--n-databases",
         type=int,
-        default=None,
-        help="Number of Spider databases to include, selected by descending example count. Includes all if unset.",
+        default=51,
+        help="Number of Spider databases to include, selected by descending example count. "
+        "Includes all if unset. (default: 51)",
     )
     parser.add_argument(
         "--n-per-database",
@@ -170,22 +170,21 @@ def main() -> None:
         default=None,
         help=(
             "Path to an existing JSONL file to resume from. Skips already-processed example IDs. "
-            "Creates a new timestamped file if unset."
+            "Creates a new file if unset."
         ),
     )
     parser.add_argument(
         "--sleep",
         type=float,
-        default=0.1,
-        help="Seconds to sleep between API calls to avoid rate limits. (default: 0.1)",
+        default=0.0,
+        help="Seconds to sleep between API calls to avoid rate limits. (default: 0.0)",
     )
     args = parser.parse_args()
 
     if args.output is not None:
         output_path = args.output
     else:
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        output_path = Path(f"data/predictions_{args.provider}_{args.model}_{timestamp}.jsonl")
+        output_path = Path(f"data/predictions_{args.provider}_{args.model}.jsonl")
 
     schemas = _load_schema(args.spider_path / "tables.json")
     train_data = json.loads((args.spider_path / "train_spider.json").read_text())
@@ -200,6 +199,7 @@ def main() -> None:
     else:
         judge = openai_judge(args.model, args.base_delay, args.max_retries)
 
+    n_written = 0
     with open(output_path, "a") as out_f:
         for i, ex in enumerate(remaining):
             print(f"  [{i + 1}/{len(remaining)}] {ex['example_id']} ({ex['db_id']})")
@@ -220,7 +220,9 @@ def main() -> None:
             }
             out_f.write(json.dumps(record) + "\n")
             out_f.flush()
+            n_written += 1
             time.sleep(args.sleep)
+    print(f"Done. {n_written} records written to {output_path.resolve()}")
 
 
 if __name__ == "__main__":

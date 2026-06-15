@@ -1,13 +1,12 @@
 import argparse
 import json
-import re
 import time
 from pathlib import Path
 from typing import Callable, Dict, List, Optional, Set
 
 import anthropic
 import openai
-from _utils import _call_with_retry, _load_checkpoint, _load_schema
+from _utils import _load_checkpoint, _load_schema
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -17,8 +16,7 @@ SYSTEM_PROMPT = (
     "Given a natural language question, the database schema, and a predicted SQL query, "
     "determine whether the predicted SQL correctly answers the question on this database. "
     "Be rigorous: pay attention to missing WHERE clauses, wrong aggregations, incorrect JOINs, "
-    "and column or table names that do not exist in the schema. "
-    "Your response must be a single digit: 0 or 1. Output nothing else."
+    "and column or table names that do not exist in the schema."
 )
 
 USER_TEMPLATE = """\
@@ -30,52 +28,89 @@ Schema:
 Question: {question}
 Predicted SQL: {predicted_sql}
 
-Output 1 if the SQL correctly answers the question, 0 if it does not. Output only 0 or 1
-and absolutely nothing more."""
+Submit label 1 if the SQL correctly answers the question, 0 if it does not."""
+
+_ANTHROPIC_LABEL_TOOL = {
+    "name": "submit_label",
+    "description": "Submit the correctness label for the predicted SQL query.",
+    "input_schema": {
+        "type": "object",
+        "properties": {
+            "label": {
+                "type": "integer",
+                "enum": [0, 1],
+                "description": "1 if the SQL correctly answers the question, 0 otherwise.",
+            }
+        },
+        "required": ["label"],
+    },
+}
+
+_OPENAI_LABEL_TOOL = {
+    "type": "function",
+    "strict": True,
+    "function": {
+        "name": "submit_label",
+        "description": "Submit the correctness label for the predicted SQL query.",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "label": {
+                    "type": "integer",
+                    "enum": [0, 1],
+                    "description": "1 if the SQL correctly answers the question, 0 otherwise.",
+                }
+            },
+            "required": ["label"],
+            "additionalProperties": False,
+        },
+    },
+}
 
 
-def _parse_label(text: str) -> Optional[int]:
-    stripped = text.strip()
-    if stripped in ("0", "1"):
-        return int(stripped)
-    match = re.search(r"\b([01])\b", stripped)
-    if match:
-        return int(match.group(1))
-    return None
-
-
-def anthropic_judge(model: str, base_delay: float, max_retries: int) -> Callable[[List[Dict]], Optional[str]]:
+def anthropic_judge(model: str, base_delay: float, max_retries: int) -> Callable[[List[Dict]], Optional[int]]:
     client = anthropic.Anthropic()
 
-    def judge(messages: List[Dict]) -> Optional[str]:
-        return _call_with_retry(
-            client,
-            max_retries=max_retries,
-            base_delay=base_delay,
-            model=model,
-            max_tokens=64,
-            temperature=0.0,
-            system=SYSTEM_PROMPT,
-            messages=messages,
-        )
+    def judge(messages: List[Dict]) -> Optional[int]:
+        for attempt in range(max_retries):
+            try:
+                response = client.messages.create(
+                    model=model,
+                    max_tokens=64,
+                    temperature=0.0,
+                    system=SYSTEM_PROMPT,
+                    tools=[_ANTHROPIC_LABEL_TOOL],
+                    tool_choice={"type": "tool", "name": "submit_label"},
+                    messages=messages,
+                )
+                tool_use = next(b for b in response.content if b.type == "tool_use")
+                return int(tool_use.input["label"])
+            except Exception as e:
+                if attempt < max_retries - 1:
+                    time.sleep(base_delay * (2**attempt))
+                else:
+                    print(f"  Error after {max_retries} attempts: {e}")
+        return None
 
     return judge
 
 
-def openai_judge(model: str, base_delay: float, max_retries: int) -> Callable[[List[Dict]], Optional[str]]:
+def openai_judge(model: str, base_delay: float, max_retries: int) -> Callable[[List[Dict]], Optional[int]]:
     client = openai.OpenAI()
 
-    def judge(messages: List[Dict]) -> Optional[str]:
+    def judge(messages: List[Dict]) -> Optional[int]:
         system_messages = [{"role": "system", "content": SYSTEM_PROMPT}]
         for attempt in range(max_retries):
             try:
                 response = client.chat.completions.create(
                     model=model,
                     messages=system_messages + messages,
-                    # max_tokens=64,
                     temperature=0.0,
+                    tools=[_OPENAI_LABEL_TOOL],
+                    tool_choice={"type": "function", "function": {"name": "submit_label"}},
                 )
-                return response.choices[0].message.content
+                args = json.loads(response.choices[0].message.tool_calls[0].function.arguments)
+                return int(args["label"])
             except Exception as e:
                 if attempt < max_retries - 1:
                     time.sleep(base_delay * (2**attempt))
@@ -120,8 +155,8 @@ def main() -> None:
     parser.add_argument(
         "--input",
         type=Path,
-        default=Path("data/predictions.jsonl"),
-        help="Path to the input JSONL file containing predictions. (default: data/predictions.jsonl)",
+        default=None,
+        help="Path to the input JSONL file containing predictions.",
     )
     parser.add_argument(
         "--output",
@@ -139,7 +174,7 @@ def main() -> None:
         "--sleep",
         type=float,
         default=0.0,
-        help="Seconds to sleep between API calls to avoid rate limits. (default: 0.1)",
+        help="Seconds to sleep between API calls to avoid rate limits. (default: 0.0)",
     )
     args = parser.parse_args()
 
@@ -155,6 +190,7 @@ def main() -> None:
     else:
         judge = openai_judge(args.model, args.base_delay, args.max_retries)
 
+    n_written = 0
     with open(args.output, "a") as out_f:
         for i, ex in enumerate(remaining):
             print(f"  [{i + 1}/{len(remaining)}] {ex['example_id']} ({ex['db_id']})")
@@ -164,17 +200,15 @@ def main() -> None:
                 question=ex["question"],
                 predicted_sql=ex["predicted_sql"],
             )
-            raw = judge([{"role": "user", "content": user_prompt}])
-            if raw is None:
-                continue
-            label = _parse_label(raw)
+            label = judge([{"role": "user", "content": user_prompt}])
             if label is None:
-                print(f"    Could not parse label from: {raw!r}")
                 continue
             record = {"example_id": ex["example_id"], "llm_judge_label": label}
             out_f.write(json.dumps(record) + "\n")
             out_f.flush()
+            n_written += 1
             time.sleep(args.sleep)
+    print(f"Done. {n_written} records written to {args.output.resolve()}")
 
 
 if __name__ == "__main__":

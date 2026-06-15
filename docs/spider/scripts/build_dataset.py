@@ -5,6 +5,7 @@ from typing import List
 
 import pandas as pd
 from datasets import Dataset
+from huggingface_hub import login
 
 
 def _load_jsonl(path: Path) -> pd.DataFrame:
@@ -20,20 +21,17 @@ def main() -> None:
     parser.add_argument(
         "--predictions",
         type=Path,
-        default=Path("data/predictions.jsonl"),
-        help="Path to the predictions JSONL file. (default: data/predictions.jsonl)",
+        help="Path to the predictions JSONL file.",
     )
     parser.add_argument(
         "--judge-labels",
         type=Path,
-        default=Path("data/llm_judge_labels.jsonl"),
-        help="Path to the LLM judge labels JSONL file. (default: data/llm_judge_labels.jsonl)",
+        help="Path to the LLM judge labels JSONL file.",
     )
     parser.add_argument(
         "--human-labels",
         type=Path,
-        default=Path("data/human_labels.jsonl"),
-        help="Path to the human labels JSONL file. (default: data/human_labels.jsonl)",
+        help="Path to the human labels JSONL file.",
     )
     parser.add_argument(
         "--output",
@@ -43,7 +41,7 @@ def main() -> None:
     )
     parser.add_argument(
         "--hf-repo",
-        default="glide-py/spider-text-to-sql",
+        default="imerad-kv/spider-text-to-sql",
         help="HuggingFace Hub repository slug to push the dataset to. (default: glide-py/spider-text-to-sql)",
     )
     args = parser.parse_args()
@@ -73,6 +71,7 @@ def main() -> None:
     df.to_parquet(args.output, index=False)
 
     dataset = Dataset.from_pandas(df, preserve_index=False)
+    login(token="REDACTED_HF_TOKEN")
     dataset.push_to_hub(args.hf_repo)
     print(f"Pushed {len(df)} examples to {args.hf_repo}.")
 

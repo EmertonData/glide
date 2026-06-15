@@ -16,7 +16,6 @@ def _execute_query(db_path: Path, sql: str) -> Tuple[Optional[List], Optional[st
         result = sorted(rows)
         return result, None
     except Exception as exc:
-        print(exc)
         return None, str(exc)
 
 
@@ -65,8 +64,8 @@ def main() -> None:
     parser.add_argument(
         "--input",
         type=Path,
-        default=Path("data/predictions.jsonl"),
-        help="Path to the input JSONL file containing predictions (default: data/predictions.jsonl).",
+        default=None,
+        help="Path to the input JSONL file containing predictions.",
     )
     parser.add_argument(
         "--output",
@@ -89,6 +88,7 @@ def main() -> None:
     remaining = [ex for ex in examples if ex["example_id"] not in processed]
     print(f"Remaining: {len(remaining)} / {len(examples)}")
 
+    n_written = 0
     with open(args.output, "a") as out_f:
         for i, ex in enumerate(remaining):
             print(f"  [{i + 1}/{len(remaining)}] {ex['example_id']} ({ex['db_id']})")
@@ -101,6 +101,8 @@ def main() -> None:
 
             out_f.write(json.dumps(record) + "\n")
             out_f.flush()
+            n_written += 1
+    print(f"Done. {n_written} records written to {args.output.resolve()}")
 
 
 if __name__ == "__main__":

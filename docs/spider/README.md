@@ -9,8 +9,6 @@ tags:
   - spider
   - llm-evaluation
   - glide
-size_categories:
-  - n<1K
 ---
 
 # Spider Text-to-SQL with LLM-Judge Labels
@@ -52,31 +50,62 @@ Install dependencies:
 pip install -r scripts/requirements.txt
 ```
 
-Then run the scripts in order from the repository root:
+Then run the scripts in order from the repository root.
+
+**Step 1 — Download and extract Spider 1.0:**
 
 ```bash
-# 1. Download and extract Spider 1.0
 python scripts/download_dataset.py
-
-# 2. Inspect per-database statistics to inform database selection
-python scripts/explore_dataset.py
-
-# 3. Generate SQL predictions
-#    Supports --provider {anthropic,openai} and any --model from that provider.
-#    Run with --help for the full list of options (scope, retries, checkpointing).
-python scripts/generate_predictions.py --provider anthropic --model claude-haiku-4-5-20251001
-
-# 4. Generate LLM judge labels and human labels
-#    The judge script supports the same --provider and --model options as step 3.
-python scripts/generate_llm_judge_labels.py --provider anthropic --model claude-sonnet-4-6
-python scripts/generate_human_labels.py
-
-# 5. Merge and push to HuggingFace
-#    Input paths and the target repo are configurable; run with --help for details.
-python scripts/build_dataset.py --hf-repo glide-py/spider-text-to-sql
 ```
 
-Steps 3 and 4 write checkpointed JSONL files under `data/` and can be safely interrupted and resumed. The relevant API key (`ANTHROPIC_API_KEY` or `OPENAI_API_KEY`) must be set before running them.
+**Step 2 — Inspect per-database statistics to inform database selection:**
+
+```bash
+python scripts/explore_dataset.py
+```
+
+**Step 3 — Generate SQL predictions:**
+
+Supports `--provider {anthropic,openai}` and any `--model` from that provider. Run with `--help` for the full list of options (scope, retries, checkpointing). The relevant API key (`ANTHROPIC_API_KEY` or `OPENAI_API_KEY`) must be set.
+
+```bash
+python scripts/generate_predictions.py --provider anthropic --model claude-haiku-4-5-20251001
+```
+
+The script prints the output path on completion:
+
+```
+Done. 1234 records written to /abs/path/to/data/predictions_anthropic_claude-haiku-4-5-20251001.jsonl
+```
+
+Note that path — you will pass it as `--input` in the next step.
+
+**Step 4 — Generate LLM judge labels and human labels:**
+
+Pass the predictions file from step 3 as `--input` to both scripts. The judge script supports the same `--provider` and `--model` options as step 3.
+
+```bash
+python scripts/generate_llm_judge_labels.py --provider anthropic --model claude-sonnet-4-6 \
+    --input <predictions path from step 3>
+
+python scripts/generate_human_labels.py --input <predictions path from step 3>
+```
+
+Each script prints its output path on completion. Note both paths — you will pass them to `build_dataset.py` in step 5.
+
+Steps 3 and 4 write checkpointed JSONL files under `data/` and can be safely interrupted and resumed.
+
+**Step 5 — Merge and push to HuggingFace:**
+
+Pass the three output paths noted in steps 3 and 4 as `--predictions`, `--judge-labels`, and `--human-labels`.
+
+```bash
+python scripts/build_dataset.py \
+    --predictions <predictions path from step 3> \
+    --judge-labels <llm_judge_labels path from step 4> \
+    --human-labels <human_labels path from step 4> \
+    --hf-repo glide-py/spider-text-to-sql
+```
 
 ## Source
 
