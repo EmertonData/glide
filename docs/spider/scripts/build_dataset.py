@@ -1,12 +1,10 @@
+import argparse
 import json
 from pathlib import Path
 from typing import List
 
 import pandas as pd
 from datasets import Dataset
-
-# TODO: set to the agreed HuggingFace repo slug, e.g. "glide-py/spider-text-to-sql"
-HF_REPO = "glide-py/spider-text-to-sql"
 
 
 def _load_jsonl(path: Path) -> pd.DataFrame:
@@ -16,9 +14,43 @@ def _load_jsonl(path: Path) -> pd.DataFrame:
 
 
 def main() -> None:
-    predictions = _load_jsonl(Path("data/predictions.jsonl"))
-    judge_labels = _load_jsonl(Path("data/llm_judge_labels.jsonl"))
-    human_labels = _load_jsonl(Path("data/human_labels.jsonl"))
+    parser = argparse.ArgumentParser(
+        description="Merge predictions with LLM judge and human labels, then push to HuggingFace Hub."
+    )
+    parser.add_argument(
+        "--predictions",
+        type=Path,
+        default=Path("data/predictions.jsonl"),
+        help="Path to the predictions JSONL file. (default: data/predictions.jsonl)",
+    )
+    parser.add_argument(
+        "--judge-labels",
+        type=Path,
+        default=Path("data/llm_judge_labels.jsonl"),
+        help="Path to the LLM judge labels JSONL file. (default: data/llm_judge_labels.jsonl)",
+    )
+    parser.add_argument(
+        "--human-labels",
+        type=Path,
+        default=Path("data/human_labels.jsonl"),
+        help="Path to the human labels JSONL file. (default: data/human_labels.jsonl)",
+    )
+    parser.add_argument(
+        "--output",
+        type=Path,
+        default=Path("data/spider_dataset.parquet"),
+        help="Path for the output Parquet file. (default: data/spider_dataset.parquet)",
+    )
+    parser.add_argument(
+        "--hf-repo",
+        default="glide-py/spider-text-to-sql",
+        help="HuggingFace Hub repository slug to push the dataset to. (default: glide-py/spider-text-to-sql)",
+    )
+    args = parser.parse_args()
+
+    predictions = _load_jsonl(args.predictions)
+    judge_labels = _load_jsonl(args.judge_labels)
+    human_labels = _load_jsonl(args.human_labels)
 
     df = predictions.merge(judge_labels[["example_id", "llm_judge_label"]], on="example_id")
     df = df.merge(human_labels[["example_id", "human_label"]], on="example_id")
@@ -38,11 +70,11 @@ def main() -> None:
     print(summary.to_string())
 
     df = df.drop(columns=["agreement"])
-    df.to_parquet("data/spider_dataset.parquet", index=False)
+    df.to_parquet(args.output, index=False)
 
     dataset = Dataset.from_pandas(df, preserve_index=False)
-    dataset.push_to_hub(HF_REPO)
-    print(f"Pushed {len(df)} examples to {HF_REPO}.")
+    dataset.push_to_hub(args.hf_repo)
+    print(f"Pushed {len(df)} examples to {args.hf_repo}.")
 
 
 if __name__ == "__main__":

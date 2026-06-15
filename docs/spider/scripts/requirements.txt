@@ -1,4 +1,6 @@
 anthropic
+openai
 pandas
 pyarrow
 datasets
+python-dotenv
