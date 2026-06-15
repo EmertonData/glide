@@ -71,7 +71,6 @@ def main() -> None:
     df.to_parquet(args.output, index=False)
 
     dataset = Dataset.from_pandas(df, preserve_index=False)
-    login(token="REDACTED_HF_TOKEN")
     dataset.push_to_hub(args.hf_repo)
     print(f"Pushed {len(df)} examples to {args.hf_repo}.")
 

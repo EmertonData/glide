@@ -155,7 +155,6 @@ def main() -> None:
     parser.add_argument(
         "--input",
         type=Path,
-        default=None,
         help="Path to the input JSONL file containing predictions.",
     )
     parser.add_argument(

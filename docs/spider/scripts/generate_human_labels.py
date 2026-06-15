@@ -6,17 +6,24 @@ from typing import Dict, List, Optional, Set, Tuple
 
 
 def _execute_query(db_path: Path, sql: str) -> Tuple[Optional[List], Optional[str]]:
+    if not db_path.exists():
+        return None, f"db_error: database file not found: {db_path}"
+
     try:
         conn = sqlite3.connect(str(db_path))
+    except sqlite3.Error as exc:
+        return None, f"db_error: {exc}"
+
+    try:
         cursor = conn.cursor()
-        # cursor.execute(sql)
-        cursor.executescript(sql)
+        cursor.execute(sql)
         rows = cursor.fetchall()
-        conn.close()
-        result = sorted(rows)
+        result = sorted(rows, key=str)
         return result, None
-    except Exception as exc:
-        return None, str(exc)
+    except sqlite3.Error as exc:
+        return None, f"sql_error: {exc}"
+    finally:
+        conn.close()
 
 
 def _strip_markdown_fence(sql: str) -> str:
@@ -64,7 +71,6 @@ def main() -> None:
     parser.add_argument(
         "--input",
         type=Path,
-        default=None,
         help="Path to the input JSONL file containing predictions.",
     )
     parser.add_argument(
