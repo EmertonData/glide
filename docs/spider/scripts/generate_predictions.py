@@ -8,7 +8,7 @@ from typing import Callable, Dict, List, Optional, Set
 
 import anthropic
 import openai
-from _utils import _call_with_retry, _load_checkpoint, _load_schema
+from _utils import _call_with_retry, _load_checkpoint, _load_schema, _strip_markdown_fence
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -216,7 +216,7 @@ def main() -> None:
                 "db_id": ex["db_id"],
                 "question": ex["question"],
                 "gold_sql": ex["gold_sql"],
-                "predicted_sql": predicted_sql.strip(),
+                "predicted_sql": _strip_markdown_fence(predicted_sql),
             }
             out_f.write(json.dumps(record) + "\n")
             out_f.flush()

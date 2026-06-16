@@ -79,9 +79,9 @@ def anthropic_judge(model: str, base_delay: float, max_retries: int) -> Callable
                     max_tokens=64,
                     temperature=0.0,
                     system=SYSTEM_PROMPT,
-                    tools=[_ANTHROPIC_LABEL_TOOL],
+                    tools=[_ANTHROPIC_LABEL_TOOL],  # ty: ignore
                     tool_choice={"type": "tool", "name": "submit_label"},
-                    messages=messages,
+                    messages=messages,  # ty: ignore
                 )
                 tool_use = next(b for b in response.content if b.type == "tool_use")
                 return int(tool_use.input["label"])
@@ -106,7 +106,7 @@ def openai_judge(model: str, base_delay: float, max_retries: int) -> Callable[[L
                     model=model,
                     messages=system_messages + messages,
                     temperature=0.0,
-                    tools=[_OPENAI_LABEL_TOOL],
+                    tools=[_OPENAI_LABEL_TOOL],  # ty: ignore
                     tool_choice={"type": "function", "function": {"name": "submit_label"}},
                 )
                 args = json.loads(response.choices[0].message.tool_calls[0].function.arguments)

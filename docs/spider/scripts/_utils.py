@@ -75,6 +75,17 @@ def _call_with_retry(
     return None
 
 
+def _strip_markdown_fence(sql: str) -> str:
+    sql = sql.strip()
+    if sql.startswith("```"):
+        lines = sql.splitlines()
+        lines = lines[1:]
+        if lines and lines[-1].strip() == "```":
+            lines = lines[:-1]
+        sql = "\n".join(lines).strip()
+    return sql
+
+
 def _load_checkpoint(path: Path) -> Set[str]:
     if not path.exists():
         return set()

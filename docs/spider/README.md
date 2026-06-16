@@ -72,6 +72,8 @@ Supports `--provider {anthropic,openai}` and any `--model` from that provider. R
 python scripts/generate_predictions.py --provider anthropic --model claude-haiku-4-5-20251001
 ```
 
+The script defaults to `--n-datasets 51`, which is the number of Spider databases with at least 50 examples.
+
 The script prints the output path on completion:
 
 ```

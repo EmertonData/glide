@@ -5,7 +5,6 @@ from typing import List
 
 import pandas as pd
 from datasets import Dataset
-from huggingface_hub import login
 
 
 def _load_jsonl(path: Path) -> pd.DataFrame:

@@ -59,12 +59,14 @@ dev = [
     "ty>=0.0.46",
 ]
 doc = [
+    "anthropic>=0.109.2",
     "datasets>=5.0.0",
     "matplotlib>=3.10.9",
     "mkdocs>=1.6.1",
     "mkdocs-jupyter>=0.26.3",
     "mkdocs-material>=9.7.6",
     "mkdocstrings[python]>=1.0.4",
+    "openai>=2.41.1",
     "scikit-learn>=1.9.0"
 ]
 

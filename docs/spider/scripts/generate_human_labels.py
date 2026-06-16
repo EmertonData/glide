@@ -4,6 +4,8 @@ import sqlite3
 from pathlib import Path
 from typing import Dict, List, Optional, Set, Tuple
 
+from _utils import _load_checkpoint, _strip_markdown_fence
+
 
 def _execute_query(db_path: Path, sql: str) -> Tuple[Optional[List], Optional[str]]:
     if not db_path.exists():
@@ -26,19 +28,6 @@ def _execute_query(db_path: Path, sql: str) -> Tuple[Optional[List], Optional[st
         conn.close()
 
 
-def _strip_markdown_fence(sql: str) -> str:
-    sql = sql.strip()
-    if sql.startswith("```"):
-        lines = sql.splitlines()
-        # drop opening fence line (```sql or ```)
-        lines = lines[1:]
-        # drop closing fence if present
-        if lines and lines[-1].strip() == "```":
-            lines = lines[:-1]
-        sql = "\n".join(lines).strip()
-    return sql
-
-
 def _compute_label(db_path: Path, gold_sql: str, predicted_sql: str) -> Tuple[int, Optional[str]]:
     gold_rows, _ = _execute_query(db_path, gold_sql)
     predicted_rows, error = _execute_query(db_path, _strip_markdown_fence(predicted_sql))
@@ -48,22 +37,6 @@ def _compute_label(db_path: Path, gold_sql: str, predicted_sql: str) -> Tuple[in
 
     label = 1 if predicted_rows == gold_rows else 0
     return label, None
-
-
-def _load_checkpoint(path: Path) -> Set[str]:
-    if not path.exists():
-        return set()
-    processed: Set[str] = set()
-    with open(path) as f:
-        for line in f:
-            line = line.strip()
-            if not line:
-                continue
-            try:
-                processed.add(json.loads(line)["example_id"])
-            except (json.JSONDecodeError, KeyError):
-                pass
-    return processed
 
 
 def main() -> None:
