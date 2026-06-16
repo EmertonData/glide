@@ -29,10 +29,10 @@ Question: {question}
 Return your SQL query:"""
 
 
-def anthropic_judge(model: str, base_delay: float, max_retries: int) -> Callable[[List[Dict]], Optional[str]]:
+def anthropic_predictor(model: str, base_delay: float, max_retries: int) -> Callable[[List[Dict]], Optional[str]]:
     client = anthropic.Anthropic()
 
-    def judge(messages: List[Dict]) -> Optional[str]:
+    def predictor(messages: List[Dict]) -> Optional[str]:
         return _call_with_retry(
             client,
             max_retries=max_retries,
@@ -44,13 +44,13 @@ def anthropic_judge(model: str, base_delay: float, max_retries: int) -> Callable
             messages=messages,
         )
 
-    return judge
+    return predictor
 
 
-def openai_judge(model: str, base_delay: float, max_retries: int) -> Callable[[List[Dict]], Optional[str]]:
+def openai_predictor(model: str, base_delay: float, max_retries: int) -> Callable[[List[Dict]], Optional[str]]:
     client = openai.OpenAI()
 
-    def judge(messages: List[Dict]) -> Optional[str]:
+    def predictor(messages: List[Dict]) -> Optional[str]:
         system_messages = [{"role": "system", "content": SYSTEM_PROMPT}]
         for attempt in range(max_retries):
             try:
@@ -68,7 +68,7 @@ def openai_judge(model: str, base_delay: float, max_retries: int) -> Callable[[L
                     print(f"  Error after {max_retries} attempts: {e}")
         return None
 
-    return judge
+    return predictor
 
 
 def _select_examples(
@@ -195,9 +195,9 @@ def main() -> None:
     print(f"Selected {len(examples)} examples -- already processed: {len(processed)}, remaining: {len(remaining)}")
 
     if args.provider == "anthropic":
-        judge = anthropic_judge(args.model, args.base_delay, args.max_retries)
+        predictor = anthropic_predictor(args.model, args.base_delay, args.max_retries)
     else:
-        judge = openai_judge(args.model, args.base_delay, args.max_retries)
+        predictor = openai_predictor(args.model, args.base_delay, args.max_retries)
 
     n_written = 0
     with open(output_path, "a") as out_f:
@@ -208,7 +208,7 @@ def main() -> None:
                 schema=schemas[ex["db_id"]],
                 question=ex["question"],
             )
-            predicted_sql = judge([{"role": "user", "content": user_prompt}])
+            predicted_sql = predictor([{"role": "user", "content": user_prompt}])
             if predicted_sql is None:
                 continue
             record = {
