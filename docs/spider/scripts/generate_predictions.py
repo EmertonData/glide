@@ -143,7 +143,6 @@ def main() -> None:
     parser.add_argument(
         "--n-per-database",
         type=int,
-        default=None,
         help="Maximum number of examples to sample per database. Includes all examples per database if unset.",
     )
     parser.add_argument(
@@ -162,7 +161,8 @@ def main() -> None:
         "--spider-path",
         type=Path,
         default=Path("data/spider"),
-        help="Path to the Spider 1.0 directory (must contain tables.json and train_spider.json). (default: data/spider)",
+        help="Path to the Spider 1.0 directory (must contain tables.json and train_spider.json). "
+        "(default: data/spider)",
     )
     parser.add_argument(
         "--output",
