@@ -1,12 +1,124 @@
 import json
 import time
 from pathlib import Path
-from typing import Dict, List, Optional, Set, Tuple
+from typing import Callable, Dict, List, Optional, Set, Tuple
 
 import anthropic
+import openai
+
+_ANTHROPIC_LABEL_OUTPUT_FORMAT = {
+    "type": "json_schema",
+    "schema": {
+        "type": "object",
+        "properties": {"label": {"type": "integer", "enum": [0, 1]}},
+        "required": ["label"],
+        "additionalProperties": False,
+    },
+}
+
+_ANTHROPIC_LABEL_WITH_REASONING_OUTPUT_FORMAT = {
+    "type": "json_schema",
+    "schema": {
+        "type": "object",
+        "properties": {
+            "reasoning": {"type": "string"},
+            "label": {"type": "integer", "enum": [0, 1]},
+        },
+        "required": ["reasoning", "label"],
+        "additionalProperties": False,
+    },
+}
+
+_OPENAI_LABEL_JSON_SCHEMA = {
+    "type": "json_schema",
+    "name": "binary_label_response",
+    "schema": {
+        "type": "object",
+        "properties": {"label": {"type": "integer", "enum": [0, 1]}},
+        "required": ["label"],
+        "additionalProperties": False,
+    },
+    "strict": True,
+}
+
+_OPENAI_LABEL_WITH_REASONING_JSON_SCHEMA = {
+    "type": "json_schema",
+    "name": "binary_label_with_reasoning_response",
+    "schema": {
+        "type": "object",
+        "properties": {
+            "reasoning": {"type": "string"},
+            "label": {"type": "integer", "enum": [0, 1]},
+        },
+        "required": ["reasoning", "label"],
+        "additionalProperties": False,
+    },
+    "strict": True,
+}
 
 
-def _load_schema(tables_path: Path) -> Dict[str, str]:
+def anthropic_judge(
+    model: str, base_delay: float, max_retries: int, system_prompt: str, with_reasoning: bool = False
+) -> Callable[[List[Dict]], Optional[Tuple[int, Optional[str]]]]:
+    client = anthropic.Anthropic()
+    output_format = _ANTHROPIC_LABEL_WITH_REASONING_OUTPUT_FORMAT if with_reasoning else _ANTHROPIC_LABEL_OUTPUT_FORMAT
+    max_tokens = 512 if with_reasoning else 64
+
+    def judge(messages: List[Dict]) -> Optional[Tuple[int, Optional[str]]]:
+        for attempt in range(max_retries):
+            try:
+                response = client.messages.create(
+                    model=model,
+                    max_tokens=max_tokens,
+                    temperature=0.0,
+                    system=system_prompt,
+                    output_config={"format": output_format},  # ty: ignore
+                    messages=messages,  # ty: ignore
+                )
+                text = next(b.text for b in response.content if b.type == "text")
+                parsed = json.loads(text)
+                return (int(parsed["label"]), parsed.get("reasoning"))
+            except Exception as e:
+                print(f"  Attempt {attempt + 1}/{max_retries} failed: {str(e)[:200]}")
+                if attempt < max_retries - 1:
+                    time.sleep(base_delay * (2**attempt))
+                else:
+                    print(f"  Error after {max_retries} attempts: giving up.")
+        return None
+
+    return judge
+
+
+def openai_judge(
+    model: str, base_delay: float, max_retries: int, system_prompt: str, with_reasoning: bool = False
+) -> Callable[[List[Dict]], Optional[Tuple[int, Optional[str]]]]:
+    client = openai.OpenAI()
+    schema = _OPENAI_LABEL_WITH_REASONING_JSON_SCHEMA if with_reasoning else _OPENAI_LABEL_JSON_SCHEMA
+
+    def judge(messages: List[Dict]) -> Optional[Tuple[int, Optional[str]]]:
+        system_messages = [{"role": "system", "content": system_prompt}]
+        for attempt in range(max_retries):
+            try:
+                response = client.responses.create(
+                    model=model,
+                    input=system_messages + messages,
+                    temperature=0.0,
+                    text={"format": schema},  # ty : ignore
+                )
+                parsed = json.loads(response.output_text)
+                return (int(parsed["label"]), parsed.get("reasoning"))
+            except Exception as e:
+                print(f"  Attempt {attempt + 1}/{max_retries} failed: {str(e)[:200]}")
+                if attempt < max_retries - 1:
+                    time.sleep(base_delay * (2**attempt))
+                else:
+                    print(f"  Error after {max_retries} attempts: giving up.")
+        return None
+
+    return judge
+
+
+def _load_schemas(tables_path: Path) -> Dict[str, str]:
     with open(tables_path) as f:
         tables_data = json.load(f)
 
@@ -51,7 +163,7 @@ def _load_schema(tables_path: Path) -> Dict[str, str]:
     return schemas
 
 
-def _call_with_retry(
+def _call_with_retry_anthropic(
     client: anthropic.Anthropic,
     max_retries: int,
     base_delay: float,
@@ -75,15 +187,36 @@ def _call_with_retry(
     return None
 
 
+def _call_with_retry_openai(
+    client: openai.OpenAI,
+    max_retries: int,
+    base_delay: float,
+    **kwargs,
+) -> Optional[str]:
+    for attempt in range(max_retries):
+        try:
+            response = client.chat.completions.create(**kwargs)
+            result = response.choices[0].message.content
+            return result
+        except openai.RateLimitError:
+            delay = base_delay * (2**attempt)
+            print(f"  Rate limit, retrying in {delay:.0f}s (attempt {attempt + 1}/{max_retries})")
+            time.sleep(delay)
+        except openai.APIStatusError as exc:
+            if exc.status_code >= 500:
+                delay = base_delay * (2**attempt)
+                time.sleep(delay)
+            else:
+                return None
+    return None
+
+
 def _strip_markdown_fence(sql: str) -> str:
     sql = sql.strip()
-    if sql.startswith("```"):
-        lines = sql.splitlines()
-        lines = lines[1:]
-        if lines and lines[-1].strip() == "```":
-            lines = lines[:-1]
-        sql = "\n".join(lines).strip()
-    return sql
+    sql = sql.strip("`")
+    if sql.lower().startswith("sql"):
+        sql = sql[3:]
+    return sql.strip()
 
 
 def _load_checkpoint(path: Path) -> Set[str]:

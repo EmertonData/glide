@@ -1,3 +1,4 @@
+import argparse
 import json
 import re
 import urllib.parse
@@ -5,9 +6,8 @@ import urllib.request
 import zipfile
 from pathlib import Path
 
-GDRIVE_FILE_ID = "1403EGqzIDoHMdQF4c9Bkyl7dZLZ5Wt6J"
-OUTPUT_DIR = Path("data/spider")
-ARCHIVE_PATH = Path("data/spider.zip")
+DEFAULT_GDRIVE_FILE_ID = "1403EGqzIDoHMdQF4c9Bkyl7dZLZ5Wt6J"
+DEFAULT_OUTPUT_DIR = Path("data/spider")
 
 
 def _resolve_gdrive_url(file_id: str) -> str:
@@ -30,34 +30,65 @@ def _resolve_gdrive_url(file_id: str) -> str:
 
 
 def main() -> None:
-    if (OUTPUT_DIR / "train_spider.json").exists():
+    parser = argparse.ArgumentParser(description="Download and extract the Spider 1.0 dataset.")
+    parser.add_argument("--gdrive-file-id", default=DEFAULT_GDRIVE_FILE_ID, help="Google Drive file ID.")
+    parser.add_argument(
+        "--output-dir", type=Path, default=DEFAULT_OUTPUT_DIR, help="Directory to extract the dataset into."
+    )
+    parser.add_argument(
+        "--archive-path",
+        type=Path,
+        default=None,
+        help="Path to a local zip archive. If provided, skips download entirely.",
+    )
+    parser.add_argument(
+        "--url",
+        default=None,
+        help="Direct download URL. Takes precedence over --gdrive-file-id.",
+    )
+    args = parser.parse_args()
+
+    output_dir: Path = args.output_dir
+
+    if (output_dir / "train_spider.json").exists():
         print("Spider dataset already present, skipping download.")
         return
 
-    OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+    output_dir.mkdir(parents=True, exist_ok=True)
 
-    print(f"Resolving Google Drive download URL for file {GDRIVE_FILE_ID} ...")
-    download_url = _resolve_gdrive_url(GDRIVE_FILE_ID)
-
-    print("Downloading Spider 1.0 ...")
-    urllib.request.urlretrieve(download_url, ARCHIVE_PATH)
+    if args.archive_path is not None:
+        archive_path = args.archive_path
+        cleanup_archive = False
+        print(f"Using local archive: {archive_path}")
+    else:
+        archive_path = output_dir.parent / (output_dir.name + ".zip")
+        cleanup_archive = True
+        if args.url is not None:
+            print(f"Downloading Spider 1.0 from {args.url} ...")
+            download_url = args.url
+        else:
+            print(f"Resolving Google Drive download URL for file {args.gdrive_file_id} ...")
+            download_url = _resolve_gdrive_url(args.gdrive_file_id)
+            print("Downloading Spider 1.0 ...")
+        urllib.request.urlretrieve(download_url, archive_path)
 
     print("Extracting...")
-    with zipfile.ZipFile(ARCHIVE_PATH) as zf:
+    with zipfile.ZipFile(archive_path) as zf:
         for member in zf.namelist():
             parts = Path(member).parts
             if len(parts) <= 1:
                 continue
-            target = OUTPUT_DIR / Path(*parts[1:])
+            target = output_dir / Path(*parts[1:])
             if member.endswith("/"):
                 target.mkdir(parents=True, exist_ok=True)
             else:
                 target.parent.mkdir(parents=True, exist_ok=True)
                 target.write_bytes(zf.read(member))
 
-    ARCHIVE_PATH.unlink()
+    if cleanup_archive:
+        archive_path.unlink()
 
-    examples = json.loads((OUTPUT_DIR / "train_spider.json").read_text())
+    examples = json.loads((output_dir / "train_spider.json").read_text())
     db_count = len({ex["db_id"] for ex in examples})
     print(f"  {len(examples)} training examples across {db_count} databases.")
 

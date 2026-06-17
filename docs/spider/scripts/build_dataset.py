@@ -15,7 +15,7 @@ def _load_jsonl(path: Path) -> pd.DataFrame:
 
 def main() -> None:
     parser = argparse.ArgumentParser(
-        description="Merge predictions with LLM judge and human labels, then push to HuggingFace Hub."
+        description="Merge predictions with LLM judge and ground truth labels, then push to HuggingFace Hub."
     )
     parser.add_argument(
         "--predictions",
@@ -28,9 +28,9 @@ def main() -> None:
         help="Path to the LLM judge labels JSONL file.",
     )
     parser.add_argument(
-        "--human-labels",
+        "--ground-truths",
         type=Path,
-        help="Path to the human labels JSONL file.",
+        help="Path to the ground truths JSONL file.",
     )
     parser.add_argument(
         "--output",
@@ -40,25 +40,25 @@ def main() -> None:
     )
     parser.add_argument(
         "--hf-repo",
-        default="glide-py/spider-text-to-sql",
+        default="imerad-kv/spider-text-to-sql",
         help="HuggingFace Hub repository slug to push the dataset to. (default: glide-py/spider-text-to-sql)",
     )
     args = parser.parse_args()
 
     predictions = _load_jsonl(args.predictions)
     judge_labels = _load_jsonl(args.judge_labels)
-    human_labels = _load_jsonl(args.human_labels)
+    ground_truths = _load_jsonl(args.ground_truths)
 
     df = predictions.merge(judge_labels[["example_id", "llm_judge_label"]], on="example_id")
-    df = df.merge(human_labels[["example_id", "human_label"]], on="example_id")
-    df = df[["example_id", "db_id", "question", "gold_sql", "predicted_sql", "llm_judge_label", "human_label"]]
+    df = df.merge(ground_truths[["example_id", "ground_truth_label"]], on="example_id")
+    df = df[["example_id", "db_id", "question", "gold_sql", "predicted_sql", "llm_judge_label", "ground_truth_label"]]
 
-    df["agreement"] = (df["llm_judge_label"] == df["human_label"]).astype(int)
+    df["agreement"] = (df["llm_judge_label"] == df["ground_truth_label"]).astype(int)
     summary = (
         df.groupby("db_id")
         .agg(
-            count=("human_label", "count"),
-            human_accuracy=("human_label", "mean"),
+            count=("ground_truth_label", "count"),
+            ground_truth_accuracy=("ground_truth_label", "mean"),
             judge_accuracy=("llm_judge_label", "mean"),
             agreement_rate=("agreement", "mean"),
         )

@@ -8,7 +8,13 @@ from typing import Callable, Dict, List, Optional, Set
 
 import anthropic
 import openai
-from _utils import _call_with_retry, _load_checkpoint, _load_schema, _strip_markdown_fence
+from _utils import (
+    _call_with_retry_anthropic,
+    _call_with_retry_openai,
+    _load_checkpoint,
+    _load_schemas,
+    _strip_markdown_fence,
+)
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -33,7 +39,7 @@ def anthropic_predictor(model: str, base_delay: float, max_retries: int) -> Call
     client = anthropic.Anthropic()
 
     def predictor(messages: List[Dict]) -> Optional[str]:
-        return _call_with_retry(
+        return _call_with_retry_anthropic(
             client,
             max_retries=max_retries,
             base_delay=base_delay,
@@ -52,21 +58,15 @@ def openai_predictor(model: str, base_delay: float, max_retries: int) -> Callabl
 
     def predictor(messages: List[Dict]) -> Optional[str]:
         system_messages = [{"role": "system", "content": SYSTEM_PROMPT}]
-        for attempt in range(max_retries):
-            try:
-                response = client.chat.completions.create(
-                    model=model,
-                    messages=system_messages + messages,
-                    max_tokens=256,
-                    temperature=0.0,
-                )
-                return response.choices[0].message.content
-            except Exception as e:
-                if attempt < max_retries - 1:
-                    time.sleep(base_delay * (2**attempt))
-                else:
-                    print(f"  Error after {max_retries} attempts: {e}")
-        return None
+        return _call_with_retry_openai(
+            client,
+            max_retries=max_retries,
+            base_delay=base_delay,
+            model=model,
+            messages=system_messages + messages,
+            max_tokens=256,
+            temperature=0.0,
+        )
 
     return predictor
 
@@ -168,25 +168,29 @@ def main() -> None:
         "--output",
         type=Path,
         default=None,
-        help=(
-            "Path to an existing JSONL file to resume from. Skips already-processed example IDs. "
-            "Creates a new file if unset."
-        ),
+        help=("Output JSONL file for predictions; used as a checkpoint. (default: data/predictions_by_<model>.jsonl)"),
     )
     parser.add_argument(
         "--sleep",
         type=float,
-        default=0.0,
+        default=0.3,
         help="Seconds to sleep between API calls to avoid rate limits. (default: 0.0)",
+    )
+    parser.add_argument(
+        "--include-prompt",
+        action="store_true",
+        default=False,
+        help="Include the full user prompt (with SQL schema) in each output record. (default: false)",
     )
     args = parser.parse_args()
 
     if args.output is not None:
         output_path = args.output
     else:
-        output_path = Path(f"data/predictions_{args.provider}_{args.model}.jsonl")
+        model_slug = args.model.replace("/", "-")
+        output_path = Path(f"data/predictions_by_{model_slug}.jsonl")
 
-    schemas = _load_schema(args.spider_path / "tables.json")
+    schemas = _load_schemas(args.spider_path / "tables.json")
     train_data = json.loads((args.spider_path / "train_spider.json").read_text())
     examples = _select_examples(train_data, schemas, args.n_databases, args.n_per_database, args.seed)
 
@@ -196,8 +200,10 @@ def main() -> None:
 
     if args.provider == "anthropic":
         predictor = anthropic_predictor(args.model, args.base_delay, args.max_retries)
-    else:
+    elif args.provider == "openai":
         predictor = openai_predictor(args.model, args.base_delay, args.max_retries)
+    else:
+        raise ValueError(f"Unknown provider {args.provider}")
 
     n_written = 0
     with open(output_path, "a") as out_f:
@@ -218,6 +224,8 @@ def main() -> None:
                 "gold_sql": ex["gold_sql"],
                 "predicted_sql": _strip_markdown_fence(predicted_sql),
             }
+            if args.include_prompt:
+                record["prompt"] = user_prompt
             out_f.write(json.dumps(record) + "\n")
             out_f.flush()
             n_written += 1
