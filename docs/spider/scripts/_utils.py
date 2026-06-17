@@ -77,8 +77,8 @@ def anthropic_judge(
             max_tokens=max_tokens,
             temperature=0.0,
             system=system_prompt,
-            output_config={"format": output_format},  # ty: ignore
-            messages=messages,  # ty: ignore
+            output_config={"format": output_format},
+            messages=messages,
         )
         if text is None:
             return None
