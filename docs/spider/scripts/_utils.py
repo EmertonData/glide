@@ -31,29 +31,33 @@ _ANTHROPIC_LABEL_WITH_REASONING_OUTPUT_FORMAT = {
 
 _OPENAI_LABEL_JSON_SCHEMA = {
     "type": "json_schema",
-    "name": "binary_label_response",
-    "schema": {
-        "type": "object",
-        "properties": {"label": {"type": "integer", "enum": [0, 1]}},
-        "required": ["label"],
-        "additionalProperties": False,
+    "json_schema": {
+        "name": "binary_label_response",
+        "strict": True,
+        "schema": {
+            "type": "object",
+            "properties": {"label": {"type": "integer", "enum": [0, 1]}},
+            "required": ["label"],
+            "additionalProperties": False,
+        },
     },
-    "strict": True,
 }
 
 _OPENAI_LABEL_WITH_REASONING_JSON_SCHEMA = {
     "type": "json_schema",
-    "name": "binary_label_with_reasoning_response",
-    "schema": {
-        "type": "object",
-        "properties": {
-            "reasoning": {"type": "string"},
-            "label": {"type": "integer", "enum": [0, 1]},
+    "json_schema": {
+        "name": "binary_label_with_reasoning_response",
+        "strict": True,
+        "schema": {
+            "type": "object",
+            "properties": {
+                "reasoning": {"type": "string"},
+                "label": {"type": "integer", "enum": [0, 1]},
+            },
+            "required": ["reasoning", "label"],
+            "additionalProperties": False,
         },
-        "required": ["reasoning", "label"],
-        "additionalProperties": False,
     },
-    "strict": True,
 }
 
 
@@ -65,26 +69,21 @@ def anthropic_judge(
     max_tokens = 512 if with_reasoning else 64
 
     def judge(messages: List[Dict]) -> Optional[Tuple[int, Optional[str]]]:
-        for attempt in range(max_retries):
-            try:
-                response = client.messages.create(
-                    model=model,
-                    max_tokens=max_tokens,
-                    temperature=0.0,
-                    system=system_prompt,
-                    output_config={"format": output_format},  # ty: ignore
-                    messages=messages,  # ty: ignore
-                )
-                text = next(b.text for b in response.content if b.type == "text")
-                parsed = json.loads(text)
-                return (int(parsed["label"]), parsed.get("reasoning"))
-            except Exception as e:
-                print(f"  Attempt {attempt + 1}/{max_retries} failed: {str(e)[:200]}")
-                if attempt < max_retries - 1:
-                    time.sleep(base_delay * (2**attempt))
-                else:
-                    print(f"  Error after {max_retries} attempts: giving up.")
-        return None
+        text = _call_with_retry_anthropic(
+            client,
+            max_retries=max_retries,
+            base_delay=base_delay,
+            model=model,
+            max_tokens=max_tokens,
+            temperature=0.0,
+            system=system_prompt,
+            output_config={"format": output_format},  # ty: ignore
+            messages=messages,  # ty: ignore
+        )
+        if text is None:
+            return None
+        parsed = json.loads(text)
+        return (int(parsed["label"]), parsed.get("reasoning"))
 
     return judge
 
@@ -97,23 +96,19 @@ def openai_judge(
 
     def judge(messages: List[Dict]) -> Optional[Tuple[int, Optional[str]]]:
         system_messages = [{"role": "system", "content": system_prompt}]
-        for attempt in range(max_retries):
-            try:
-                response = client.responses.create(
-                    model=model,
-                    input=system_messages + messages,
-                    temperature=0.0,
-                    text={"format": schema},  # ty : ignore
-                )
-                parsed = json.loads(response.output_text)
-                return (int(parsed["label"]), parsed.get("reasoning"))
-            except Exception as e:
-                print(f"  Attempt {attempt + 1}/{max_retries} failed: {str(e)[:200]}")
-                if attempt < max_retries - 1:
-                    time.sleep(base_delay * (2**attempt))
-                else:
-                    print(f"  Error after {max_retries} attempts: giving up.")
-        return None
+        text = _call_with_retry_openai(
+            client,
+            max_retries=max_retries,
+            base_delay=base_delay,
+            model=model,
+            messages=system_messages + messages,
+            temperature=0.0,
+            response_format=schema,
+        )
+        if text is None:
+            return None
+        parsed = json.loads(text)
+        return (int(parsed["label"]), parsed.get("reasoning"))
 
     return judge
 

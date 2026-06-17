@@ -55,13 +55,13 @@ def main() -> None:
     parser.add_argument(
         "--provider",
         choices=["anthropic", "openai"],
-        default="anthropic",
-        help="LLM provider to use. (default: anthropic)",
+        default="openai",
+        help="LLM provider to use. (default: openai)",
     )
     parser.add_argument(
         "--model",
-        default="claude-sonnet-4-6",
-        help="Model name passed to the provider API. (default: claude-sonnet-4-6)",
+        default="gpt-5.4-mini",
+        help="Model name passed to the provider API. (default: gpt-5.4-mini)",
     )
     parser.add_argument(
         "--base-delay",
