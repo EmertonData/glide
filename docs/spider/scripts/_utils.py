@@ -37,6 +37,21 @@ _OPENAI_LABEL_JSON_SCHEMA = {
 }
 
 
+SQL_CORRECTNESS_CRITERIA = (
+    "A query correctly answers the question if it:\n"
+    "- Returns the right columns: selects what the question asks for, using all necessary tables joined"
+    " without producing spurious duplicates or missing rows.\n"
+    "- Filters correctly: encodes all constraints stated or implied by the question,"
+    " without adding conditions the question does not imply.\n"
+    "- Aggregates and groups correctly: uses the right function (COUNT, SUM, AVG, MIN, MAX)"
+    " at the right granularity when the question calls for one.\n"
+    "- Respects cardinality and ordering: applies LIMIT only when the question explicitly bounds the result;"
+    " sorts by the right key and direction when specified.\n"
+    "Column order in SELECT, aliases, SQL keyword casing, choice of JOIN syntax vs subquery,"
+    " and other structural variations that produce an equivalent result do not affect correctness."
+)
+
+
 def anthropic_judge(
     model: str, base_delay: float, max_retries: int, system_prompt: str
 ) -> Callable[[List[Dict]], Optional[Tuple[int, Optional[str]]]]:

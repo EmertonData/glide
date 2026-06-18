@@ -9,6 +9,7 @@ from typing import Callable, Dict, List, Optional, Set
 import anthropic
 import openai
 from _utils import (
+    SQL_CORRECTNESS_CRITERIA,
     _call_with_retry_anthropic,
     _call_with_retry_openai,
     _load_checkpoint,
@@ -21,15 +22,11 @@ SYSTEM_PROMPT = (
     "write the SQL query that answers the question. Return ONLY the SQL query, no explanation."
 )
 
-USER_TEMPLATE = """\
-Database: {db_id}
-
-Schema:
-{schema}
-
-Question: {question}
-
-Return your SQL query:"""
+USER_TEMPLATE = (
+    "Database: {db_id}\n\n"
+    "Schema:\n{schema}\n\n"
+    "Question: {question}\n\n" + SQL_CORRECTNESS_CRITERIA + "\n\nReturn your SQL query:"
+)
 
 
 def anthropic_predictor(model: str, base_delay: float, max_retries: int) -> Callable[[List[Dict]], Optional[str]]:
