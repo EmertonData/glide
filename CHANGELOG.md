@@ -12,6 +12,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - `generate_multi_binary_dataset` simulator for generating binary oracle datasets with multiple proxies.
 
 ### 🔄 Changed
+- Renamed `ClusterPPIMeanEstimator` → `ClusteredPPIMeanEstimator`, `ClusterClassicalMeanEstimator` → `ClusteredClassicalMeanEstimator`, `UniformClusterSampler` → `UniformClusteredSampler`.
 
 ### 🐛 Fixed
 
@@ -20,7 +21,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 ## [0.7.0] – 2026-06-12
 
 ### ✨ Added
-- Cluster-level inference support: `ClusteredPPIMeanEstimator`, `ClusteredClassicalMeanEstimator`, `UniformClusteredSampler`, and `generate_clustered_binary_dataset` for end-to-end prediction-powered inference on clustered data.
+- Cluster-level inference support: `ClusterPPIMeanEstimator`, `ClusterClassicalMeanEstimator`, `UniformClusterSampler`, and `generate_clustered_binary_dataset` for end-to-end prediction-powered inference on clustered data.
 - Diagrams in the README and user guide illustrating prediction-powered inference and GLIDE's three-step workflow.
 
 ### 🔄 Changed
