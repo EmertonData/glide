@@ -907,7 +907,7 @@ dev = [
 ]
 doc = [
     { name = "datasets", specifier = ">=5.0.0" },
-    { name = "matplotlib", specifier = ">=3.10.9" },
+    { name = "matplotlib", specifier = ">=3.11.0" },
     { name = "mkdocs", specifier = ">=1.6.1" },
     { name = "mkdocs-jupyter", specifier = ">=0.26.3" },
     { name = "mkdocs-material", specifier = ">=9.7.6" },
