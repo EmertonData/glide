@@ -21,7 +21,7 @@
 | [`StratifiedSampler`](samplers.md#glide.samplers.stratified.StratifiedSampler) | Stratified budget allocation with Neyman/proportional strategies |
 | [`CostOptimalRandomSampler`](samplers.md#glide.samplers.cost_optimal_random.CostOptimalRandomSampler) | Cost-optimal random sampling |
 | [`CostOptimalSampler`](samplers.md#glide.samplers.cost_optimal.CostOptimalSampler) | Uncertainty-based cost-optimal sampling |
-| [`UniformClusterSampler`](samplers.md#glide.samplers.cluster.UniformClusterSampler) | Uniform clustered random sampling |
+| [`UniformClusteredSampler`](samplers.md#glide.samplers.clustered.UniformClusteredSampler) | Uniform clustered random sampling |
 
 ## Estimators
 
@@ -32,7 +32,7 @@
 | [`ClassicalMeanEstimator`](estimators.md#glide.estimators.classical.ClassicalMeanEstimator) | Classical sample mean without proxy labels |
 | [`StratifiedClassicalMeanEstimator`](estimators.md#glide.estimators.stratified_classical.StratifiedClassicalMeanEstimator) | Classical mean with population-proportional stratification |
 | [`IPWClassicalMeanEstimator`](estimators.md#glide.estimators.ipw_classical.IPWClassicalMeanEstimator) | Classical mean with inverse probability weighting |
-| [`ClusterClassicalMeanEstimator`](estimators.md#glide.estimators.cluster_classical.ClusterClassicalMeanEstimator) | Classical sample mean on clustered data |
+| [`ClusteredClassicalMeanEstimator`](estimators.md#glide.estimators.clustered_classical.ClusteredClassicalMeanEstimator) | Classical sample mean on clustered data |
 
 ### Prediction-Powered
 
@@ -41,7 +41,7 @@
 | [`PPIMeanEstimator`](estimators.md#glide.estimators.ppi.PPIMeanEstimator) | Combines labeled data with proxy predictions |
 | [`StratifiedPPIMeanEstimator`](estimators.md#glide.estimators.stratified_ppi.StratifiedPPIMeanEstimator) | PPI with per-stratum optimal weighting |
 | [`ASIMeanEstimator`](estimators.md#glide.estimators.asi.ASIMeanEstimator) | Active statistical inference with non-uniform sampling |
-| [`ClusterPPIMeanEstimator`](estimators.md#glide.estimators.cluster_ppi.ClusterPPIMeanEstimator) | PPI for clustered data |
+| [`ClusteredPPIMeanEstimator`](estimators.md#glide.estimators.clustered_ppi.ClusteredPPIMeanEstimator) | PPI for clustered data |
 | [`PTDMeanEstimator`](estimators.md#glide.estimators.ptd.PTDMeanEstimator) | Predict-then-debias with bootstrap confidence intervals |
 | [`StratifiedPTDMeanEstimator`](estimators.md#glide.estimators.stratified_ptd.StratifiedPTDMeanEstimator) | PTD with per-stratum optimal weighting |
 | [`IPWPTDMeanEstimator`](estimators.md#glide.estimators.ipw_ptd.IPWPTDMeanEstimator) | PTD with inverse probability weighting |

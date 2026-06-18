@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 
-from glide.estimators import ClusterPPIMeanEstimator, PPIMeanEstimator
+from glide.estimators import ClusteredPPIMeanEstimator, PPIMeanEstimator
 
 
 @pytest.mark.parametrize("power_tuning", [False, True])
@@ -10,7 +10,7 @@ def test_single_observation_clusters_equals_ppi(power_tuning):
     y_proxy = np.array([2.0, 4.0, 6.0, 6.0])
     clusters = np.array(["A", "C", "B", "D"])
 
-    cluster_result = ClusterPPIMeanEstimator().estimate(y_true, y_proxy, clusters, power_tuning=power_tuning)
+    cluster_result = ClusteredPPIMeanEstimator().estimate(y_true, y_proxy, clusters, power_tuning=power_tuning)
     ppi_result = PPIMeanEstimator().estimate(y_true, y_proxy, power_tuning=power_tuning)
 
     assert cluster_result.confidence_interval.mean == pytest.approx(ppi_result.confidence_interval.mean, abs=1e-10)

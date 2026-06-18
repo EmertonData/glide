@@ -12,6 +12,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - `generate_multi_binary_dataset` simulator for generating binary oracle datasets with multiple proxies.
 
 ### 🔄 Changed
+- Renamed `ClusterPPIMeanEstimator` → `ClusteredPPIMeanEstimator`, `ClusterClassicalMeanEstimator` → `ClusteredClassicalMeanEstimator`, `UniformClusterSampler` → `UniformClusteredSampler`.
 
 ### 🐛 Fixed
 

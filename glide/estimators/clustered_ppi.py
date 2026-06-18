@@ -11,13 +11,13 @@ from glide.core.validation import (
     _validate_has_no_nan,
     _validate_unique_clusters,
 )
-from glide.estimators.cluster_classical import ClusterClassicalMeanEstimator
+from glide.estimators.clustered_classical import ClusteredClassicalMeanEstimator
 from glide.estimators.ppi_core import _compute_mean_estimate, _compute_std_estimate, _compute_tuning_parameter
 from glide.mean_inference_results import PredictionPoweredMeanInferenceResult
 
 
-class ClusterPPIMeanEstimator:
-    """Cluster PPI++ estimator for population mean.
+class ClusteredPPIMeanEstimator:
+    """Clustered PPI++ estimator for population mean.
 
     Extends PPI++ mean estimation as in ``PPIMeanEstimator`` to datasets where
     observations are grouped into clusters. Each cluster's true and proxy means
@@ -33,17 +33,17 @@ class ClusterPPIMeanEstimator:
     Examples
     --------
     >>> import numpy as np
-    >>> from glide.estimators import ClusterPPIMeanEstimator
+    >>> from glide.estimators import ClusteredPPIMeanEstimator
     >>> y_true = np.array([1.0, 2.0, 3.0, 4.0, np.nan, np.nan, np.nan, np.nan])
     >>> y_proxy = np.array([1.1, 2.2, 3.1, 3.9, 1.5, 1.8, 4.5, 4.8])
     >>> clusters = np.array(["A", "A", "B", "B", "C", "C", "D", "D"])
-    >>> estimator = ClusterPPIMeanEstimator()
+    >>> estimator = ClusteredPPIMeanEstimator()
     >>> result = estimator.estimate(y_true, y_proxy, clusters)
     >>> print(result)
     Metric: Metric
     Point Estimate: 2.744
     Confidence Interval (95%): [1.020, 4.468]
-    Estimator : ClusterPPIMeanEstimator
+    Estimator : ClusteredPPIMeanEstimator
     n_true: 4
     n_proxy: 8
     Effective Sample Size: 5
@@ -109,7 +109,7 @@ class ClusterPPIMeanEstimator:
         confidence_level: float = 0.95,
         power_tuning: bool = True,
     ) -> PredictionPoweredMeanInferenceResult:
-        """Estimate the population mean using the Cluster PPI++ estimator.
+        """Estimate the population mean using the Clustered PPI++ estimator.
 
         Computes cluster means for labeled and unlabeled clusters and uses them
         as sampling units to apply a PPI++-style bias correction:
@@ -154,7 +154,7 @@ class ClusterPPIMeanEstimator:
         -------
         PredictionPoweredMeanInferenceResult
             Contains the CLT-based confidence interval, the metric name,
-            the estimator name (``"ClusterPPIMeanEstimator"``), and the counts
+            the estimator name (``"ClusteredPPIMeanEstimator"``), and the counts
             ``n_true`` (total labeled observations) and ``n_proxy`` (total
             dataset size).
 
@@ -189,7 +189,7 @@ class ClusterPPIMeanEstimator:
         )
 
         labeled_total_size = np.sum(~np.isnan(y_true))
-        classical_confidence_interval = ClusterClassicalMeanEstimator().estimate(y_true, clusters).confidence_interval
+        classical_confidence_interval = ClusteredClassicalMeanEstimator().estimate(y_true, clusters).confidence_interval
         effective_sample_size = floor(labeled_total_size * classical_confidence_interval.var / confidence_interval.var)
         result = PredictionPoweredMeanInferenceResult(
             confidence_interval=confidence_interval,
