@@ -12,7 +12,7 @@
 
 ---
 
-::: glide.estimators.cluster_classical.ClusterClassicalMeanEstimator
+::: glide.estimators.clustered_classical.ClusteredClassicalMeanEstimator
 
 ---
 
@@ -28,7 +28,7 @@
 
 ---
 
-::: glide.estimators.cluster_ppi.ClusterPPIMeanEstimator
+::: glide.estimators.clustered_ppi.ClusteredPPIMeanEstimator
 
 ---
 

@@ -4,9 +4,9 @@ import numpy as np
 import pytest
 from numpy.typing import NDArray
 
-import glide.estimators.cluster_ppi as cluster_ppi_module
+import glide.estimators.clustered_ppi as clustered_ppi_module
 from glide.confidence_intervals import CLTConfidenceInterval
-from glide.estimators import ClusterPPIMeanEstimator
+from glide.estimators import ClusteredPPIMeanEstimator
 from glide.mean_inference_results import PredictionPoweredMeanInferenceResult
 
 
@@ -26,8 +26,8 @@ def clusters() -> NDArray:
 
 
 @pytest.fixture
-def estimator() -> ClusterPPIMeanEstimator:
-    return ClusterPPIMeanEstimator()
+def estimator() -> ClusteredPPIMeanEstimator:
+    return ClusteredPPIMeanEstimator()
 
 
 # --- _preprocess ---
@@ -35,10 +35,10 @@ def estimator() -> ClusterPPIMeanEstimator:
 
 def test_preprocess_delegates_to_validation(estimator, y_true, y_proxy, clusters):
     with (
-        patch.object(cluster_ppi_module, "_validate_equal_lengths") as mock_validate_equal_lengths,
-        patch.object(cluster_ppi_module, "_validate_has_no_nan") as mock_validate_has_no_nan,
-        patch.object(cluster_ppi_module, "_validate_unique_clusters") as mock_validate_unique_clusters,
-        patch.object(cluster_ppi_module, "_validate_bounds") as mock_validate_bounds,
+        patch.object(clustered_ppi_module, "_validate_equal_lengths") as mock_validate_equal_lengths,
+        patch.object(clustered_ppi_module, "_validate_has_no_nan") as mock_validate_has_no_nan,
+        patch.object(clustered_ppi_module, "_validate_unique_clusters") as mock_validate_unique_clusters,
+        patch.object(clustered_ppi_module, "_validate_bounds") as mock_validate_bounds,
     ):
         estimator._preprocess(y_true, y_proxy, clusters)
 
@@ -86,7 +86,7 @@ def test_estimate_returns_valid_inference_result(estimator, y_true, y_proxy, clu
     assert np.isfinite(result.confidence_interval.lower_bound)
     assert np.isfinite(result.confidence_interval.upper_bound)
     assert result.confidence_interval.lower_bound < result.confidence_interval.upper_bound
-    assert result.estimator_name == "ClusterPPIMeanEstimator"
+    assert result.estimator_name == "ClusteredPPIMeanEstimator"
 
 
 def test_estimate_metadata(estimator, y_true, y_proxy, clusters):
@@ -123,7 +123,7 @@ def test_str_format(estimator, y_true, y_proxy, clusters):
         "Metric: performance\n"
         "Point Estimate: 5.545\n"
         "Confidence Interval (95%): [4.462, 6.629]\n"
-        "Estimator : ClusterPPIMeanEstimator\n"
+        "Estimator : ClusteredPPIMeanEstimator\n"
         "n_true: 2\n"
         "n_proxy: 4\n"
         "Effective Sample Size: 6"

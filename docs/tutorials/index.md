@@ -53,7 +53,7 @@ Use the table below to find the tutorial that matches your situation.
 |---|---|---|---|---|---|---|
 | No | No | No | No | Uniform random | PPI++ | [Standard annotation budget (PPI++)](ppi.ipynb) |
 | No | No | Yes | No | Stratified uniform | Stratified PPI++ | [Stratified data (Stratified PPI++)](stratified_ppi.ipynb) |
-| No | No | No | Yes | Cluster uniform | Clustered PPI++ | [Clustered data (Clustered PPI++)](cluster_ppi.ipynb) |
+| No | No | No | Yes | Cluster uniform | Clustered PPI++ | [Clustered data (Clustered PPI++)](clustered_ppi.ipynb) |
 | No | Yes | No | No | Uncertainty-aware | ASI | [Uncertainty scores available (ASI)](asi.ipynb) |
 | Yes | No | No | No | Cost-optimal random | PPI++ | [Cost estimates available (Cost-Optimal Random Sampling)](cost_optimal_random.ipynb) |
 | Yes | Yes | No | No | Cost-optimal | ASI | [Cost and uncertainty scores available (Cost-Optimal Sampling)](cost_optimal.ipynb) |

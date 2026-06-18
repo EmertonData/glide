@@ -1,4 +1,4 @@
-"""Functional tests for ClusterClassicalMeanEstimator.
+"""Functional tests for ClusteredClassicalMeanEstimator.
 
 These tests verify end-to-end statistical properties rather than implementation
 details, and therefore require larger datasets to hold reliably.
@@ -7,7 +7,7 @@ details, and therefore require larger datasets to hold reliably.
 import numpy as np
 import pytest
 
-from glide.estimators import ClassicalMeanEstimator, ClusterClassicalMeanEstimator
+from glide.estimators import ClassicalMeanEstimator, ClusteredClassicalMeanEstimator
 
 
 def test_single_observation_clusters_equals_classical():
@@ -16,7 +16,7 @@ def test_single_observation_clusters_equals_classical():
     y = np.array([5.0, 7.0, 4.0, 8.0, 6.0, 3.0, 9.0, 2.0])
     clusters = np.array(["A", "B", "C", "D", "E", "F", "G", "H"])
 
-    cluster_result = ClusterClassicalMeanEstimator().estimate(y, clusters)
+    cluster_result = ClusteredClassicalMeanEstimator().estimate(y, clusters)
     classical_result = ClassicalMeanEstimator().estimate(y)
 
     assert cluster_result.confidence_interval.mean == pytest.approx(

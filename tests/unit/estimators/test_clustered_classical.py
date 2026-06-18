@@ -4,8 +4,8 @@ import numpy as np
 import pytest
 from numpy.typing import NDArray
 
-import glide.estimators.cluster_classical as cluster_classical_module
-from glide.estimators import ClusterClassicalMeanEstimator
+import glide.estimators.clustered_classical as clustered_classical_module
+from glide.estimators import ClusteredClassicalMeanEstimator
 from glide.mean_inference_results import ClassicalMeanInferenceResult
 
 
@@ -20,8 +20,8 @@ def clusters() -> NDArray:
 
 
 @pytest.fixture
-def estimator() -> ClusterClassicalMeanEstimator:
-    return ClusterClassicalMeanEstimator()
+def estimator() -> ClusteredClassicalMeanEstimator:
+    return ClusteredClassicalMeanEstimator()
 
 
 # --- _preprocess ---
@@ -30,9 +30,9 @@ def estimator() -> ClusterClassicalMeanEstimator:
 def test_preprocess_delegates_to_validation(estimator, y, clusters):
 
     with (
-        patch.object(cluster_classical_module, "_validate_equal_lengths") as mock_validate_equal_lengths,
-        patch.object(cluster_classical_module, "_validate_has_no_nan") as mock_validate_has_no_nan,
-        patch.object(cluster_classical_module, "_validate_bounds") as mock_validate_bounds,
+        patch.object(clustered_classical_module, "_validate_equal_lengths") as mock_validate_equal_lengths,
+        patch.object(clustered_classical_module, "_validate_has_no_nan") as mock_validate_has_no_nan,
+        patch.object(clustered_classical_module, "_validate_bounds") as mock_validate_bounds,
     ):
         estimator._preprocess(y, clusters)
 
@@ -71,7 +71,7 @@ def test_estimate_is_valid_inference_result(estimator, y, clusters):
     assert np.isfinite(result.confidence_interval.lower_bound)
     assert np.isfinite(result.confidence_interval.upper_bound)
     assert result.confidence_interval.lower_bound < result.confidence_interval.upper_bound
-    assert result.estimator_name == "ClusterClassicalMeanEstimator"
+    assert result.estimator_name == "ClusteredClassicalMeanEstimator"
 
 
 def test_estimate_metadata(estimator, y, clusters):
@@ -106,7 +106,7 @@ def test_str_format(estimator, y, clusters):
         "Metric: performance\n"
         "Point Estimate: 6.000\n"
         "Confidence Interval (95%): [4.040, 7.960]\n"
-        "Estimator : ClusterClassicalMeanEstimator\n"
+        "Estimator : ClusteredClassicalMeanEstimator\n"
         "n: 4"
     )
     assert output == expected

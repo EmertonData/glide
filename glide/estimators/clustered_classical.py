@@ -8,8 +8,8 @@ from glide.core.validation import _validate_bounds, _validate_equal_lengths, _va
 from glide.mean_inference_results import ClassicalMeanInferenceResult
 
 
-class ClusterClassicalMeanEstimator:
-    """Cluster classical estimator for population mean.
+class ClusteredClassicalMeanEstimator:
+    """Clustered classical estimator for population mean.
 
     Extends mean estimation as in ``ClassicalMeanEstimator`` to datasets where
     observations are grouped into clusters. Each cluster's mean is treated as
@@ -19,16 +19,16 @@ class ClusterClassicalMeanEstimator:
     Examples
     --------
     >>> import numpy as np
-    >>> from glide.estimators import ClusterClassicalMeanEstimator
+    >>> from glide.estimators import ClusteredClassicalMeanEstimator
     >>> y = np.array([5.0, 5.0, 7.0, 7.0])
     >>> clusters = np.array(["A", "A", "B", "B"])
-    >>> estimator = ClusterClassicalMeanEstimator()
+    >>> estimator = ClusteredClassicalMeanEstimator()
     >>> result = estimator.estimate(y, clusters)
     >>> print(result)
     Metric: Metric
     Point Estimate: 6.000
     Confidence Interval (95%): [4.040, 7.960]
-    Estimator : ClusterClassicalMeanEstimator
+    Estimator : ClusteredClassicalMeanEstimator
     n: 4
     """
 
@@ -60,7 +60,7 @@ class ClusterClassicalMeanEstimator:
         metric_name: str = "Metric",
         confidence_level: float = 0.95,
     ) -> ClassicalMeanInferenceResult:
-        """Estimate the population mean using the cluster classical estimator.
+        """Estimate the population mean using the clustered classical estimator.
 
         Computes within-cluster means and uses them as sampling units to apply
         the CLT:
@@ -89,7 +89,7 @@ class ClusterClassicalMeanEstimator:
         -------
         ClassicalMeanInferenceResult
             Contains the CLT-based confidence interval, the metric name,
-            the estimator name (``"ClusterClassicalMeanEstimator"``), and ``n``
+            the estimator name (``"ClusteredClassicalMeanEstimator"``), and ``n``
             (total number of non-NaN observations across all clusters).
 
         Raises
