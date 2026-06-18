@@ -20,4 +20,4 @@
 
 ---
 
-::: glide.samplers.cluster.UniformClusterSampler
+::: glide.samplers.clustered.UniformClusteredSampler

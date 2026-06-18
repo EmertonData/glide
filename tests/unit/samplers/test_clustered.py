@@ -3,13 +3,13 @@ from unittest.mock import patch
 import numpy as np
 import pytest
 
-import glide.samplers.cluster as cluster_module
-from glide.samplers import UniformClusterSampler
+import glide.samplers.clustered as clustered_module
+from glide.samplers import UniformClusteredSampler
 
 
 @pytest.fixture
-def sampler() -> UniformClusterSampler:
-    return UniformClusterSampler()
+def sampler() -> UniformClusteredSampler:
+    return UniformClusteredSampler()
 
 
 @pytest.fixture
@@ -22,9 +22,9 @@ def clusters() -> np.ndarray:
 
 def test_sample_delegates_to_validation(sampler, clusters):
     with (
-        patch.object(cluster_module, "_validate_is_integer") as mock_validate_is_integer,
-        patch.object(cluster_module, "_validate_strictly_positive") as mock_validate_strictly_positive,
-        patch.object(cluster_module, "_validate_bounds") as mock_validate_bounds,
+        patch.object(clustered_module, "_validate_is_integer") as mock_validate_is_integer,
+        patch.object(clustered_module, "_validate_strictly_positive") as mock_validate_strictly_positive,
+        patch.object(clustered_module, "_validate_bounds") as mock_validate_bounds,
     ):
         sampler.sample(clusters, n_clusters=2, random_seed=0)
 

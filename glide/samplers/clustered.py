@@ -7,7 +7,7 @@ from numpy.typing import NDArray
 from glide.core.validation import _validate_bounds, _validate_is_integer, _validate_strictly_positive
 
 
-class UniformClusterSampler:
+class UniformClusteredSampler:
     """Sampler that selects entire clusters without replacement using uniform sampling.
 
     Each call to ``sample`` draws a fixed number of clusters from the pool of unique
@@ -18,9 +18,9 @@ class UniformClusterSampler:
     Examples
     --------
     >>> import numpy as np
-    >>> from glide.samplers import UniformClusterSampler
+    >>> from glide.samplers import UniformClusteredSampler
     >>> clusters = np.array(["A", "A", "B", "B"], dtype=object)
-    >>> sampler = UniformClusterSampler()
+    >>> sampler = UniformClusteredSampler()
     >>> xi = sampler.sample(clusters, n_clusters=1, random_seed=0)
     >>> xi
     array([0, 0, 1, 1])

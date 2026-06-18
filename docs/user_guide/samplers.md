@@ -217,9 +217,9 @@ To ensure the cutoff does not depend on the input order, the samples can be shuf
 
 ---
 
-## Uniform Cluster Sampler
+## Uniform Clustered Sampler
 
-The `UniformClusterSampler` is designed for datasets where observations are grouped into **clusters**: samples within a cluster are correlated (for example, a collection of sentences clustered into paragraphs), while samples from different clusters are independent.
+The `UniformClusteredSampler` is designed for datasets where observations are grouped into **clusters**: samples within a cluster are correlated (for example, a collection of sentences clustered into paragraphs), while samples from different clusters are independent.
 
 Annotation happens at the **cluster level**: either all observations in a cluster are annotated together or none are. The sampler selects $\ell$ clusters from the $L$ available clusters uniformly without replacement. Every cluster has equal probability of being chosen, regardless of its size.
 
