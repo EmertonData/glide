@@ -10,16 +10,6 @@ _ANTHROPIC_LABEL_OUTPUT_FORMAT = {
     "type": "json_schema",
     "schema": {
         "type": "object",
-        "properties": {"label": {"type": "integer", "enum": [0, 1]}},
-        "required": ["label"],
-        "additionalProperties": False,
-    },
-}
-
-_ANTHROPIC_LABEL_WITH_REASONING_OUTPUT_FORMAT = {
-    "type": "json_schema",
-    "schema": {
-        "type": "object",
         "properties": {
             "reasoning": {"type": "string"},
             "label": {"type": "integer", "enum": [0, 1]},
@@ -36,20 +26,6 @@ _OPENAI_LABEL_JSON_SCHEMA = {
         "strict": True,
         "schema": {
             "type": "object",
-            "properties": {"label": {"type": "integer", "enum": [0, 1]}},
-            "required": ["label"],
-            "additionalProperties": False,
-        },
-    },
-}
-
-_OPENAI_LABEL_WITH_REASONING_JSON_SCHEMA = {
-    "type": "json_schema",
-    "json_schema": {
-        "name": "binary_label_with_reasoning_response",
-        "strict": True,
-        "schema": {
-            "type": "object",
             "properties": {
                 "reasoning": {"type": "string"},
                 "label": {"type": "integer", "enum": [0, 1]},
@@ -62,11 +38,9 @@ _OPENAI_LABEL_WITH_REASONING_JSON_SCHEMA = {
 
 
 def anthropic_judge(
-    model: str, base_delay: float, max_retries: int, system_prompt: str, with_reasoning: bool = False
+    model: str, base_delay: float, max_retries: int, system_prompt: str
 ) -> Callable[[List[Dict]], Optional[Tuple[int, Optional[str]]]]:
     client = anthropic.Anthropic()
-    output_format = _ANTHROPIC_LABEL_WITH_REASONING_OUTPUT_FORMAT if with_reasoning else _ANTHROPIC_LABEL_OUTPUT_FORMAT
-    max_tokens = 512 if with_reasoning else 64
 
     def judge(messages: List[Dict]) -> Optional[Tuple[int, Optional[str]]]:
         text = _call_with_retry_anthropic(
@@ -74,10 +48,10 @@ def anthropic_judge(
             max_retries=max_retries,
             base_delay=base_delay,
             model=model,
-            max_tokens=max_tokens,
+            max_tokens=512,
             temperature=0.0,
             system=system_prompt,
-            output_config={"format": output_format},
+            output_config={"format": _ANTHROPIC_LABEL_OUTPUT_FORMAT},
             messages=messages,
         )
         if text is None:
@@ -89,10 +63,9 @@ def anthropic_judge(
 
 
 def openai_judge(
-    model: str, base_delay: float, max_retries: int, system_prompt: str, with_reasoning: bool = False
+    model: str, base_delay: float, max_retries: int, system_prompt: str
 ) -> Callable[[List[Dict]], Optional[Tuple[int, Optional[str]]]]:
     client = openai.OpenAI()
-    schema = _OPENAI_LABEL_WITH_REASONING_JSON_SCHEMA if with_reasoning else _OPENAI_LABEL_JSON_SCHEMA
 
     def judge(messages: List[Dict]) -> Optional[Tuple[int, Optional[str]]]:
         system_messages = [{"role": "system", "content": system_prompt}]
@@ -103,7 +76,7 @@ def openai_judge(
             model=model,
             messages=system_messages + messages,
             temperature=0.0,
-            response_format=schema,
+            response_format=_OPENAI_LABEL_JSON_SCHEMA,
         )
         if text is None:
             return None

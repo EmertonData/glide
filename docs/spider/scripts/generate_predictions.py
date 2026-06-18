@@ -15,9 +15,6 @@ from _utils import (
     _load_schemas,
     _strip_markdown_fence,
 )
-from dotenv import load_dotenv
-
-load_dotenv()
 
 SYSTEM_PROMPT = (
     "You are an expert SQL writer. Given a natural language question and a database schema, "

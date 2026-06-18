@@ -3,4 +3,3 @@ openai
 pandas
 pyarrow
 datasets
-python-dotenv

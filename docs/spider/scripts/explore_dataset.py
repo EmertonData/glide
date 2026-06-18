@@ -1,13 +1,23 @@
+import argparse
 import json
 from collections import Counter
 from pathlib import Path
 from typing import List, Tuple
 
-DATA_PATH = Path("data/spider/train_spider.json")
+DEFAULT_DATA_PATH = Path("data/spider/train_spider.json")
 
 
 def main() -> None:
-    examples = json.loads(DATA_PATH.read_text())
+    parser = argparse.ArgumentParser(description="Inspect per-database example counts in a Spider JSON file.")
+    parser.add_argument(
+        "--data-path",
+        type=Path,
+        default=DEFAULT_DATA_PATH,
+        help=f"Path to the Spider training JSON file (default: {DEFAULT_DATA_PATH}).",
+    )
+    args = parser.parse_args()
+
+    examples = json.loads(args.data_path.read_text())
     counts: Counter = Counter(ex["db_id"] for ex in examples)
     sorted_dbs: List[Tuple[str, int]] = counts.most_common()
 

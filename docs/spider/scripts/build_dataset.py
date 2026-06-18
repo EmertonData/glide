@@ -49,9 +49,17 @@ def main() -> None:
     judge_labels = _load_jsonl(args.judge_labels)
     ground_truths = _load_jsonl(args.ground_truths)
 
-    df = predictions.merge(judge_labels[["example_id", "llm_judge_label"]], on="example_id")
-    df = df.merge(ground_truths[["example_id", "ground_truth_label"]], on="example_id")
-    df = df[["example_id", "db_id", "question", "gold_sql", "predicted_sql", "llm_judge_label", "ground_truth_label"]]
+    judge_cols = ["example_id", "llm_judge_label"]
+    if "llm_judge_reasoning" in judge_labels.columns:
+        judge_cols.append("llm_judge_reasoning")
+
+    ground_truth_cols = ["example_id", "ground_truth_label"]
+    if "ground_truth_reasoning" in ground_truths.columns:
+        ground_truth_cols.append("ground_truth_reasoning")
+
+    df = predictions.merge(judge_labels[judge_cols], on="example_id")
+    df = df.merge(ground_truths[ground_truth_cols], on="example_id")
+    df = df[["example_id", "db_id", "question", "gold_sql", "predicted_sql"] + judge_cols[1:] + ground_truth_cols[1:]]
 
     df["agreement"] = (df["llm_judge_label"] == df["ground_truth_label"]).astype(int)
     summary = (
