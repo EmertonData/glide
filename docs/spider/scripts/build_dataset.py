@@ -40,7 +40,7 @@ def main() -> None:
     )
     parser.add_argument(
         "--hf-repo",
-        default="imerad-kv/spider-text-to-sql",
+        default="Glide-py/spider-text-to-sql",
         help="HuggingFace Hub repository slug to push the dataset to. (default: glide-py/spider-text-to-sql)",
     )
     args = parser.parse_args()
@@ -50,16 +50,33 @@ def main() -> None:
     ground_truths = _load_jsonl(args.ground_truths)
 
     judge_cols = ["example_id", "llm_judge_label"]
-    if "llm_judge_reasoning" in judge_labels.columns:
-        judge_cols.append("llm_judge_reasoning")
+    if "reasoning" in judge_labels.columns:
+        judge_cols.append("reasoning")
 
     ground_truth_cols = ["example_id", "ground_truth_label"]
-    if "ground_truth_reasoning" in ground_truths.columns:
-        ground_truth_cols.append("ground_truth_reasoning")
+    if "reasoning" in ground_truths.columns:
+        ground_truth_cols.append("reasoning")
 
-    df = predictions.merge(judge_labels[judge_cols], on="example_id")
-    df = df.merge(ground_truths[ground_truth_cols], on="example_id")
-    df = df[["example_id", "db_id", "question", "gold_sql", "predicted_sql"] + judge_cols[1:] + ground_truth_cols[1:]]
+    df = predictions.merge(
+        judge_labels[judge_cols].rename(columns={"reasoning": "llm_judge_reasoning"}), on="example_id"
+    )
+    df = df.merge(
+        ground_truths[ground_truth_cols].rename(columns={"reasoning": "ground_truth_reasoning"}), on="example_id"
+    )
+
+    output_cols = [
+        "example_id",
+        "db_id",
+        "question",
+        "gold_sql",
+        "predicted_sql",
+        "llm_judge_label",
+        "ground_truth_label",
+    ]
+    for optional_col in ["llm_judge_reasoning", "ground_truth_reasoning"]:
+        if optional_col in df.columns:
+            output_cols.append(optional_col)
+    df = df[output_cols]
 
     df["agreement"] = (df["llm_judge_label"] == df["ground_truth_label"]).astype(int)
     summary = (

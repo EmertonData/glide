@@ -3,21 +3,7 @@ import time
 from pathlib import Path
 from typing import Callable, Dict, List, Optional, Set, Tuple
 
-import anthropic
 import openai
-
-_ANTHROPIC_LABEL_OUTPUT_FORMAT = {
-    "type": "json_schema",
-    "schema": {
-        "type": "object",
-        "properties": {
-            "reasoning": {"type": "string"},
-            "label": {"type": "integer", "enum": [0, 1]},
-        },
-        "required": ["reasoning", "label"],
-        "additionalProperties": False,
-    },
-}
 
 _OPENAI_LABEL_JSON_SCHEMA = {
     "type": "json_schema",
@@ -52,39 +38,14 @@ SQL_CORRECTNESS_CRITERIA = (
 )
 
 
-def anthropic_judge(
-    model: str, base_delay: float, max_retries: int, system_prompt: str
-) -> Callable[[List[Dict]], Optional[Tuple[int, Optional[str]]]]:
-    client = anthropic.Anthropic()
-
-    def judge(messages: List[Dict]) -> Optional[Tuple[int, Optional[str]]]:
-        text = _call_with_retry_anthropic(
-            client,
-            max_retries=max_retries,
-            base_delay=base_delay,
-            model=model,
-            max_tokens=512,
-            temperature=0.0,
-            system=system_prompt,
-            output_config={"format": _ANTHROPIC_LABEL_OUTPUT_FORMAT},
-            messages=messages,
-        )
-        if text is None:
-            return None
-        parsed = json.loads(text)
-        return (int(parsed["label"]), parsed.get("reasoning"))
-
-    return judge
-
-
-def openai_judge(
+def judge(
     model: str, base_delay: float, max_retries: int, system_prompt: str
 ) -> Callable[[List[Dict]], Optional[Tuple[int, Optional[str]]]]:
     client = openai.OpenAI()
 
-    def judge(messages: List[Dict]) -> Optional[Tuple[int, Optional[str]]]:
+    def _judge(messages: List[Dict]) -> Optional[Tuple[int, Optional[str]]]:
         system_messages = [{"role": "system", "content": system_prompt}]
-        text = _call_with_retry_openai(
+        text = _call_with_retry(
             client,
             max_retries=max_retries,
             base_delay=base_delay,
@@ -98,7 +59,7 @@ def openai_judge(
         parsed = json.loads(text)
         return (int(parsed["label"]), parsed.get("reasoning"))
 
-    return judge
+    return _judge
 
 
 def _load_schemas(tables_path: Path) -> Dict[str, str]:
@@ -146,32 +107,7 @@ def _load_schemas(tables_path: Path) -> Dict[str, str]:
     return schemas
 
 
-def _call_with_retry_anthropic(
-    client: anthropic.Anthropic,
-    max_retries: int,
-    base_delay: float,
-    **kwargs,
-) -> Optional[str]:
-    for attempt in range(max_retries):
-        try:
-            response = client.messages.create(**kwargs)
-            result = response.content[0].text
-            return result
-        except anthropic.RateLimitError:
-            delay = base_delay * (2**attempt)
-            print(f"  Rate limit, retrying in {delay:.0f}s (attempt {attempt + 1}/{max_retries})")
-            time.sleep(delay)
-        except anthropic.APIStatusError as exc:
-            if exc.status_code >= 500:
-                delay = base_delay * (2**attempt)
-                time.sleep(delay)
-            else:
-                print(f"  Non-retryable API error (HTTP {exc.status_code}): {exc.message}")
-                return None
-    return None
-
-
-def _call_with_retry_openai(
+def _call_with_retry(
     client: openai.OpenAI,
     max_retries: int,
     base_delay: float,

@@ -1,4 +1,3 @@
-anthropic
 openai
 pandas
 pyarrow

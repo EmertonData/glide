@@ -6,12 +6,10 @@ from collections import Counter
 from pathlib import Path
 from typing import Callable, Dict, List, Optional, Set
 
-import anthropic
 import openai
 from _utils import (
     SQL_CORRECTNESS_CRITERIA,
-    _call_with_retry_anthropic,
-    _call_with_retry_openai,
+    _call_with_retry,
     _load_checkpoint,
     _load_schemas,
     _strip_markdown_fence,
@@ -29,30 +27,12 @@ USER_TEMPLATE = (
 )
 
 
-def anthropic_predictor(model: str, base_delay: float, max_retries: int) -> Callable[[List[Dict]], Optional[str]]:
-    client = anthropic.Anthropic()
-
-    def predictor(messages: List[Dict]) -> Optional[str]:
-        return _call_with_retry_anthropic(
-            client,
-            max_retries=max_retries,
-            base_delay=base_delay,
-            model=model,
-            max_tokens=512,
-            temperature=0.0,
-            system=SYSTEM_PROMPT,
-            messages=messages,
-        )
-
-    return predictor
-
-
-def openai_predictor(model: str, base_delay: float, max_retries: int) -> Callable[[List[Dict]], Optional[str]]:
+def _predictor(model: str, base_delay: float, max_retries: int) -> Callable[[List[Dict]], Optional[str]]:
     client = openai.OpenAI()
 
     def predictor(messages: List[Dict]) -> Optional[str]:
         system_messages = [{"role": "system", "content": SYSTEM_PROMPT}]
-        return _call_with_retry_openai(
+        return _call_with_retry(
             client,
             max_retries=max_retries,
             base_delay=base_delay,
@@ -107,19 +87,13 @@ def main() -> None:
         description=(
             "Generate SQL predictions on the Spider dataset using an LLM. "
             "Outputs a checkpointed JSONL file under data/ and can be safely interrupted and resumed. "
-            "Requires ANTHROPIC_API_KEY or OPENAI_API_KEY depending on the provider."
+            "Requires OPENAI_API_KEY."
         )
     )
     parser.add_argument(
-        "--provider",
-        choices=["anthropic", "openai"],
-        default="anthropic",
-        help="LLM provider to use. (default: anthropic)",
-    )
-    parser.add_argument(
         "--model",
-        default="claude-haiku-4-5-20251001",
-        help="Model name passed to the provider API. (default: claude-haiku-4-5-20251001)",
+        default="gpt-5.4-mini",
+        help="OpenAI model name. (default: gpt-5.4-mini)",
     )
     parser.add_argument(
         "--seed",
@@ -192,12 +166,7 @@ def main() -> None:
     remaining = [ex for ex in examples if ex["example_id"] not in processed]
     print(f"Selected {len(examples)} examples -- already processed: {len(processed)}, remaining: {len(remaining)}")
 
-    if args.provider == "anthropic":
-        predictor = anthropic_predictor(args.model, args.base_delay, args.max_retries)
-    elif args.provider == "openai":
-        predictor = openai_predictor(args.model, args.base_delay, args.max_retries)
-    else:
-        raise ValueError(f"Unknown provider {args.provider}")
+    predictor = _predictor(args.model, args.base_delay, args.max_retries)
 
     n_written = 0
     with open(output_path, "a") as out_f:

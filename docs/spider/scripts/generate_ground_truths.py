@@ -10,8 +10,7 @@ from _utils import (
     _load_checkpoint,
     _load_schemas,
     _strip_markdown_fence,
-    anthropic_judge,
-    openai_judge,
+    judge,
 )
 
 SYSTEM_PROMPT = (
@@ -70,19 +69,13 @@ def main() -> None:
         description=(
             "Run a hybrid SQL evaluator: first compare query outputs directly, then fall back to an LLM judge "
             "when outputs differ. Outputs a checkpointed JSONL file and can be safely interrupted and resumed. "
-            "Requires ANTHROPIC_API_KEY or OPENAI_API_KEY depending on the provider."
+            "Requires OPENAI_API_KEY."
         )
-    )
-    parser.add_argument(
-        "--provider",
-        choices=["anthropic", "openai"],
-        default="openai",
-        help="LLM provider to use. (default: openai)",
     )
     parser.add_argument(
         "--model",
         default="gpt-5.4",
-        help="Model name passed to the provider API. (default: gpt-5.4)",
+        help="OpenAI model name. (default: gpt-5.4)",
     )
     parser.add_argument(
         "--base-delay",
@@ -143,10 +136,7 @@ def main() -> None:
     remaining = [ex for ex in examples if ex["example_id"] not in processed]
     print(f"Selected {len(examples)} examples -- already processed: {len(processed)}, remaining: {len(remaining)}")
 
-    if args.provider == "anthropic":
-        judge = anthropic_judge(args.model, args.base_delay, args.max_retries, SYSTEM_PROMPT)
-    else:
-        judge = openai_judge(args.model, args.base_delay, args.max_retries, SYSTEM_PROMPT)
+    llm_judge = judge(args.model, args.base_delay, args.max_retries, SYSTEM_PROMPT)
 
     n_written = 0
     n_judge_calls = 0
@@ -177,7 +167,7 @@ def main() -> None:
                     gold_sql=ex["gold_sql"],
                     predicted_sql=ex["predicted_sql"],
                 )
-                result = judge([{"role": "user", "content": user_prompt}])
+                result = llm_judge([{"role": "user", "content": user_prompt}])
                 if result is None:
                     continue
                 label, reasoning = result
