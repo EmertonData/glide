@@ -118,8 +118,8 @@ def main() -> None:
     parser.add_argument(
         "--sleep",
         type=float,
-        default=0.0,
-        help="Seconds to sleep between API calls to avoid rate limits. (default: 0.0)",
+        default=0.3,
+        help="Seconds to sleep between API calls to avoid rate limits. (default: 0.3)",
     )
     args = parser.parse_args()
 
