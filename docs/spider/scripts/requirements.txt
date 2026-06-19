@@ -1,4 +1,0 @@
-openai
-pandas
-pyarrow
-datasets
