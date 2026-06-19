@@ -40,7 +40,7 @@ def main() -> None:
     )
     parser.add_argument(
         "--hf-repo",
-        default="glide-py/spider-text-to-sql",
+        default="imerad-kv/spider-text-to-sql",
         help="HuggingFace Hub repository slug to push the dataset to. (default: glide-py/spider-text-to-sql)",
     )
     args = parser.parse_args()

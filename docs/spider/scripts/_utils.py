@@ -166,6 +166,7 @@ def _call_with_retry_anthropic(
                 delay = base_delay * (2**attempt)
                 time.sleep(delay)
             else:
+                print(f"  Non-retryable API error (HTTP {exc.status_code}): {exc.message}")
                 return None
     return None
 
@@ -190,6 +191,7 @@ def _call_with_retry_openai(
                 delay = base_delay * (2**attempt)
                 time.sleep(delay)
             else:
+                print(f"  Non-retryable API error (HTTP {exc.status_code}): {exc.message}")
                 return None
     return None
 

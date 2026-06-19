@@ -38,7 +38,7 @@ def anthropic_predictor(model: str, base_delay: float, max_retries: int) -> Call
             max_retries=max_retries,
             base_delay=base_delay,
             model=model,
-            max_tokens=256,
+            max_tokens=512,
             temperature=0.0,
             system=SYSTEM_PROMPT,
             messages=messages,
@@ -58,7 +58,7 @@ def openai_predictor(model: str, base_delay: float, max_retries: int) -> Callabl
             base_delay=base_delay,
             model=model,
             messages=system_messages + messages,
-            max_tokens=256,
+            max_completion_tokens=512,
             temperature=0.0,
         )
 
@@ -130,9 +130,9 @@ def main() -> None:
     parser.add_argument(
         "--n-databases",
         type=int,
-        default=51,
+        default=10,
         help="Number of Spider databases to include, selected by descending example count. "
-        "Includes all if unset. (default: 51)",
+        "Includes all if unset. (default: 10)",
     )
     parser.add_argument(
         "--n-per-database",

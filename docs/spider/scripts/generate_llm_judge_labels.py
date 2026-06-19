@@ -21,8 +21,8 @@ USER_TEMPLATE = (
     "Question: {question}\n"
     "Predicted SQL: {predicted_sql}\n\n"
     + SQL_CORRECTNESS_CRITERIA
-    + "\n\nIn one or two sentences, check the predicted SQL against each criterion above and note any issues or gaps,"
-    " then label it 1 if it correctly answers the question, 0 if it does not."
+    + "\n\nIn one or two sentences, reason about the suitability of the predicted SQL as an answer to the question"
+    " with respect to the criteria above, then label it 1 if it correctly answers the question, 0 if it does not."
 )
 
 
@@ -42,8 +42,8 @@ def main() -> None:
     )
     parser.add_argument(
         "--model",
-        default="gpt-5.4-mini",
-        help="Model name passed to the provider API. (default: gpt-5.4-mini)",
+        default="gpt-5.4",
+        help="Model name passed to the provider API. (default: gpt-5.4)",
     )
     parser.add_argument(
         "--base-delay",

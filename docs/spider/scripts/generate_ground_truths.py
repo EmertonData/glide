@@ -54,18 +54,15 @@ def _execute_query(db_path: Path, sql: str) -> Tuple[Optional[List], Optional[st
         conn.close()
 
 
-def _compare_outputs(db_path: Path, gold_sql: str, predicted_sql: str) -> Tuple[bool, Optional[str]]:
+def _compare_outputs(db_path: Path, gold_sql: str, predicted_sql: str) -> Tuple[bool, Optional[str], Optional[str]]:
     gold_rows, gold_error = _execute_query(db_path, gold_sql)
-    if gold_error is not None:
-        print(f"!!! Gold query execution produced an error !!!")
-        return False, gold_error
-
     predicted_rows, predicted_error = _execute_query(db_path, _strip_markdown_fence(predicted_sql))
-    if predicted_error is not None:
-        return False, predicted_error
+
+    if gold_error is not None or predicted_error is not None:
+        return False, gold_error, predicted_error
 
     outputs_match = predicted_rows == gold_rows
-    return outputs_match, None
+    return outputs_match, None, None
 
 
 def main() -> None:
@@ -157,9 +154,15 @@ def main() -> None:
         for i, ex in enumerate(remaining):
             print(f"  [{i + 1}/{len(remaining)}] {ex['example_id']} ({ex['db_id']})", end="")
             db_path = db_root / ex["db_id"] / f"{ex['db_id']}.sqlite"
-            outputs_match, execution_error = _compare_outputs(db_path, ex["gold_sql"], ex["predicted_sql"])
+            outputs_match, gold_execution_error, predicted_execution_error = _compare_outputs(
+                db_path, ex["gold_sql"], ex["predicted_sql"]
+            )
 
             record: Dict = {"example_id": ex["example_id"], "outputs_match": outputs_match}
+            if gold_execution_error is not None:
+                record["gold_execution_error"] = gold_execution_error
+            if predicted_execution_error is not None:
+                record["predicted_execution_error"] = predicted_execution_error
 
             if outputs_match:
                 print(" [match]")
@@ -181,8 +184,6 @@ def main() -> None:
                 record["ground_truth_label"] = label
                 record["reasoning"] = reasoning or ""
                 n_judge_calls += 1
-                if execution_error is not None:
-                    record["execution_error"] = execution_error
                 time.sleep(args.sleep)
 
             out_f.write(json.dumps(record) + "\n")
