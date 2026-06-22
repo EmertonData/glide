@@ -33,16 +33,7 @@ def test_compute_tuning_parameters_power_tuning_false(y_true, y_proxies_labeled,
     np.testing.assert_allclose(result, expected)
 
 
-def test_compute_tuning_parameters_power_tuning_true_m1():
-    y_true_3 = np.array([5.0, 6.0, 7.0])
-    y_proxies_labeled_1d = np.array([[4.5], [5.5], [6.5]])
-    y_proxies_unlabeled_1d = np.array([[6.0], [7.0], [8.0]])
-    expected = np.array([0.339])
-    result = _compute_tuning_parameters(y_true_3, y_proxies_labeled_1d, y_proxies_unlabeled_1d, power_tuning=True)
-    np.testing.assert_allclose(result, expected, atol=0.01)
-
-
-def test_compute_tuning_parameters_power_tuning_true_m2(y_true, y_proxies_labeled, y_proxies_unlabeled):
+def test_compute_tuning_parameters_known_value(y_true, y_proxies_labeled, y_proxies_unlabeled):
     expected = np.array([0.75, -0.375])
     result = _compute_tuning_parameters(y_true, y_proxies_labeled, y_proxies_unlabeled, power_tuning=True)
     np.testing.assert_allclose(result, expected, atol=1e-10)

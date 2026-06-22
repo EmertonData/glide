@@ -23,7 +23,7 @@ from glide.mean_inference_results import PredictionPoweredMeanInferenceResult
 class MultiPPIMeanEstimator:
     """Estimator for population mean using Prediction-Powered Inference with multiple proxies.
 
-    This class extends PPIMeanEstimator to settings where M >= 1 proxy models are
+    This class extends PPIMeanEstimator to settings where M >= 1 proxy predictors are
     available. It finds the optimal tuning parameter vector lambda that minimises the mean
     squared error of the estimate, then applies the PPI correction with that combined
     proxy. This power tuning feature (enabled by default) ensures the estimator is
@@ -82,7 +82,7 @@ class MultiPPIMeanEstimator:
         """Estimate the population mean using MultiPPI.
 
         Combines a small set of labeled samples with a large set of unlabeled samples,
-        leveraging M proxy models simultaneously. The optimal tuning parameter vector lambda
+        leveraging M proxy predictors simultaneously. The optimal tuning parameter vector lambda
         is estimated from the data and used to form a single combined proxy prediction before
         applying the PPI rectifier.
 
