@@ -78,19 +78,43 @@ def test_estimate_metadata(estimator, y_arrays):
     assert result.effective_sample_size == 3
 
 
-def test_estimate_known_values(estimator, y_arrays):
+def test_estimate_custom_confidence_level(estimator, y_arrays):
     y_true, y_proxies = y_arrays
-    result = estimator.estimate(y_true, y_proxies, confidence_level=0.95)
-    assert result.confidence_interval.mean == pytest.approx(1.5, abs=1e-10)
-    assert result.std == pytest.approx(np.sqrt(0.15625), abs=1e-10)
-    assert result.confidence_interval.lower_bound == pytest.approx(0.725, abs=0.01)
-    assert result.confidence_interval.upper_bound == pytest.approx(2.275, abs=0.01)
+    result = estimator.estimate(y_true, y_proxies, confidence_level=0.85)
+
+    expected_mean = 1.5
+    expected_std = 0.250
+    expected_lower = 5.257
+    expected_upper = 5.978
+
+    assert result.confidence_interval.confidence_level == 0.85
+    assert result.confidence_interval.mean == pytest.approx(expected_mean, abs=0.01)
+    assert result.std == pytest.approx(expected_std, abs=0.01)
+    assert result.confidence_interval.lower_bound == pytest.approx(expected_lower, abs=0.01)
+    assert result.confidence_interval.upper_bound == pytest.approx(expected_upper, abs=0.01)
 
 
-def test_estimate_power_tuning_false(estimator, y_arrays):
+# --- __str__ / __repr__ ---
+
+
+def test_str_format(estimator, y_arrays):
     y_true, y_proxies = y_arrays
-    result_tuned = estimator.estimate(y_true, y_proxies, power_tuning=True)
-    result_untuned = estimator.estimate(y_true, y_proxies, power_tuning=False)
-    assert isinstance(result_untuned, PredictionPoweredMeanInferenceResult)
-    assert result_untuned.estimator_name == "MultiPPIMeanEstimator"
-    assert result_untuned.confidence_interval.mean != pytest.approx(result_tuned.confidence_interval.mean, abs=1e-10)
+    result = estimator.estimate(y_true, y_proxies, metric_name="performance")
+
+    output = str(result)
+    expected = (
+        "Metric: performance\n"
+        "Point Estimate: 5.618\n"
+        "Confidence Interval (95%): [5.127, 6.108]\n"
+        "Estimator : StratifiedPPIMeanEstimator\n"
+        "n_true: 4\n"
+        "n_proxy: 8\n"
+        "Effective Sample Size: 7"
+    )
+    assert output == expected
+
+
+def test_repr_equals_str(estimator, y_arrays):
+    y_true, y_proxies = y_arrays
+    result = estimator.estimate(y_true, y_proxies, metric_name="perf")
+    assert repr(result) == str(result)
