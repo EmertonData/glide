@@ -11,7 +11,8 @@ def _compute_tuning_parameter(
     power_tuning: bool,
 ) -> float:
     if not power_tuning:
-        return 1.0
+        lambda_ = 1.0
+        return lambda_
     n_labeled = len(y_true)
     n_unlabeled = len(y_proxy_unlabeled)
     y_proxy_all = np.hstack([y_proxy_labeled, y_proxy_unlabeled])

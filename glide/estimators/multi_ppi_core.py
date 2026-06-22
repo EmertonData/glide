@@ -8,14 +8,14 @@ def _compute_tuning_parameters(
     y_proxies_unlabeled: NDArray,
     power_tuning: bool,
 ) -> NDArray:
+    n_proxies = y_proxies_labeled.shape[1]
+    if not power_tuning:
+        lambdas_ = np.full(n_proxies, 1 / np.sqrt(n_proxies))
+        return lambdas_
     n_labeled = len(y_true)
     n_unlabeled = len(y_proxies_unlabeled)
-    M = y_proxies_labeled.shape[1]
-    if not power_tuning:
-        lambdas_ = np.full(M, 1 / np.sqrt(M))
-        return lambdas_
     y_proxies_all = np.vstack([y_proxies_labeled, y_proxies_unlabeled])
-    proxy_cov_matrix = np.atleast_2d(np.cov(y_proxies_all.T, ddof=1))
+    proxy_cov_matrix = np.atleast_2d(np.cov(y_proxies_all, rowvar=False, ddof=1))
     centered_proxies_labeled = y_proxies_labeled - np.mean(y_proxies_labeled, axis=0)
     centered_true = y_true - np.mean(y_true)
     proxy_true_cov = centered_proxies_labeled.T @ centered_true / (n_labeled - 1)

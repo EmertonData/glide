@@ -26,8 +26,9 @@ class MultiPPIMeanEstimator:
     This class extends PPIMeanEstimator to settings where M >= 1 proxy models are
     available. It finds the optimal tuning parameter vector lambda that minimises the mean
     squared error of the estimate, then applies the PPI correction with that combined
-    proxy. The estimator is always at least as efficient as the naive sample mean,
-    regardless of the quality or number of proxies.
+    proxy. This power tuning feature (enabled by default) ensures the estimator is
+    always at least as efficient as the naive sample mean, regardless of the quality
+    or number of proxies.
 
     When M = 1, the estimator is equivalent to PPIMeanEstimator with power_tuning=True.
 
