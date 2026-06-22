@@ -57,7 +57,7 @@ The parameter $\lambda$ allows modulating the contribution of the proxy labels b
 
 ### Variance and confidence intervals
 
-For large enough sample sizes (typically $n \geq 100$), the **Central Limit Theorem** applies and the variance of the PPI++ estimator decomposes as:
+For large enough sample sizes (typically $n \geq 50$), the **Central Limit Theorem** applies and the variance of the PPI++ estimator decomposes as:
 
 $$\sigma^2_{\hat{\theta}}(\lambda) = \underbrace{\frac{\sigma^2_{Y - \lambda\tilde{Y}}}{n}}_{\text{Labeled residual variance}} + \underbrace{\frac{\lambda^2\,\sigma^2_{\tilde{Y}}}{N}}_{\text{Unlabeled proxy variance}}$$
 
@@ -180,7 +180,7 @@ The asymptotic variance is the sample variance of the corrected labels divided b
 
 $$\hat{\sigma}^2_{\text{SE}}(\lambda) = \frac{\widehat{\text{Var}}\!\left(z(\lambda)\right)}{n}$$
 
-where $\widehat{\text{Var}}$ denotes the sample variance. By the Central Limit Theorem (for $n$ large enough, typically $n \geq 100$), this yields a confidence interval at level $1 - \alpha$:
+where $\widehat{\text{Var}}$ denotes the sample variance. By the Central Limit Theorem (for $n$ large enough, typically $n \geq 50$), this yields a confidence interval at level $1 - \alpha$:
 
 $$\Pr\!\left(\theta^* \in \left[\hat{\theta}_{\lambda} - z_{1-\alpha/2}\,\hat{\sigma}_{\text{SE}},\; \hat{\theta}_{\lambda} + z_{1-\alpha/2}\,\hat{\sigma}_{\text{SE}}\right]\right) \geq 1 - \alpha$$
 
@@ -276,11 +276,11 @@ When every cluster is a singleton, $L^{\bullet} = n$ and $L^{\circ} = N$, and al
 
 ---
 
-## Multi-Proxy Prediction-Powered Inference (MultiPPI)
+## Multi-Proxy Prediction-Powered Inference (Multi-PPI)
 
-Standard PPI++ assumes a single proxy model. **Multi-Proxy Prediction-Powered Inference (MultiPPI)** [[8](#ref-8)] generalises this to $M \geq 1$ proxy models simultaneously. It finds the optimal linear combination of all $M$ proxies before applying the PPI correction. As in PPI++, labeled samples are drawn uniformly at random from the population.
+Standard PPI++ assumes a single proxy model. **Multi-Proxy Prediction-Powered Inference (Multi-PPI)** [[8](#ref-8)] generalises this to $M \geq 1$ proxy models simultaneously. It finds the optimal linear combination of all $M$ proxies before applying the PPI correction. As in PPI++, labeled samples are drawn uniformly at random from the population.
 
-In MultiPPI, each sample has two associated values:
+In Multi-PPI, each sample has two associated values:
 
 | Value | Present for | Description |
 |---|---|---|
@@ -289,50 +289,50 @@ In MultiPPI, each sample has two associated values:
 
 ### Mean estimation
 
-Let $\tilde{\mathbf{Y}}^\bullet_j = (\tilde{Y}^{(1),\bullet}_j, \ldots, \tilde{Y}^{(M),\bullet}_j)^\top \in \mathbb{R}^M$ and $\tilde{\mathbf{Y}}^\circ_i = (\tilde{Y}^{(1),\circ}_i, \ldots, \tilde{Y}^{(M),\circ}_i)^\top \in \mathbb{R}^M$ denote the proxy prediction vectors for labeled and unlabeled samples respectively. The MultiPPI mean estimate is parameterised by a tuning vector $\boldsymbol{\lambda} = (\lambda_1, \ldots, \lambda_M)^\top \in \mathbb{R}^M$ and defined as:
+Let $\tilde{\mathbf{Y}}^\bullet_j = (\tilde{Y}^{(1),\bullet}_j, \ldots, \tilde{Y}^{(M),\bullet}_j)^\top \in \mathbb{R}^M$ and $\tilde{\mathbf{Y}}^\circ_i = (\tilde{Y}^{(1),\circ}_i, \ldots, \tilde{Y}^{(M),\circ}_i)^\top \in \mathbb{R}^M$ denote the proxy prediction vectors for labeled and unlabeled samples respectively. The Multi-PPI mean estimate is parameterised by a tuning vector $\mathbf{\lambda} = (\lambda_1, \ldots, \lambda_M)^\top \in \mathbb{R}^M$ and defined as:
 
-$$\hat{\theta}_{\boldsymbol{\lambda}} = \frac{1}{n}\sum_{j=1}^{n} Y_j + \boldsymbol{\lambda}^\top \left[\frac{1}{N}\sum_{i=1}^{N} \tilde{\mathbf{Y}}^\circ_i - \frac{1}{n}\sum_{j=1}^{n} \tilde{\mathbf{Y}}^\bullet_j\right]$$
+$$\hat{\theta}_{\mathbf{\lambda}} = \frac{1}{n}\sum_{j=1}^{n} Y_j + \mathbf{\lambda}^\top \left[\frac{1}{N}\sum_{i=1}^{N} \tilde{\mathbf{Y}}^\circ_i - \frac{1}{n}\sum_{j=1}^{n} \tilde{\mathbf{Y}}^\bullet_j\right]$$
 
 This combines two components:
 
 - The **human-label mean** $\frac{1}{n}\sum_j Y_j$, unbiased but high-variance due to the small labeled set.
 - A **variance reduction term** using all proxy predictions across $M$ proxies. The tuning parameter $\lambda_m$ scales the correction from proxy $m$: the difference between the unlabeled and labeled means of that proxy.
 
-When $\boldsymbol{\lambda} = \mathbf{0}$, the estimator reduces to the naive sample mean. When $M = 1$ and $\lambda_1 = 1$, it recovers standard PPI.
+When $\mathbf{\lambda} = \mathbf{0}$, the estimator reduces to the naive sample mean. When $M = 1$ and $\lambda_1 = 1$, it recovers standard PPI.
 
 ### Variance and confidence intervals
 
-By the Central Limit Theorem (for large enough $n$, typically $n \geq 100$), the asymptotic variance of the MultiPPI estimator decomposes as:
+By the Central Limit Theorem (for large enough $n$, typically $n \geq 50$), the asymptotic variance of the Multi-PPI estimator decomposes as:
 
-$$\sigma^2_{\hat{\theta}}(\boldsymbol{\lambda}) = \underbrace{\frac{\text{Var}(Y - \boldsymbol{\lambda}^\top \tilde{\mathbf{Y}})}{n}}_{\text{Labeled residual variance}} + \underbrace{\frac{\text{Var}(\boldsymbol{\lambda}^\top \tilde{\mathbf{Y}})}{N}}_{\text{Unlabeled proxy variance}}$$
+$$\sigma^2_{\hat{\theta}}(\mathbf{\lambda}) = \underbrace{\frac{\text{Var}(Y - \mathbf{\lambda}^\top \tilde{\mathbf{Y}})}{n}}_{\text{Labeled residual variance}} + \underbrace{\frac{\text{Var}(\mathbf{\lambda}^\top \tilde{\mathbf{Y}})}{N}}_{\text{Unlabeled proxy variance}}$$
 
-- The first term is the variance of the residuals $Y - \boldsymbol{\lambda}^\top \tilde{\mathbf{Y}}$ on the labeled samples, scaled by $1/n$. It shrinks as the proxy combination aligns better with the true labels.
-- The second term is the variance of the projected proxy scores $\boldsymbol{\lambda}^\top \tilde{\mathbf{Y}}$ on the unlabeled samples, scaled by $1/N$. It is typically negligible since $N \gg n$.
+- The first term is the variance of the residuals $Y - \mathbf{\lambda}^\top \tilde{\mathbf{Y}}$ on the labeled samples, scaled by $1/n$. It shrinks when the proxy combination is well correlated with the true labels.
+- The second term is the variance of the projected proxy scores $\mathbf{\lambda}^\top \tilde{\mathbf{Y}}$ on the unlabeled samples, scaled by $1/N$. It is typically negligible since $N \gg n$.
 
 This gives a confidence interval at level $1 - \alpha$:
 
-$$\Pr\!\left(\theta^* \in \left[\hat{\theta}_{\boldsymbol{\lambda}} - z_{1-\alpha/2}\, \hat{\sigma}(\boldsymbol{\lambda}),\; \hat{\theta}_{\boldsymbol{\lambda}} + z_{1-\alpha/2}\, \hat{\sigma}(\boldsymbol{\lambda})\right]\right) \geq 1 - \alpha$$
+$$\Pr\!\left(\theta^* \in \left[\hat{\theta}_{\mathbf{\lambda}} - z_{1-\alpha/2}\, \sigma_{\hat{\theta}}(\mathbf{\lambda}),\; \hat{\theta}_{\mathbf{\lambda}} + z_{1-\alpha/2}\, \sigma_{\hat{\theta}}(\mathbf{\lambda})\right]\right) \geq 1 - \alpha$$
 
 where $z_{1-\alpha/2}$ is the standard normal quantile (e.g. $z_{0.975} = 1.96$ for a 95% two-sided confidence interval).
 
 ### Power-tuning
 
-In MultiPPI, the tuning parameter is a **vector** $\boldsymbol{\lambda} \in \mathbb{R}^M$ rather than a scalar, since each of the $M$ proxies receives its own weight. The mean squared error of $\hat{\theta}_{\boldsymbol{\lambda}}$ is a quadratic function of $\boldsymbol{\lambda}$ with a unique minimiser:
+In Multi-PPI, the tuning parameter is a **vector** $\mathbf{\lambda} \in \mathbb{R}^M$ rather than a scalar, since each of the $M$ proxies receives its own weight. The mean squared error of $\hat{\theta}_{\mathbf{\lambda}}$ is a quadratic function of $\mathbf{\lambda}$ with a unique minimiser:
 
-$$\boldsymbol{\lambda}^* = \frac{N}{n+N} \cdot \left[\text{Var}(\tilde{\mathbf{Y}})\right]^{-1} \cdot \text{Cov}(\tilde{\mathbf{Y}}, Y)$$
+$$\mathbf{\lambda}^* = \frac{N}{n+N} \cdot \text{Var}(\tilde{\mathbf{Y}})^{-1} \cdot \text{Cov}(\tilde{\mathbf{Y}}, Y)$$
 
-where $\text{Var}(\tilde{\mathbf{Y}})$ is the $M \times M$ covariance matrix of the proxy predictions and $\text{Cov}(\tilde{\mathbf{Y}}, Y)$ is the $M$-dimensional cross-covariance vector between proxy predictions and the true label. For $M = 1$, this reduces to the scalar formula $\lambda^* = \frac{N}{n+N} \cdot \frac{\text{Cov}(\tilde{Y}, Y)}{\text{Var}(\tilde{Y})}$.
+where $\text{Var}(\tilde{\mathbf{Y}})$ is the $M \times M$ covariance matrix of the proxy predictions and $\text{Cov}(\tilde{\mathbf{Y}}, Y)$ is the $M$-dimensional cross-covariance vector between proxy predictions and the true label. For $M = 1$, this reduces to the same scalar formula as in PPI++.
 
-In practice, $\boldsymbol{\lambda}^*$ is unknown and replaced by the plug-in estimator:
+In practice, $\mathbf{\lambda}^*$ is unknown and replaced by the plug-in estimator:
 
-$$\hat{\boldsymbol{\lambda}} = \frac{N}{n+N} \cdot \left[\widehat{\text{Var}}_{n+N}(\tilde{\mathbf{Y}})\right]^{-1} \cdot \widehat{\text{Cov}}_n(\tilde{\mathbf{Y}}^\bullet, Y)$$
+$$\hat{\mathbf{\lambda}} = \frac{N}{n+N} \cdot \widehat{\text{Var}}_{n+N}(\tilde{\mathbf{Y}})^{-1} \cdot \widehat{\text{Cov}}_n(\tilde{\mathbf{Y}}^\bullet, Y)$$
 
 where:
 
 - $\widehat{\text{Var}}_{n+N}(\tilde{\mathbf{Y}})$ is the $M \times M$ sample covariance matrix of the proxy predictions, computed over **all $n + N$ samples**,
 - $\widehat{\text{Cov}}_n(\tilde{\mathbf{Y}}^\bullet, Y)$ is the $M$-dimensional sample cross-covariance vector between labeled proxy predictions and true labels, computed over the **$n$ labeled samples only**.
 
-The estimator with optimal $\boldsymbol{\lambda}^*$ satisfies a **safety property**: its variance is always no greater than $\text{Var}(Y)/n$, the variance of the naive sample mean. This guarantees that using MultiPPI can only tighten the confidence interval relative to the classical estimator, regardless of the number or quality of the proxies. It is standard to use the empirical estimate $\hat{\boldsymbol{\lambda}}$ in practice.
+When a proxy is informative (high covariance with the true label), the corresponding component $\lambda_m^*$ is large and the estimator benefits from that proxy's signal, narrowing the confidence interval. When a proxy is uninformative, its component shrinks toward 0, down-weighting it without affecting the other components. This guarantees that the variance of $\hat{\theta}_{\hat{\mathbf{\lambda}}}$ is always no greater than $\text{Var}(Y)/n$, the variance of the naive sample mean: using Multi-PPI with optimal tuning can only reduce the confidence interval width relative to the classical estimator, regardless of the number or quality of the proxies. It is standard to use the empirical estimate $\hat{\mathbf{\lambda}}$ in practice.
 
 ---
 
