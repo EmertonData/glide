@@ -39,6 +39,9 @@ theme:
 extra_css:
   - stylesheets/extra.css
 
+hooks:
+  - docs/hooks.py
+
 plugins:
   - search
   - mkdocstrings:

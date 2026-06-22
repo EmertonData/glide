@@ -15,7 +15,7 @@ GLIDE addresses this by combining large pools of cheap proxy labels with small s
 The workflow has three stages:
 
 <p align="center">
-  <img src="../../assets/glide-workflow.png" alt="GLIDE's workflow" width="90%">
+  <img src="../assets/glide-workflow.png" alt="GLIDE's workflow" width="90%">
 </p>
 
 ### Do you need a sampler?
