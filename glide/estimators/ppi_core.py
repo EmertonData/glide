@@ -45,8 +45,10 @@ def _compute_std_estimate(
     lambda_: float,
 ) -> float:
     n_labeled, n_unlabeled = len(y_true), len(y_proxy_unlabeled)
-    rectifier_var = np.var(y_true - lambda_ * y_proxy_labeled, ddof=1) / n_labeled
-    proxy_var = lambda_**2 * np.var(y_proxy_unlabeled, ddof=1) / n_unlabeled
-    var_estimate = proxy_var + rectifier_var
+    rectifier_residuals = y_true - lambda_ * y_proxy_labeled
+    rectifier_var = np.var(rectifier_residuals, ddof=1) / n_labeled
+    proxy_projections = lambda_ * y_proxy_unlabeled
+    proxy_var = np.var(proxy_projections, ddof=1) / n_unlabeled
+    var_estimate = rectifier_var + proxy_var
     std_estimate = np.sqrt(var_estimate)
     return std_estimate

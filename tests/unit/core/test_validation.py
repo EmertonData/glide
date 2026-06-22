@@ -22,6 +22,7 @@ from glide.core.validation import (
     _validate_strictly_positive,
     _validate_uncertainties,
     _validate_unique_clusters,
+    _validate_y_proxies,
     _validate_y_proxy,
     _validate_y_true,
     _validate_y_true_burn_in,
@@ -92,6 +93,35 @@ def test_get_non_zero_mask_with_zero_emits_warning():
     with pytest.warns(UserWarning, match=warning_message):
         result = _get_non_zero_mask(np.array([0.0, 0.5]), warning_message=warning_message)
     np.testing.assert_array_equal(result, expected)
+
+
+# --- _validate_y_proxies ---
+
+
+def test_validate_y_proxies_valid():
+    _validate_y_proxies(np.array([[1.0, 2.0], [3.0, 4.0]]))
+
+
+def test_validate_y_proxies_1d_raises():
+    with pytest.raises(ValueError, match="'y_proxies' must be a 2D array"):
+        _validate_y_proxies(np.array([1.0, 2.0]))
+
+
+def test_validate_y_proxies_delegates_to_validation():
+    with (
+        patch("glide.core.validation._validate_has_no_nan") as mock_validate_has_no_nan,
+        patch("glide.core.validation._validate_non_constant") as mock_validate_non_constant,
+    ):
+        arr = np.array([[1.0, 2.0], [3.0, 4.0]])
+        _validate_y_proxies(arr)
+        mock_validate_has_no_nan.assert_called_once()
+        np.testing.assert_array_equal(mock_validate_has_no_nan.call_args[0][0], arr)
+        assert mock_validate_has_no_nan.call_args[0][1] == "y_proxies"
+        assert mock_validate_non_constant.call_count == 2
+        np.testing.assert_array_equal(mock_validate_non_constant.call_args_list[0][0][0], arr[:, 0])
+        assert mock_validate_non_constant.call_args_list[0][0][1] == "'y_proxies' column 0 values are constant."
+        np.testing.assert_array_equal(mock_validate_non_constant.call_args_list[1][0][0], arr[:, 1])
+        assert mock_validate_non_constant.call_args_list[1][0][1] == "'y_proxies' column 1 values are constant."
 
 
 # --- _validate_y_proxy ---

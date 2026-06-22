@@ -145,6 +145,18 @@ def _validate_sample_sizes(
         raise ValueError(f"Too few labeled or unlabeled samples in {stratum_part}.")
 
 
+def _validate_y_proxies(y_proxies: NDArray, stratum_id: Optional[Hashable] = None) -> None:
+    if y_proxies.ndim != 2:
+        raise ValueError(f"'y_proxies' must be a 2D array; got shape {y_proxies.shape!r}.")
+    _validate_has_no_nan(y_proxies, "y_proxies")
+    stratum_part = f" in stratum '{stratum_id}'" if stratum_id is not None else ""
+    for m in range(y_proxies.shape[1]):
+        _validate_non_constant(
+            y_proxies[:, m],
+            f"'y_proxies' column {m} values are constant{stratum_part}.",
+        )
+
+
 def _validate_binary_or_nan(array: NDArray, name: str) -> None:
     array_float = array.astype(float)
     if not (np.isnan(array_float) | np.isin(array_float, [0.0, 1.0])).all():
