@@ -317,7 +317,7 @@ where $z_{1-\alpha/2}$ is the standard normal quantile (e.g. $z_{0.975} = 1.96$ 
 
 ### Power-tuning
 
-In Multi-PPI, the tuning parameter is a **vector** $\mathbf{\lambda} \in \mathbb{R}^M$ rather than a scalar, since each of the $M$ proxies receives its own weight. The mean squared error of $\hat{\theta}_{\mathbf{\lambda}}$ is a quadratic function of $\mathbf{\lambda}$ with a unique minimiser:
+In Multi-PPI, the tuning parameter $\mathbf{\lambda} \in \mathbb{R}^M$ is a vector rather than a scalar, since each of the $M$ proxies receives its own weight. The mean squared error of $\hat{\theta}_{\mathbf{\lambda}}$ is a quadratic function of $\mathbf{\lambda}$ with a unique minimiser:
 
 $$\mathbf{\lambda}^* = \frac{N}{n+N} \cdot \text{Var}(\tilde{\mathbf{Y}})^{-1} \cdot \text{Cov}(\tilde{\mathbf{Y}}, Y)$$
 
