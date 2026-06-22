@@ -106,6 +106,7 @@ class ClusteredPPIMeanEstimator:
         ValueError
             - If ``y_true``, ``y_proxy``, and ``clusters`` do not all have the
               same length.
+            - If labeled ``y_true`` values are constant.
             - If any proxy value is NaN.
             - If ``clusters`` contains NaN values (numeric dtype) or None values (non-numeric dtype).
             - If any cluster contains both labeled and unlabeled observations.

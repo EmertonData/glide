@@ -118,6 +118,7 @@ class PPIMeanEstimator:
             - If ``y_true`` and ``y_proxy`` have different lengths.
             - If any proxy value is NaN.
             - If all proxy values are identical.
+            - If labeled ``y_true`` values are constant.
             - If there are fewer than 2 labeled or fewer than 2 unlabeled samples.
         """
         y_true_filtered, y_proxy_labeled, y_proxy_unlabeled = self._preprocess(y_true, y_proxy)

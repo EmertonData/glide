@@ -137,6 +137,7 @@ class IPWPTDMeanEstimator:
             - If ``y_true``, ``y_proxy``, and ``pi`` do not all have the same length.
             - If any proxy value is NaN.
             - If all proxy values are identical.
+            - If labeled ``y_true`` values are constant.
             - If any sampling probability is not in [0, 1].
             - If any labeled sample (non-NaN ``y_true``) has a labeling probability of 0.
             - If any unlabeled sample (NaN ``y_true``) has a labeling probability of 1.

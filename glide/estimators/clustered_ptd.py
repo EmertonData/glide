@@ -25,12 +25,9 @@ class ClusteredPTDMeanEstimator:
     cluster sampling designs.
 
     A power-tuning parameter λ is estimated from the joint bootstrap covariance
-    of the labeled cluster means and labeled cluster proxy means. The final
-    confidence interval is a percentile interval over B bootstrap replicates of:
-
-        θ_b = mean(y_true_b) + λ * (mean(y_proxy_unlabeled_b) - mean(y_proxy_labeled_b))
-
-    where each _b subscript denotes a size-weighted resample of cluster-level means.
+    of the labeled cluster means and labeled cluster proxy means. At each bootstrap
+    iteration, clusters are resampled with replacement and their means are averaged,
+    producing bootstrap replicates of the PTD estimate.
 
     References
     ----------
@@ -70,11 +67,12 @@ class ClusteredPTDMeanEstimator:
     ) -> PredictionPoweredMeanInferenceResult:
         """Estimate the population mean using the Clustered Predict-Then-Debias bootstrap.
 
-        Aggregates observations into cluster-level means, bootstraps labeled cluster
-        means with size-weighting, and assembles per-replicate PTD estimates to form
-        a percentile confidence interval. The unlabeled proxy mean's sampling
-        variability is approximated by a Gaussian draw per replicate, computed from
-        cluster sums so that larger clusters contribute proportionally more.
+        Computes cluster means for labeled and unlabeled clusters and uses them as
+        sampling units to run the PTD bootstrap. The tuning parameter λ and the
+        confidence interval are both derived from a bootstrap over the labeled clusters
+        only. The sampling variability of the unlabeled proxy mean is approximated by
+        a single Gaussian draw per iteration, keeping the per-iteration cost O(M_L),
+        where M_L is the number of labeled clusters.
 
         Labeled and unlabeled clusters are distinguished by the NaN pattern in
         ``y_true``: a cluster is labeled if every one of its ``y_true`` entries is
@@ -116,6 +114,7 @@ class ClusteredPTDMeanEstimator:
         ------
         ValueError
             - If ``y_true``, ``y_proxy``, and ``clusters`` do not all have the same length.
+            - If labeled ``y_true`` values are constant.
             - If any proxy value is NaN.
             - If ``clusters`` contains NaN values (numeric dtype) or None values (non-numeric dtype).
             - If any cluster contains both labeled and unlabeled observations.
