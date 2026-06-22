@@ -43,7 +43,7 @@ def test_estimate_returns_valid_inference_result(estimator, y_true, y_proxy, clu
 def test_estimate_metadata(estimator, y_true, y_proxy, clusters):
     result = estimator.estimate(y_true, y_proxy, clusters, metric_name="accuracy", n_bootstrap=5, random_seed=0)
     assert result.metric_name == "accuracy"
-    assert result.estimator_name == "ClusteredPTDMeanEstimator"
+    assert result.estimator_name == estimator.__class__.__name__
     assert result.n_true == 4
     assert result.n_proxy == 8
     assert result.effective_sample_size == 6

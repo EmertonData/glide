@@ -8,6 +8,7 @@ from glide.core.validation import (
     _validate_equal_lengths,
     _validate_has_no_nan,
     _validate_unique_clusters,
+    _validate_y_true,
 )
 
 
@@ -17,6 +18,7 @@ def _preprocess(
     clusters: NDArray,
 ) -> Tuple[NDArray, NDArray, NDArray]:
     _validate_equal_lengths(y_true, y_proxy, clusters, names=["y_true", "y_proxy", "clusters"])
+    _validate_y_true(y_true)
     _validate_has_no_nan(y_proxy, "y_proxy")
     _validate_has_no_nan(clusters, "clusters")
 

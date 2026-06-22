@@ -153,7 +153,7 @@ class ClusteredPTDMeanEstimator:
             bootstrap_estimates=bootstrap_estimates,
             confidence_level=confidence_level,
         )
-        n_labeled = int(np.sum(~np.isnan(y_true)))
+        n_labeled = np.sum(~np.isnan(y_true))
         classical_confidence_interval = ClusteredClassicalMeanEstimator().estimate(y_true, clusters).confidence_interval
         effective_sample_size = floor(n_labeled * classical_confidence_interval.var / confidence_interval.var)
         result = PredictionPoweredMeanInferenceResult(
@@ -161,7 +161,7 @@ class ClusteredPTDMeanEstimator:
             metric_name=metric_name,
             estimator_name=self.__class__.__name__,
             n_true=n_labeled,
-            n_proxy=len(y_true),
+            n_proxy=len(y_proxy),
             effective_sample_size=effective_sample_size,
         )
         return result
