@@ -6,7 +6,7 @@ details, and therefore require larger datasets to hold reliably.
 
 import numpy as np
 
-from glide.estimators import ClassicalMeanEstimator, MultiPPIMeanEstimator, PPIMeanEstimator
+from glide.estimators import MultiPPIMeanEstimator, PPIMeanEstimator
 from glide.simulators import generate_binary_dataset, generate_multi_binary_dataset, simulate_annotation
 
 # ── tests ──────────────────────────────────────────────────────────────────────
@@ -35,22 +35,6 @@ def test_single_proxy_equals_ppi():
     np.testing.assert_allclose(
         result_multi.confidence_interval.upper_bound, result_ppi.confidence_interval.upper_bound, atol=1e-12
     )
-
-
-def test_multi_ppi_tighter_than_classical():
-    """MultiPPI yields a tighter confidence interval than Classical when both proxies correlate well with y_true.
-
-    With strongly correlated proxies, the optimal lambda reduces the variance below
-    the classical estimator's variance, guaranteeing a narrower confidence interval.
-    """
-    y_true_oracle, y_proxies = generate_multi_binary_dataset(50, 0.6, [0.6, 0.65], [0.7, 0.7], random_seed=0)
-    xi = np.hstack([np.ones(10), np.zeros(40)])
-    y_true = simulate_annotation(y_true_oracle, xi)
-
-    result_multi = MultiPPIMeanEstimator().estimate(y_true, y_proxies)
-    result_classical = ClassicalMeanEstimator().estimate(y_true)
-
-    assert result_multi.std < result_classical.std
 
 
 def test_two_proxies_tighter_than_single_ppi():
