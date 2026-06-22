@@ -276,6 +276,66 @@ When every cluster is a singleton, $L^{\bullet} = n$ and $L^{\circ} = N$, and al
 
 ---
 
+## Multi-Proxy Prediction-Powered Inference (MultiPPI)
+
+Standard PPI++ assumes a single proxy model. **Multi-Proxy Prediction-Powered Inference (MultiPPI)** [[8](#ref-8)] generalises this to $M \geq 1$ proxy models simultaneously. It finds the optimal linear combination of all $M$ proxies before applying the PPI correction. As in PPI++, labeled samples are drawn uniformly at random from the population.
+
+In MultiPPI, each sample has two associated values:
+
+| Value | Present for | Description |
+|---|---|---|
+| $\tilde{Y}^{(m)}_i$, for $m = 1, \ldots, M$ | All $n+N$ samples | Proxy prediction from proxy $m$ |
+| $Y_j$ | Labeled samples only ($n \ll N$) | Ground-truth label |
+
+### Mean estimation
+
+Let $\tilde{\mathbf{Y}}^\bullet_j = (\tilde{Y}^{(1),\bullet}_j, \ldots, \tilde{Y}^{(M),\bullet}_j)^\top \in \mathbb{R}^M$ and $\tilde{\mathbf{Y}}^\circ_i = (\tilde{Y}^{(1),\circ}_i, \ldots, \tilde{Y}^{(M),\circ}_i)^\top \in \mathbb{R}^M$ denote the proxy prediction vectors for labeled and unlabeled samples respectively. The MultiPPI mean estimate is parameterised by a tuning vector $\boldsymbol{\lambda} = (\lambda_1, \ldots, \lambda_M)^\top \in \mathbb{R}^M$ and defined as:
+
+$$\hat{\theta}_{\boldsymbol{\lambda}} = \frac{1}{n}\sum_{j=1}^{n} Y_j + \boldsymbol{\lambda}^\top \left[\frac{1}{N}\sum_{i=1}^{N} \tilde{\mathbf{Y}}^\circ_i - \frac{1}{n}\sum_{j=1}^{n} \tilde{\mathbf{Y}}^\bullet_j\right]$$
+
+This combines two components:
+
+- The **human-label mean** $\frac{1}{n}\sum_j Y_j$, unbiased but high-variance due to the small labeled set.
+- A **variance reduction term** using all proxy predictions across $M$ proxies. The tuning parameter $\lambda_m$ scales the correction from proxy $m$: the difference between the unlabeled and labeled means of that proxy.
+
+When $\boldsymbol{\lambda} = \mathbf{0}$, the estimator reduces to the naive sample mean. When $M = 1$ and $\lambda_1 = 1$, it recovers standard PPI.
+
+### Variance and confidence intervals
+
+By the Central Limit Theorem (for large enough $n$, typically $n \geq 100$), the asymptotic variance of the MultiPPI estimator decomposes as:
+
+$$\sigma^2_{\hat{\theta}}(\boldsymbol{\lambda}) = \underbrace{\frac{\text{Var}(Y - \boldsymbol{\lambda}^\top \tilde{\mathbf{Y}})}{n}}_{\text{Labeled residual variance}} + \underbrace{\frac{\text{Var}(\boldsymbol{\lambda}^\top \tilde{\mathbf{Y}})}{N}}_{\text{Unlabeled proxy variance}}$$
+
+- The first term is the variance of the residuals $Y - \boldsymbol{\lambda}^\top \tilde{\mathbf{Y}}$ on the labeled samples, scaled by $1/n$. It shrinks as the proxy combination aligns better with the true labels.
+- The second term is the variance of the projected proxy scores $\boldsymbol{\lambda}^\top \tilde{\mathbf{Y}}$ on the unlabeled samples, scaled by $1/N$. It is typically negligible since $N \gg n$.
+
+This gives a confidence interval at level $1 - \alpha$:
+
+$$\Pr\!\left(\theta^* \in \left[\hat{\theta}_{\boldsymbol{\lambda}} - z_{1-\alpha/2}\, \hat{\sigma}(\boldsymbol{\lambda}),\; \hat{\theta}_{\boldsymbol{\lambda}} + z_{1-\alpha/2}\, \hat{\sigma}(\boldsymbol{\lambda})\right]\right) \geq 1 - \alpha$$
+
+where $z_{1-\alpha/2}$ is the standard normal quantile (e.g. $z_{0.975} = 1.96$ for a 95% two-sided confidence interval).
+
+### Power-tuning
+
+In MultiPPI, the tuning parameter is a **vector** $\boldsymbol{\lambda} \in \mathbb{R}^M$ rather than a scalar, since each of the $M$ proxies receives its own weight. The mean squared error of $\hat{\theta}_{\boldsymbol{\lambda}}$ is a quadratic function of $\boldsymbol{\lambda}$ with a unique minimiser:
+
+$$\boldsymbol{\lambda}^* = \frac{N}{n+N} \cdot \left[\text{Var}(\tilde{\mathbf{Y}})\right]^{-1} \cdot \text{Cov}(\tilde{\mathbf{Y}}, Y)$$
+
+where $\text{Var}(\tilde{\mathbf{Y}})$ is the $M \times M$ covariance matrix of the proxy predictions and $\text{Cov}(\tilde{\mathbf{Y}}, Y)$ is the $M$-dimensional cross-covariance vector between proxy predictions and the true label. For $M = 1$, this reduces to the scalar formula $\lambda^* = \frac{N}{n+N} \cdot \frac{\text{Cov}(\tilde{Y}, Y)}{\text{Var}(\tilde{Y})}$.
+
+In practice, $\boldsymbol{\lambda}^*$ is unknown and replaced by the plug-in estimator:
+
+$$\hat{\boldsymbol{\lambda}} = \frac{N}{n+N} \cdot \left[\widehat{\text{Var}}_{n+N}(\tilde{\mathbf{Y}})\right]^{-1} \cdot \widehat{\text{Cov}}_n(\tilde{\mathbf{Y}}^\bullet, Y)$$
+
+where:
+
+- $\widehat{\text{Var}}_{n+N}(\tilde{\mathbf{Y}})$ is the $M \times M$ sample covariance matrix of the proxy predictions, computed over **all $n + N$ samples**,
+- $\widehat{\text{Cov}}_n(\tilde{\mathbf{Y}}^\bullet, Y)$ is the $M$-dimensional sample cross-covariance vector between labeled proxy predictions and true labels, computed over the **$n$ labeled samples only**.
+
+The estimator with optimal $\boldsymbol{\lambda}^*$ satisfies a **safety property**: its variance is always no greater than $\text{Var}(Y)/n$, the variance of the naive sample mean. This guarantees that using MultiPPI can only tighten the confidence interval relative to the classical estimator, regardless of the number or quality of the proxies. It is standard to use the empirical estimate $\hat{\boldsymbol{\lambda}}$ in practice.
+
+---
+
 ## Predict-Then-Debias (PTD)
 
 **Predict-Then-Debias (PTD)** [[7](#ref-7)] constructs a confidence interval from the **empirical distribution of bootstrap estimates** rather than a normal approximation, making it reliable when $n$ is small or residuals are non-Gaussian. GLIDE implements Algorithm 3 from [[7](#ref-7)], which works on a uniformly drawn labeled sample and includes a speedup that avoids resampling the unlabeled data during the bootstrap.
@@ -483,3 +543,5 @@ When the proxy is informative (high covariance with ground-truth), $\hat{\lambda
 <a id="ref-6"></a>[6] <a id="ref-6-link" href="https://www.ecva.net/papers/eccv_2024/papers_ECCV/papers/12117.pdf">Fogliato, Riccardo, Pratik Patil, Mathew Monfort, and Pietro Perona. "A framework for efficient model evaluation through stratification, sampling, and estimation." In European Conference on Computer Vision, pp. 140-158. Cham: Springer Nature Switzerland, 2024.</a>.
 
 <a id="ref-7"></a>[7] <a id="ref-7-link" href="https://arxiv.org/abs/2501.18577">Kluger, Dan M., Kerri Lu, Tijana Zrnic, Sherrie Wang, and Stephen Bates. "Prediction-powered inference with imputed covariates and nonuniform sampling." arXiv preprint arXiv:2501.18577 (2025).</a>.
+
+<a id="ref-8"></a>[8] <a id="ref-8-link" href="https://arxiv.org/abs/2509.21707">Shan, Jiawei, Zhifeng Chen, Yiming Dong, Yazhen Wang, and Jiwei Zhao. "SADA: Safe and Adaptive Aggregation of Multiple Black-Box Predictions in Semi-Supervised Learning." arXiv preprint arXiv:2509.21707 (2025).</a>.
