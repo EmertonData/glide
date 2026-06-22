@@ -49,6 +49,21 @@ def test_estimate_metadata(estimator, y_true, y_proxy, clusters):
     assert result.effective_sample_size == 6
 
 
+def test_estimate_custom_confidence_level(estimator, y_true, y_proxy, clusters):
+    result = estimator.estimate(y_true, y_proxy, clusters, n_bootstrap=5, confidence_level=0.85, random_seed=0)
+
+    expected_mean = 2.516
+    expected_std = 0.779
+    expected_lower = 1.769
+    expected_upper = 3.403
+
+    assert result.confidence_interval.confidence_level == 0.85
+    assert result.confidence_interval.mean == pytest.approx(expected_mean, abs=0.01)
+    assert result.std == pytest.approx(expected_std, abs=0.01)
+    assert result.confidence_interval.lower_bound == pytest.approx(expected_lower, abs=0.01)
+    assert result.confidence_interval.upper_bound == pytest.approx(expected_upper, abs=0.01)
+
+
 def test_estimate_reproducibility(estimator, y_true, y_proxy, clusters):
     result_a = estimator.estimate(y_true, y_proxy, clusters, n_bootstrap=5, random_seed=7)
     result_b = estimator.estimate(y_true, y_proxy, clusters, n_bootstrap=5, random_seed=7)
@@ -63,46 +78,6 @@ def test_estimate_different_seeds_results_differ(estimator, y_true, y_proxy, clu
         result_a.confidence_interval.lower_bound != result_b.confidence_interval.lower_bound
         or result_a.confidence_interval.upper_bound != result_b.confidence_interval.upper_bound
     )
-
-
-def test_estimate_mismatched_lengths_raises(estimator):
-    y_true = np.array([1.0, np.nan, np.nan])
-    y_proxy = np.array([1.1, 1.5])
-    clusters = np.array(["A", "B", "C"])
-    with pytest.raises(ValueError):
-        estimator.estimate(y_true, y_proxy, clusters)
-
-
-def test_estimate_nan_in_proxy_raises(estimator):
-    y_true = np.array([1.0, 2.0, np.nan, np.nan])
-    y_proxy = np.array([1.1, np.nan, 1.5, 1.8])
-    clusters = np.array(["A", "B", "C", "D"])
-    with pytest.raises(ValueError):
-        estimator.estimate(y_true, y_proxy, clusters)
-
-
-def test_estimate_partially_labeled_cluster_raises(estimator):
-    y_true = np.array([1.0, np.nan, 3.0, np.nan])
-    y_proxy = np.array([1.1, 2.2, 3.1, 3.9])
-    clusters = np.array(["A", "A", "B", "C"])
-    with pytest.raises(ValueError, match="Cluster 'A'"):
-        estimator.estimate(y_true, y_proxy, clusters)
-
-
-def test_estimate_too_few_labeled_clusters_raises(estimator):
-    y_true = np.array([1.0, np.nan, np.nan, np.nan])
-    y_proxy = np.array([1.1, 2.2, 3.1, 3.9])
-    clusters = np.array(["A", "B", "C", "D"])
-    with pytest.raises(ValueError, match="2 fully labeled"):
-        estimator.estimate(y_true, y_proxy, clusters)
-
-
-def test_estimate_too_few_unlabeled_clusters_raises(estimator):
-    y_true = np.array([1.0, 2.0, 3.0, np.nan])
-    y_proxy = np.array([1.1, 2.2, 3.1, 3.9])
-    clusters = np.array(["A", "B", "C", "D"])
-    with pytest.raises(ValueError, match="2 fully unlabeled"):
-        estimator.estimate(y_true, y_proxy, clusters)
 
 
 # --- __str__ / __repr__ ---

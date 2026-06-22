@@ -9,7 +9,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 ## [Next release]
 
 ### ✨ Added
-- `ClusteredPTDMeanEstimator`: cluster-robust Predict-Then-Debias estimator that resamples whole clusters to account for within-cluster correlation.
+- `ClusteredPTDMeanEstimator`: cluster-robust Predict-Then-Debias estimator for clsutered data.
 - `generate_multi_binary_dataset` simulator for generating binary oracle datasets with multiple proxies.
 - Spider Text-to-SQL case study
 
