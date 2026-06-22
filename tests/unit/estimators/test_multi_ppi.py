@@ -83,9 +83,9 @@ def test_estimate_custom_confidence_level(estimator, y_arrays):
     result = estimator.estimate(y_true, y_proxies, confidence_level=0.85)
 
     expected_mean = 1.5
-    expected_std = 0.250
-    expected_lower = 5.257
-    expected_upper = 5.978
+    expected_std = 0.395
+    expected_lower = 0.931
+    expected_upper = 2.069
 
     assert result.confidence_interval.confidence_level == 0.85
     assert result.confidence_interval.mean == pytest.approx(expected_mean, abs=0.01)
@@ -104,12 +104,12 @@ def test_str_format(estimator, y_arrays):
     output = str(result)
     expected = (
         "Metric: performance\n"
-        "Point Estimate: 5.618\n"
-        "Confidence Interval (95%): [5.127, 6.108]\n"
-        "Estimator : StratifiedPPIMeanEstimator\n"
-        "n_true: 4\n"
-        "n_proxy: 8\n"
-        "Effective Sample Size: 7"
+        "Point Estimate: 1.500\n"
+        "Confidence Interval (95%): [0.725, 2.275]\n"
+        "Estimator : MultiPPIMeanEstimator\n"
+        "n_true: 2\n"
+        "n_proxy: 4\n"
+        "Effective Sample Size: 3"
     )
     assert output == expected
 
