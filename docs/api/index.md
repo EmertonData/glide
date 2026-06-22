@@ -45,6 +45,7 @@
 | [`PTDMeanEstimator`](estimators.md#glide.estimators.ptd.PTDMeanEstimator) | Predict-then-debias with bootstrap confidence intervals |
 | [`StratifiedPTDMeanEstimator`](estimators.md#glide.estimators.stratified_ptd.StratifiedPTDMeanEstimator) | PTD with per-stratum optimal weighting |
 | [`IPWPTDMeanEstimator`](estimators.md#glide.estimators.ipw_ptd.IPWPTDMeanEstimator) | PTD with inverse probability weighting |
+| [`ClusteredPTDMeanEstimator`](estimators.md#glide.estimators.clusterd_ptd.ClusterdPTDMeanEstimator) | PTD for clustered data |
 
 ## Confidence Intervals
 
