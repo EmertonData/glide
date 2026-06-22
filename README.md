@@ -84,6 +84,7 @@ If you use GLIDE in your work, please cite us using the "Cite this repository" b
 | Active Sampling | `samplers.ActiveSampler` | [[5]](#ref-5), [[6]](#ref-6) | [Link](https://github.com/kristinagligoric/confidence-driven-inference) |
 | Predict-Then-Debias | `estimators.PTDMeanEstimator`, `estimators.StratifiedPTDMeanEstimator`, `estimators.IPWPTDMeanEstimator` | [[7]](#ref-7) | [Link](https://github.com/DanKluger/PTDBoot) |
 | Cluster Prediction-Powered Inference | `estimators.ClusteredPPIMeanEstimator` | — | [Link](https://github.com/davidbroska/ppi_py) |
+| Clustered Predict-Then-Debias | `estimators.ClusteredPTDMeanEstimator` | [[7]](#ref-7) | [Link](https://github.com/DanKluger/PTDBoot) |
 
 ### References
 
