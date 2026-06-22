@@ -14,6 +14,7 @@
       "Bash(git ls-remote*)",
       "Bash(grep *)",
       "Bash(rg *)",
+      "Bash(echo *)",
       "WebFetch"
     ]
   },

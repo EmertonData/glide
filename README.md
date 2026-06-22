@@ -84,8 +84,9 @@ If you use GLIDE in your work, please cite us using the "Cite this repository" b
 | Active Sampling | `samplers.ActiveSampler` | [[5]](#ref-5), [[6]](#ref-6) | [Link](https://github.com/kristinagligoric/confidence-driven-inference) |
 | Predict-Then-Debias | `estimators.PTDMeanEstimator`, `estimators.StratifiedPTDMeanEstimator`, `estimators.IPWPTDMeanEstimator` | [[7]](#ref-7) | [Link](https://github.com/DanKluger/PTDBoot) |
 | Cluster Prediction-Powered Inference | `estimators.ClusteredPPIMeanEstimator` | — | [Link](https://github.com/davidbroska/ppi_py) |
+| Multi-Proxy Prediction-Powered Inference | `estimators.MultiPPIMeanEstimator` | [[8]](#ref-8) | [Link](https://github.com/jw-shan/sada) |
 
-### References
+### 📖 References
 
 <a id="ref-1"></a>[1] <a href="https://www.science.org/doi/10.1126/science.adi6000">Angelopoulos, Anastasios N., Stephen Bates, Clara Fannjiang, Michael I. Jordan, and Tijana Zrnic. "Prediction-powered inference." Science 382, no. 6671 (2023): 669-674.</a>
 
@@ -100,6 +101,8 @@ If you use GLIDE in your work, please cite us using the "Cite this repository" b
 <a id="ref-6"></a>[6] <a href="https://aclanthology.org/2025.naacl-long.179/">Gligorić, Kristina, Tijana Zrnic, Cinoo Lee, Emmanuel Candes, and Dan Jurafsky. "Can unconfident LLM annotations be used for confident conclusions?" In Proceedings of the 2025 Conference of the Nations of the Americas Chapter of the Association for Computational Linguistics: Human Language Technologies (Volume 1: Long Papers), pp. 3514-3533. 2025.</a>
 
 <a id="ref-7"></a>[7] <a href="https://arxiv.org/abs/2501.18577">Kluger, Dan M., Kerri Lu, Tijana Zrnic, Sherrie Wang, and Stephen Bates. "Prediction-powered inference with imputed covariates and nonuniform sampling." arXiv preprint arXiv:2501.18577 (2025).</a>
+
+<a id="ref-8"></a>[8] <a id="ref-8-link" href="https://arxiv.org/abs/2509.21707">Shan, Jiawei, Zhifeng Chen, Yiming Dong, Yazhen Wang, and Jiwei Zhao. "SADA: Safe and Adaptive Aggregation of Multiple Black-Box Predictions in Semi-Supervised Learning." arXiv preprint arXiv:2509.21707 (2025).</a>.
 
 ## 📬 Stay Updated
 
