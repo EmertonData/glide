@@ -528,6 +528,82 @@ When the proxy is informative (high covariance with ground-truth), $\hat{\lambda
 
 ---
 
+## Clustered Predict-Then-Debias (Clustered PTD)
+
+**Clustered Predict-Then-Debias (Clustered PTD)** [[7](#ref-7)] extends PTD to datasets where observations are grouped into clusters and each cluster is either entirely labeled or entirely unlabeled. The bootstrap resamples whole clusters rather than individual observations, accounting for within-cluster correlation and producing valid confidence intervals under cluster sampling designs. Like PTD, it builds a confidence interval from the empirical distribution of bootstrap estimates rather than a normal approximation, making it reliable when the number of labeled clusters is small.
+
+The data is partitioned into $L$ disjoint clusters $C_1, \dots, C_L$, with $\bigcup_{l=1}^{L} C_l = \{1, \dots, n + N\}$ and $C_i \cap C_j = \emptyset$ for $i \neq j$. Each cluster is **either fully labeled or fully unlabeled**: no cluster contains a mix of labeled and unlabeled observations. Observations from distinct clusters are independent, but no independence is assumed among observations within the same cluster. We denote $L^\bullet$ the number of labeled clusters and $L^\circ$ the number of unlabeled clusters.
+
+In Clustered PTD, each sample has two associated values plus a cluster identifier:
+
+| Value | Present for | Description |
+|---|---|---|
+| $\tilde{Y}_i$ | All $n+N$ samples | Proxy label |
+| $Y_j$ | Labeled samples only ($n \ll N$) | Ground-truth label |
+| $c_i$ | All $n+N$ samples | Cluster identifier |
+
+The cluster identifiers allow partitioning the data into cluster-level means, which replace individual observations as the sampling units for the bootstrap.
+
+### Mean estimation
+
+The Clustered PTD mean estimate is the average of $B$ bootstrap estimates:
+
+$$\hat{\theta}_{\text{CPTD}} = \frac{1}{B}\sum_{b=1}^{B}\hat{\theta}^{(b)}_{\text{CPTD}}$$
+
+where each $\hat{\theta}^{(b)}_{\text{CPTD}}$ is produced during the bootstrap procedure described below.
+
+### Bootstrap procedure
+
+The first step is computing **cluster means**. For each labeled cluster $l$:
+
+$$\bar{Y}^{(l)} = \frac{1}{|C_l|}\sum_{i \in C_l} Y_i, \qquad \bar{\tilde{Y}}^{(l),\bullet} = \frac{1}{|C_l|}\sum_{i \in C_l} \tilde{Y}_i$$
+
+For each unlabeled cluster $m$:
+
+$$\bar{\tilde{Y}}^{(m),\circ} = \frac{1}{|C_m|}\sum_{i \in C_m} \tilde{Y}_i$$
+
+These $L^\bullet$ labeled cluster mean pairs and $L^\circ$ unlabeled proxy cluster means serve as the sampling units for the bootstrap.
+
+Before the bootstrap loop, compute the mean and sampling variance of the unlabeled proxy cluster means:
+
+$$\hat{\gamma}^\circ = \frac{1}{L^\circ}\sum_{m=1}^{L^\circ}\bar{\tilde{Y}}^{(m),\circ}, \qquad \hat{S}_\gamma^\circ = \frac{\widehat{\text{Var}}\big(\bar{\tilde{Y}}^{(m),\circ}\big)}{L^\circ}$$
+
+These quantities are computed once and reused across all $B$ iterations, applying the same CLT speedup as PTD to the unlabeled cluster means.
+
+For $b = 1, \dots, B$, sample $L^\bullet$ cluster indices $\mathcal{I}^{(b)}$ with replacement from $\{1, \dots, L^\bullet\}$ and compute the bootstrap means of the labeled cluster means:
+
+$$\hat{\mu}^{(b)}_{\text{true}} = \frac{1}{L^\bullet}\sum_{l \in \mathcal{I}^{(b)}} \bar{Y}^{(l)}, \qquad \hat{\mu}^{(b)}_{\text{proxy}} = \frac{1}{L^\bullet}\sum_{l \in \mathcal{I}^{(b)}} \bar{\tilde{Y}}^{(l),\bullet}$$
+
+A perturbed draw of the unlabeled cluster proxy mean is formed as:
+
+$$\tilde{\gamma}^{(b)} = \hat{\gamma}^\circ + Z^{(b)} \cdot \sqrt{\hat{S}_\gamma^\circ}, \qquad Z^{(b)} \sim \mathcal{N}(0,\, 1)$$
+
+Combining the labeled bootstrap cluster means with this unlabeled draw gives:
+
+$$\hat{\theta}^{(b)}_{\text{CPTD}} = \lambda \cdot \tilde{\gamma}^{(b)} + \left(\hat{\mu}^{(b)}_{\text{true}} - \lambda \cdot \hat{\mu}^{(b)}_{\text{proxy}}\right)$$
+
+where $\lambda$ is a power-tuning factor controlling the proxy labels' influence. The term $\hat{\mu}^{(b)}_{\text{true}} - \lambda \cdot \hat{\mu}^{(b)}_{\text{proxy}}$ captures the proxy bias measured on the labeled clusters, while $\lambda \cdot \tilde{\gamma}^{(b)}$ contributes the proxy signal on the unlabeled clusters.
+
+**Note.** Each bootstrap estimate $\hat{\mu}^{(b)}_{\text{true}}$, $\hat{\mu}^{(b)}_{\text{proxy}}$ and $\tilde{\gamma}^{(b)}$ uses the **mean of cluster means** rather than a size-weighted combination. As argued in the Clustered PPI section, this is the minimum-variance choice when no independence is assumed among observations within the same cluster: treating all within-cluster observations as perfectly correlated, the optimal weights are uniform across clusters regardless of cluster size.
+
+### Confidence intervals
+
+The confidence interval at level $1 - \alpha$ is the interval between the $\alpha/2$ and $1 - \alpha/2$ empirical quantiles of $\bigl\{\hat{\theta}^{(1)}_{\text{CPTD}},\, \ldots,\, \hat{\theta}^{(B)}_{\text{CPTD}}\bigr\}$. The bootstrap percentile approach makes no distributional assumptions and adapts to the actual shape of the residual distribution, remaining reliable even when the number of labeled clusters is small.
+
+### Power-tuning
+
+The optimal $\lambda$ is estimated from the **bootstrap covariances** of the labeled cluster means. Let $\hat{\mu}_{\text{true}}$ and $\hat{\mu}_{\text{proxy}}$ be the vectors of values $\hat{\mu}^{(b)}_{\text{true}}$ and $\hat{\mu}^{(b)}_{\text{proxy}}$ for $b=1,\dots,B$ respectively. After running the bootstrap loop, it is computed as:
+
+$$\hat{\lambda} = \frac{\widehat{\text{Cov}}_B\!\left(\hat{\mu}_{\text{true}},\; \hat{\mu}_{\text{proxy}}\right)}{\widehat{\text{Var}}_B\!\left(\hat{\mu}_{\text{proxy}}\right) + \hat{S}_\gamma^\circ}$$
+
+where $\widehat{\text{Cov}}_B$ and $\widehat{\text{Var}}_B$ are computed across the $B$ bootstrap replicates of the labeled cluster means, and $\hat{S}_\gamma^\circ$ is the estimated sampling variance of the unlabeled proxy cluster mean. This is the same formula as PTD power-tuning, applied at the cluster level.
+
+When the proxy is informative (high bootstrap covariance with ground-truth cluster means), $\hat{\lambda}$ is large and the estimate borrows heavily from the proxy signal, reducing its variance. When the proxy is uninformative, $\hat{\lambda}$ shrinks toward 0, falling back to the classical cluster mean bootstrap. It is standard to use the optimal value $\hat{\lambda}$ in practice.
+
+When every cluster is a singleton ($L^\bullet = n$ and $L^\circ = N$), all formulas reduce exactly to their PTD counterparts, recovering the full PTD procedure.
+
+---
+
 ## References
 
 <a id="ref-1"></a>[1] <a id="ref-1-link" href="https://www.science.org/doi/10.1126/science.adi6000">Angelopoulos, Anastasios N., Stephen Bates, Clara Fannjiang, Michael I. Jordan, and Tijana Zrnic. "Prediction-powered inference." Science 382, no. 6671 (2023): 669-674.</a>.
