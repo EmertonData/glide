@@ -32,6 +32,10 @@
 
 ---
 
+::: glide.estimators.multi_ppi.MultiPPIMeanEstimator
+
+---
+
 ::: glide.estimators.ptd.PTDMeanEstimator
 
 ---
