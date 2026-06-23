@@ -39,7 +39,9 @@ arXiv IDs use `YYMM.NNNNN` format — the YYMM prefix encodes the submission yea
 
 **Short window (≤ 3 days / last announced batch):** fetch `https://arxiv.org/list/stat/recent?skip=0&show=2000` and extract all paper entries: arXiv ID, title, and authors. The listing covers approximately 3 announcement days in practice; treat the full listing as the batch window.
 
-**Longer window (> 3 days):** for each month in scope (from the Date range section above), fetch `https://arxiv.org/list/stat/YYYY-MM?skip=0&show=5000` — where `YYYY-MM` is the four-digit year and two-digit month (e.g., `2025-02` for February 2025). If the window spans multiple months, fire all fetches in a **single message**. Extract all paper entries: arXiv ID, title, authors, and submission date. Date filtering to the exact window happens in Step 5.
+> Note: `show=5000` returns HTTP 400 on the monthly listing; `show=2000` works. Use `show=2000`.
+
+**Longer window (> 3 days):** for each month in scope (from the Date range section above), fetch `https://arxiv.org/list/stat/YYYY-MM?skip=0&show=2000` — where `YYYY-MM` is the four-digit year and two-digit month (e.g., `2025-02` for February 2025). If the window spans multiple months, fire all fetches in a **single message**. Extract all paper entries: arXiv ID, title, authors, and submission date. Date filtering to the exact window happens in Step 5.
 
 ## Step 2 — Parallel topic searches
 
