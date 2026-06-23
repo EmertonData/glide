@@ -91,6 +91,7 @@ nav:
     - Stratified PPI Validation: deep_dive/stratified_ppi_validation.ipynb
     - ASI Validation: deep_dive/asi_validation.ipynb
     - Clustered PPI Validation: deep_dive/clustered_ppi_validation.ipynb
+    - Multi-PPI Validation: deep_dive/multi_ppi_validation.ipynb
     - PTD Validation: deep_dive/ptd_validation.ipynb
     - Stratified PTD Validation: deep_dive/stratified_ptd_validation.ipynb
     - IPW PTD Validation: deep_dive/ipwptd_validation.ipynb
