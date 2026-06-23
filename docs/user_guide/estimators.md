@@ -584,7 +584,7 @@ $$\hat{\theta}^{(b)}_{\text{CPTD}} = \lambda \cdot \tilde{\gamma}^{(b)} + \left(
 
 where $\lambda$ is a power-tuning factor controlling the proxy labels' influence. The term $\hat{\mu}^{(b)}_{\text{true}} - \lambda \cdot \hat{\mu}^{(b)}_{\text{proxy}}$ captures the proxy bias measured on the labeled clusters, while $\lambda \cdot \tilde{\gamma}^{(b)}$ contributes the proxy signal on the unlabeled clusters.
 
-**Note.** Each bootstrap estimate $\hat{\mu}^{(b)}_{\text{true}}$, $\hat{\mu}^{(b)}_{\text{proxy}}$ and $\tilde{\gamma}^{(b)}$ uses the **mean of cluster means** rather than a size-weighted combination. As argued in the Clustered PPI section, this is the minimum-variance choice when no independence is assumed among observations within the same cluster: treating all within-cluster observations as perfectly correlated, the optimal weights are uniform across clusters regardless of cluster size.
+**Note.** Each bootstrap mean $\hat{\mu}^{(b)}_{\text{true}}$, $\hat{\mu}^{(b)}_{\text{proxy}}$ and $\tilde{\gamma}^{(b)}$ uses the **mean of cluster means** rather than a size-weighted combination. As argued in the Clustered PPI section, this is the minimum-variance choice when no independence is assumed among observations within the same cluster: treating all within-cluster observations as perfectly correlated, the optimal weights are uniform across clusters regardless of cluster size.
 
 ### Confidence intervals
 
