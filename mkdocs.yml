@@ -95,6 +95,7 @@ nav:
     - PTD Validation: deep_dive/ptd_validation.ipynb
     - Stratified PTD Validation: deep_dive/stratified_ptd_validation.ipynb
     - IPW PTD Validation: deep_dive/ipwptd_validation.ipynb
+    - Clustered PTD Validation: deep_dive/clustered_ptd_validation.ipynb
     - Agentic System Evaluation Case Study: deep_dive/icml_case_study.ipynb
     - Text-to-SQL Accuracy Estimation Case Study: deep_dive/spider_case_study.ipynb
   - Contributing: contributing.md
