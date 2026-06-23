@@ -45,3 +45,7 @@
 ---
 
 ::: glide.estimators.stratified_ptd.StratifiedPTDMeanEstimator
+
+---
+
+::: glide.estimators.clustered_ptd.ClusteredPTDMeanEstimator

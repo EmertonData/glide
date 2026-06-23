@@ -2,6 +2,7 @@ from glide.estimators.asi import ASIMeanEstimator
 from glide.estimators.classical import ClassicalMeanEstimator
 from glide.estimators.clustered_classical import ClusteredClassicalMeanEstimator
 from glide.estimators.clustered_ppi import ClusteredPPIMeanEstimator
+from glide.estimators.clustered_ptd import ClusteredPTDMeanEstimator
 from glide.estimators.ipw_classical import IPWClassicalMeanEstimator
 from glide.estimators.ipw_ptd import IPWPTDMeanEstimator
 from glide.estimators.multi_ppi import MultiPPIMeanEstimator
@@ -24,4 +25,5 @@ __all__ = [
     "PTDMeanEstimator",
     "StratifiedPTDMeanEstimator",
     "IPWPTDMeanEstimator",
+    "ClusteredPTDMeanEstimator",
 ]
