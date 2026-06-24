@@ -9,6 +9,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 ## [Next release]
 
 ### ✨ Added
+- GitHub Pages landing page at [emertondata.github.io/glide](https://emertondata.github.io/glide).
 - `ClusteredPTDMeanEstimator`: cluster-robust Predict-Then-Debias estimator for clustered data.
 - `MultiPPIMeanEstimator` for prediction-powered inference with multiple proxy models.
 - `generate_multi_binary_dataset` simulator for generating binary oracle datasets with multiple proxies.
