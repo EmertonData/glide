@@ -5,7 +5,7 @@ on:
     branches:
       - main
     paths:
-      - "landing/**"
+      - "docs/landing/**"
   workflow_dispatch:
 
 permissions:
@@ -33,10 +33,13 @@ jobs:
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v6
 
+      - name: Copy shared assets into landing page
+        run: cp -r docs/assets docs/landing/
+
       - name: Upload landing page as Pages artifact
         uses: actions/upload-pages-artifact@v5
         with:
-          path: landing/
+          path: docs/landing/
 
       - name: Deploy to GitHub Pages
         id: deployment
