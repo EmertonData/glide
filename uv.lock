@@ -878,16 +878,16 @@ doc = [
 ]
 
 [package.metadata]
-requires-dist = [{ name = "scipy", specifier = ">=1.17.1" }]
+requires-dist = [{ name = "scipy", specifier = ">=1.18.0" }]
 
 [package.metadata.requires-dev]
 dev = [
     { name = "bump-my-version", specifier = ">=1.1.2" },
     { name = "papermill", specifier = ">=2.7.0" },
     { name = "prek", specifier = ">=0.4.5" },
-    { name = "pytest", specifier = ">=9.1.0" },
+    { name = "pytest", specifier = ">=9.1.1" },
     { name = "pytest-coverage", specifier = ">=0.0" },
-    { name = "ruff", specifier = ">=0.15.16" },
+    { name = "ruff", specifier = ">=0.15.19" },
     { name = "ty", specifier = ">=0.0.53" },
 ]
 doc = [

@@ -15,6 +15,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - Spider Text-to-SQL case study
 
 ### 🔄 Changed
+- Updated the sampler/estimator decision tree and tutorials index to cover Multi-PPI++ for multiple proxy sources.
 - Renamed `ClusterPPIMeanEstimator` → `ClusteredPPIMeanEstimator`, `ClusterClassicalMeanEstimator` → `ClusteredClassicalMeanEstimator`, `UniformClusterSampler` → `UniformClusteredSampler`.
 
 ### 🐛 Fixed
