@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>GLIDE — Helping humans ride the GenAI evaluation wave</title>
+  <link rel="icon" type="image/png" href="assets/favicon-glide.png" />
   <meta name="description" content="GLIDE is a Python library for rigorous evaluation of GenAI systems using hybrid human and proxy annotations, with guaranteed statistical confidence intervals." />
 
   <!-- Bootstrap 5 -->
@@ -40,14 +41,42 @@
       padding: 2.5rem 1.75rem;
     }
 
+    .nav-btn-list {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1rem 0.5rem;
+      justify-items: center;
+      margin-bottom: 0.5rem;
+    }
+
+    .nav-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.4rem;
+      text-decoration: none;
+    }
+
+    .nav-item:hover .nav-label {
+      text-decoration: underline;
+    }
+
     .nav-btn {
       display: flex;
       align-items: center;
-      gap: 0.6rem;
-      width: 100%;
-      margin-bottom: 0.75rem;
-      font-weight: 600;
       justify-content: center;
+      width: 4.8rem;
+      height: 4.8rem;
+      border-radius: 50% !important;
+      font-size: 1.6rem;
+      padding: 0;
+      flex-shrink: 0;
+    }
+
+    .nav-label {
+      font-weight: 600;
+      font-size: 0.8rem;
+      text-align: center;
     }
 
     .hero-card {
@@ -117,92 +146,77 @@
     <div class="row">
 
       <!-- LEFT SIDEBAR -->
-      <div class="col-md-4 col-lg-3 sidebar">
+      <div class="col-md-5 col-lg-4 sidebar">
 
         <div class="text-center mb-4">
           <img
             src="assets/logo-glide-no-bg.png"
             alt="GLIDE logo"
-            style="max-width: 160px; width: 100%; margin-bottom: 1rem;"
+            style="width: calc(100% + 3.5rem); margin-left: -2.25rem; margin-right: -2.25rem; margin-bottom: 1rem;"
           />
-          <p class="text-muted small mb-2">
-            Generated Label Inference &amp; Debiasing Engine
-          </p>
           <a href="https://pypi.org/project/glide-py/" target="_blank" rel="noopener">
             <img
               src="https://img.shields.io/pypi/v/glide-py?style=flat-square&color=4361ee"
               alt="PyPI version"
             />
           </a>
+          <p class="text-muted mt-3 mb-2">
+            Helping humans ride the GenAI evaluation wave
+          </p>
         </div>
 
-        <a
-          href="https://github.com/EmertonData/glide"
-          class="btn btn-dark nav-btn"
-          target="_blank"
-          rel="noopener"
-        >
-          <i class="fa-brands fa-github"></i> Repository
-        </a>
-        <a
-          href="https://glide-py.readthedocs.io"
-          class="btn btn-outline-primary nav-btn"
-          target="_blank"
-          rel="noopener"
-        >
-          <i class="fa-solid fa-book"></i> Documentation
-        </a>
-        <a
-          href="https://pypi.org/project/glide-py/"
-          class="btn btn-outline-warning nav-btn"
-          target="_blank"
-          rel="noopener"
-        >
-          <i class="fa-brands fa-python"></i> PyPI
-        </a>
-        <a
-          href="https://arxiv.org/abs/2605.31278"
-          class="btn btn-outline-danger nav-btn"
-          target="_blank"
-          rel="noopener"
-        >
-          <i class="fa-solid fa-file-lines"></i> Paper
-        </a>
-        <a
-          href="https://www.linkedin.com/newsletters/evaluating-genai-with-glide-7453423077557952512/"
-          class="btn btn-outline-secondary nav-btn"
-          target="_blank"
-          rel="noopener"
-        >
-          <i class="fa-solid fa-envelope"></i> Newsletter
-        </a>
-        <a
-          href="https://www.emerton-data.com"
-          class="btn btn-outline-secondary nav-btn"
-          target="_blank"
-          rel="noopener"
-        >
-          <i class="fa-solid fa-building"></i> Emerton Data
-        </a>
+        <div class="nav-btn-list">
+          <a href="https://github.com/EmertonData/glide" class="nav-item" target="_blank" rel="noopener">
+            <span class="btn btn-dark nav-btn"><i class="fa-brands fa-github"></i></span>
+            <span class="nav-label text-dark">Repository</span>
+          </a>
+          <a href="https://glide-py.readthedocs.io" class="nav-item" target="_blank" rel="noopener">
+            <span class="btn btn-outline-primary nav-btn"><i class="fa-solid fa-book"></i></span>
+            <span class="nav-label text-primary">Documentation</span>
+          </a>
+          <a href="https://pypi.org/project/glide-py/" class="nav-item" target="_blank" rel="noopener">
+            <span class="btn btn-outline-warning nav-btn"><i class="fa-brands fa-python"></i></span>
+            <span class="nav-label text-warning">PyPI</span>
+          </a>
+          <a href="https://arxiv.org/abs/2605.31278" class="nav-item" target="_blank" rel="noopener">
+            <span class="btn btn-outline-danger nav-btn"><i class="fa-solid fa-file-lines"></i></span>
+            <span class="nav-label text-danger">Paper</span>
+          </a>
+          <a href="https://www.linkedin.com/newsletters/evaluating-genai-with-glide-7453423077557952512/" class="nav-item" target="_blank" rel="noopener">
+            <span class="btn btn-outline-secondary nav-btn"><i class="fa-solid fa-envelope"></i></span>
+            <span class="nav-label text-secondary">Newsletter</span>
+          </a>
+          <a href="https://www.emerton-data.com" class="nav-item" target="_blank" rel="noopener">
+            <span class="btn btn-outline-secondary nav-btn"><i class="fa-solid fa-building"></i></span>
+            <span class="nav-label text-secondary">Emerton Data</span>
+          </a>
+        </div>
 
         <hr class="my-4" />
 
-        <p class="text-muted small text-center mb-0">
-          A Python library by<br />
-          <strong>Emerton Data</strong>
+        <p class="text-muted small text-center mb-2">
+          A Python library by
         </p>
+        <div class="text-center">
+          <a href="https://www.emerton-data.com" target="_blank" rel="noopener">
+            <img
+              src="assets/logo-ed.jpg"
+              alt="Emerton Data logo"
+              style="width: 70%;"
+            />
+          </a>
+        </div>
 
       </div><!-- /sidebar -->
 
       <!-- RIGHT MAIN CONTENT -->
-      <div class="col-md-8 col-lg-9 p-4 p-md-5">
+      <div class="col-md-7 col-lg-8 p-4 p-md-5">
 
         <!-- HERO MESSAGES -->
         <div class="hero-card">
           <div class="card-label">Human-above-the-loop</div>
           <div class="card-message">
             100 human labels. The statistical power of 200.
-            Rigorous evaluation, without the annotation bill.
           </div>
         </div>
 
@@ -210,28 +224,25 @@
           <div class="card-label">Stop guessing, start measuring</div>
           <div class="card-message">
             Not "91% accuracy (LLM judge)." But "82% ± 3%, certified."
-            That's the difference between guessing and knowing.
           </div>
         </div>
 
         <!-- WHAT IS GLIDE -->
         <h5 class="mt-4 mb-2 fw-bold">What is GLIDE?</h5>
-        <p class="text-muted mb-4">
-          Teams deploy GenAI systems with unknown true performance, forced to choose between
-          scalable-but-biased LLM judges and unaffordable human annotation.
-          GLIDE takes a third path: a small human-labeled sample characterises the bias in your
-          proxy scores, then Prediction-Powered Inference corrects it.
-          The result is a certified performance estimate with defensible confidence intervals,
-          at a fraction of the annotation cost.
+        <p class="text-muted mb-2">
+          <strong>GLIDE</strong> (Generated Label Inference &amp; Debiasing Engine) is a Python library for rigorous evaluation of GenAI systems.
         </p>
+        <ul class="feature-list text-muted mb-4">
+          <li><strong>LLM judges are biased.</strong> Proxy evaluators systematically over- or under-estimate true performance.</li>
+          <li><strong>Human annotation is expensive.</strong> Full labeling at scale is rarely feasible.</li>
+          <li><strong>GLIDE bridges the gap.</strong> Using prediction-powered inference, it combines a small human-labeled sample with your existing proxy scores to produce valid, debiased performance estimates.</li>
+        </ul>
 
         <!-- FEATURES -->
         <h5 class="mb-2 fw-bold">Key features</h5>
         <ul class="feature-list text-muted mb-4">
-          <li>Prediction-Powered Inference (PPI) and Active Statistical Inference (ASI) estimators</li>
-          <li>Stratified sampling for subgroup-level evaluation</li>
-          <li>Cost-optimal annotation budget allocation</li>
-          <li>Classical estimators as a baseline, in the same unified API</li>
+          <li>Bias-corrected performance estimates from a handful of human labels and your existing LLM judge scores</li>
+          <li>Smart annotation budget allocation to minimise the human labeling needed for reliable results</li>
           <li>Guaranteed confidence intervals regardless of proxy quality</li>
           <li>Compatible with any LLM judge or human evaluation pipeline</li>
         </ul>
