@@ -55,7 +55,7 @@ dev = [
     "prek>=0.4.5",
     "pytest>=9.1.0",
     "pytest-coverage>=0.0",
-    "ruff>=0.15.16",
+    "ruff>=0.15.19",
     "ty>=0.0.50",
 ]
 doc = [
