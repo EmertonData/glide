@@ -38,7 +38,10 @@ Once a sample has been selected, human annotators label the chosen items. The si
 
 ## Phase 3: Estimation
 
-With human labels in hand, the final question determines whether the Central Limit Theorem can be safely applied to construct confidence intervals.
+With human labels in hand, two questions determine the estimator.
+
+**Do you have several proxy sources?**
+If more than one proxy annotator (for example, two different LLM judges) labelled every item, Multi-PPI++ combines all of them into a single debiased estimate, learning the optimal weight for each source from the labeled data. A source that agrees more closely with the human annotations receives a larger weight, and the result is always at least as efficient as using human labels alone.
 
 **Do you have more than 50 human labels (per stratum for stratified methods)?**
 PPI and Active Statistical Inference form the CLT-family, they rely on normal approximations to construct confidence intervals. This approximation requires a sufficient number of labeled samples, typically at least 50 per stratum (or in total for non-stratified methods). Below this threshold, the Predict-Then-Debias bootstrap family of estimators provides a simpler and more conservative alternative that remains valid with fewer annotations.
@@ -49,13 +52,14 @@ Each tutorial walks through one complete path in the above decision tree:
 from sampling to annotation to estimation, on a simulated dataset.
 Use the table below to find the tutorial that matches your situation.
 
-| Cost estimates? | Uncertainty scores? | Stratified data? | Clustered data? | Phase 1 sampler | Phase 3 estimator | Tutorial |
-|---|---|---|---|---|---|---|
-| No | No | No | No | Uniform random | PPI++ | [Standard annotation budget (PPI++)](ppi.ipynb) |
-| No | No | Yes | No | Stratified uniform | Stratified PPI++ | [Stratified data (Stratified PPI++)](stratified_ppi.ipynb) |
-| No | No | No | Yes | Clustered uniform | Clustered PPI++ | [Clustered data (Clustered PPI++)](clustered_ppi.ipynb) |
-| No | Yes | No | No | Uncertainty-aware | ASI | [Uncertainty scores available (ASI)](asi.ipynb) |
-| Yes | No | No | No | Cost-optimal random | PPI++ | [Cost estimates available (Cost-Optimal Random Sampling)](cost_optimal_random.ipynb) |
-| Yes | Yes | No | No | Cost-optimal | ASI | [Cost and uncertainty scores available (Cost-Optimal Sampling)](cost_optimal.ipynb) |
+| Cost estimates? | Uncertainty scores? | Stratified data? | Clustered data? | Multiple proxies? | Phase 1 sampler | Phase 3 estimator | Tutorial |
+|---|---|---|---|---|---|---|---|
+| No | No | No | No | No | Uniform random | PPI++ | [Standard annotation budget (PPI++)](ppi.ipynb) |
+| No | No | No | No | Yes | Uniform random | Multi-PPI++ | [Multiple proxies (Multi-PPI++)](multi_ppi.ipynb) |
+| No | No | Yes | No | No | Stratified uniform | Stratified PPI++ | [Stratified data (Stratified PPI++)](stratified_ppi.ipynb) |
+| No | No | No | Yes | No | Clustered uniform | Clustered PPI++ | [Clustered data (Clustered PPI++)](clustered_ppi.ipynb) |
+| No | Yes | No | No | No | Uncertainty-aware | ASI | [Uncertainty scores available (ASI)](asi.ipynb) |
+| Yes | No | No | No | No | Cost-optimal random | PPI++ | [Cost estimates available (Cost-Optimal Random Sampling)](cost_optimal_random.ipynb) |
+| Yes | Yes | No | No | No | Cost-optimal | ASI | [Cost and uncertainty scores available (Cost-Optimal Sampling)](cost_optimal.ipynb) |
 
 If your data contains fewer than 50 human labels: use the PTD variant of the estimators above (`PTDMeanEstimator` for PPI++, `StratifiedPTDMeanEstimator` for Stratified PPI++, `ClusteredPTDMeanEstimator` for Clustered PPI++, and `IPWPTDMeanEstimator` for ASI). In the stratified case, the `StratifiedPTDMeanEstimator` should be used whenever one of the strata has fewer than 50 labels. The tutorial workflow for the respective estimators is identical; only the estimator class changes.
