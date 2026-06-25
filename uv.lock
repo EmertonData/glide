@@ -878,7 +878,7 @@ doc = [
 ]
 
 [package.metadata]
-requires-dist = [{ name = "scipy", specifier = ">=1.17.1" }]
+requires-dist = [{ name = "scipy", specifier = ">=1.18.0" }]
 
 [package.metadata.requires-dev]
 dev = [
