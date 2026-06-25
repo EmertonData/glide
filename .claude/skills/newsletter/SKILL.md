@@ -79,6 +79,8 @@ Follow the format and length guidance below precisely.
 - 1 blank line between paragraphs
 - ``` fences around code snippets (the user removes them before pasting)
 
+**Emojis on titles:** prefix every section title with a single leading emoji that fits the section (e.g. ✨ for "What's new in GLIDE", 🔭 for "What's next", 🙌 for "Get involved", 📚 for "References", and a topical one for the tutorial title). Exactly one emoji per title. Do NOT add emojis to the opening hook (it has no title), and do NOT scatter emojis inside body paragraphs or inline labels — titles only. A single emoji elsewhere is acceptable only when it lands naturally at the end of a sentence (e.g. a flag after a city name), never on the bold inline lead-ins of the tutorial body ("The problem.", "Why it is hard.", etc.).
+
 **Tone:** clear, confident, accessible to a technical professional who is not a statistician. No jargon without a one-clause explanation. No exclamation marks. No filler phrases ("In today's world…", "It goes without saying…").
 
 **Length:** at least 800 words. The tutorial section should be the longest, at roughly 400 words.
@@ -172,6 +174,7 @@ Only include papers actually cited in the tutorial section.
 
 - [ ] No `#` characters outside of code snippets (no markdown headers)
 - [ ] All section titles are plain text on their own line with correct spacing
+- [ ] Every section title (all but the opening hook) is prefixed with exactly one emoji; no emojis on body paragraphs or inline lead-ins
 - [ ] Tutorial title names a business problem, not a method
 - [ ] Business case is established before any technical content
 - [ ] Code snippet is 5–10 lines, self-contained, no imports
