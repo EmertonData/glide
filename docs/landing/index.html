@@ -38,7 +38,10 @@
       background-color: #ffffff;
       border-right: 1px solid #dee2e6;
       min-height: 100vh;
-      padding: 2.5rem 1.75rem;
+      padding: 2.5rem 1.75rem 2rem;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
     }
 
     .nav-btn-list {
@@ -84,7 +87,6 @@
       background-color: #eef2ff;
       border-radius: 0 0.4rem 0.4rem 0;
       padding: 1rem 1.25rem;
-      margin-bottom: 1.1rem;
     }
 
     .hero-card.violet {
@@ -111,6 +113,37 @@
       font-weight: 600;
       color: #212529;
       line-height: 1.45;
+    }
+
+    .tagline {
+      font-size: 1.35rem;
+      font-weight: 600;
+      color: #343a40;
+      line-height: 1.35;
+      width: calc(100% + 3.5rem);
+      margin-left: -1.75rem;
+      margin-right: -1.75rem;
+      text-align: center;
+    }
+
+    .section-heading {
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: #ffffff;
+      background-color: #212529;
+      padding: 0.55rem 1.5rem;
+      margin: 1.5rem -1.5rem 0.85rem;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    @media (min-width: 768px) {
+      .section-heading {
+        padding-left: 3rem;
+        padding-right: 3rem;
+        margin-left: -3rem;
+        margin-right: -3rem;
+      }
     }
 
     .install-block {
@@ -148,19 +181,13 @@
       <!-- LEFT SIDEBAR -->
       <div class="col-md-5 col-lg-4 sidebar">
 
-        <div class="text-center mb-4">
+        <div class="text-center">
           <img
-            src="assets/logo-glide-no-bg.png"
+            src="assets/logo-glide-white-bg.png"
             alt="GLIDE logo"
             style="width: calc(100% + 3.5rem); margin-left: -2.25rem; margin-right: -2.25rem; margin-bottom: 1rem;"
           />
-          <a href="https://pypi.org/project/glide-py/" target="_blank" rel="noopener">
-            <img
-              src="https://img.shields.io/pypi/v/glide-py?style=flat-square&color=4361ee"
-              alt="PyPI version"
-            />
-          </a>
-          <p class="text-muted mt-3 mb-2">
+          <p class="tagline mt-3 mb-2">
             Helping humans ride the GenAI evaluation wave
           </p>
         </div>
@@ -171,40 +198,41 @@
             <span class="nav-label text-dark">Repository</span>
           </a>
           <a href="https://glide-py.readthedocs.io" class="nav-item" target="_blank" rel="noopener">
-            <span class="btn btn-outline-primary nav-btn"><i class="fa-solid fa-book"></i></span>
+            <span class="btn btn-primary nav-btn"><i class="fa-solid fa-book"></i></span>
             <span class="nav-label text-primary">Documentation</span>
           </a>
           <a href="https://pypi.org/project/glide-py/" class="nav-item" target="_blank" rel="noopener">
-            <span class="btn btn-outline-warning nav-btn"><i class="fa-brands fa-python"></i></span>
+            <span class="btn btn-warning nav-btn"><i class="fa-brands fa-python"></i></span>
             <span class="nav-label text-warning">PyPI</span>
           </a>
           <a href="https://arxiv.org/abs/2605.31278" class="nav-item" target="_blank" rel="noopener">
-            <span class="btn btn-outline-danger nav-btn"><i class="fa-solid fa-file-lines"></i></span>
+            <span class="btn btn-danger nav-btn"><i class="fa-solid fa-file-lines"></i></span>
             <span class="nav-label text-danger">Paper</span>
           </a>
           <a href="https://www.linkedin.com/newsletters/evaluating-genai-with-glide-7453423077557952512/" class="nav-item" target="_blank" rel="noopener">
-            <span class="btn btn-outline-secondary nav-btn"><i class="fa-solid fa-envelope"></i></span>
+            <span class="btn btn-secondary nav-btn"><i class="fa-solid fa-envelope"></i></span>
             <span class="nav-label text-secondary">Newsletter</span>
           </a>
           <a href="https://www.emerton-data.com" class="nav-item" target="_blank" rel="noopener">
-            <span class="btn btn-outline-secondary nav-btn"><i class="fa-solid fa-building"></i></span>
+            <span class="btn btn-secondary nav-btn"><i class="fa-solid fa-building"></i></span>
             <span class="nav-label text-secondary">Emerton Data</span>
           </a>
         </div>
 
-        <hr class="my-4" />
-
-        <p class="text-muted small text-center mb-2">
-          A Python library by
-        </p>
-        <div class="text-center">
-          <a href="https://www.emerton-data.com" target="_blank" rel="noopener">
-            <img
-              src="assets/logo-ed.jpg"
-              alt="Emerton Data logo"
-              style="width: 70%;"
-            />
-          </a>
+        <div>
+          <hr class="mb-4 mt-0" />
+          <p class="text-muted small text-center mb-2">
+            A Python library by
+          </p>
+          <div class="text-center">
+            <a href="https://www.emerton-data.com" target="_blank" rel="noopener">
+              <img
+                src="assets/logo-ed.jpg"
+                alt="Emerton Data logo"
+                style="width: 70%;"
+              />
+            </a>
+          </div>
         </div>
 
       </div><!-- /sidebar -->
@@ -213,22 +241,24 @@
       <div class="col-md-7 col-lg-8 p-4 p-md-5">
 
         <!-- HERO MESSAGES -->
-        <div class="hero-card">
-          <div class="card-label">Human-above-the-loop</div>
-          <div class="card-message">
-            100 human labels. The statistical power of 200.
+        <div class="d-flex gap-3 mb-3">
+          <div class="hero-card flex-fill mb-0">
+            <div class="card-label">Human-above-the-loop</div>
+            <div class="card-message">
+              100 human labels. The statistical power of 200.
+            </div>
           </div>
-        </div>
 
-        <div class="hero-card violet">
-          <div class="card-label">Stop guessing, start measuring</div>
-          <div class="card-message">
-            Not "91% accuracy (LLM judge)." But "82% ± 3%, certified."
+          <div class="hero-card violet flex-fill mb-0">
+            <div class="card-label">Stop guessing, start measuring</div>
+            <div class="card-message">
+              Not "91% accuracy (LLM judge)." But "82% ± 3%, certified."
+            </div>
           </div>
         </div>
 
         <!-- WHAT IS GLIDE -->
-        <h5 class="mt-4 mb-2 fw-bold">What is GLIDE?</h5>
+        <div class="section-heading">What is GLIDE?</div>
         <p class="text-muted mb-2">
           <strong>GLIDE</strong> (Generated Label Inference &amp; Debiasing Engine) is a Python library for rigorous evaluation of GenAI systems.
         </p>
@@ -239,16 +269,16 @@
         </ul>
 
         <!-- FEATURES -->
-        <h5 class="mb-2 fw-bold">Key features</h5>
+        <div class="section-heading">Key features</div>
         <ul class="feature-list text-muted mb-4">
-          <li>Bias-corrected performance estimates from a handful of human labels and your existing LLM judge scores</li>
-          <li>Smart annotation budget allocation to minimise the human labeling needed for reliable results</li>
+          <li>Unbiased performance and risk estimates</li>
+          <li>Smart annotation budget allocation to minimise the human labeling</li>
           <li>Guaranteed confidence intervals regardless of proxy quality</li>
-          <li>Compatible with any LLM judge or human evaluation pipeline</li>
+          <li>Works for any metric, any AI system, any unstructured output requiring annotation</li>
         </ul>
 
         <!-- INSTALL -->
-        <h5 class="mb-2 fw-bold">Get started</h5>
+        <div class="section-heading">Get started</div>
         <div class="install-block">pip install glide-py</div>
 
       </div><!-- /main -->
