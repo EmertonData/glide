@@ -30,18 +30,25 @@
   <style>
     body {
       font-family: 'Inter', sans-serif;
-      background-color: #f8f9fa;
+      background-image: url('assets/newsletter_bg.png');
+      background-size: cover;
+      background-position: center;
       color: #212529;
     }
 
     .sidebar {
-      background-color: #ffffff;
-      border-right: 1px solid #dee2e6;
+      background-color: #0d1f44;
+      border-right: 1px solid rgba(255, 255, 255, 0.1);
       min-height: 100vh;
       padding: 2.5rem 1.75rem 2rem;
       display: flex;
       flex-direction: column;
       justify-content: space-between;
+    }
+
+    .main-panel {
+      background-color: rgba(255, 255, 255, 0.55);
+      min-height: 100vh;
     }
 
     .nav-btn-list {
@@ -82,6 +89,10 @@
       text-align: center;
     }
 
+    .sidebar .nav-label.text-dark {
+      color: #ced4da !important;
+    }
+
     .hero-card {
       border-left: 4px solid #4361ee;
       background-color: #eef2ff;
@@ -118,7 +129,7 @@
     .tagline {
       font-size: 1.35rem;
       font-weight: 600;
-      color: #343a40;
+      color: #e2eafc;
       line-height: 1.35;
       width: calc(100% + 3.5rem);
       margin-left: -1.75rem;
@@ -164,11 +175,33 @@
       margin-bottom: 0.45rem;
     }
 
+    .sidebar hr {
+      border-color: rgba(255, 255, 255, 0.15);
+    }
+
+    .sidebar-footer-label {
+      color: rgba(255, 255, 255, 0.6);
+      font-size: 0.875rem;
+      text-align: center;
+      margin-bottom: 0.5rem;
+    }
+
+    .ed-logo-wrap {
+      background-color: #ffffff;
+      border-radius: 0.5rem;
+      padding: 0.6rem 1.2rem;
+      display: inline-block;
+      width: 70%;
+    }
+
     @media (max-width: 767px) {
       .sidebar {
         min-height: auto;
         border-right: none;
-        border-bottom: 1px solid #dee2e6;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      }
+      .main-panel {
+        min-height: auto;
       }
     }
   </style>
@@ -221,16 +254,18 @@
 
         <div>
           <hr class="mb-4 mt-0" />
-          <p class="text-muted small text-center mb-2">
+          <p class="sidebar-footer-label mb-2">
             A Python library by
           </p>
           <div class="text-center">
             <a href="https://www.emerton-data.com" target="_blank" rel="noopener">
-              <img
-                src="assets/logo-ed.jpg"
-                alt="Emerton Data logo"
-                style="width: 70%;"
-              />
+              <div class="ed-logo-wrap">
+                <img
+                  src="assets/logo-ed.jpg"
+                  alt="Emerton Data logo"
+                  style="width: 100%;"
+                />
+              </div>
             </a>
           </div>
         </div>
@@ -238,7 +273,7 @@
       </div><!-- /sidebar -->
 
       <!-- RIGHT MAIN CONTENT -->
-      <div class="col-md-7 col-lg-8 p-4 p-md-5">
+      <div class="col-md-7 col-lg-8 p-4 p-md-5 main-panel">
 
         <!-- HERO MESSAGES -->
         <div class="d-flex gap-3 mb-3">
