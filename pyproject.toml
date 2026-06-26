@@ -3,14 +3,14 @@ name = "glide-py"
 version = "0.8.0"
 authors = [
   {name = "Grégoire Martinon", email = "gregoire.martinon@emerton-data.com"},
-  {name = "Ibrahim Merad", email = "ibrahim.merad@kaukana-ventures.com"},
+  {name = "Ibrahim Merad", email = "ibrahim.merad@emerton-data.com"},
   {name = "Mohammed Raki", email = "mohammed.raki@emerton-data.com"},
   {name = "Guillaume D'Hérouville", email = "guillaume.dherouville@emerton-data.com"},
   {name = "Victor Woelffel", email = "victor.woelffel@emerton-data.com"},
 ]
 maintainers = [
   {name = "Grégoire Martinon", email = "gregoire.martinon@emerton-data.com"},
-  {name = "Ibrahim Merad", email = "ibrahim.merad@kaukana-ventures.com"},
+  {name = "Ibrahim Merad", email = "ibrahim.merad@emerton-data.com"},
 ]
 description = "Helping humans ride the GenAI evaluation wave"
 readme = "README.md"
