@@ -37,7 +37,7 @@
     }
 
     .sidebar {
-      background-color: rgba(13, 31, 68, 0.05);
+      background-color: rgba(13, 31, 68, 0.02);
       border-right: 2px solid #90caf9;
       min-height: 100vh;
       padding: 2.5rem 1.75rem 2rem;
@@ -85,7 +85,7 @@
 
     .nav-label {
       font-weight: 600;
-      font-size: 0.8rem;
+      font-size: 0.90rem;
       text-align: center;
     }
 
@@ -352,15 +352,31 @@
 
   <script>
     function copyInstall(btn) {
-      navigator.clipboard.writeText('pip install glide-py').then(function () {
-        var original = btn.innerHTML;
-        btn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M13.854 3.646a.5.5 0 0 1 0 .708l-7 7a.5.5 0 0 1-.708 0l-3.5-3.5a.5.5 0 1 1 .708-.708L6.5 10.293l6.646-6.647a.5.5 0 0 1 .708 0"/></svg>';
+      var text = 'pip install glide-py';
+      var original = btn.innerHTML;
+      var checkSvg = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M13.854 3.646a.5.5 0 0 1 0 .708l-7 7a.5.5 0 0 1-.708 0l-3.5-3.5a.5.5 0 1 1 .708-.708L6.5 10.293l6.646-6.647a.5.5 0 0 1 .708 0"/></svg>';
+
+      function showCheck() {
+        btn.innerHTML = checkSvg;
         btn.style.color = '#6ea96e';
         setTimeout(function () {
           btn.innerHTML = original;
           btn.style.color = '';
         }, 1500);
-      });
+      }
+
+      if (navigator.clipboard) {
+        navigator.clipboard.writeText(text).then(showCheck);
+      } else {
+        var ta = document.createElement('textarea');
+        ta.value = text;
+        ta.style.cssText = 'position:fixed;opacity:0;pointer-events:none';
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+        showCheck();
+      }
     }
   </script>
 </body>
