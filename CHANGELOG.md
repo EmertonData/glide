@@ -9,6 +9,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 ## [Next release]
 
 ### ✨ Added
+- GitHub Pages landing page at [emertondata.github.io/glide](https://emertondata.github.io/glide).
 
 ### 🔄 Changed
 

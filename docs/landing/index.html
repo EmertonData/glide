@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>GLIDE — Helping humans ride the GenAI evaluation wave</title>
+  <link rel="icon" type="image/png" href="assets/favicon-glide.png" />
+  <meta name="description" content="GLIDE is a Python library for rigorous evaluation of GenAI systems using hybrid human and proxy annotations, with guaranteed statistical confidence intervals." />
+
+  <!-- Bootstrap 5 -->
+  <link
+    href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+    rel="stylesheet"
+    integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH"
+    crossorigin="anonymous"
+  />
+  <!-- Google Fonts -->
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Space+Mono:wght@700&display=swap"
+    rel="stylesheet"
+  />
+  <!-- Font Awesome 6 -->
+  <link
+    rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
+    integrity="sha512-Avb2QiuDEEvB4bZJYdft2mNjVShBftLdPG8FJ0V7irTLQ8Uo0qcPxh4Plq7G5tGm0rU+1SPhVotteLpBERwTkw=="
+    crossorigin="anonymous"
+  />
+
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+      background-image: url('assets/newsletter_bg.png');
+      background-size: cover;
+      background-position: center;
+      color: #212529;
+    }
+
+    .sidebar {
+      background-color: rgba(255, 255, 255, 0.5);
+      border-right: 2px solid #90caf9;
+      min-height: 100vh;
+      padding: 2.5rem 1.75rem 2rem;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .main-panel {
+      background-color: rgba(255, 255, 255, 0.65);
+      min-height: 100vh;
+    }
+
+    .nav-btn-list {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1rem 0.5rem;
+      justify-items: center;
+      margin-bottom: 0.5rem;
+    }
+
+    .nav-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.4rem;
+      text-decoration: none;
+    }
+
+    .nav-item:hover .nav-label {
+      text-decoration: underline;
+    }
+
+    .nav-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 4.8rem;
+      height: 4.8rem;
+      border-radius: 50% !important;
+      font-size: 1.6rem;
+      padding: 0;
+      flex-shrink: 0;
+    }
+
+    .nav-label {
+      font-weight: 600;
+      font-size: 0.90rem;
+      text-align: center;
+    }
+
+    .sidebar .nav-label.text-dark {
+      color: #212529 !important;
+    }
+
+    .hero-card {
+      border-left: 4px solid #4361ee;
+      background-color: #eef2ff;
+      border-radius: 0 0.4rem 0.4rem 0;
+      padding: 1rem 1.25rem;
+    }
+
+    .hero-card.violet {
+      border-left-color: #3a0ca3;
+      background-color: #f0eaff;
+    }
+
+    .hero-card .card-label {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      font-weight: 700;
+      color: #4361ee;
+      margin-bottom: 0.3rem;
+    }
+
+    .hero-card.violet .card-label {
+      color: #3a0ca3;
+    }
+
+    .hero-card .card-message {
+      font-size: 1rem;
+      font-weight: 600;
+      color: #212529;
+      line-height: 1.45;
+    }
+
+    .tagline {
+      font-size: 1.35rem;
+      font-weight: 600;
+      color: #212529;
+      line-height: 1.35;
+      width: calc(100% + 3.5rem);
+      margin-left: -1.75rem;
+      margin-right: -1.75rem;
+      text-align: center;
+    }
+
+    .section-heading {
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: #ffffff;
+      background-color: rgba(0, 55, 89, 0.60);
+      padding: 0.55rem 1.5rem;
+      margin: 1.5rem -1.5rem 0.85rem;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    @media (min-width: 768px) {
+      .section-heading {
+        padding-left: 3rem;
+        padding-right: 3rem;
+        margin-left: -3rem;
+        margin-right: -3rem;
+      }
+    }
+
+    .install-block {
+      font-family: 'Space Mono', monospace;
+      background-color: #212529;
+      color: #f8f9fa;
+      border-radius: 0.4rem;
+      padding: 0.75rem 1.1rem;
+      font-size: 0.9rem;
+      letter-spacing: 0.03em;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .copy-btn {
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: #adb5bd;
+      padding: 0;
+      line-height: 1;
+      flex-shrink: 0;
+      margin-left: 0.75rem;
+      transition: color 0.15s;
+    }
+
+    .copy-btn:hover {
+      color: #f8f9fa;
+    }
+
+    .feature-list {
+      padding-left: 1.25rem;
+    }
+
+    .feature-list li {
+      margin-bottom: 0.45rem;
+    }
+
+    .sidebar hr {
+      border-color: rgba(255, 255, 255, 0.15);
+    }
+
+    .sidebar-footer-label {
+      color: #212529;
+      font-size: 0.875rem;
+      text-align: center;
+      margin-bottom: 0.5rem;
+    }
+
+    .ed-logo-wrap {
+      background-color: #ffffff;
+      border-radius: 0.5rem;
+      padding: 0.6rem 1.2rem;
+      display: inline-block;
+      width: 70%;
+    }
+
+    @media (max-width: 767px) {
+      .sidebar {
+        min-height: auto;
+        border-right: none;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      }
+      .main-panel {
+        min-height: auto;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container-fluid">
+    <div class="row">
+
+      <!-- LEFT SIDEBAR -->
+      <div class="col-md-5 col-lg-4 sidebar">
+
+        <div class="text-center">
+          <img
+            src="assets/logo-glide-no-bg.png"
+            alt="GLIDE logo"
+            style="width: calc(100% + 3.5rem); margin-left: -2.25rem; margin-right: -2.25rem; margin-bottom: 1rem;"
+          />
+          <p class="tagline mt-3 mb-2">
+            Helping humans ride the GenAI evaluation wave
+          </p>
+        </div>
+
+        <div class="nav-btn-list">
+          <a href="https://github.com/EmertonData/glide" class="nav-item" target="_blank" rel="noopener">
+            <span class="btn btn-dark nav-btn"><i class="fa-brands fa-github"></i></span>
+            <span class="nav-label text-dark">Repository</span>
+          </a>
+          <a href="https://glide-py.readthedocs.io" class="nav-item" target="_blank" rel="noopener">
+            <span class="btn btn-primary nav-btn"><i class="fa-solid fa-book"></i></span>
+            <span class="nav-label text-primary">Documentation</span>
+          </a>
+          <a href="https://pypi.org/project/glide-py/" class="nav-item" target="_blank" rel="noopener">
+            <span class="btn btn-warning nav-btn text-white"><i class="fa-brands fa-python"></i></span>
+            <span class="nav-label text-warning">PyPI</span>
+          </a>
+          <a href="https://arxiv.org/abs/2605.31278" class="nav-item" target="_blank" rel="noopener">
+            <span class="btn btn-danger nav-btn"><i class="fa-solid fa-file-lines"></i></span>
+            <span class="nav-label text-danger">Paper</span>
+          </a>
+          <a href="https://www.linkedin.com/newsletters/evaluating-genai-with-glide-7453423077557952512/" class="nav-item" target="_blank" rel="noopener">
+            <span class="btn btn-secondary nav-btn"><i class="fa-solid fa-envelope"></i></span>
+            <span class="nav-label text-secondary">Newsletter</span>
+          </a>
+          <a href="https://www.emerton-data.com" class="nav-item" target="_blank" rel="noopener">
+            <span class="btn btn-secondary nav-btn"><i class="fa-solid fa-building"></i></span>
+            <span class="nav-label text-secondary">Emerton Data</span>
+          </a>
+        </div>
+
+        <div>
+          <hr class="mb-4 mt-0" />
+          <p class="sidebar-footer-label mb-2">
+            A Python library by
+          </p>
+          <div class="text-center">
+            <a href="https://www.emerton-data.com" target="_blank" rel="noopener">
+              <div class="ed-logo-wrap">
+                <img
+                  src="assets/logo-ed.jpg"
+                  alt="Emerton Data logo"
+                  style="width: 100%;"
+                />
+              </div>
+            </a>
+          </div>
+        </div>
+
+      </div><!-- /sidebar -->
+
+      <!-- RIGHT MAIN CONTENT -->
+      <div class="col-md-7 col-lg-8 p-4 p-md-5 main-panel">
+
+        <!-- HERO MESSAGES -->
+        <div class="d-flex gap-3 mb-3">
+          <div class="hero-card flex-fill mb-0">
+            <div class="card-label">Human-above-the-loop</div>
+            <div class="card-message">
+              100 human labels.<br>
+              The statistical power of 200.
+            </div>
+          </div>
+
+          <div class="hero-card violet flex-fill mb-0">
+            <div class="card-label">Stop guessing, start measuring</div>
+            <div class="card-message">
+              Not "91% accuracy (LLM judge)."<br>
+              But "82% ± 3%, certified."
+            </div>
+          </div>
+        </div>
+
+        <!-- WHAT IS GLIDE -->
+        <div class="section-heading">What is GLIDE?</div>
+        <p class="text-muted mb-2">
+          <strong>GLIDE</strong> (Generated Label Inference &amp; Debiasing Engine) is a Python library for rigorous evaluation of GenAI systems.
+        </p>
+        <ul class="feature-list text-muted mb-4">
+          <li><strong>LLM judges are biased.</strong> Proxy evaluators systematically over- or under-estimate true performance.</li>
+          <li><strong>Human annotation is expensive.</strong> Full labeling at scale is rarely feasible.</li>
+          <li><strong>GLIDE bridges the gap.</strong> Thanks to prediction-powered inference, it combines both to produce valid, unbiased performance estimates.</li>
+        </ul>
+
+        <!-- FEATURES -->
+        <div class="section-heading">Key features</div>
+        <ul class="feature-list text-muted mb-4">
+          <li>Unbiased performance and risk estimates</li>
+          <li>Smart annotation budget allocation to minimise human labeling</li>
+          <li>Guaranteed confidence intervals regardless of proxy quality</li>
+          <li>Works for any metric, any AI system, any unstructured output requiring annotation</li>
+        </ul>
+
+        <!-- INSTALL -->
+        <div class="section-heading">Get started</div>
+        <div class="install-block">
+          <span>pip install glide-py</span>
+          <button class="copy-btn" title="Copy to clipboard" onclick="copyInstall(this)">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+              <path d="M4 1.5H3a2 2 0 0 0-2 2V14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V3.5a2 2 0 0 0-2-2h-1v1h1a1 1 0 0 1 1 1V14a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V3.5a1 1 0 0 1 1-1h1z"/>
+              <path d="M9.5 1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-3a.5.5 0 0 1-.5-.5v-1a.5.5 0 0 1 .5-.5zm-3-1A1.5 1.5 0 0 0 5 1.5v1A1.5 1.5 0 0 0 6.5 4h3A1.5 1.5 0 0 0 11 2.5v-1A1.5 1.5 0 0 0 9.5 0z"/>
+            </svg>
+          </button>
+        </div>
+
+      </div><!-- /main -->
+
+    </div><!-- /row -->
+  </div><!-- /container -->
+
+  <script>
+    function copyInstall(btn) {
+      var text = 'pip install glide-py';
+      var original = btn.innerHTML;
+      var checkSvg = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M13.854 3.646a.5.5 0 0 1 0 .708l-7 7a.5.5 0 0 1-.708 0l-3.5-3.5a.5.5 0 1 1 .708-.708L6.5 10.293l6.646-6.647a.5.5 0 0 1 .708 0"/></svg>';
+
+      function showCheck() {
+        btn.innerHTML = checkSvg;
+        btn.style.color = '#6ea96e';
+        setTimeout(function () {
+          btn.innerHTML = original;
+          btn.style.color = '';
+        }, 1500);
+      }
+
+      if (navigator.clipboard) {
+        navigator.clipboard.writeText(text).then(showCheck);
+      } else {
+        var ta = document.createElement('textarea');
+        ta.value = text;
+        ta.style.cssText = 'position:fixed;opacity:0;pointer-events:none';
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+        showCheck();
+      }
+    }
+  </script>
+</body>
+</html>
