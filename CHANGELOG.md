@@ -10,17 +10,26 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### ✨ Added
 - GitHub Pages landing page at [emertondata.github.io/glide](https://emertondata.github.io/glide).
-- `ClusteredPTDMeanEstimator`: cluster-robust Predict-Then-Debias estimator for clustered data.
-- `MultiPPIMeanEstimator` for prediction-powered inference with multiple proxy models.
-- `generate_multi_binary_dataset` simulator for generating binary oracle datasets with multiple proxies.
-- Spider Text-to-SQL case study
 
 ### 🔄 Changed
-- Renamed `ClusterPPIMeanEstimator` → `ClusteredPPIMeanEstimator`, `ClusterClassicalMeanEstimator` → `ClusteredClassicalMeanEstimator`, `UniformClusterSampler` → `UniformClusteredSampler`.
 
 ### 🐛 Fixed
 
 ### 💛 Contributors
+
+## [0.8.0] – 2026-06-26
+
+### ✨ Added
+- `MultiPPIMeanEstimator` for prediction-powered inference with multiple proxy models, with `generate_multi_binary_dataset` for generating matching synthetic datasets.
+- `ClusteredPTDMeanEstimator`: cluster-robust Predict-Then-Debias estimator for clustered data.
+- Spider Text-to-SQL case study in the documentation.
+
+### 🔄 Changed
+- Renamed cluster estimators and sampler for naming consistency: `ClusterPPIMeanEstimator` → `ClusteredPPIMeanEstimator`, `ClusterClassicalMeanEstimator` → `ClusteredClassicalMeanEstimator`, `UniformClusterSampler` → `UniformClusteredSampler`.
+- Updated the estimator decision tree and tutorials to cover Multi-PPI++ for multiple proxy sources.
+
+### 💛 Contributors
+Thank you to everyone who contributed to this release: @gmartinon-ed, @imerad
 
 ## [0.7.0] – 2026-06-12
 
