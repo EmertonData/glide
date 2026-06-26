@@ -37,8 +37,8 @@
     }
 
     .sidebar {
-      background-color: #0d1f44;
-      border-right: 1px solid rgba(255, 255, 255, 0.1);
+      background-color: rgba(13, 31, 68, 0.10);
+      border-right: 2px solid #90caf9;
       min-height: 100vh;
       padding: 2.5rem 1.75rem 2rem;
       display: flex;
@@ -90,7 +90,7 @@
     }
 
     .sidebar .nav-label.text-dark {
-      color: #ced4da !important;
+      color: #212529 !important;
     }
 
     .hero-card {
@@ -129,7 +129,7 @@
     .tagline {
       font-size: 1.35rem;
       font-weight: 600;
-      color: #e2eafc;
+      color: #212529;
       line-height: 1.35;
       width: calc(100% + 3.5rem);
       margin-left: -1.75rem;
@@ -141,7 +141,7 @@
       font-size: 0.95rem;
       font-weight: 700;
       color: #ffffff;
-      background-color: #212529;
+      background-color: rgba(0, 55, 89, 0.60);
       padding: 0.55rem 1.5rem;
       margin: 1.5rem -1.5rem 0.85rem;
       letter-spacing: 0.04em;
@@ -165,6 +165,25 @@
       padding: 0.75rem 1.1rem;
       font-size: 0.9rem;
       letter-spacing: 0.03em;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .copy-btn {
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: #adb5bd;
+      padding: 0;
+      line-height: 1;
+      flex-shrink: 0;
+      margin-left: 0.75rem;
+      transition: color 0.15s;
+    }
+
+    .copy-btn:hover {
+      color: #f8f9fa;
     }
 
     .feature-list {
@@ -180,7 +199,7 @@
     }
 
     .sidebar-footer-label {
-      color: rgba(255, 255, 255, 0.6);
+      color: #212529;
       font-size: 0.875rem;
       text-align: center;
       margin-bottom: 0.5rem;
@@ -216,7 +235,7 @@
 
         <div class="text-center">
           <img
-            src="assets/logo-glide-white-bg.png"
+            src="assets/logo-glide-no-bg.png"
             alt="GLIDE logo"
             style="width: calc(100% + 3.5rem); margin-left: -2.25rem; margin-right: -2.25rem; margin-bottom: 1rem;"
           />
@@ -235,7 +254,7 @@
             <span class="nav-label text-primary">Documentation</span>
           </a>
           <a href="https://pypi.org/project/glide-py/" class="nav-item" target="_blank" rel="noopener">
-            <span class="btn btn-warning nav-btn"><i class="fa-brands fa-python"></i></span>
+            <span class="btn btn-warning nav-btn text-white"><i class="fa-brands fa-python"></i></span>
             <span class="nav-label text-warning">PyPI</span>
           </a>
           <a href="https://arxiv.org/abs/2605.31278" class="nav-item" target="_blank" rel="noopener">
@@ -280,14 +299,16 @@
           <div class="hero-card flex-fill mb-0">
             <div class="card-label">Human-above-the-loop</div>
             <div class="card-message">
-              100 human labels. The statistical power of 200.
+              100 human labels.<br>
+              The statistical power of 200.
             </div>
           </div>
 
           <div class="hero-card violet flex-fill mb-0">
             <div class="card-label">Stop guessing, start measuring</div>
             <div class="card-message">
-              Not "91% accuracy (LLM judge)." But "82% ± 3%, certified."
+              Not "91% accuracy (LLM judge)."<br>
+              But "82% ± 3%, certified."
             </div>
           </div>
         </div>
@@ -300,25 +321,47 @@
         <ul class="feature-list text-muted mb-4">
           <li><strong>LLM judges are biased.</strong> Proxy evaluators systematically over- or under-estimate true performance.</li>
           <li><strong>Human annotation is expensive.</strong> Full labeling at scale is rarely feasible.</li>
-          <li><strong>GLIDE bridges the gap.</strong> Using prediction-powered inference, it combines a small human-labeled sample with your existing proxy scores to produce valid, debiased performance estimates.</li>
+          <li><strong>GLIDE bridges the gap.</strong> Thanks to prediction-powered inference, it combines both to produce valid, unbiased performance estimates.</li>
         </ul>
 
         <!-- FEATURES -->
         <div class="section-heading">Key features</div>
         <ul class="feature-list text-muted mb-4">
           <li>Unbiased performance and risk estimates</li>
-          <li>Smart annotation budget allocation to minimise the human labeling</li>
+          <li>Smart annotation budget allocation to minimise human labeling</li>
           <li>Guaranteed confidence intervals regardless of proxy quality</li>
           <li>Works for any metric, any AI system, any unstructured output requiring annotation</li>
         </ul>
 
         <!-- INSTALL -->
         <div class="section-heading">Get started</div>
-        <div class="install-block">pip install glide-py</div>
+        <div class="install-block">
+          <span>pip install glide-py</span>
+          <button class="copy-btn" title="Copy to clipboard" onclick="copyInstall(this)">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+              <path d="M4 1.5H3a2 2 0 0 0-2 2V14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V3.5a2 2 0 0 0-2-2h-1v1h1a1 1 0 0 1 1 1V14a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V3.5a1 1 0 0 1 1-1h1z"/>
+              <path d="M9.5 1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-3a.5.5 0 0 1-.5-.5v-1a.5.5 0 0 1 .5-.5zm-3-1A1.5 1.5 0 0 0 5 1.5v1A1.5 1.5 0 0 0 6.5 4h3A1.5 1.5 0 0 0 11 2.5v-1A1.5 1.5 0 0 0 9.5 0z"/>
+            </svg>
+          </button>
+        </div>
 
       </div><!-- /main -->
 
     </div><!-- /row -->
   </div><!-- /container -->
+
+  <script>
+    function copyInstall(btn) {
+      navigator.clipboard.writeText('pip install glide-py').then(function () {
+        var original = btn.innerHTML;
+        btn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M13.854 3.646a.5.5 0 0 1 0 .708l-7 7a.5.5 0 0 1-.708 0l-3.5-3.5a.5.5 0 1 1 .708-.708L6.5 10.293l6.646-6.647a.5.5 0 0 1 .708 0"/></svg>';
+        btn.style.color = '#6ea96e';
+        setTimeout(function () {
+          btn.innerHTML = original;
+          btn.style.color = '';
+        }, 1500);
+      });
+    }
+  </script>
 </body>
 </html>
