@@ -1,6 +1,5 @@
 from dataclasses import dataclass
 
-from glide.confidence_intervals import ConfidenceInterval
 from glide.mean_inference_results import MeanInferenceResult
 
 
@@ -8,9 +7,6 @@ from glide.mean_inference_results import MeanInferenceResult
 class PredictionPoweredMeanInferenceResult(MeanInferenceResult):
     """Mean inference result for prediction-powered methods."""
 
-    confidence_interval: ConfidenceInterval
-    metric_name: str
-    estimator_name: str
     n_true: int = 0
     n_proxy: int = 0
     effective_sample_size: int = 0
