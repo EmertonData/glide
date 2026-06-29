@@ -1,12 +1,12 @@
 # Overview
 
-This section is concerned with the statistical validity of the algorithms implemented in GLIDE. If you are not yet familiar with how those algorithms work, read the [User Guide](../user_guide/index.md) first.
+This section verifies key properties of the algorithms implemented in GLIDE, including statistical validity, data efficiency, and practical performance, through numerical experiments on synthetic and real datasets. If you are not yet familiar with how those algorithms work, read the [User Guide](../user_guide/index.md) first.
 
 ---
 
 ## Scientific Validation
 
-The scientific validation notebooks verify that GLIDE's algorithms are statistically correct. Each notebook runs a Monte Carlo experiment sweeping the correlation between true and proxy labels, and measures coverage validity, confidence interval width, and effective sample size. The [Methodology](scientific_validation/estimators/methodology.md) page defines these measures and the experimental protocol in detail.
+The scientific validation notebooks verify statistical properties of GLIDE's algorithms on synthetic data through Monte Carlo experiments. The metrics and protocol vary by algorithm family; the [Methodology](scientific_validation/estimators/methodology.md) page documents them for estimators.
 
 ---
 
