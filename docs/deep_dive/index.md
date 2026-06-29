@@ -6,7 +6,7 @@ This section verifies key properties of the algorithms implemented in GLIDE, inc
 
 ## Scientific Validation
 
-The scientific validation notebooks verify statistical properties of GLIDE's algorithms on synthetic data through Monte Carlo experiments. The metrics and protocol vary by algorithm family; the [Methodology](scientific_validation/estimators/methodology.md) page documents them for estimators.
+The scientific validation notebooks verify statistical properties of GLIDE's algorithms on synthetic data through Monte Carlo experiments. The metrics and protocol vary by algorithm family; details on the used measures and experimental protocol for estimators are provided in the [Methodology](scientific_validation/estimators/methodology.md) page.
 
 ---
 
