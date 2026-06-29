@@ -19,13 +19,14 @@ Edit conservatively: change only what you observed to be wrong or suboptimal. Do
 ## Time window
 
 Parse the args:
-- `/watch` with no args → default to **last announced batch** (arXiv announces papers 1–2 days after submission; using the calendar day would often yield no results)
+- `/watch` with no args → behaves exactly like `/watch since last time` (see that entry below)
 - `/watch N days` → N calendar days back from today
 - `/watch N weeks` → N × 7 days back from today
 - `/watch N months` → N calendar months back from today (e.g., `2 months` → from today back to the same day two months ago)
 - `/watch last month` → 1 calendar month back from today (alias for `/watch 1 month`)
 - `/watch last [month name]` (e.g., `last february`) → the most recent full occurrence of that named month
 - `/watch in [month name] [YYYY]` or `/watch [month name] [YYYY]` (e.g., `in february 2025`) → that specific calendar month
+- `/watch since last time` (also `since last run`, `since my last watch`) → read the date in the `.last_watch` file in this skill's directory. If the file does not exist, ask the user for clarification on the window instead of guessing. Otherwise compute the number of days between that date and today, and treat the run as `/watch N days`.
 
 There is no upper cap. For windows exceeding 3 months, note in the output that coverage from the topic and author searches (Steps 2–3) may be incomplete due to result volume.
 
@@ -42,6 +43,8 @@ arXiv IDs use `YYMM.NNNNN` format — the YYMM prefix encodes the submission yea
 > Note: `show=5000` returns HTTP 400 on the monthly listing; `show=2000` works. Use `show=2000`.
 
 **Longer window (> 3 days):** for each month in scope (from the Date range section above), fetch `https://arxiv.org/list/stat/YYYY-MM?skip=0&show=2000` — where `YYYY-MM` is the four-digit year and two-digit month (e.g., `2025-02` for February 2025). If the window spans multiple months, fire all fetches in a **single message**. Extract all paper entries: arXiv ID, title, authors, and submission date. Date filtering to the exact window happens in Step 5.
+
+> Note: the monthly listing is unreliable for the *current* month's most recent days. WebFetch summarises only the beginning of the listing (oldest IDs of the month), so late-month / recent submissions never surface no matter the `skip` value. When the window's end is within the last few days of today (a recent window that happens to exceed 3 days), do NOT rely on the monthly listing — instead use the `stat/recent` listing (covers the last ~3 announcement days) plus the Step 2–3 searches ordered by `-announced_date_first` (which surface the newest papers first) as the authoritative sources. Reserve the monthly listing for windows fully in past months.
 
 ## Step 2 — Parallel topic searches
 
@@ -175,6 +178,8 @@ Close with the summary line — always include it, even if nothing matched:
 Flagged N paper(s) out of M total scanned, covering YYYY-MM-DD – YYYY-MM-DD.
 (of which K found via Scholar citation lookup)
 ```
+
+Finally, record this run: write today's date (`YYYY-MM-DD`) to the `.last_watch` file in this skill's directory, overwriting any previous content. This file is gitignored and powers `/watch since last time`.
 
 ## Coverage note
 
