@@ -7,9 +7,9 @@ from glide.confidence_intervals import ConfidenceInterval
 class MeanInferenceResult:
     """Base class for mean inference results."""
 
-    confidence_interval: ConfidenceInterval
     metric_name: str
     estimator_name: str
+    confidence_interval: ConfidenceInterval
 
     @property
     def width(self) -> float:
