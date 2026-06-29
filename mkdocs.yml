@@ -87,9 +87,6 @@ nav:
     - Cost estimates available (Cost-Optimal Random Sampling): tutorials/cost_optimal_random.ipynb
     - Cost and uncertainty scores available (Cost-Optimal Sampling): tutorials/cost_optimal.ipynb
   - Deep Dive:
-    - Case Studies:
-      - Agentic System Evaluation: deep_dive/case_studies/r_judge.ipynb
-      - Text-to-SQL Accuracy Estimation: deep_dive/case_studies/spider.ipynb
     - Scientific Validation:
       - Estimators:
         - Methodology: deep_dive/scientific_validation/estimators/methodology.md
@@ -104,6 +101,9 @@ nav:
         - Clustered PTD Validation: deep_dive/scientific_validation/estimators/clustered_ptd.ipynb
       - Monitors:
         - Coming soon: deep_dive/scientific_validation/monitors/index.md
+    - Case Studies:
+      - Agentic System Evaluation: deep_dive/case_studies/r_judge.ipynb
+      - Text-to-SQL Accuracy Estimation: deep_dive/case_studies/spider.ipynb
   - Contributing: contributing.md
   - API Reference:
     - Overview: api/index.md
