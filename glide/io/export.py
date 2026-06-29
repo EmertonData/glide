@@ -42,7 +42,7 @@ def to_json(result: MeanInferenceResult) -> str:
     data = asdict(result)
     data["mean"] = result.mean
     data["std"] = result.std
-    # Reconstruct confidence_interval dict in desired field order
+
     ci_dict = {
         "confidence_level": result.confidence_interval.confidence_level,
         "lower_bound": result.confidence_interval.lower_bound,
