@@ -87,18 +87,23 @@ nav:
     - Cost estimates available (Cost-Optimal Random Sampling): tutorials/cost_optimal_random.ipynb
     - Cost and uncertainty scores available (Cost-Optimal Sampling): tutorials/cost_optimal.ipynb
   - Deep Dive:
-    - Scientific Validation Methodology: deep_dive/scientific_validation.md
-    - PPI Validation: deep_dive/ppi_validation.ipynb
-    - Stratified PPI Validation: deep_dive/stratified_ppi_validation.ipynb
-    - ASI Validation: deep_dive/asi_validation.ipynb
-    - Clustered PPI Validation: deep_dive/clustered_ppi_validation.ipynb
-    - Multi-PPI Validation: deep_dive/multi_ppi_validation.ipynb
-    - PTD Validation: deep_dive/ptd_validation.ipynb
-    - Stratified PTD Validation: deep_dive/stratified_ptd_validation.ipynb
-    - IPW PTD Validation: deep_dive/ipwptd_validation.ipynb
-    - Clustered PTD Validation: deep_dive/clustered_ptd_validation.ipynb
-    - Agentic System Evaluation Case Study: deep_dive/icml_case_study.ipynb
-    - Text-to-SQL Accuracy Estimation Case Study: deep_dive/spider_case_study.ipynb
+    - Case Studies:
+      - Agentic System Evaluation: deep_dive/case_studies/r_judge.ipynb
+      - Text-to-SQL Accuracy Estimation: deep_dive/case_studies/spider.ipynb
+    - Scientific Validation:
+      - Estimators:
+        - Methodology: deep_dive/scientific_validation/estimators/methodology.md
+        - PPI Validation: deep_dive/scientific_validation/estimators/ppi.ipynb
+        - Stratified PPI Validation: deep_dive/scientific_validation/estimators/stratified_ppi.ipynb
+        - ASI Validation: deep_dive/scientific_validation/estimators/asi.ipynb
+        - Clustered PPI Validation: deep_dive/scientific_validation/estimators/clustered_ppi.ipynb
+        - Multi-PPI Validation: deep_dive/scientific_validation/estimators/multi_ppi.ipynb
+        - PTD Validation: deep_dive/scientific_validation/estimators/ptd.ipynb
+        - Stratified PTD Validation: deep_dive/scientific_validation/estimators/stratified_ptd.ipynb
+        - IPW PTD Validation: deep_dive/scientific_validation/estimators/ipwptd.ipynb
+        - Clustered PTD Validation: deep_dive/scientific_validation/estimators/clustered_ptd.ipynb
+      - Monitors:
+        - Coming soon: deep_dive/scientific_validation/monitors/index.md
   - Contributing: contributing.md
   - API Reference:
     - Overview: api/index.md
