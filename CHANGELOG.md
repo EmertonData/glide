@@ -12,6 +12,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - GitHub Pages landing page at [emertondata.github.io/glide](https://emertondata.github.io/glide).
 
 ### 🔄 Changed
+- Reorganized deep dive docs into a `Case Studies` section and a `Scientific Validation` section with `Estimators` and `Monitors` subsections.
 
 ### 🐛 Fixed
 
