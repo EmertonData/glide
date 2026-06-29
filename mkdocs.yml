@@ -87,6 +87,7 @@ nav:
     - Cost estimates available (Cost-Optimal Random Sampling): tutorials/cost_optimal_random.ipynb
     - Cost and uncertainty scores available (Cost-Optimal Sampling): tutorials/cost_optimal.ipynb
   - Deep Dive:
+    - Overview: deep_dive/index.md
     - Scientific Validation:
       - Estimators:
         - Methodology: deep_dive/scientific_validation/estimators/methodology.md
