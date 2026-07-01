@@ -884,7 +884,7 @@ requires-dist = [{ name = "scipy", specifier = ">=1.18.0" }]
 dev = [
     { name = "bump-my-version", specifier = ">=1.1.2" },
     { name = "papermill", specifier = ">=2.7.0" },
-    { name = "prek", specifier = ">=0.4.5" },
+    { name = "prek", specifier = ">=0.4.6" },
     { name = "pytest", specifier = ">=9.1.1" },
     { name = "pytest-coverage", specifier = ">=0.0" },
     { name = "ruff", specifier = ">=0.15.19" },
