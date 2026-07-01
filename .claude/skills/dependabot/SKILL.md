@@ -50,9 +50,13 @@ Ask: *"Ready to process these? Any you'd like to skip?"* Wait for confirmation.
 
 ### Step 3 — Handle indirect / GitHub Actions PRs
 
-Nothing to change on these branches. Report each one:
+Nothing to change on these branches. Post a comment on each:
 
-`PR #<number> (<package>): indirect — no changes needed, ready for maintainer review.`
+```bash
+gh pr comment <number> --body "Processed by the dependabot skill. This is an indirect dependency — no changes to \`pyproject.toml\` were needed. Ready for maintainer review."
+```
+
+Report each one: `PR #<number> (<package>): indirect — commented, ready for maintainer review.`
 
 ### Step 4 — Handle direct dependency PRs
 
@@ -107,13 +111,26 @@ git commit -m "chore: bump <package> to <target-version> in pyproject.toml"
 git push origin <headRefName>
 ```
 
-#### 4f. Return to main
+#### 4f. Post a comment on the PR
+
+```bash
+gh pr comment <number> --body "Processed by the dependabot skill.
+
+- \`pyproject.toml\`: bumped \`<package>\` constraint from \`>=<old-version>\` to \`>=<target-version>\` (group: \`<group>\`)
+- \`uv.lock\`: deleted and regenerated via \`uv sync --all-groups\`
+
+Ready for maintainer review."
+```
+
+If PyPI had a newer version than dependabot's suggestion, mention it: add a line like `Note: PyPI latest was <pypi-version>, which is ahead of dependabot's <dependabot-version> — used <pypi-version>.`
+
+#### 4g. Return to main
 
 ```bash
 git checkout main
 ```
 
-Report: `PR #<number> (<package>): direct — pyproject.toml bumped to >=<target-version>, pushed. Ready for maintainer review.`
+Report: `PR #<number> (<package>): direct — pyproject.toml bumped to >=<target-version>, commented, ready for maintainer review.`
 
 ### Step 5 — Final summary
 
