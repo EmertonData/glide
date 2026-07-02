@@ -34,15 +34,6 @@ Extract the package name (token after "Bump", lowercased). Search `pyproject.tom
 - **indirect-python**: Python package, not found in `pyproject.toml`.
 - **github-actions**: owner/action pattern (e.g. `actions/checkout`).
 
-For a **direct** PR, verify the actual latest version on PyPI. Normalize the package name first by lowercasing and replacing underscores with dashes:
-
-```bash
-curl -s "https://pypi.org/pypi/<normalized-package>/json" \
-  | python3 -c "import sys, json; d = json.load(sys.stdin); print(d['info']['version'])"
-```
-
-Use whichever is higher (PyPI vs dependabot) as the **target version**. Note if PyPI was ahead.
-
 For a **github-actions** PR, confirm the version format as it appears in the workflow files:
 
 ```bash
@@ -71,14 +62,12 @@ git checkout <headRefName>
 Preserve the existing constraint operator.
 
 ```bash
-rm uv.lock
 make venv
 ```
 
 **Indirect-python PR:** no `pyproject.toml` change. Regenerate the lock file only:
 
 ```bash
-rm uv.lock
 make venv
 ```
 
@@ -115,10 +104,9 @@ If there are conflicts, resolve each type as follows:
 git add pyproject.toml
 ```
 
-**`uv.lock` conflicts:** always resolve by deleting and regenerating:
+**`uv.lock` conflicts:** always resolve by regenerating:
 
 ```bash
-rm uv.lock
 make venv
 git add uv.lock
 ```
@@ -164,7 +152,6 @@ Merged latest main. Ready for maintainer review.
 
 Rules:
 - Omit sections that are empty (no Python entry, no GHA entry).
-- Add a PyPI note if PyPI was ahead: `Note: PyPI latest was <v>, ahead of dependabot's <v> — used <v>.`
 - If the merge resolved conflicts, add: `Note: conflicts in <files> were resolved automatically.`
 - If the branch was already up-to-date with main, omit the "Merged latest main" line.
 
