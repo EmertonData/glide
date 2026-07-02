@@ -1,18 +1,16 @@
 ---
 name: dependabot
-description: Handle open dependabot PRs automatically. Detects all open PRs from the Dependabot bot, classifies each updated dependency as direct (declared in pyproject.toml), indirect-python (transitive), or GitHub Actions, then applies the full unified change set (Python dep bumps + GitHub Actions version bumps) to every PR branch so all branches reach the same final state and merge cleanly in any order. Posts a summary comment on each PR. Merging is left to the maintainer. Use this skill whenever the user says "handle dependabot PRs", "take care of dependabot", "process dependabot updates", "triage dependabot", "deal with dependabot", or anything similar about pending dependabot pull requests.
+description: Handle open dependabot PRs automatically. Finds the oldest open dependabot PR, classifies it, applies the version bump to the branch, merges main to eliminate conflicts, and posts a summary comment. Merging is left to the maintainer. Use this skill whenever the user says "handle dependabot PRs", "take care of dependabot", "process dependabot updates", "triage dependabot", "deal with dependabot", or anything similar about pending dependabot pull requests.
 ---
 
 ## Overview
 
-Automates the prep work for the weekly dependabot PR triage. Collects all Python dep bumps and GitHub Actions version bumps into a single unified change set and applies it to every PR branch — so all branches reach the same final state and merge cleanly in any order.
+Processes the oldest open dependabot PR and makes it ready for maintainer review. Applies the dependency bump to the branch first, then merges the latest main to ensure the branch is conflict-free.
 
 **Dependency types:**
-- **Direct**: declared in `pyproject.toml` — contributes a Python entry to the change set.
-- **Indirect-python**: transitive dep, not in `pyproject.toml` — no own Python entry, but still processed.
-- **GitHub Actions**: contributes a GHA entry to the change set.
-
-Every branch (direct, indirect-python, and github-actions) receives the full unified change set: all Python dep bumps applied to `pyproject.toml` + `uv.lock` regenerated + all GHA version bumps applied to `.github/workflows/`.
+- **Direct**: declared in `pyproject.toml` — bump the version constraint and regenerate the lock file.
+- **Indirect-python**: transitive dep, not in `pyproject.toml` — regenerate the lock file only.
+- **GitHub Actions**: bump the action version in workflow files.
 
 Merging is left to the maintainer.
 
@@ -23,20 +21,20 @@ Merging is left to the maintainer.
 ### Step 1 — Discover open dependabot PRs
 
 ```bash
-gh pr list --author app/dependabot --state open --json number,title,headRefName,url
+gh pr list --author app/dependabot --state open --json number,title,headRefName,url --jq 'sort_by(.number)'
 ```
 
-Stop and report if no PRs are found.
+Stop and report if no PRs are found. Select the one with the **lowest PR number** as the target.
 
-### Step 2 — Classify every PR and collect the unified change set
+### Step 2 — Classify the PR
 
 Extract the package name (token after "Bump", lowercased). Search `pyproject.toml` (`[project].dependencies` and all `[dependency-groups]` keys) for that name (case-insensitive):
 
 - **direct**: found — note the group (`project`, `dev`, `doc`, etc.) and current constraint (e.g. `>=0.0.53`).
-- **indirect-python**: Python package, not found.
+- **indirect-python**: Python package, not found in `pyproject.toml`.
 - **github-actions**: owner/action pattern (e.g. `actions/checkout`).
 
-For each **direct** PR, verify the actual latest version on PyPI. Normalize the package name first by lowercasing and replacing underscores with dashes (PyPI's canonical form):
+For a **direct** PR, verify the actual latest version on PyPI. Normalize the package name first by lowercasing and replacing underscores with dashes:
 
 ```bash
 curl -s "https://pypi.org/pypi/<normalized-package>/json" \
@@ -45,111 +43,136 @@ curl -s "https://pypi.org/pypi/<normalized-package>/json" \
 
 Use whichever is higher (PyPI vs dependabot) as the **target version**. Note if PyPI was ahead.
 
-For each **github-actions** PR, confirm the version format as it appears in the workflow files:
+For a **github-actions** PR, confirm the version format as it appears in the workflow files:
 
 ```bash
 grep -r "<action>" .github/workflows/
 ```
 
-The YAML often uses a `v` prefix (e.g., `@v4`) even if the PR title says "from 3 to 4".
+Print the classification and target version, then ask: *"Ready to process this PR?"* Wait for confirmation before touching any branch.
 
-Build the unified change set:
-
-**Python entries** (from direct PRs):
-
-| Package | Old constraint | Target version | Group | Source PR |
-|---------|---------------|----------------|-------|-----------|
-| `<pkg-a>` | `>=1.0.0` | `1.1.0` | dev | #N |
-| `<pkg-b>` | `>=0.0.53` | `0.0.55` | doc | #M |
-
-**GitHub Actions entries** (from github-actions PRs):
-
-| Action | Old version (as in YAML) | New version | Source PR |
-|--------|--------------------------|-------------|-----------|
-| `<owner>/<action-a>` | `v3` | `v4` | #N |
-| `<owner>/<action-b>` | `v1` | `v2` | #M |
-
-Print the full classification table and unified change set, then ask: *"Ready to process these?"* Wait for confirmation before touching any branch.
-
-### Step 3 — Process all PR branches
-
-Work through **every** PR (direct, indirect-python, and github-actions) one at a time, in ascending PR number order, using the same procedure.
+### Step 3 — Process the PR branch
 
 #### 3a. Check out the branch
 
 ```bash
-git fetch origin <headRefName>
+git fetch origin
 git checkout <headRefName>
 ```
 
-#### 3b. Apply the Python change set
+#### 3b. Apply the version bump
 
-If the Python change set is non-empty, run `uv add` for every Python entry (regardless of which PR owns it), then regenerate the lock file:
+**Direct PR:** run `uv add` for this entry, then regenerate the lock file:
 
 - `[project].dependencies` → `uv add "<package>>=<target-version>"`
 - `[dependency-groups] dev` → `uv add --group dev "<package>>=<target-version>"`
 - `[dependency-groups] doc` → `uv add --group doc "<package>>=<target-version>"`
 
-Preserve the existing constraint operator. For indirect-python and github-actions branches there is no own entry — apply the other entries anyway.
+Preserve the existing constraint operator.
 
 ```bash
 rm uv.lock
-uv sync --all-groups
+make venv
 ```
 
-Delete rather than relying on `uv add`'s incremental update — this produces one clean resolution after all changes are applied together. Skip this entire sub-step if the Python change set is empty.
+**Indirect-python PR:** no `pyproject.toml` change. Regenerate the lock file only:
 
-If `uv sync --all-groups` fails, check out `main`, record the failure in the running summary, notify the user inline, and continue with the next PR. Mark the branch as "failed" in the Step 4 summary table.
+```bash
+rm uv.lock
+make venv
+```
 
-#### 3c. Apply the GitHub Actions change set
-
-If the GHA change set is non-empty, for each entry replace the old version with the new across all workflow files:
+**GitHub Actions PR:** replace the old version with the new across all workflow files:
 
 ```bash
 perl -pi -e 's|<action>@<old-version>|<action>@<new-version>|g' .github/workflows/*.yml
 ```
 
-Run for every entry. The branch's own action (if any) is already bumped by dependabot, so the sed is a no-op for it. Skip this entire sub-step if the GHA change set is empty.
+If `make venv` fails, check out `main`, record the failure, notify the user, and stop.
 
-#### 3d. Commit and push
+#### 3c. Commit the version bump
 
 ```bash
 git add pyproject.toml uv.lock .github/workflows/
-git commit -m "chore: apply dependabot updates"
+git commit -m "chore: apply dependabot update"
+```
+
+If `git commit` says "nothing to commit", note it and continue to 3d.
+
+#### 3d. Merge main
+
+```bash
+git merge origin/main
+```
+
+If the merge is clean (no conflicts) or already up-to-date, skip to 3f.
+
+If there are conflicts, resolve each type as follows:
+
+**`pyproject.toml` conflicts:** for each conflict block, compare the version strings from both sides and keep the higher version. Remove all conflict markers.
+
+```bash
+git add pyproject.toml
+```
+
+**`uv.lock` conflicts:** always resolve by deleting and regenerating:
+
+```bash
+rm uv.lock
+make venv
+git add uv.lock
+```
+
+**`.github/workflows/` conflicts:** for each conflict block, keep the higher version string. Remove all conflict markers.
+
+```bash
+git add .github/workflows/
+```
+
+If `make venv` fails during conflict resolution, abort the merge (`git merge --abort`), check out `main`, record the failure, notify the user, and stop.
+
+#### 3e. Commit the merge resolution
+
+Only needed when conflicts were present:
+
+```bash
+git commit --no-edit
+```
+
+#### 3f. Push
+
+```bash
 git push origin <headRefName>
 ```
 
-`git add` only stages files that actually changed, so unmodified files are silently ignored. If `git commit` says "nothing to commit" (edge case), note it in the summary and continue.
+If push is rejected, check out `main`, record the failure, notify the user, and stop.
 
-If any command in this step fails (commit hook error, push rejected, etc.), check out `main`, record the failure in the running summary, notify the user inline, and continue with the next PR. Mark the branch as "failed" in the Step 4 summary table.
-
-#### 3e. Post a comment
+#### 3g. Post a comment
 
 Template:
 
 ```
-Processed by the dependabot skill[, grouped with #N, #M, …].
+Processed by the dependabot skill.
 
 Changes applied to this branch:
-- `pyproject.toml`: bumped `<package>` from `<old-constraint>` to `>=<target>` (group: `<group>`) ← this PR
-- `pyproject.toml`: bumped `<package>` from `<old-constraint>` to `>=<target>` (group: `<group>`) ← from #N
-- `uv.lock`: deleted and regenerated via `uv sync --all-groups`
-- `.github/workflows/`: updated `<action>` from `<old-version>` to `<new-version>` ← from #N
+- `pyproject.toml`: bumped `<package>` from `<old-constraint>` to `>=<target>` (group: `<group>`)
+- `uv.lock`: deleted and regenerated via `make venv`
+- `.github/workflows/`: updated `<action>` from `<old-version>` to `<new-version>`
 
-All open dependabot changes were applied together to prevent merge conflicts. Ready for maintainer review.
+Merged latest main. Ready for maintainer review.
 ```
 
 Rules:
-- Omit "grouped with" if this is the only PR in the batch.
-- Mark this PR's own entry `← this PR`; others `← from #N`. For indirect-python, all Python entries are `← from #N`.
-- Omit sections that are empty (no Python entries, or no GHA entries).
+- Omit sections that are empty (no Python entry, no GHA entry).
 - Add a PyPI note if PyPI was ahead: `Note: PyPI latest was <v>, ahead of dependabot's <v> — used <v>.`
+- If the merge resolved conflicts, add: `Note: conflicts in <files> were resolved automatically.`
+- If the branch was already up-to-date with main, omit the "Merged latest main" line.
 
 ```bash
 gh pr comment <number> --body "<comment body>"
 ```
 
-#### 3f. Return to main
+#### 3h. Return to main
 
 ```bash
 git checkout main
@@ -157,17 +180,15 @@ git checkout main
 
 ### Step 4 — Final summary
 
-Print a table listing each PR number, package/action name, type (direct / indirect-python / github-actions), and action taken (e.g. "full change set applied, pushed" or "nothing to commit").
+Print the PR number, package/action name, type (direct / indirect-python / github-actions), and outcome (e.g. "processed and pushed" or "failed: <reason>").
 
 ---
 
 ## Important constraints
 
-- **Collect before touching.** Complete the unified change set in Step 2 before checking out any branch.
-- **Apply all to all.** Every branch receives the full Python change set and the full GHA change set, regardless of its own type or which entry is "its own".
-- **Always commit and push.** Never skip for any branch type.
+- **Confirm before acting.** Wait for user confirmation after Step 2.
+- **Process first, merge second.** Apply the version bump and commit before merging main.
 - **Never merge.** Leave approvals and merging to the maintainer.
 - **Never force-push.**
-- **One branch at a time.** Checkout → apply → commit → push → return to `main` before the next.
 - **Preserve constraint operators.** Never change `>=` to `==` or vice versa.
-- **Ask before acting.** Wait for user confirmation after Step 2.
+- **Oldest PR first.** Always select the PR with the lowest number.
