@@ -23,7 +23,7 @@ def groups():
 
 
 # --- _preprocess ---
-def test_preprocess_delegates_to_validation(y_true, y_proxy, groups):
+def test_preprocess_delegates(y_true, y_proxy, groups):
     with (
         patch.object(stratified_core_module, "_validate_has_no_nan") as mock_validate_has_no_nan,
         patch.object(stratified_core_module, "_validate_equal_lengths") as mock_validate_equal_lengths,

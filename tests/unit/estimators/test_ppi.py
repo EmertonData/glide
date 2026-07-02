@@ -28,7 +28,7 @@ def estimator() -> PPIMeanEstimator:
 # --- _preprocess ---
 
 
-def test_preprocess_delegates_to_validation(estimator, y_arrays):
+def test_preprocess_delegates(estimator, y_arrays):
     y_true, y_proxy = y_arrays
     labeled_mask = np.array([True, True, False, False])
     with (

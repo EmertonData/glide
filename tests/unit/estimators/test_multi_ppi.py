@@ -28,7 +28,7 @@ def estimator() -> MultiPPIMeanEstimator:
 # --- _preprocess ---
 
 
-def test_preprocess_delegates_to_validation(estimator, y_arrays):
+def test_preprocess_delegates(estimator, y_arrays):
     y_true, y_proxies = y_arrays
     labeled_mask = np.array([True, True, False, False])
     with (

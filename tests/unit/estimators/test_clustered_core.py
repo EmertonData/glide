@@ -26,7 +26,7 @@ def clusters() -> NDArray:
 # --- _preprocess ---
 
 
-def test_preprocess_delegates_to_validation(y_true, y_proxy, clusters):
+def test_preprocess_delegates(y_true, y_proxy, clusters):
     labeled_mask = np.array([True, False, True, False])
     with (
         patch.object(clustered_core_module, "_validate_equal_lengths") as mock_validate_equal_lengths,

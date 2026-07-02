@@ -37,7 +37,7 @@ def test_preprocess_valid_output(estimator, y_arrays):
     assert not np.any(np.isnan(y_true))
 
 
-def test_preprocess_delegates_to_validation(estimator):
+def test_preprocess_delegates(estimator):
     y_true = np.array([1.0, 2.0, np.nan, np.nan])
     y_proxy = np.array([1.0, 2.0, 3.0, 4.0])
     labeled_mask = np.array([True, True, False, False])
