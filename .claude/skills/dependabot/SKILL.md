@@ -36,10 +36,10 @@ Extract the package name (token after "Bump", lowercased). Search `pyproject.tom
 - **indirect-python**: Python package, not found.
 - **github-actions**: owner/action pattern (e.g. `actions/checkout`).
 
-For each **direct** PR, verify the actual latest version on PyPI:
+For each **direct** PR, verify the actual latest version on PyPI. Normalize the package name first by lowercasing and replacing underscores with dashes (PyPI's canonical form):
 
 ```bash
-curl -s "https://pypi.org/pypi/<package>/json" \
+curl -s "https://pypi.org/pypi/<normalized-package>/json" \
   | python3 -c "import sys, json; d = json.load(sys.stdin); print(d['info']['version'])"
 ```
 
@@ -69,11 +69,11 @@ Build the unified change set:
 | `<owner>/<action-a>` | `v3` | `v4` | #N |
 | `<owner>/<action-b>` | `v1` | `v2` | #M |
 
-Print the full classification table and unified change set, then ask: *"Ready to process these? Any you'd like to skip?"* Wait for confirmation.
+Print the full classification table and unified change set, then ask: *"Ready to process these?"* Wait for confirmation before touching any branch.
 
 ### Step 3 — Process all PR branches
 
-Work through **every** PR (direct, indirect-python, and github-actions) one at a time using the same procedure.
+Work through **every** PR (direct, indirect-python, and github-actions) one at a time, in ascending PR number order, using the same procedure.
 
 #### 3a. Check out the branch
 
@@ -99,12 +99,14 @@ uv sync --all-groups
 
 Delete rather than relying on `uv add`'s incremental update — this produces one clean resolution after all changes are applied together. Skip this entire sub-step if the Python change set is empty.
 
+If `uv sync --all-groups` fails, check out `main`, record the failure in the running summary, notify the user inline, and continue with the next PR. Mark the branch as "failed" in the Step 4 summary table.
+
 #### 3c. Apply the GitHub Actions change set
 
 If the GHA change set is non-empty, for each entry replace the old version with the new across all workflow files:
 
 ```bash
-sed -i '' 's|<action>@<old-version>|<action>@<new-version>|g' .github/workflows/*.yml
+perl -pi -e 's|<action>@<old-version>|<action>@<new-version>|g' .github/workflows/*.yml
 ```
 
 Run for every entry. The branch's own action (if any) is already bumped by dependabot, so the sed is a no-op for it. Skip this entire sub-step if the GHA change set is empty.
@@ -118,6 +120,8 @@ git push origin <headRefName>
 ```
 
 `git add` only stages files that actually changed, so unmodified files are silently ignored. If `git commit` says "nothing to commit" (edge case), note it in the summary and continue.
+
+If any command in this step fails (commit hook error, push rejected, etc.), check out `main`, record the failure in the running summary, notify the user inline, and continue with the next PR. Mark the branch as "failed" in the Step 4 summary table.
 
 #### 3e. Post a comment
 
