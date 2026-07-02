@@ -1,7 +1,6 @@
 from math import floor
 from typing import Tuple
 
-import numpy as np
 from numpy.typing import NDArray
 
 from glide.confidence_intervals import CLTConfidenceInterval
@@ -12,6 +11,7 @@ from glide.core.validation import (
     _validate_y_true,
 )
 from glide.estimators.classical import ClassicalMeanEstimator
+from glide.estimators.core import _split_labeled_unlabeled
 from glide.estimators.multi_ppi_core import (
     _compute_mean_estimate,
     _compute_std_estimate,
@@ -64,11 +64,10 @@ class MultiPPIMeanEstimator:
         _validate_equal_lengths(y_true_all, y_proxies_all, names=["y_true", "y_proxies"])
         _validate_y_proxies(y_proxies_all)
         _validate_y_true(y_true_all)
-        labeled_mask = ~np.isnan(y_true_all)
+        y_true, y_proxies_labeled, y_proxies_unlabeled, labeled_mask = _split_labeled_unlabeled(
+            y_true_all, y_proxies_all
+        )
         _validate_sample_sizes(labeled_mask)
-        y_true = y_true_all[labeled_mask]
-        y_proxies_labeled = y_proxies_all[labeled_mask]
-        y_proxies_unlabeled = y_proxies_all[~labeled_mask]
         return y_true, y_proxies_labeled, y_proxies_unlabeled
 
     def estimate(

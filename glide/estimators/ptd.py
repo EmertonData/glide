@@ -12,6 +12,7 @@ from glide.core.validation import (
     _validate_y_true,
 )
 from glide.estimators.classical import ClassicalMeanEstimator
+from glide.estimators.core import _split_labeled_unlabeled
 from glide.estimators.ptd_core import (
     _compute_bootstrap_labeled_means,
     _compute_bootstrap_mean_estimates,
@@ -63,11 +64,8 @@ class PTDMeanEstimator:
         _validate_equal_lengths(y_true_all, y_proxy_all, names=["y_true", "y_proxy"])
         _validate_y_proxy(y_proxy_all)
         _validate_y_true(y_true_all)
-        labeled_mask = ~np.isnan(y_true_all)
+        y_true, y_proxy_labeled, y_proxy_unlabeled, labeled_mask = _split_labeled_unlabeled(y_true_all, y_proxy_all)
         _validate_sample_sizes(labeled_mask)
-        y_true = y_true_all[labeled_mask]
-        y_proxy_labeled = y_proxy_all[labeled_mask]
-        y_proxy_unlabeled = y_proxy_all[~labeled_mask]
         return y_true, y_proxy_labeled, y_proxy_unlabeled
 
     def estimate(

@@ -30,20 +30,30 @@ def estimator() -> MultiPPIMeanEstimator:
 
 def test_preprocess_delegates_to_validation(estimator, y_arrays):
     y_true, y_proxies = y_arrays
+    labeled_mask = np.array([True, True, False, False])
     with (
         patch.object(multi_ppi_module, "_validate_equal_lengths") as mock_validate_equal_lengths,
         patch.object(multi_ppi_module, "_validate_y_proxies") as mock_validate_y_proxies,
         patch.object(multi_ppi_module, "_validate_y_true") as mock_validate_y_true,
+        patch.object(multi_ppi_module, "_split_labeled_unlabeled") as mock_split_labeled_unlabeled,
         patch.object(multi_ppi_module, "_validate_sample_sizes") as mock_validate_sample_sizes,
     ):
+        mock_split_labeled_unlabeled.return_value = (
+            np.array([1.0, 2.0]),
+            np.array([[1.0, 0.0], [2.0, 2.0]]),
+            np.array([[3.0, 1.0], [4.0, 3.0]]),
+            labeled_mask,
+        )
         estimator._preprocess(y_true, y_proxies)
 
         mock_validate_equal_lengths.assert_called_once_with(y_true, y_proxies, names=["y_true", "y_proxies"])
         mock_validate_y_proxies.assert_called_once_with(y_proxies)
         mock_validate_y_true.assert_called_once_with(y_true)
+        mock_split_labeled_unlabeled.assert_called_once()
+        np.testing.assert_array_equal(mock_split_labeled_unlabeled.call_args[0][0], y_true)
+        np.testing.assert_array_equal(mock_split_labeled_unlabeled.call_args[0][1], y_proxies)
         mock_validate_sample_sizes.assert_called_once()
-        labeled_mask_arg = mock_validate_sample_sizes.call_args[0][0]
-        np.testing.assert_array_equal(labeled_mask_arg, np.array([True, True, False, False]))
+        np.testing.assert_array_equal(mock_validate_sample_sizes.call_args[0][0], labeled_mask)
 
 
 def test_preprocess_valid_output(estimator, y_arrays):

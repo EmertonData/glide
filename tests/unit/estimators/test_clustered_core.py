@@ -27,13 +27,21 @@ def clusters() -> NDArray:
 
 
 def test_preprocess_delegates_to_validation(y_true, y_proxy, clusters):
+    labeled_mask = np.array([True, False, True, False])
     with (
         patch.object(clustered_core_module, "_validate_equal_lengths") as mock_validate_equal_lengths,
         patch.object(clustered_core_module, "_validate_y_true") as mock_validate_y_true,
         patch.object(clustered_core_module, "_validate_has_no_nan") as mock_validate_has_no_nan,
+        patch.object(clustered_core_module, "_split_labeled_unlabeled") as mock_split_labeled_unlabeled,
         patch.object(clustered_core_module, "_validate_unique_clusters") as mock_validate_unique_clusters,
         patch.object(clustered_core_module, "_validate_bounds") as mock_validate_bounds,
     ):
+        mock_split_labeled_unlabeled.return_value = (
+            np.array([4.0, 6.0]),
+            np.array([2.0, 6.0]),
+            np.array([4.0, 6.0]),
+            labeled_mask,
+        )
         _preprocess(y_true, y_proxy, clusters)
 
         mock_validate_equal_lengths.assert_called_once()
@@ -50,6 +58,10 @@ def test_preprocess_delegates_to_validation(y_true, y_proxy, clusters):
         assert mock_validate_has_no_nan.call_args_list[0][0][1] == "y_proxy"
         np.testing.assert_array_equal(mock_validate_has_no_nan.call_args_list[1][0][0], clusters)
         assert mock_validate_has_no_nan.call_args_list[1][0][1] == "clusters"
+
+        mock_split_labeled_unlabeled.assert_called_once()
+        np.testing.assert_array_equal(mock_split_labeled_unlabeled.call_args[0][0], y_true)
+        np.testing.assert_array_equal(mock_split_labeled_unlabeled.call_args[0][1], y_proxy)
 
         mock_validate_unique_clusters.assert_called_once()
         np.testing.assert_array_equal(mock_validate_unique_clusters.call_args[0][0], np.array(["A", "C"]))
