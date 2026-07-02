@@ -28,10 +28,10 @@ def _preprocess(
         stratum_mask = groups == stratum_id
         stratum_y_true = y_true[stratum_mask]
         stratum_y_proxy = y_proxy[stratum_mask]
+        _validate_y_proxy(stratum_y_proxy, stratum_id)
         y_true_filtered, y_proxy_labeled, y_proxy_unlabeled, labeled_mask = _split_labeled_unlabeled(
             stratum_y_true, stratum_y_proxy
         )
-        _validate_y_proxy(stratum_y_proxy, stratum_id)
         _validate_sample_sizes(labeled_mask, stratum_id)
         strata.append((y_true_filtered, y_proxy_labeled, y_proxy_unlabeled))
 

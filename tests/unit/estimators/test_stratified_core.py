@@ -43,9 +43,11 @@ def test_preprocess_delegates_to_validation(y_true, y_proxy, groups):
         np.testing.assert_array_equal(mock_validate_has_no_nan.call_args[0][0], groups)
         assert mock_validate_has_no_nan.call_args[0][1] == "groups"
 
-        mock_validate_equal_lengths.assert_called_once_with(
-            y_true, y_proxy, groups, names=["y_true", "y_proxy", "groups"]
-        )
+        mock_validate_equal_lengths.assert_called_once()
+        np.testing.assert_array_equal(mock_validate_equal_lengths.call_args[0][0], y_true)
+        np.testing.assert_array_equal(mock_validate_equal_lengths.call_args[0][1], y_proxy)
+        np.testing.assert_array_equal(mock_validate_equal_lengths.call_args[0][2], groups)
+        assert mock_validate_equal_lengths.call_args[1]["names"] == ["y_true", "y_proxy", "groups"]
 
         assert mock_validate_y_proxy.call_count == 3
         np.testing.assert_array_equal(mock_validate_y_proxy.call_args_list[0][0][0], y_proxy)
