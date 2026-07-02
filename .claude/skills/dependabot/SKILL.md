@@ -34,12 +34,6 @@ Extract the package name (token after "Bump", lowercased). Search `pyproject.tom
 - **indirect-python**: Python package, not found in `pyproject.toml`.
 - **github-actions**: owner/action pattern (e.g. `actions/checkout`).
 
-For a **github-actions** PR, confirm the version format as it appears in the workflow files:
-
-```bash
-grep -r "<action>" .github/workflows/
-```
-
 Print the classification and target version, then ask: *"Ready to process this PR?"* Wait for confirmation before touching any branch.
 
 ### Step 3 — Process the PR branch
