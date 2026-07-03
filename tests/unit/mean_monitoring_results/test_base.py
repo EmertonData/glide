@@ -34,8 +34,8 @@ def result_without_alarm(sequence):
     return MeanMonitoringResult(
         metric_name="accuracy",
         monitor_name="Test",
-        higher_is_better=True,
-        alarm_threshold=-1.0,
+        higher_is_better=False,
+        alarm_threshold=2.0,
         confidence_level=0.95,
         batch_identifiers=np.array([0, 1]),
         batch_mean_estimates=np.array([0.4, 0.8]),
