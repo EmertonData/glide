@@ -9,25 +9,25 @@ from scipy.optimize import brentq
 from glide.core.validation import _validate_literal
 
 
-def _compute_mixture_wealth(deviation: float, variance_process: float) -> float:
+def _compute_mixture_wealth(deviation: float, variance_process_value: float) -> float:
     # ψ_E(β) = −log(1−β) − β is the cumulant of the exponential-family mixture.
     def integrand(betting_parameter: float) -> float:
-        psi_exponential = -np.log1p(-betting_parameter) - betting_parameter
-        value = np.exp(betting_parameter * deviation - psi_exponential * variance_process)
+        psi_exponential = -np.log(1 - betting_parameter) - betting_parameter
+        value = np.exp(betting_parameter * deviation - psi_exponential * variance_process_value)
         return value
 
     integral, _ = quad(integrand, 0.0, 1.0)
     return integral
 
 
-def _compute_mixture_boundary(variance_process: float, miscoverage: float) -> float:
+def _compute_mixture_boundary(variance_process_value: float, miscoverage: float) -> float:
     wealth_target = 1.0 / miscoverage
 
     def excess_wealth(deviation: float) -> float:
-        value = _compute_mixture_wealth(deviation, variance_process) - wealth_target
+        value = _compute_mixture_wealth(deviation, variance_process_value) - wealth_target
         return value
 
-    # No fixed upper bracket works because the root grows with variance_process and
+    # No fixed upper bracket works because the root grows with variance_process_value and
     # 1/miscoverage; double until excess_wealth turns non-negative.
     upper_bracket = 1.0
     while excess_wealth(upper_bracket) < 0.0:

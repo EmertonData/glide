@@ -1,5 +1,8 @@
+from unittest.mock import patch
+
 import pytest
 
+import glide.confidence_intervals.clt as clt_module
 from glide.confidence_intervals import CLTConfidenceInterval
 
 
@@ -52,6 +55,14 @@ def test_bounds_change_with_confidence_level():
 # --- test_null_hypothesis ---
 
 
+def test_null_hypothesis_delegates_to_validation():
+    ci = CLTConfidenceInterval(mean=0.0, std=1.0)
+    with patch.object(clt_module, "_validate_literal") as mock_validate_literal:
+        ci.test_null_hypothesis(h0_value=0.0, alternative="larger")
+
+        mock_validate_literal.assert_called_once_with("larger", "alternative", ["two-sided", "larger", "smaller"])
+
+
 def test_null_hypothesis_null_is_true():
     ci = CLTConfidenceInterval(mean=0.0, std=1.0)
     z_stat, p_value, df = ci.test_null_hypothesis(h0_value=0.0)
@@ -94,9 +105,3 @@ def test_null_hypothesis_smaller_positive_z():
     ci = CLTConfidenceInterval(mean=1.96, std=1.0)
     _, p_value, _ = ci.test_null_hypothesis(h0_value=0.0, alternative="smaller")
     assert p_value == pytest.approx(0.975, abs=0.001)
-
-
-def test_null_hypothesis_invalid_alternative():
-    ci = CLTConfidenceInterval(mean=0.0, std=1.0)
-    with pytest.raises(ValueError, match="'alternative' must be 'two-sided', 'larger', or 'smaller'"):
-        ci.test_null_hypothesis(h0_value=0.0, alternative="invalid")  # ty: ignore

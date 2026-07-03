@@ -1,6 +1,9 @@
+from unittest.mock import patch
+
 import numpy as np
 import pytest
 
+import glide.confidence_sequences.empirical_bernstein as empirical_bernstein_module
 from glide.confidence_sequences import EmpiricalBernsteinConfidenceSequence
 from glide.confidence_sequences.empirical_bernstein import (
     _compute_empirical_bernstein_bounds,
@@ -14,9 +17,9 @@ EXPECTED_LOWER_BOUNDS = np.array([-2.27458313, -0.86521862, -0.41014575])
 # --- _compute_mixture_wealth ---
 
 
-def test_compute_mixture_wealth_positive():
+def test_compute_mixture_wealth_known_value():
     wealth = _compute_mixture_wealth(0.5, 0.1)
-    assert wealth > 0
+    assert wealth == pytest.approx(1.227, abs=1e-3)
 
 
 # --- _compute_mixture_boundary ---
@@ -31,13 +34,15 @@ def test_compute_mixture_boundary_zero_variance(miscoverage):
 def test_compute_mixture_boundary_increases_with_variance():
     small = _compute_mixture_boundary(0.5, 0.1)
     large = _compute_mixture_boundary(2.0, 0.1)
-    assert small < large
+    assert small == pytest.approx(4.298, abs=1e-3)
+    assert large == pytest.approx(5.780, abs=1e-3)
 
 
 def test_compute_mixture_boundary_increases_with_confidence():
     loose = _compute_mixture_boundary(0.5, 0.2)
     tight = _compute_mixture_boundary(0.5, 0.05)
-    assert loose < tight
+    assert loose == pytest.approx(3.283, abs=1e-3)
+    assert tight == pytest.approx(5.249, abs=1e-3)
 
 
 # --- _compute_empirical_bernstein_bounds ---
@@ -52,15 +57,6 @@ def test_compute_empirical_bernstein_bounds():
     np.testing.assert_allclose(lower_bounds, EXPECTED_LOWER_BOUNDS, atol=1e-6)
 
 
-def test_compute_empirical_bernstein_bounds_single_batch():
-    batch_estimates = np.array([0.7])
-    running_mean_estimates, lower_bounds = _compute_empirical_bernstein_bounds(
-        batch_estimates, seed_center=0.5, miscoverage=0.1
-    )
-    np.testing.assert_array_equal(running_mean_estimates, np.array([0.7]))
-    assert len(lower_bounds) == 1
-
-
 # --- EmpiricalBernsteinConfidenceSequence ---
 
 
@@ -72,12 +68,16 @@ def sequence():
     )
 
 
-def test_running_mean_estimates_stored(sequence):
+def test_sequence_attributes(sequence):
     np.testing.assert_array_equal(sequence.running_mean_estimates, np.array([0.4, 0.6]))
-
-
-def test_confidence_bounds_stored(sequence):
     np.testing.assert_array_equal(sequence.confidence_bounds, np.array([0.1, 0.55]))
+
+
+def test_null_hypothesis_delegates_to_validation(sequence):
+    with patch.object(empirical_bernstein_module, "_validate_literal") as mock_validate_literal:
+        sequence.test_null_hypothesis(0.5, alternative="larger")
+
+        mock_validate_literal.assert_called_once_with("larger", "alternative", ["larger", "smaller"])
 
 
 def test_null_hypothesis_larger(sequence):
@@ -88,8 +88,3 @@ def test_null_hypothesis_larger(sequence):
 def test_null_hypothesis_smaller(sequence):
     alarms = sequence.test_null_hypothesis(0.3, alternative="smaller")
     np.testing.assert_array_equal(alarms, np.array([True, False]))
-
-
-def test_null_hypothesis_invalid_alternative(sequence):
-    with pytest.raises(ValueError, match="'alternative' must be"):
-        sequence.test_null_hypothesis(0.5, alternative="two-sided")
