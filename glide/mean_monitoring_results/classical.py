@@ -23,6 +23,6 @@ class ClassicalMeanMonitoringResult(MeanMonitoringResult):
 
     def __str__(self) -> str:
         lines = self._common_lines() + [
-            f"batch_n: {self.batch_n[-1]}",
+            f"batch_n: {self.batch_n.tolist()}",
         ]
         return "\n".join(lines)

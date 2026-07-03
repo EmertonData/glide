@@ -74,7 +74,7 @@ def test_prediction_powered_str(prediction_powered_result):
         "Running Mean: 0.600\n"
         "Confidence Bound: 0.550\n"
         "Confidence Level: 0.95\n"
-        "batch_n_true: 12\n"
-        "batch_n_proxy: 120"
+        "batch_n_true: [10, 12]\n"
+        "batch_n_proxy: [100, 120]"
     )
     assert str(prediction_powered_result) == expected
