@@ -1,6 +1,9 @@
+from unittest.mock import patch
+
 import numpy as np
 import pytest
 
+import glide.confidence_intervals.bootstrap as bootstrap_module
 from glide.confidence_intervals import BootstrapConfidenceInterval
 
 
@@ -68,6 +71,14 @@ def test_bounds_change_with_confidence_level(estimates):
 # --- test_null_hypothesis ---
 
 
+def test_null_hypothesis_delegates_to_validation(estimates):
+    ci = BootstrapConfidenceInterval(bootstrap_estimates=estimates)
+    with patch.object(bootstrap_module, "_validate_literal") as mock_validate_literal:
+        ci.test_null_hypothesis(h0_value=0.0, alternative="larger")
+
+        mock_validate_literal.assert_called_once_with("larger", "alternative", ["two-sided", "larger", "smaller"])
+
+
 def test_null_hypothesis_null_is_true(estimates):
     ci = BootstrapConfidenceInterval(bootstrap_estimates=estimates)
     _, p_value, df = ci.test_null_hypothesis(h0_value=2.25)
@@ -97,9 +108,3 @@ def test_null_hypothesis_smaller(estimates):
     expected_p = 0.4
     assert p_value == pytest.approx(expected_p, abs=0.001)
     assert df == float("inf")
-
-
-def test_null_hypothesis_invalid_alternative(estimates):
-    ci = BootstrapConfidenceInterval(bootstrap_estimates=estimates)
-    with pytest.raises(ValueError, match="'alternative' must be 'two-sided', 'larger', or 'smaller'"):
-        ci.test_null_hypothesis(h0_value=0.0, alternative="invalid")  # ty: ignore

@@ -9,6 +9,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 ## [Next release]
 
 ### ✨ Added
+- `glide.confidence_sequences` module with the `ConfidenceSequence` protocol and `EmpiricalBernsteinConfidenceSequence`: an anytime-valid empirical-Bernstein confidence sequence.
 - GitHub Pages landing page at [emertondata.github.io/glide](https://emertondata.github.io/glide).
 
 ### 🔄 Changed
