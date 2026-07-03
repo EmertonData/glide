@@ -12,6 +12,8 @@ Computing $\theta^*$ exactly requires reliable annotations $Y$ for every sample.
 
 GLIDE addresses this by combining large pools of cheap proxy labels with small sets of human labels to produce unbiased, reliable estimates of $\theta^*$. By combining these two sources, GLIDE can achieve the same statistical precision as a purely human-labeled approach, at a fraction of the annotation cost. Actual savings depend on the annotation effort required and how well the proxy aligns with human judgement, but the potential gains can be substantial. This makes rigorous performance evaluation tractable even for large-scale AI systems.
 
+Once a system is deployed, the same combination of proxy and human labels can be used to monitor $\theta^*$ for drift over successive batches of production data, rather than only estimating it once.
+
 The workflow has three stages:
 
 <p align="center">
@@ -54,3 +56,4 @@ Once human labels $Y_i$ have been collected for samples with $\xi_i = 1$, the es
 
 - [Samplers](samplers.md) — mathematical foundations of the available samplers in the library.
 - [Estimators](estimators.md) — mathematical foundations of the available estimators in the library.
+- [Monitors](monitors.md) — mathematical foundations of anytime-valid drift monitoring, for tracking a deployed metric over successive batches.
