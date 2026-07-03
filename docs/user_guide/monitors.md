@@ -4,7 +4,7 @@ Once a metric has been estimated validating an AI system's deployment, the quest
 
 ---
 
-## The monitoring problem
+## The Monitoring Problem
 
 After deployment, the metric is re-estimated on successive batches of production data $t = 1, 2, \dots$, for instance a fresh monthly batch with new labeled samples. Each batch $t$ yields an estimate $\hat{\theta}_t$. The question is whether the sequence proves that the metric has drifted past a threshold $\tau$ that the user fixes in advance: the worst running value they are willing to tolerate.
 
@@ -16,13 +16,13 @@ $$\Pr\!\left(\forall t \ge 1:\; \bar{\theta}_t \in C_t\right) \ge 1 - \delta,$$
 
 so the user may look after every batch and the total false-alarm probability over the entire monitoring horizon still stays below the single budget $\delta$. This **anytime-valid** guarantee is what makes peeking safe. It stands in contrast to fixed-sample confidence intervals which are valid only at a single, pre-committed sample size and lose their guarantee the moment they are checked repeatedly.
 
-The rest of this page builds such a confidence sequence from first principles, then applies it to two settings: [Classical monitoring](#classical-monitoring), where the per-batch estimate comes from human labels alone, and [Prediction-powered monitoring](#prediction-powered-monitoring), where it is combined with proxy labels for faster detection at the same false-alarm budget.
+Such a confidence sequence is built below from first principles, then applied to two settings: [Classical risk monitoring](#classical-risk-monitoring), where the per-batch estimate comes from human labels alone, and [Prediction-Powered Risk Monitoring (PPRM)](#prediction-powered-risk-monitoring-pprm), where it is combined with proxy labels for faster detection at the same false-alarm budget.
 
 ---
 
-## Classical monitoring
+## Classical Risk Monitoring
 
-This section derives the anytime-valid guarantee in the setting where the per-batch estimate comes directly from a batch of human-labeled samples, building up to the alarm rule that turns that guarantee into an actionable drift alarm.
+The anytime-valid guarantee is derived here in the setting where the per-batch estimate comes directly from a batch of human-labeled samples, building up to the alarm rule that turns that guarantee into an actionable drift alarm.
 
 ### Setting
 
@@ -44,11 +44,11 @@ $$\hat{R}_s = \frac{1}{n_s}\sum_{j=1}^{n_s} Y_{s,j}$$
 
 is the classical sample mean of the $n_s$ labels in batch $s$ alone. A performance metric, where higher is better (for example accuracy), is monitored by applying everything below to $1 - R$ instead of $R$; this single mirror transformation is the only adjustment needed.
 
-The derivation also assumes $R \in [0, 1]$, which the classical sample mean of $[0, 1]$-valued labels automatically satisfies. The confidence sequence built below is therefore driven directly by $X_s = \hat{R}_s$, with no further transformation needed.
+The derivation only requires $R$ to be **bounded** within some known range: any such bounded risk can be affinely normalized onto $[0, 1]$ without affecting the guarantee derived below. The classical sample mean of $[0, 1]$-valued labels already lies in $[0, 1]$, so no such normalization is needed here, and the confidence sequence built below is driven directly by $X_s = \hat{R}_s$.
 
-### From Markov to Ville: the anytime-valid guarantee
+### From Markov to Ville: the Anytime-Valid Guarantee
 
-This section builds the anytime-valid guarantee from first principles, in three steps: a classical tail bound, its sequential upgrade, and a betting interpretation that makes the upgrade constructive.
+The anytime-valid guarantee is built below from first principles, in three steps: a classical tail bound, its sequential upgrade, and a betting interpretation that makes the upgrade constructive.
 
 **Markov's inequality.** For a nonnegative random variable $W$ with $E[W] \le 1$,
 
@@ -84,7 +84,7 @@ $$W_t = \int_0^1 W_t(\beta) \, q(\beta) \, d\beta.$$
 
 A mixture of nonnegative supermartingales, each starting at $1$, is itself a nonnegative supermartingale starting at $1$, so Ville's inequality applies for *any* choice of $q$; the density affects the tightness of the resulting bound but not its validity. GLIDE takes $q$ uniform on $(0, 1)$: parameter-free and horizon-agnostic so that it drops out of the integrand. A conjugate choice of $q$ would yield a closed-form mixture and a slightly tighter boundary, at the price of introducing a sharpness hyperparameter that would have to be tuned.
 
-### The empirical-Bernstein boundary
+### The Empirical-Bernstein Boundary
 
 Fix the variance process at a value $v$. The **boundary** is the largest cumulative deviation still consistent with $H_0$, expressed through the mixture wealth process $W(s, v)$ introduced above, now viewed as a function of a candidate deviation $s$ at fixed variance $v$:
 
@@ -108,7 +108,7 @@ As an analytical landmark, consider the zero-variance case $v = 0$: the penalty 
 
 $$\frac{e^{u(0)} - 1}{u(0)} = \frac{1}{\delta}.$$
 
-### The alarm rule and the single budget
+### The Alarm Rule and the Single Budget
 
 **Alarm rule.** The user fixes a threshold $\tau$ in advance: the worst running risk they are willing to tolerate, in metric units. This is the criterion the whole construction has been building toward: at every batch $t$, a **drift alarm fires** as soon as the anytime-valid lower bound on the running risk crosses the threshold,
 
@@ -122,9 +122,9 @@ Finally, a caveat on what this monitors: the procedure tracks the running *avera
 
 ---
 
-## Prediction-powered monitoring
+## Prediction-Powered Risk Monitoring (PPRM)
 
-The human labels collected in a batch can be scarce, which limits how quickly a monitor based on them alone can react to real drift. GLIDE's monitors can instead combine those human labels with a large pool of cheap proxy labels, the same way [Prediction-Powered Inference (PPI++)](estimators.md#prediction-powered-inference-ppi) does for one-off estimation. The anytime-valid guarantee derived above, the confidence sequence, Ville's inequality, the betting supermartingale, the empirical-Bernstein boundary, and the alarm rule, carries over unchanged: only the per-batch estimate $\hat{R}_s$ changes, now obtained from the PPI++ estimator instead of a plain sample mean of the batch's labels. That single change brings two additional requirements, addressed in turn below: the estimate must be renormalized onto $[0, 1]$, and its power-tuning weight must be predictable.
+The human labels collected in a batch can be scarce, which limits how quickly a monitor based on them alone can react to real drift. **Prediction-Powered Risk Monitoring (PPRM)** [[1](#ref-1)] instead combines those human labels with a large pool of cheap proxy labels, the same way [Prediction-Powered Inference (PPI++)](estimators.md#prediction-powered-inference-ppi) does for one-off estimation. The anytime-valid guarantee derived above, the confidence sequence, Ville's inequality, the betting supermartingale, the empirical-Bernstein boundary, and the alarm rule, carries over unchanged: only the per-batch estimate $\hat{R}_s$ changes, now obtained from the PPI++ estimator instead of a plain sample mean of the batch's labels. That single change brings two additional requirements, addressed in turn below: the estimate must be renormalized onto $[0, 1]$, and its power-tuning weight must be predictable.
 
 ### Setting
 
@@ -139,9 +139,9 @@ The per-batch estimate $\hat{R}_s$ used in the running risk $\bar{R}_t$ (introdu
 
 $$\hat{R}_s = \frac{1}{n_s}\sum_{j=1}^{n_s} Y_{s,j} + \lambda_s\left[\frac{1}{N_s}\sum_{i=1}^{N_s} \tilde{Y}_{s,i}^{\circ} - \frac{1}{n_s}\sum_{j=1}^{n_s} \tilde{Y}_{s,j}^{\bullet}\right],$$
 
-which is the [Prediction-Powered Inference (PPI++)](estimators.md#prediction-powered-inference-ppi) mean estimator applied within batch $s$, using its own power-tuning weight $\lambda_s$ ([Predictable power-tuning](#predictable-power-tuning) below). Unlike a plain sample mean, $\hat{R}_s$ is not guaranteed to fall in $[0, 1]$, which the next section addresses.
+which is the [Prediction-Powered Inference (PPI++)](estimators.md#prediction-powered-inference-ppi) mean estimator applied within batch $s$, using its own power-tuning weight $\lambda_s$ (see [Predictable power-tuning](#predictable-power-tuning) below). Unlike a plain sample mean, $\hat{R}_s$ is not guaranteed to fall in $[0, 1]$, which the next section addresses.
 
-### Normalization onto the unit interval
+### Normalization onto the Unit Interval
 
 The empirical-Bernstein boundary derived above is valid only for variables confined to a *known* bounded range. A prediction-powered estimate of a metric in $[0, 1]$ does not itself lie in $[0, 1]$: the power-tuning weight $\lambda$ is a variance-minimizing regression slope, not a mixing weight confined to $[0, 1]$, so an under-dispersed or anti-correlated proxy can push $\lambda$, and with it the estimate, outside any fixed interval.
 
@@ -151,13 +151,13 @@ $$X = \frac{\hat{R} + \lambda_{\max}}{1 + 2\lambda_{\max}}$$
 
 maps that range back onto $[0, 1]$, producing the normalized estimate $X$ that plays the role directly held by $X_s = \hat{R}_s$ in the classical section.
 
-### Predictable power-tuning
+### Predictable Power-Tuning
 
 The power-tuning weight $\lambda_t$ used to form the estimate $\hat{R}_t$ on batch $t$ must itself be **predictable**: computed only from batches strictly earlier than $t$, never from batch $t$ itself. This is what makes each per-batch increment conditionally mean-zero under $H_0$, which is the condition that keeps $W_t$ a supermartingale.
 
 Predictability is the only validity constraint here. *Which* prior batches are pooled to compute $\lambda_t$ is purely a matter of statistical power, and any predictable choice remains valid; only the width of the resulting boundary changes. GLIDE pools the full prior history of batches to compute $\lambda_t$. The first batch has no predecessor, so it simply uses the neutral weight $\lambda_1 = 1$, which is itself trivially predictable since it depends on no data at all.
 
-**Alarm rule.** With both additions in place, $X_t$ satisfies the same assumptions used in [Classical monitoring](#classical-monitoring), so the same criterion still decides when to raise a **drift alarm**,
+**Alarm rule.** With both additions in place, $X_t$ satisfies the same assumptions used in [Classical risk monitoring](#classical-risk-monitoring), so the same criterion still decides when to raise a **drift alarm**,
 
 $$L_t > \tau,$$
 
@@ -169,6 +169,6 @@ now backed by the more sample-efficient PPI++ estimate, at the same single false
 
 <a id="ref-1"></a>[1] <a id="ref-1-link" href="https://arxiv.org/abs/2602.02229">Zhang, Guangyi, Yunlong Cai, Guanding Yu, and Osvaldo Simeone. "Prediction-Powered Risk Monitoring of Deployed Models for Detecting Harmful Distribution Shifts." arXiv preprint arXiv:2602.02229 (2026).</a>.
 
-<a id="ref-2"></a>[2] <a id="ref-2-link" href="https://arxiv.org/abs/2010.09686">Waudby-Smith, Ian, and Aaditya Ramdas. "Estimating means of bounded random variables by betting." Journal of the Royal Statistical Society Series B: Statistical Methodology 86, no. 1 (2024): 1-27.</a>.
+<a id="ref-2"></a>[2] <a id="ref-2-link" href="https://academic.oup.com/jrsssb/article/86/1/1/7043257">Waudby-Smith, Ian, and Aaditya Ramdas. "Estimating means of bounded random variables by betting." Journal of the Royal Statistical Society Series B: Statistical Methodology 86, no. 1 (2024): 1-27.</a>.
 
-<a id="ref-3"></a>[3] <a id="ref-3-link" href="https://arxiv.org/abs/1810.08240">Howard, Steven R., Aaditya Ramdas, Jon McAuliffe, and Jasjeet Sekhon. "Time-uniform, nonparametric, nonasymptotic confidence sequences." The Annals of Statistics 49, no. 2 (2021): 1055-1080.</a>.
+<a id="ref-3"></a>[3] <a id="ref-3-link" href="https://projecteuclid.org/journals/The-Annals-of-Statistics/volume-49/issue-2/Time-uniform-nonparametric-nonasymptotic-confidence-sequences/10.1214/20-AOS1991.full">Howard, Steven R., Aaditya Ramdas, Jon McAuliffe, and Jasjeet Sekhon. "Time-uniform, nonparametric, nonasymptotic confidence sequences." The Annals of Statistics 49, no. 2 (2021): 1055-1080.</a>.
