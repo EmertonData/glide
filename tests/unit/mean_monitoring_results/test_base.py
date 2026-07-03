@@ -1,6 +1,9 @@
+from unittest.mock import patch
+
 import numpy as np
 import pytest
 
+import glide.mean_monitoring_results.base as base_module
 from glide.confidence_sequences import EmpiricalBernsteinConfidenceSequence
 from glide.mean_monitoring_results import MeanMonitoringResult
 
@@ -23,7 +26,6 @@ def result_with_alarm(sequence):
         higher_is_better=True,
         alarm_threshold=0.5,
         confidence_level=0.95,
-        batch_identifiers=np.array([0, 1]),
         batch_mean_estimates=np.array([0.4, 0.8]),
         confidence_sequence=sequence,
     )
@@ -37,7 +39,6 @@ def result_without_alarm(sequence):
         higher_is_better=False,
         alarm_threshold=2.0,
         confidence_level=0.95,
-        batch_identifiers=np.array([0, 1]),
         batch_mean_estimates=np.array([0.4, 0.8]),
         confidence_sequence=sequence,
     )
@@ -59,6 +60,36 @@ def test_base_properties(result_with_alarm, result_without_alarm):
 def test_base_repr_equals_str_equals_summary(result_with_alarm):
     assert repr(result_with_alarm) == str(result_with_alarm)
     assert str(result_with_alarm) == result_with_alarm.summary()
+
+
+# --- MeanMonitoringResult.__post_init__ ---
+
+
+def test_base_post_init_delegates_to_validation(sequence):
+    batch_mean_estimates = np.array([0.4, 0.8])
+    with (
+        patch.object(base_module, "_validate_non_empty") as mock_validate_non_empty,
+        patch.object(base_module, "_validate_equal_lengths") as mock_validate_equal_lengths,
+    ):
+        MeanMonitoringResult(
+            metric_name="accuracy",
+            monitor_name="Test",
+            higher_is_better=True,
+            alarm_threshold=0.5,
+            confidence_level=0.95,
+            batch_mean_estimates=batch_mean_estimates,
+            confidence_sequence=sequence,
+        )
+        mock_validate_non_empty.assert_called_once()
+        np.testing.assert_array_equal(mock_validate_non_empty.call_args[0][0], batch_mean_estimates)
+        assert mock_validate_non_empty.call_args[0][1] == "batch_mean_estimates"
+        mock_validate_equal_lengths.assert_called_once()
+        np.testing.assert_array_equal(mock_validate_equal_lengths.call_args[0][0], batch_mean_estimates)
+        np.testing.assert_array_equal(mock_validate_equal_lengths.call_args[0][1], sequence.running_mean_estimates)
+        np.testing.assert_array_equal(mock_validate_equal_lengths.call_args[0][2], sequence.confidence_bounds)
+        assert mock_validate_equal_lengths.call_args[1] == {
+            "names": ["batch_mean_estimates", "running_mean_estimates", "confidence_bounds"]
+        }
 
 
 # --- MeanMonitoringResult.__str__ ---

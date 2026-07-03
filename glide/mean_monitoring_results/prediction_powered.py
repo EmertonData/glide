@@ -2,6 +2,7 @@ from dataclasses import dataclass
 
 from numpy.typing import NDArray
 
+from glide.core.validation import _validate_equal_lengths
 from glide.mean_monitoring_results.base import MeanMonitoringResult
 
 
@@ -17,6 +18,15 @@ class PredictionPoweredMeanMonitoringResult(MeanMonitoringResult):
 
     batch_n_true: NDArray
     batch_n_proxy: NDArray
+
+    def __post_init__(self) -> None:
+        super().__post_init__()
+        _validate_equal_lengths(
+            self.batch_mean_estimates,
+            self.batch_n_true,
+            self.batch_n_proxy,
+            names=["batch_mean_estimates", "batch_n_true", "batch_n_proxy"],
+        )
 
     def __str__(self) -> str:
         lines = self._common_lines() + [

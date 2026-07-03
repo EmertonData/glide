@@ -4,6 +4,7 @@ from typing import List, Optional
 from numpy.typing import NDArray
 
 from glide.confidence_sequences import ConfidenceSequence
+from glide.core.validation import _validate_equal_lengths, _validate_non_empty
 
 
 @dataclass(repr=False)
@@ -36,9 +37,17 @@ class MeanMonitoringResult:
     higher_is_better: bool
     alarm_threshold: float
     confidence_level: float
-    batch_identifiers: NDArray
     batch_mean_estimates: NDArray
     confidence_sequence: ConfidenceSequence
+
+    def __post_init__(self) -> None:
+        _validate_non_empty(self.batch_mean_estimates, "batch_mean_estimates")
+        _validate_equal_lengths(
+            self.batch_mean_estimates,
+            self.confidence_sequence.running_mean_estimates,
+            self.confidence_sequence.confidence_bounds,
+            names=["batch_mean_estimates", "running_mean_estimates", "confidence_bounds"],
+        )
 
     @property
     def running_means(self) -> NDArray:
