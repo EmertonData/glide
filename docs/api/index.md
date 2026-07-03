@@ -68,6 +68,13 @@
 | [`ClassicalMeanInferenceResult`](mean_inference_results.md#glide.mean_inference_results.classical.ClassicalMeanInferenceResult) | Result object from classical estimators |
 | [`PredictionPoweredMeanInferenceResult`](mean_inference_results.md#glide.mean_inference_results.prediction_powered.PredictionPoweredMeanInferenceResult) | Result object from prediction-powered estimators |
 
+## Monitoring Results
+
+| Class | Description |
+|-------|-------------|
+| [`ClassicalMeanMonitoringResult`](mean_monitoring_results.md#glide.mean_monitoring_results.classical.ClassicalMeanMonitoringResult) | Result object from the classical monitor |
+| [`PredictionPoweredMeanMonitoringResult`](mean_monitoring_results.md#glide.mean_monitoring_results.prediction_powered.PredictionPoweredMeanMonitoringResult) | Result object from the prediction-powered monitor |
+
 ## Scientific Validation
 
 | Function | Description |
