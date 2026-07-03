@@ -31,11 +31,8 @@ def prediction_powered_result(sequence):
     )
 
 
-def test_prediction_powered_batch_n_true(prediction_powered_result):
+def test_prediction_powered_batch_n_properties(prediction_powered_result):
     np.testing.assert_array_equal(prediction_powered_result.batch_n_true, np.array([10, 12]))
-
-
-def test_prediction_powered_batch_n_proxy(prediction_powered_result):
     np.testing.assert_array_equal(prediction_powered_result.batch_n_proxy, np.array([100, 120]))
 
 
