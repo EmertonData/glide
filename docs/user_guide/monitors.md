@@ -16,30 +16,37 @@ $$\Pr\!\left(\forall t \ge 1:\; \bar{\theta}_t \in C_t\right) \ge 1 - \delta,$$
 
 so the user may look after every batch and the total false-alarm probability over the entire monitoring horizon still stays below the single budget $\delta$. This **anytime-valid** guarantee is what makes peeking safe. It stands in contrast to fixed-sample confidence intervals which are valid only at a single, pre-committed sample size and lose their guarantee the moment they are checked repeatedly.
 
+The rest of this page builds such a confidence sequence from first principles, then applies it to two settings: [Classical monitoring](#classical-monitoring), where the per-batch estimate comes from human labels alone, and [Prediction-powered monitoring](#prediction-powered-monitoring), where it is combined with proxy labels for faster detection at the same false-alarm budget.
+
 ---
 
-## Setting
+## Classical monitoring
 
-Each batch $t$ carries the same inputs as [Prediction-Powered Inference (PPI++)](estimators.md#prediction-powered-inference-ppi): a small set of human labels and a larger set of proxy labels, both specific to that batch.
+This section derives the anytime-valid guarantee in the setting where the per-batch estimate comes directly from a batch of human-labeled samples, building up to the alarm rule that turns that guarantee into an actionable drift alarm.
+
+### Setting
+
+Each batch $t$ contributes a set of human labels.
 
 | Value | Present for | Description |
 |---|---|---|
-| $\tilde{Y}_{t,i}$ | All samples in batch $t$ | Proxy label |
-| $Y_{t,j}$ | Labeled samples in batch $t$ only | Ground-truth label |
+| $Y_{t,j}$ | All labeled samples in batch $t$ | Ground-truth label |
 
-Every batch is monitored: there is no separate calibration batch, because the comparison target is the user-fixed threshold $\tau$ rather than a value estimated from the data.
+Every batch is monitored relatively to a user-fixed threshold $\tau$.
 
-The derivation below treats the metric as a **risk** $R$, where lower is better (for example an error rate). The running risk after $t$ batches is the average of the per-batch prediction-powered estimates:
+The derivation treats the metric as a **risk** $R$, where lower is better (for example an error rate). The running risk after $t$ batches is the average of the per-batch estimates:
 
 $$\bar{R}_t = \frac{1}{t} \sum_{s=1}^{t} \hat{R}_s,$$
 
-where $\hat{R}_s$ is the PPI++ estimate of the risk on batch $s$ alone. A performance metric, where higher is better (for example accuracy), is monitored by applying everything below to $1 - R$ instead of $R$; this single mirror transformation is the only adjustment needed, and it is not repeated elsewhere in this page.
+where
 
-The derivation also assumes $R \in [0, 1]$. This boundedness is required because the confidence sequence construction below relies on an empirical-Bernstein boundary, which in turn requires a known, bounded range for the quantity being monitored. Section [Normalization onto the unit interval](#normalization-onto-the-unit-interval) shows how a raw PPI++ estimate, which is not itself confined to $[0, 1]$, is mapped onto it.
+$$\hat{R}_s = \frac{1}{n_s}\sum_{j=1}^{n_s} Y_{s,j}$$
 
----
+is the classical sample mean of the $n_s$ labels in batch $s$ alone. A performance metric, where higher is better (for example accuracy), is monitored by applying everything below to $1 - R$ instead of $R$; this single mirror transformation is the only adjustment needed.
 
-## From Markov to Ville: the anytime-valid guarantee
+The derivation also assumes $R \in [0, 1]$, which the classical sample mean of $[0, 1]$-valued labels automatically satisfies. The confidence sequence built below is therefore driven directly by $X_s = \hat{R}_s$, with no further transformation needed.
+
+### From Markov to Ville: the anytime-valid guarantee
 
 This section builds the anytime-valid guarantee from first principles, in three steps: a classical tail bound, its sequential upgrade, and a betting interpretation that makes the upgrade constructive.
 
@@ -47,49 +54,47 @@ This section builds the anytime-valid guarantee from first principles, in three 
 
 $$\Pr(W \ge 1/\delta) \le \delta \, E[W] \le \delta.$$
 
-Any such $W$ turns the event $\{W \ge 1/\delta\}$ into a test of level $\delta$: it is unlikely to occur if $E[W] \le 1$. But this bound is only about $W$ at a single, fixed point; it says nothing about whether $W$ might cross $1/\delta$ at some earlier or later time even if it is back below threshold now.
+Any such $W$ turns the event $\{W \ge 1/\delta\}$ into a test of level $\delta$: it is unlikely to occur if $E[W] \le 1$. But this bound is only about a single value $W$; it does immediately extend to checking the successive values of a sequence $W_t$ of random variables.
 
 **Ville's inequality.** The sequential upgrade. For a nonnegative supermartingale $\{W_t\}_{t \ge 0}$ with $W_0 = 1$ and $E[W_t \mid \mathcal{F}_{t-1}] \le W_{t-1}$,
 
 $$\Pr\!\left(\exists t \ge 1:\; W_t \ge 1/\delta\right) \le \delta.$$
 
-The difference from Markov is essential: the probability bounded here is that of *ever* crossing $1/\delta$, over the entire, unbounded horizon, not the probability at one fixed time. This is exactly the anytime-valid property that a confidence sequence needs.
+The difference from Markov is essential: the probability bounded here is that of *ever* crossing $1/\delta$, over an unbounded horizon, instead of the probability at one fixed time. This is the anytime-valid property needed for a confidence sequence.
 
-**The betting / wealth reading.** Ville's inequality becomes constructive once $W_t$ is read as the wealth of a gambler betting against the null hypothesis "no drift", starting with one unit of capital. A bet that is fair under the null keeps $W_t$ a supermartingale, so under the null the gambler cannot expect to get rich: Ville's inequality caps how much luck they can have, over the whole sequence of bets. Under genuine drift, however, the bets are informative and tend to pay off, so the wealth grows; reaching $W_t \ge 1/\delta$ is therefore calibrated evidence of drift, not a coincidence.
+**The betting / wealth reading.** Ville's inequality becomes constructive once $W_t$ is read as the wealth of a gambler betting against $H_0$, the null hypothesis "no drift", starting with one unit of capital. A bet that is fair under $H_0$ keeps $W_t$ a supermartingale, so under $H_0$ the gambler cannot expect to get rich: Ville's inequality caps how much luck they can have, over the whole sequence of bets. Under genuine drift, however, the bets are informative and tend to pay off, so the wealth grows; reaching $W_t \ge 1/\delta$ is therefore calibrated evidence of drift, not a coincidence.
 
-The **betting parameter** $\beta \in (0, 1)$ controls how aggressively the gambler bets at each step. For a fixed $\beta$, the wealth process is
+The **betting parameter** $\beta \in (0, 1)$ controls how aggressively the gambler bets at each step. For a fixed $\beta$, the wealth process takes the form derived in [[2](#ref-2)]:
 
 $$W_t(\beta) = \exp\!\left(\beta \, S_t - \psi_E(\beta) \, V_t\right),$$
 
 where:
 
-- $S_t = \sum_{s=1}^{t} (X_s - c_s)$ is the cumulative deviation of the normalized per-batch estimates $X_s$ (Section [Normalization onto the unit interval](#normalization-onto-the-unit-interval)) from their **predictable centers** $c_s$,
+- $S_t = \sum_{s=1}^{t} (X_s - c_s)$ is the cumulative deviation of the per-batch estimates $X_s$ from their **predictable centers** $c_s$,
 - $V_t = \sum_{s=1}^{t} (X_s - c_s)^2$ is the running empirical variance of those deviations,
-- $\psi_E(\beta) = -\log(1 - \beta) - \beta$ is a cumulant-generating-function penalty, chosen exactly so that $W_t(\beta)$ is a supermartingale under the null.
+- $\psi_E(\beta) = -\log(1 - \beta) - \beta$ is a cumulant-generating-function penalty, chosen so that $W_t(\beta)$ is a supermartingale under $H_0$.
 
-A **predictable center** $c_s$ is a quantity fixed before batch $s$ is observed, most naturally the running mean of the normalized estimates from all previous batches, $c_s = \bar{X}_{s-1}$ for $s \ge 2$. Fixing $c_s$ this way makes the increment $X_s - c_s$ conditionally mean-zero under the null, which is what secures the supermartingale property.
+A **predictable center** $c_s$ is a quantity fixed before batch $s$ is observed, most naturally the running mean of the estimates from all previous batches, $c_s = \bar{X}_{s-1}$ for $s \ge 2$. Fixing $c_s$ this way makes the increment $X_s - c_s$ conditionally mean-zero under $H_0$.
 
-There is no previous batch before the first one, so $c_1$ must be seeded by a constant fixed in advance. This is where the guide seeds with the threshold $\tau$: predictability alone is what secures validity, so *any* constant fixed in advance ($0$, the midpoint of the range, $\tau$, ...) gives a valid sequence, and the choice of seed affects only the width of the very first look, never coverage. The guide seeds with $\tau$ specifically because it is the null-hypothesized running risk at the decision boundary: it is the pre-data analogue of the running mean that later batches center on, and it makes the first contribution to $V_t$ smallest exactly when an early batch lands near the threshold, which is the regime the test cares about most. Because the seed enters only the first term of $V_t$, its influence washes out as batches accumulate; a poorly chosen seed can only inflate $V_t$, which widens the early boundary and *delays* an alarm, but it can never create a false one.
+There is no previous batch before the first one, so $c_1$ must be seeded by a constant fixed in advance. This is where the guide seeds with the threshold $\tau$: predictability is a necessary condition for validity, so a constant fixed in advance ($0$, the midpoint of the range, $\tau$, ...) gives a valid sequence. The choice of seed affects the width of the first look but not the coverage. The guide seeds with $\tau$ because it is the null-hypothesized running risk at the decision boundary. Because the seed enters only the first term of $V_t$, its influence vanishes as batches accumulate; a poorly chosen seed can inflate $V_t$, which widens the early boundary and may delay an alarm, but it can not create a false one.
 
 **The method of mixtures.** The betting parameter that would extract the most evidence fastest depends on the (unknown) size of the drift and on $V_t$, so rather than commit to a single $\beta$, the guide averages the wealth process over a density $q(\beta)$ on $(0, 1)$:
 
 $$W_t = \int_0^1 W_t(\beta) \, q(\beta) \, d\beta.$$
 
-A mixture of nonnegative supermartingales, each starting at $1$, is itself a nonnegative supermartingale starting at $1$, so Ville's inequality applies for *any* choice of $q$; the density affects only the tightness of the resulting bound, never its validity. GLIDE takes $q$ uniform on $(0, 1)$: parameter-free and horizon-agnostic, and it drops out of the integrand entirely. A conjugate choice of $q$ would yield a closed-form mixture and a slightly tighter boundary, at the price of introducing a sharpness hyperparameter that would have to be tuned.
+A mixture of nonnegative supermartingales, each starting at $1$, is itself a nonnegative supermartingale starting at $1$, so Ville's inequality applies for *any* choice of $q$; the density affects the tightness of the resulting bound but not its validity. GLIDE takes $q$ uniform on $(0, 1)$: parameter-free and horizon-agnostic so that it drops out of the integrand. A conjugate choice of $q$ would yield a closed-form mixture and a slightly tighter boundary, at the price of introducing a sharpness hyperparameter that would have to be tuned.
 
----
+### The empirical-Bernstein boundary
 
-## The empirical-Bernstein boundary
-
-Fix the variance process at a value $v$. The **boundary** is the largest cumulative deviation still consistent with the null,
+Fix the variance process at a value $v$. The **boundary** is the largest cumulative deviation still consistent with $H_0$, expressed through the mixture wealth process $W(s, v)$ introduced above, now viewed as a function of a candidate deviation $s$ at fixed variance $v$:
 
 $$u(v) = \sup\{\, s \ge 0 : W(s, v) \le 1/\delta \,\},$$
 
-the right edge of the acceptance region, expressed as a deviation budget, where $\delta$ is the sequence's single false-alarm budget (its miscoverage). Under the uniform mixture, the wealth process as a function of the deviation $s$ is
+the right edge of the acceptance region, expressed as a deviation budget, where $\delta$ is the sequence's single false-alarm budget (its miscoverage). Under the uniform mixture, $W(s, v)$ takes the explicit form
 
 $$W(s, v) = \int_0^1 \exp\!\left(\beta s - \psi_E(\beta) v\right) d\beta.$$
 
-This function is continuous and strictly increasing in $s$: its derivative with respect to $s$, $\int_0^1 \beta \exp(\beta s - \psi_E(\beta) v)\, d\beta$, is strictly positive, and $W(s, v)$ rises from a value $\le 1$ at $s = 0$ to $\infty$ as $s \to \infty$. The supremum defining $u(v)$ is therefore attained at the unique root of
+This function is continuous and strictly increasing in $s$: its derivative with respect to $s$ is strictly positive, and $W(s, v)$ rises from a value $\le 1$ at $s = 0$ to $\infty$ as $s \to \infty$. The supremum defining $u(v)$ is therefore attained at the unique root of
 
 $$\int_0^1 \exp\!\left(\beta \, u(v) - \psi_E(\beta) \, v\right) d\beta = \frac{1}{\delta}.$$
 
@@ -103,43 +108,60 @@ As an analytical landmark, consider the zero-variance case $v = 0$: the penalty 
 
 $$\frac{e^{u(0)} - 1}{u(0)} = \frac{1}{\delta}.$$
 
+### The alarm rule and the single budget
+
+**Alarm rule.** The user fixes a threshold $\tau$ in advance: the worst running risk they are willing to tolerate, in metric units. This is the criterion the whole construction has been building toward: at every batch $t$, a **drift alarm fires** as soon as the anytime-valid lower bound on the running risk crosses the threshold,
+
+$$L_t > \tau.$$
+
+Because $\tau$ is a known constant, not a quantity estimated from data, the only way to raise a false alarm under $H_0$ ($\bar{R}_t \le \tau$ for every $t$) is for the confidence sequence itself to fail to cover the running risk at some point in the horizon, an event with probability at most its single budget $\delta$. Under no drift, the probability of *ever* raising a false alarm is therefore at most $\delta,$ i.e. the sequence's miscoverage. 
+
+A smaller $\delta$ widens the confidence sequence and delays alarms, so the budget directly governs detection speed, not just the false-alarm rate.
+
+Finally, a caveat on what this monitors: the procedure tracks the running *average* $\bar{R}_t$, so a short transient drift is progressively diluted as more batches accumulate into that average. Sensitivity to abrupt, recent drifts is recovered by restricting the running average to the most recent batches rather than the full history.
+
 ---
 
-## Normalization onto the unit interval
+## Prediction-powered monitoring
 
-The empirical-Bernstein boundary of the previous section is valid only for variables confined to a *known* bounded range. A prediction-powered estimate of a metric in $[0, 1]$ does not itself lie in $[0, 1]$: the power-tuning weight $\lambda$ is a variance-minimizing regression slope, not a mixing weight confined to $[0, 1]$, so an under-dispersed or anti-correlated proxy can push $\lambda$, and with it the estimate, outside any fixed interval.
+The human labels collected in a batch can be scarce, which limits how quickly a monitor based on them alone can react to real drift. GLIDE's monitors can instead combine those human labels with a large pool of cheap proxy labels, the same way [Prediction-Powered Inference (PPI++)](estimators.md#prediction-powered-inference-ppi) does for one-off estimation. The anytime-valid guarantee derived above, the confidence sequence, Ville's inequality, the betting supermartingale, the empirical-Bernstein boundary, and the alarm rule, carries over unchanged: only the per-batch estimate $\hat{R}_s$ changes, now obtained from the PPI++ estimator instead of a plain sample mean of the batch's labels. That single change brings two additional requirements, addressed in turn below: the estimate must be renormalized onto $[0, 1]$, and its power-tuning weight must be predictable.
+
+### Setting
+
+Each batch $t$ now carries the same inputs as [Prediction-Powered Inference (PPI++)](estimators.md#prediction-powered-inference-ppi): a small set of human labels together with a larger set of proxy labels, both specific to that batch.
+
+| Value | Present for | Description |
+|---|---|---|
+| $\tilde{Y}_{t,i}$ | All samples in batch $t$ | Proxy label |
+| $Y_{t,j}$ | Labeled samples in batch $t$ only | Ground-truth label |
+
+The per-batch estimate $\hat{R}_s$ used in the running risk $\bar{R}_t$ (introduced above) is now the PPI++ estimate on batch $s$. Denoting $\tilde{Y}_s^{\bullet}$ and $\tilde{Y}_s^{\circ}$ the labeled and unlabeled proxies of batch $s$ respectively, with $n_s$ and $N_s$ their counts,
+
+$$\hat{R}_s = \frac{1}{n_s}\sum_{j=1}^{n_s} Y_{s,j} + \lambda_s\left[\frac{1}{N_s}\sum_{i=1}^{N_s} \tilde{Y}_{s,i}^{\circ} - \frac{1}{n_s}\sum_{j=1}^{n_s} \tilde{Y}_{s,j}^{\bullet}\right],$$
+
+which is the [Prediction-Powered Inference (PPI++)](estimators.md#prediction-powered-inference-ppi) mean estimator applied within batch $s$, using its own power-tuning weight $\lambda_s$ ([Predictable power-tuning](#predictable-power-tuning) below). Unlike a plain sample mean, $\hat{R}_s$ is not guaranteed to fall in $[0, 1]$, which the next section addresses.
+
+### Normalization onto the unit interval
+
+The empirical-Bernstein boundary derived above is valid only for variables confined to a *known* bounded range. A prediction-powered estimate of a metric in $[0, 1]$ does not itself lie in $[0, 1]$: the power-tuning weight $\lambda$ is a variance-minimizing regression slope, not a mixing weight confined to $[0, 1]$, so an under-dispersed or anti-correlated proxy can push $\lambda$, and with it the estimate, outside any fixed interval.
 
 Clipping the power-tuning weight to $[0, \lambda_{\max}]$ confines a $[0, 1]$-metric estimate $\hat{R}$ to the range $[-\lambda_{\max},\, 1 + \lambda_{\max}]$. The affine map
 
 $$X = \frac{\hat{R} + \lambda_{\max}}{1 + 2\lambda_{\max}}$$
 
-sends that range exactly onto $[0, 1]$, producing the normalized estimate $X$ used throughout the previous two sections. A larger $\lambda_{\max}$ permits more reliance on the proxy, but it also widens the denominator of the map above, which scales up every deviation and therefore the width of the boundary $u(v)$: more proxy reliance is traded against slower detection.
+maps that range back onto $[0, 1]$, producing the normalized estimate $X$ that plays the role directly held by $X_s = \hat{R}_s$ in the classical section.
 
----
+### Predictable power-tuning
 
-## Predictable power-tuning
-
-The power-tuning weight $\lambda_t$ used to form the estimate $\hat{R}_t$ on batch $t$ must itself be **predictable**: computed only from batches strictly earlier than $t$, never from batch $t$ itself. This is what makes each per-batch increment conditionally mean-zero under the null, which is exactly the condition that keeps $W_t$ a supermartingale.
+The power-tuning weight $\lambda_t$ used to form the estimate $\hat{R}_t$ on batch $t$ must itself be **predictable**: computed only from batches strictly earlier than $t$, never from batch $t$ itself. This is what makes each per-batch increment conditionally mean-zero under $H_0$, which is the condition that keeps $W_t$ a supermartingale.
 
 Predictability is the only validity constraint here. *Which* prior batches are pooled to compute $\lambda_t$ is purely a matter of statistical power, and any predictable choice remains valid; only the width of the resulting boundary changes. GLIDE pools the full prior history of batches to compute $\lambda_t$. The first batch has no predecessor, so it simply uses the neutral weight $\lambda_1 = 1$, which is itself trivially predictable since it depends on no data at all.
 
----
+**Alarm rule.** With both additions in place, $X_t$ satisfies the same assumptions used in [Classical monitoring](#classical-monitoring), so the same criterion still decides when to raise a **drift alarm**,
 
-## The alarm rule and the single budget
+$$L_t > \tau,$$
 
-The user fixes a threshold $\tau$ in advance: the worst running risk they are willing to tolerate, in metric units. The drift alarm at batch $t$ fires when the anytime-valid lower bound on the running risk crosses it,
-
-$$L_t > \tau.$$
-
-Because $\tau$ is a known constant, not a quantity estimated from data, the only way to raise a false alarm under the null ($\bar{R}_t \le \tau$ for every $t$) is for the confidence sequence itself to fail to cover the running risk at some point in the horizon, an event with probability at most its single budget $\delta$. Under no drift, the probability of *ever* raising a false alarm is therefore at most
-
-$$\delta,$$
-
-the sequence's lone miscoverage. This is simpler than the two-sample setup in [[1](#ref-1)], where the fixed threshold is replaced by a reference bound $U_0$ *estimated* from a labeled reference sample; that reference bound carries its own miscoverage $\delta_S$, so the total false-alarm budget there is $\delta_S + \delta$, since miscoverages add. Fixing $\tau$ in advance removes $\delta_S$ entirely.
-
-A smaller $\delta$ widens the confidence sequence and delays alarms, so the budget directly governs detection speed, not just the false-alarm rate.
-
-Finally, a caveat on what this monitors: PPRM tracks the running *average* $\bar{R}_t$, so a short transient drift is progressively diluted as more batches accumulate into that average. Sensitivity to abrupt, recent drifts is recovered by restricting the running average to the most recent batches rather than the full history.
+now backed by the more sample-efficient PPI++ estimate, at the same single false-alarm budget $\delta$.
 
 ---
 
