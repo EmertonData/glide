@@ -55,6 +55,12 @@
 | [`CLTConfidenceInterval`](confidence_intervals.md#glide.confidence_intervals.clt.CLTConfidenceInterval) | CLT-based normal approximation confidence intervals |
 | [`BootstrapConfidenceInterval`](confidence_intervals.md#glide.confidence_intervals.bootstrap.BootstrapConfidenceInterval) | Quantile-based bootstrap confidence intervals |
 
+## Confidence Sequences
+
+| Class | Description |
+|-------|-------------|
+| [`EmpiricalBernsteinConfidenceSequence`](confidence_sequences.md#glide.confidence_sequences.empirical_bernstein.EmpiricalBernsteinConfidenceSequence) | Anytime-valid empirical-Bernstein confidence sequence |
+
 ## Inference Results
 
 | Class | Description |
