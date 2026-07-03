@@ -48,8 +48,12 @@ def test_compute_mixture_boundary_increases_with_confidence():
 # --- _compute_empirical_bernstein_bounds ---
 
 
-def test_compute_empirical_bernstein_bounds_delegates_to_validation():
-    batch_estimates = np.array([0.4, 0.6, 0.5])
+@pytest.fixture
+def batch_estimates():
+    return np.array([0.4, 0.6, 0.5])
+
+
+def test_compute_empirical_bernstein_bounds_delegates_to_validation(batch_estimates):
     with patch.object(empirical_bernstein_module, "_validate_bounds") as mock_validate_bounds:
         _compute_empirical_bernstein_bounds(batch_estimates, seed_center=0.5, miscoverage=0.2)
 
@@ -58,8 +62,7 @@ def test_compute_empirical_bernstein_bounds_delegates_to_validation():
         )
 
 
-def test_compute_empirical_bernstein_bounds():
-    batch_estimates = np.array([0.4, 0.6, 0.5])
+def test_compute_empirical_bernstein_bounds(batch_estimates):
     running_mean_estimates, lower_bounds = _compute_empirical_bernstein_bounds(
         batch_estimates, seed_center=0.5, miscoverage=0.2
     )
