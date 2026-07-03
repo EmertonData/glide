@@ -10,6 +10,7 @@ from glide.core.validation import (
     _validate_unique_clusters,
     _validate_y_true,
 )
+from glide.estimators.core import _split_labeled_unlabeled
 
 
 def _preprocess(
@@ -22,7 +23,7 @@ def _preprocess(
     _validate_has_no_nan(y_proxy, "y_proxy")
     _validate_has_no_nan(clusters, "clusters")
 
-    labeled_mask = ~np.isnan(y_true)
+    y_true_labeled, y_proxy_labeled, y_proxy_unlabeled, labeled_mask = _split_labeled_unlabeled(y_true, y_proxy)
     labeled_clusters = clusters[labeled_mask]
     unlabeled_clusters = clusters[~labeled_mask]
 
@@ -47,9 +48,9 @@ def _preprocess(
         error_message=f"Need at least 2 fully unlabeled clusters; got {n_unlabeled_clusters}.",
     )
 
-    labeled_true_sums = np.bincount(labeled_cluster_indices, weights=y_true[labeled_mask])
-    labeled_proxy_sums = np.bincount(labeled_cluster_indices, weights=y_proxy[labeled_mask])
-    unlabeled_proxy_sums = np.bincount(unlabeled_cluster_indices, weights=y_proxy[~labeled_mask])
+    labeled_true_sums = np.bincount(labeled_cluster_indices, weights=y_true_labeled)
+    labeled_proxy_sums = np.bincount(labeled_cluster_indices, weights=y_proxy_labeled)
+    unlabeled_proxy_sums = np.bincount(unlabeled_cluster_indices, weights=y_proxy_unlabeled)
     labeled_sizes = np.bincount(labeled_cluster_indices)
     unlabeled_sizes = np.bincount(unlabeled_cluster_indices)
 

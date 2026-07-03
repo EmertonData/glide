@@ -37,24 +37,34 @@ def test_preprocess_valid_output(estimator, y_arrays):
     assert not np.any(np.isnan(y_true))
 
 
-def test_preprocess_delegates_to_validation(estimator):
+def test_preprocess_delegates(estimator):
     y_true = np.array([1.0, 2.0, np.nan, np.nan])
     y_proxy = np.array([1.0, 2.0, 3.0, 4.0])
+    labeled_mask = np.array([True, True, False, False])
 
     with (
         patch.object(ptd_module, "_validate_equal_lengths") as mock_validate_equal_lengths,
         patch.object(ptd_module, "_validate_y_proxy") as mock_validate_y_proxy,
         patch.object(ptd_module, "_validate_y_true") as mock_validate_y_true,
+        patch.object(ptd_module, "_split_labeled_unlabeled") as mock_split_labeled_unlabeled,
         patch.object(ptd_module, "_validate_sample_sizes") as mock_validate_sample_sizes,
     ):
+        mock_split_labeled_unlabeled.return_value = (
+            np.array([1.0, 2.0]),
+            np.array([1.0, 2.0]),
+            np.array([3.0, 4.0]),
+            labeled_mask,
+        )
         estimator._preprocess(y_true, y_proxy)
 
         mock_validate_equal_lengths.assert_called_once_with(y_true, y_proxy, names=["y_true", "y_proxy"])
         mock_validate_y_proxy.assert_called_once_with(y_proxy)
         mock_validate_y_true.assert_called_once_with(y_true)
+        mock_split_labeled_unlabeled.assert_called_once()
+        np.testing.assert_array_equal(mock_split_labeled_unlabeled.call_args[0][0], y_true)
+        np.testing.assert_array_equal(mock_split_labeled_unlabeled.call_args[0][1], y_proxy)
         mock_validate_sample_sizes.assert_called_once()
-        labeled_mask_arg = mock_validate_sample_sizes.call_args[0][0]
-        np.testing.assert_array_equal(labeled_mask_arg, np.array([True, True, False, False]))
+        np.testing.assert_array_equal(mock_validate_sample_sizes.call_args[0][0], labeled_mask)
 
 
 # ── estimate ──────────────────────────────────────────────────────────────────

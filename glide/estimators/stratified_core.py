@@ -10,6 +10,7 @@ from glide.core.validation import (
     _validate_y_proxy,
     _validate_y_true,
 )
+from glide.estimators.core import _split_labeled_unlabeled
 
 
 def _preprocess(
@@ -27,12 +28,11 @@ def _preprocess(
         stratum_mask = groups == stratum_id
         stratum_y_true = y_true[stratum_mask]
         stratum_y_proxy = y_proxy[stratum_mask]
-        labeled_mask = ~np.isnan(stratum_y_true)
         _validate_y_proxy(stratum_y_proxy, stratum_id)
+        y_true_filtered, y_proxy_labeled, y_proxy_unlabeled, labeled_mask = _split_labeled_unlabeled(
+            stratum_y_true, stratum_y_proxy
+        )
         _validate_sample_sizes(labeled_mask, stratum_id)
-        y_true_filtered = stratum_y_true[labeled_mask]
-        y_proxy_labeled = stratum_y_proxy[labeled_mask]
-        y_proxy_unlabeled = stratum_y_proxy[~labeled_mask]
         strata.append((y_true_filtered, y_proxy_labeled, y_proxy_unlabeled))
 
     return strata
