@@ -6,7 +6,7 @@ from numpy.typing import NDArray
 from scipy.integrate import quad
 from scipy.optimize import brentq
 
-from glide.core.validation import _validate_literal
+from glide.core.validation import _validate_bounds, _validate_literal
 
 
 def _compute_mixture_wealth(deviation: float, variance_process_value: float) -> float:
@@ -41,6 +41,7 @@ def _compute_empirical_bernstein_bounds(
     seed_center: float,
     miscoverage: float,
 ) -> Tuple[NDArray, NDArray]:
+    _validate_bounds(miscoverage, "miscoverage", lower=0.0, upper=1.0, left_inclusive=False, right_inclusive=False)
     n_batches = len(batch_estimates)
     batch_counts = np.arange(1, n_batches + 1)
     running_mean_estimates = np.cumsum(batch_estimates) / batch_counts
