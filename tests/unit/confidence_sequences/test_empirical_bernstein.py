@@ -11,9 +11,6 @@ from glide.confidence_sequences.empirical_bernstein import (
     _compute_mixture_wealth,
 )
 
-EXPECTED_LOWER_BOUNDS = np.array([-2.27458313, -0.86521862, -0.41014575])
-
-
 # --- _compute_mixture_wealth ---
 
 
@@ -28,7 +25,9 @@ def test_compute_mixture_wealth_known_value():
 @pytest.mark.parametrize("miscoverage", [0.1, 0.2, 0.5])
 def test_compute_mixture_boundary_zero_variance(miscoverage):
     boundary = _compute_mixture_boundary(0.0, miscoverage)
-    assert (np.exp(boundary) - 1) / boundary == pytest.approx(1 / miscoverage, abs=1e-6)
+    closed_form_integral = (np.exp(boundary) - 1) / boundary
+    wealth = 1 / miscoverage
+    assert closed_form_integral == pytest.approx(wealth, abs=1e-6)
 
 
 def test_compute_mixture_boundary_increases_with_variance():
@@ -66,8 +65,9 @@ def test_compute_empirical_bernstein_bounds(batch_estimates):
     running_mean_estimates, lower_bounds = _compute_empirical_bernstein_bounds(
         batch_estimates, seed_center=0.5, miscoverage=0.2
     )
+    expected_lower_bound = np.array([-2.27458313, -0.86521862, -0.41014575])
     np.testing.assert_allclose(running_mean_estimates, np.array([0.4, 0.5, 0.5]))
-    np.testing.assert_allclose(lower_bounds, EXPECTED_LOWER_BOUNDS, atol=1e-6)
+    np.testing.assert_allclose(lower_bounds, expected_lower_bound, atol=1e-6)
 
 
 # --- EmpiricalBernsteinConfidenceSequence ---

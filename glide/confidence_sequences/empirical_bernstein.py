@@ -10,7 +10,6 @@ from glide.core.validation import _validate_bounds, _validate_literal
 
 
 def _compute_mixture_wealth(deviation: float, variance_process_value: float) -> float:
-    # ψ_E(β) = −log(1−β) − β is the cumulant of the exponential-family mixture.
     def integrand(betting_parameter: float) -> float:
         psi_exponential = -np.log(1 - betting_parameter) - betting_parameter
         value = np.exp(betting_parameter * deviation - psi_exponential * variance_process_value)
@@ -27,8 +26,6 @@ def _compute_mixture_boundary(variance_process_value: float, miscoverage: float)
         value = _compute_mixture_wealth(deviation, variance_process_value) - wealth_target
         return value
 
-    # No fixed upper bracket works because the root grows with variance_process_value and
-    # 1/miscoverage; double until excess_wealth turns non-negative.
     upper_bracket = 1.0
     while excess_wealth(upper_bracket) < 0.0:
         upper_bracket *= 2.0
@@ -45,8 +42,6 @@ def _compute_empirical_bernstein_bounds(
     n_batches = len(batch_estimates)
     batch_counts = np.arange(1, n_batches + 1)
     running_mean_estimates = np.cumsum(batch_estimates) / batch_counts
-    # Centers must be predictable (known before each batch arrives): use the previous
-    # running mean, seeded with seed_center before the first batch.
     predictable_centers = np.hstack([np.array([seed_center]), running_mean_estimates[:-1]])
     variance_process = np.cumsum((batch_estimates - predictable_centers) ** 2)
     boundaries = np.array([_compute_mixture_boundary(value, miscoverage) for value in variance_process])
