@@ -15,3 +15,9 @@ class ClassicalMeanMonitoringResult(MeanMonitoringResult):
     """
 
     batch_n: NDArray
+
+    def __str__(self) -> str:
+        lines = self._common_lines() + [
+            f"batch_n: {self.batch_n[-1]}",
+        ]
+        return "\n".join(lines)

@@ -1,26 +1,50 @@
 import numpy as np
+import pytest
 
 from glide.confidence_sequences import EmpiricalBernsteinConfidenceSequence
 from glide.mean_monitoring_results import ClassicalMeanMonitoringResult
 
 # --- ClassicalMeanMonitoringResult ---
 
-_SEQUENCE = EmpiricalBernsteinConfidenceSequence(
-    running_mean_estimates=np.array([0.4, 0.6]),
-    confidence_bounds=np.array([0.1, 0.55]),
-)
-_CLASSICAL = ClassicalMeanMonitoringResult(
-    metric_name="accuracy",
-    monitor_name="Classical",
-    higher_is_better=True,
-    alarm_threshold=0.5,
-    confidence_level=0.95,
-    batch_identifiers=np.array([0, 1]),
-    batch_mean_estimates=np.array([0.4, 0.8]),
-    confidence_sequence=_SEQUENCE,
-    batch_n=np.array([10, 12]),
-)
+
+@pytest.fixture
+def sequence():
+    return EmpiricalBernsteinConfidenceSequence(
+        running_mean_estimates=np.array([0.4, 0.6]),
+        confidence_bounds=np.array([0.1, 0.55]),
+    )
 
 
-def test_classical_batch_n():
-    np.testing.assert_array_equal(_CLASSICAL.batch_n, np.array([10, 12]))
+@pytest.fixture
+def classical_result(sequence):
+    return ClassicalMeanMonitoringResult(
+        metric_name="accuracy",
+        monitor_name="Classical",
+        higher_is_better=True,
+        alarm_threshold=0.5,
+        confidence_level=0.95,
+        batch_identifiers=np.array([0, 1]),
+        batch_mean_estimates=np.array([0.4, 0.8]),
+        confidence_sequence=sequence,
+        batch_n=np.array([10, 12]),
+    )
+
+
+def test_classical_batch_n(classical_result):
+    np.testing.assert_array_equal(classical_result.batch_n, np.array([10, 12]))
+
+
+def test_classical_str(classical_result):
+    expected = (
+        "Metric: accuracy\n"
+        "Monitor: Classical\n"
+        "Number of Batches: 2\n"
+        "Drift Detected: True\n"
+        "First Alarm Index: 0\n"
+        "Alarm Threshold: 0.500\n"
+        "Running Mean: 0.600\n"
+        "Confidence Bound: 0.550\n"
+        "Confidence Level: 0.95\n"
+        "batch_n: 12"
+    )
+    assert str(classical_result) == expected

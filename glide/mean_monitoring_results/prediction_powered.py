@@ -17,3 +17,10 @@ class PredictionPoweredMeanMonitoringResult(MeanMonitoringResult):
 
     batch_n_true: NDArray
     batch_n_proxy: NDArray
+
+    def __str__(self) -> str:
+        lines = self._common_lines() + [
+            f"batch_n_true: {self.batch_n_true[-1]}",
+            f"batch_n_proxy: {self.batch_n_proxy[-1]}",
+        ]
+        return "\n".join(lines)

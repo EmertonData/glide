@@ -73,8 +73,8 @@ class MeanMonitoringResult:
         result = int(self.alarms.argmax())
         return result
 
-    def __str__(self) -> str:
-        lines: List[str] = [
+    def _common_lines(self) -> List[str]:
+        lines = [
             f"Metric: {self.metric_name}",
             f"Monitor: {self.monitor_name}",
             f"Number of Batches: {self.n_batches}",
@@ -85,7 +85,10 @@ class MeanMonitoringResult:
             f"Confidence Bound: {self.confidence_bounds[-1]:.3f}",
             f"Confidence Level: {self.confidence_level:.2f}",
         ]
-        return "\n".join(lines)
+        return lines
+
+    def __str__(self) -> str:
+        return "\n".join(self._common_lines())
 
     def summary(self) -> str:
         """Return a formatted summary of the monitoring result."""
