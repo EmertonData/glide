@@ -44,7 +44,7 @@ def result_without_alarm(sequence):
     )
 
 
-def test_base_properties(result_with_alarm, result_without_alarm):
+def test_base_properties_with_alarm(result_with_alarm):
     np.testing.assert_array_equal(result_with_alarm.running_means, np.array([0.4, 0.6]))
     np.testing.assert_array_equal(result_with_alarm.confidence_bounds, np.array([0.1, 0.55]))
     assert result_with_alarm.n_batches == 2
@@ -52,6 +52,8 @@ def test_base_properties(result_with_alarm, result_without_alarm):
     assert result_with_alarm.drift_detected is True
     assert result_with_alarm.first_alarm_index == 0
 
+
+def test_base_properties_without_alarm(result_without_alarm):
     np.testing.assert_array_equal(result_without_alarm.alarms, np.array([False, False]))
     assert result_without_alarm.drift_detected is False
     assert result_without_alarm.first_alarm_index is None
