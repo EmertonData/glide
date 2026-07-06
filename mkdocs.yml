@@ -114,6 +114,7 @@ nav:
     - Confidence Intervals: api/confidence_intervals.md
     - Confidence Sequences: api/confidence_sequences.md
     - Inference Results: api/mean_inference_results.md
+    - Monitoring Results: api/mean_monitoring_results.md
     - Scientific Validation: api/scientific_validation.md
     - I/O: api/io.md
 
