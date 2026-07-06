@@ -75,9 +75,33 @@ class ClassicalMeanMonitor:
         batches: NDArray,
         higher_is_better: bool,
         threshold: float,
+        confidence_level: float,
         metric_lower_bound: float,
         metric_upper_bound: float,
     ) -> Tuple[NDArray, float, NDArray, NDArray]:
+        _validate_bounds(
+            confidence_level, "confidence_level", lower=0, upper=1, left_inclusive=False, right_inclusive=False
+        )
+        _validate_bounds(
+            metric_lower_bound,
+            "metric_lower_bound",
+            upper=metric_upper_bound,
+            right_inclusive=False,
+            error_message=(
+                f"'metric_lower_bound' must be strictly smaller than 'metric_upper_bound'; "
+                f"got {metric_lower_bound!r} and {metric_upper_bound!r}."
+            ),
+        )
+        _validate_bounds(
+            threshold,
+            "threshold",
+            lower=metric_lower_bound,
+            upper=metric_upper_bound,
+            error_message=(
+                f"'threshold' must lie between 'metric_lower_bound'={metric_lower_bound!r} and "
+                f"'metric_upper_bound'={metric_upper_bound!r}."
+            ),
+        )
         _validate_equal_lengths(y, batches, names=["y", "batches"])
         labeled_mask = ~np.isnan(y)
         labeled_values = y[labeled_mask]
@@ -209,32 +233,8 @@ class ClassicalMeanMonitor:
             - If ``threshold`` falls outside ``[metric_lower_bound, metric_upper_bound]``.
             - If ``confidence_level`` is not in (0, 1).
         """
-        _validate_bounds(
-            confidence_level, "confidence_level", lower=0, upper=1, left_inclusive=False, right_inclusive=False
-        )
-        _validate_bounds(
-            metric_lower_bound,
-            "metric_lower_bound",
-            upper=metric_upper_bound,
-            right_inclusive=False,
-            error_message=(
-                f"'metric_lower_bound' must be strictly smaller than 'metric_upper_bound'; "
-                f"got {metric_lower_bound!r} and {metric_upper_bound!r}."
-            ),
-        )
-        _validate_bounds(
-            threshold,
-            "threshold",
-            lower=metric_lower_bound,
-            upper=metric_upper_bound,
-            error_message=(
-                f"'threshold' must lie between 'metric_lower_bound'={metric_lower_bound!r} and "
-                f"'metric_upper_bound'={metric_upper_bound!r}."
-            ),
-        )
-
         risk_y, risk_threshold, batch_codes, batch_n = self._preprocess(
-            y, batches, higher_is_better, threshold, metric_lower_bound, metric_upper_bound
+            y, batches, higher_is_better, threshold, confidence_level, metric_lower_bound, metric_upper_bound
         )
         batch_sums = np.bincount(batch_codes, weights=risk_y)
         risk_batch_mean_estimates = batch_sums / batch_n
