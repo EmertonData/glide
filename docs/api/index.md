@@ -48,6 +48,12 @@
 | [`ClusteredPTDMeanEstimator`](estimators.md#glide.estimators.clustered_ptd.ClusteredPTDMeanEstimator) | PTD for clustered data |
 | [`IPWPTDMeanEstimator`](estimators.md#glide.estimators.ipw_ptd.IPWPTDMeanEstimator) | PTD with inverse probability weighting |
 
+## Monitors
+
+| Class | Description |
+|-------|-------------|
+| [`ClassicalMeanMonitor`](monitors.md#glide.monitors.classical.ClassicalMeanMonitor) | Anytime-valid drift monitor over batched labels, without proxy predictions |
+
 ## Confidence Intervals
 
 | Class | Description |
