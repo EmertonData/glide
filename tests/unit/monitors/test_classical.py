@@ -30,7 +30,8 @@ def monitor():
 def test_preprocess_delegates_to_validation(monitor, y, batches):
     with (
         patch.object(classical_module, "_validate_equal_lengths") as mock_validate_equal_lengths,
-        patch.object(classical_module, "_validate_min_samples") as mock_validate_min_samples,
+        patch.object(classical_module, "_validate_non_empty") as mock_validate_non_empty,
+        patch.object(classical_module, "_validate_has_no_nan") as mock_validate_has_no_nan,
         patch.object(classical_module, "_validate_bounds") as mock_validate_bounds,
         patch.object(classical_module, "_unique_ordered_batches") as mock_unique_ordered_batches,
     ):
@@ -50,9 +51,13 @@ def test_preprocess_delegates_to_validation(monitor, y, batches):
         np.testing.assert_array_equal(mock_validate_equal_lengths.call_args[0][1], batches)
         assert mock_validate_equal_lengths.call_args[1] == {"names": ["y", "batches"]}
 
-        mock_validate_min_samples.assert_called_once()
-        np.testing.assert_array_equal(mock_validate_min_samples.call_args[0][0], y)
-        assert mock_validate_min_samples.call_args[0][1] == "y"
+        mock_validate_non_empty.assert_called_once()
+        np.testing.assert_array_equal(mock_validate_non_empty.call_args[0][0], y)
+        assert mock_validate_non_empty.call_args[0][1] == "y"
+
+        mock_validate_has_no_nan.assert_called_once()
+        np.testing.assert_array_equal(mock_validate_has_no_nan.call_args[0][0], batches)
+        assert mock_validate_has_no_nan.call_args[0][1] == "batches"
 
         assert mock_validate_bounds.call_count == 5
 

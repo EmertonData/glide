@@ -1,9 +1,6 @@
-from unittest.mock import patch
-
 import numpy as np
 import pytest
 
-import glide.monitors.core as core_module
 from glide.monitors.core import _scale_from_unit_risk, _scale_to_unit_risk, _unique_ordered_batches
 
 
@@ -18,15 +15,6 @@ def values_scaled():
 
 
 # --- _unique_ordered_batches ---
-
-
-def test_unique_ordered_batches_delegates_to_validation():
-    batches = np.array([0, 0, 1])
-    with patch.object(core_module, "_validate_has_no_nan") as mock_validate_has_no_nan:
-        _unique_ordered_batches(batches)
-    mock_validate_has_no_nan.assert_called_once()
-    np.testing.assert_array_equal(mock_validate_has_no_nan.call_args[0][0], batches)
-    assert mock_validate_has_no_nan.call_args[0][1] == "batches"
 
 
 def test_unique_ordered_batches_integers():

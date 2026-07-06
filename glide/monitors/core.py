@@ -3,11 +3,8 @@ from typing import Tuple, Union, overload
 import numpy as np
 from numpy.typing import NDArray
 
-from glide.core.validation import _validate_has_no_nan
-
 
 def _unique_ordered_batches(batches: NDArray) -> Tuple[NDArray, NDArray]:
-    _validate_has_no_nan(batches, "batches")
     block_starts = np.ones(len(batches), dtype=bool)
     block_starts[1:] = batches[1:] != batches[:-1]
     batch_identifiers = batches[block_starts]

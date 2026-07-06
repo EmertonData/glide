@@ -5,7 +5,7 @@ from numpy.typing import NDArray
 
 from glide.confidence_sequences import EmpiricalBernsteinConfidenceSequence
 from glide.confidence_sequences.empirical_bernstein import _compute_empirical_bernstein_bounds
-from glide.core.validation import _validate_bounds, _validate_equal_lengths, _validate_min_samples
+from glide.core.validation import _validate_bounds, _validate_equal_lengths, _validate_has_no_nan, _validate_non_empty
 from glide.mean_monitoring_results import ClassicalMeanMonitoringResult
 from glide.monitors.core import _scale_from_unit_risk, _scale_to_unit_risk, _unique_ordered_batches
 
@@ -79,6 +79,8 @@ class ClassicalMeanMonitor:
         metric_lower_bound: float,
         metric_upper_bound: float,
     ) -> Tuple[NDArray, float, NDArray, NDArray]:
+        _validate_non_empty(y, "y")
+        _validate_has_no_nan(batches, "batches")
         _validate_bounds(
             confidence_level, "confidence_level", lower=0, upper=1, left_inclusive=False, right_inclusive=False
         )
@@ -105,7 +107,6 @@ class ClassicalMeanMonitor:
         _validate_equal_lengths(y, batches, names=["y", "batches"])
         labeled_mask = ~np.isnan(y)
         labeled_values = y[labeled_mask]
-        _validate_min_samples(labeled_values, "y")
         _validate_bounds(
             labeled_values,
             "y",
@@ -224,6 +225,7 @@ class ClassicalMeanMonitor:
         Raises
         ------
         ValueError
+            - If ``y`` is empty.
             - If ``y`` and ``batches`` have different lengths.
             - If any labeled value falls outside ``[metric_lower_bound, metric_upper_bound]``.
             - If ``batches`` contains NaN values.
