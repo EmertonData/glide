@@ -21,8 +21,11 @@ def test_unique_ordered_batches_integers():
     batches = np.array([2, 2, 0, 0, 0, 1])
     batch_identifiers, batch_codes = _unique_ordered_batches(batches)
 
-    np.testing.assert_array_equal(batch_identifiers, np.array([2, 0, 1]))
-    np.testing.assert_array_equal(batch_codes, np.array([0, 0, 1, 1, 1, 2]))
+    expected_batch_identifiers = np.array([2, 0, 1])
+    expected_batch_codes = np.array([0, 0, 1, 1, 1, 2])
+
+    np.testing.assert_array_equal(batch_identifiers, expected_batch_identifiers)
+    np.testing.assert_array_equal(batch_codes, expected_batch_codes)
 
 
 def test_unique_ordered_batches_interleaved_raises():
@@ -38,14 +41,16 @@ def test_scale_to_unit_risk_lower_is_better(values_unscaled):
     result = _scale_to_unit_risk(
         values_unscaled, metric_lower_bound=0.0, metric_upper_bound=10.0, higher_is_better=False
     )
-    np.testing.assert_allclose(result, np.array([0.0, 0.5, 1.0]))
+    expected = np.array([0.0, 0.5, 1.0])
+    np.testing.assert_allclose(result, expected)
 
 
 def test_scale_to_unit_risk_higher_is_better(values_unscaled):
     result = _scale_to_unit_risk(
         values_unscaled, metric_lower_bound=0.0, metric_upper_bound=10.0, higher_is_better=True
     )
-    np.testing.assert_allclose(result, np.array([1.0, 0.5, 0.0]))
+    expected = np.array([1.0, 0.5, 0.0])
+    np.testing.assert_allclose(result, expected)
 
 
 # --- _scale_from_unit_risk ---
@@ -55,11 +60,13 @@ def test_scale_from_unit_risk_lower_is_better(values_scaled):
     result = _scale_from_unit_risk(
         values_scaled, metric_lower_bound=0.0, metric_upper_bound=10.0, higher_is_better=False
     )
-    np.testing.assert_allclose(result, np.array([0.0, 5.0, 10.0]))
+    expected = np.array([0.0, 5.0, 10.0])
+    np.testing.assert_allclose(result, expected)
 
 
 def test_scale_from_unit_risk_higher_is_better(values_scaled):
     result = _scale_from_unit_risk(
         values_scaled, metric_lower_bound=0.0, metric_upper_bound=10.0, higher_is_better=True
     )
-    np.testing.assert_allclose(result, np.array([10.0, 5.0, 0.0]))
+    expected = np.array([10.0, 5.0, 0.0])
+    np.testing.assert_allclose(result, expected)

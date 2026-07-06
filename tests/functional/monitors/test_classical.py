@@ -31,8 +31,9 @@ def batches():
 def test_detect_batch_mean_estimates_match_classical_estimator(y, batches):
     """Each batch estimate equals the classical estimator computed on that batch alone."""
     result = ClassicalMeanMonitor().detect(y, batches, higher_is_better=False, threshold=0.5)
-    estimator_means = np.zeros(5)
-    for batch_id in range(5):
+    n_batches = len(np.unique(batches))
+    estimator_means = np.zeros(n_batches)
+    for batch_id in range(n_batches):
         batch_mask = batches == batch_id
         estimator_result = ClassicalMeanEstimator().estimate(y[batch_mask])
         estimator_means[batch_id] = estimator_result.mean

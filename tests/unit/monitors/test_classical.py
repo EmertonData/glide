@@ -46,14 +46,14 @@ def test_preprocess_delegates_to_validation(monitor, y, batches):
             metric_upper_bound=1.0,
         )
 
+        mock_validate_non_empty.assert_called_once()
+        np.testing.assert_array_equal(mock_validate_non_empty.call_args[0][0], y)
+        assert mock_validate_non_empty.call_args[0][1] == "y"
+
         mock_validate_equal_lengths.assert_called_once()
         np.testing.assert_array_equal(mock_validate_equal_lengths.call_args[0][0], y)
         np.testing.assert_array_equal(mock_validate_equal_lengths.call_args[0][1], batches)
         assert mock_validate_equal_lengths.call_args[1] == {"names": ["y", "batches"]}
-
-        mock_validate_non_empty.assert_called_once()
-        np.testing.assert_array_equal(mock_validate_non_empty.call_args[0][0], y)
-        assert mock_validate_non_empty.call_args[0][1] == "y"
 
         mock_validate_has_no_nan.assert_called_once()
         np.testing.assert_array_equal(mock_validate_has_no_nan.call_args[0][0], batches)
@@ -82,6 +82,9 @@ def test_preprocess_delegates_to_validation(monitor, y, batches):
         assert mock_validate_bounds.call_args_list[2][1]["upper"] == 1.0
         assert "'threshold' must lie between" in mock_validate_bounds.call_args_list[2][1]["error_message"]
 
+        mock_unique_ordered_batches.assert_called_once()
+        np.testing.assert_array_equal(mock_unique_ordered_batches.call_args[0][0], batches)
+
         np.testing.assert_array_equal(mock_validate_bounds.call_args_list[3][0][0], y)
         assert mock_validate_bounds.call_args_list[3][0][1] == "y"
         assert mock_validate_bounds.call_args_list[3][1]["lower"] == 0.0
@@ -95,9 +98,6 @@ def test_preprocess_delegates_to_validation(monitor, y, batches):
             "'y' must have at least 2 non-NaN values per batch"
             in mock_validate_bounds.call_args_list[4][1]["error_message"]
         )
-
-        mock_unique_ordered_batches.assert_called_once()
-        np.testing.assert_array_equal(mock_unique_ordered_batches.call_args[0][0], batches)
 
 
 def test_preprocess_known_output(monitor, y, batches):

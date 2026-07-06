@@ -23,22 +23,6 @@ class ClassicalMeanMonitor:
     Because the bounds are valid at all times simultaneously, :meth:`detect` may be called
     after every new batch without inflating the false-alarm probability.
 
-    Notes
-    -----
-    The confidence sequence is built over the per-batch sample means as its
-    atoms, so the monitored quantity is the equal-weighted running mean of the
-    per-batch estimates. This matches the way human annotations arrive in
-    practice (in batches, not as a per-sample stream) and equals a per-sample
-    running mean only when every batch shares the same labeled count. The bound
-    width splits into two parts: the underlying statistical precision, set by the
-    total number of labels (the usual root-n term, unaffected by how the labels
-    are split across batches), plus the anytime-valid overhead, the price for
-    being allowed to peek after every batch, which decays as one over the number
-    of batches. Both parts shrink as data accumulates; the overhead is simply
-    what keeps the earliest looks wide, so no alarm can fire in the first few
-    batches. This is the expected, modest cost of valid repeated looking, not a
-    loss of sample efficiency.
-
     References
     ----------
     Howard, Steven R., Aaditya Ramdas, Jon McAuliffe, and Jasjeet Sekhon. "Time-uniform,
@@ -80,6 +64,7 @@ class ClassicalMeanMonitor:
         metric_upper_bound: float,
     ) -> Tuple[NDArray, float, NDArray, NDArray]:
         _validate_non_empty(y, "y")
+        _validate_equal_lengths(y, batches, names=["y", "batches"])
         _validate_has_no_nan(batches, "batches")
         _validate_bounds(
             confidence_level, "confidence_level", lower=0, upper=1, left_inclusive=False, right_inclusive=False
@@ -104,7 +89,6 @@ class ClassicalMeanMonitor:
                 f"'metric_upper_bound'={metric_upper_bound!r}."
             ),
         )
-        _validate_equal_lengths(y, batches, names=["y", "batches"])
         labeled_mask = ~np.isnan(y)
         labeled_values = y[labeled_mask]
         _validate_bounds(
@@ -227,13 +211,13 @@ class ClassicalMeanMonitor:
         ValueError
             - If ``y`` is empty.
             - If ``y`` and ``batches`` have different lengths.
-            - If any labeled value falls outside ``[metric_lower_bound, metric_upper_bound]``.
-            - If ``batches`` contains NaN values.
-            - If batches are interleaved rather than grouped into contiguous blocks.
-            - If any batch has fewer than 2 labeled (non-NaN) samples.
+            - If ``batches`` contains NaN values (numeric dtype) or None values (non-numeric dtype).
+            - If ``confidence_level`` is not in (0, 1).
             - If ``metric_lower_bound >= metric_upper_bound``.
             - If ``threshold`` falls outside ``[metric_lower_bound, metric_upper_bound]``.
-            - If ``confidence_level`` is not in (0, 1).
+            - If any labeled value falls outside ``[metric_lower_bound, metric_upper_bound]``.
+            - If batches are interleaved rather than grouped into contiguous blocks.
+            - If any batch has fewer than 2 labeled (non-NaN) samples.
         """
         risk_y, risk_threshold, batch_codes, batch_n = self._preprocess(
             y, batches, higher_is_better, threshold, confidence_level, metric_lower_bound, metric_upper_bound
