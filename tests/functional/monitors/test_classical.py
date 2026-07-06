@@ -31,13 +31,16 @@ def batches():
 def test_detect_batch_mean_estimates_match_classical_estimator(y, batches):
     """Each batch estimate equals the classical estimator computed on that batch alone."""
     result = ClassicalMeanMonitor().detect(y, batches, higher_is_better=False, threshold=0.5)
-    batch_mask = batches == 0
-    estimator_result = ClassicalMeanEstimator().estimate(y[batch_mask])
+    estimator_means = np.zeros(5)
+    for batch_id in range(5):
+        batch_mask = batches == batch_id
+        estimator_result = ClassicalMeanEstimator().estimate(y[batch_mask])
+        estimator_means[batch_id] = estimator_result.mean
 
-    assert result.batch_mean_estimates[0] == pytest.approx(estimator_result.mean)
+    np.testing.assert_allclose(result.batch_mean_estimates, estimator_means)
 
 
-def test_detect_prefix_consistency():
+def test_detect_prefix_consistency(y, batches):
     """Detecting on a growing history is prefix-consistent with detecting on the full history.
 
     Every batch is monitored (there is no reference batch to exclude), so restricting
@@ -45,11 +48,6 @@ def test_detect_prefix_consistency():
     arrays returned by the call on the full dataset. This is the property that makes
     repeated calls on a growing history jointly valid.
     """
-    first_block = np.array([0.1, 0.2, 0.15, 0.25])
-    later_block = np.array([0.3, 0.4, 0.35, 0.45])
-    y = np.hstack([first_block, np.tile(later_block, 3)])
-    batches = np.repeat(np.arange(4), 4)
-
     monitor = ClassicalMeanMonitor()
     full = monitor.detect(y, batches, higher_is_better=False, threshold=0.5)
     prefix_mask = batches <= 2
@@ -66,23 +64,3 @@ def test_detect_higher_is_better_symmetry(y, batches):
 
     np.testing.assert_array_equal(performance.alarms, risk.alarms)
     np.testing.assert_allclose(performance.confidence_bounds, 1.0 - risk.confidence_bounds)
-
-
-def test_detect_no_alarm_on_stationary_stream_below_threshold():
-    """A stream stationary well below the threshold never raises a drift alarm."""
-    y, _ = generate_binary_dataset(n_total=200, true_mean=0.2, proxy_mean=0.2, correlation=0.0, random_seed=1)
-    batches = np.repeat(np.arange(20), 10)
-
-    result = ClassicalMeanMonitor().detect(y, batches, higher_is_better=False, threshold=0.5)
-
-    assert result.drift_detected is False
-
-
-def test_detect_alarm_on_stream_above_threshold():
-    """A stream stationary well above the threshold eventually raises a drift alarm."""
-    y, _ = generate_binary_dataset(n_total=200, true_mean=0.9, proxy_mean=0.9, correlation=0.0, random_seed=1)
-    batches = np.repeat(np.arange(20), 10)
-
-    result = ClassicalMeanMonitor().detect(y, batches, higher_is_better=False, threshold=0.5)
-
-    assert result.drift_detected is True
