@@ -49,17 +49,15 @@ def test_compute_clipped_tuning_parameter_known_value(data):
 # --- _normalize_to_unit_interval / _denormalize_from_unit_interval ---
 
 
-def test_normalize_to_unit_interval():
-    values = np.array([-1.0, 0.0, 2.0])
+def test_normalize_to_unit_interval_delegates():
+    with patch("glide.monitors.ppi_core._scale_to_unit_risk") as mock_scale_to_unit_risk:
+        _normalize_to_unit_interval(2.0, max_tuning_parameter=1.0)
 
-    normalized = _normalize_to_unit_interval(values, max_tuning_parameter=1.0)
-
-    np.testing.assert_allclose(normalized, np.array([0.0, 1.0 / 3.0, 1.0]))
+    mock_scale_to_unit_risk.assert_called_once_with(2.0, -1.0, 2.0, higher_is_better=False)
 
 
-def test_denormalize_from_unit_interval():
-    values = np.array([0.0, 1.0 / 3.0, 1.0])
+def test_denormalize_from_unit_interval_delegates():
+    with patch("glide.monitors.ppi_core._scale_from_unit_risk") as mock_scale_from_unit_risk:
+        _denormalize_from_unit_interval(0.5, max_tuning_parameter=1.0)
 
-    original = _denormalize_from_unit_interval(values, max_tuning_parameter=1.0)
-
-    np.testing.assert_allclose(original, np.array([-1.0, 0.0, 2.0]))
+    mock_scale_from_unit_risk.assert_called_once_with(0.5, -1.0, 2.0, higher_is_better=False)

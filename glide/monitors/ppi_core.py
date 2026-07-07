@@ -3,6 +3,7 @@ from typing import Union, overload
 from numpy.typing import NDArray
 
 from glide.estimators.ppi_core import _compute_tuning_parameter
+from glide.monitors.core import _scale_from_unit_risk, _scale_to_unit_risk
 
 
 def _compute_clipped_tuning_parameter(
@@ -25,8 +26,7 @@ def _normalize_to_unit_interval(
     values: Union[float, NDArray],
     max_tuning_parameter: float,
 ) -> Union[float, NDArray]:
-    normalization = 1.0 + 2.0 * max_tuning_parameter
-    normalized = (values + max_tuning_parameter) / normalization
+    normalized = _scale_to_unit_risk(values, -max_tuning_parameter, 1.0 + max_tuning_parameter, higher_is_better=False)
     return normalized
 
 
@@ -38,6 +38,5 @@ def _denormalize_from_unit_interval(
     values: Union[float, NDArray],
     max_tuning_parameter: float,
 ) -> Union[float, NDArray]:
-    normalization = 1.0 + 2.0 * max_tuning_parameter
-    original = values * normalization - max_tuning_parameter
+    original = _scale_from_unit_risk(values, -max_tuning_parameter, 1.0 + max_tuning_parameter, higher_is_better=False)
     return original
