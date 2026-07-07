@@ -200,12 +200,10 @@ class PPIMeanMonitor:
     ) -> PredictionPoweredMeanMonitoringResult:
         """Detect a drift of the running mean across a batched dataset.
 
-        Splits the data by batch, computes a prediction-powered estimate per batch
-        with a power-tuning parameter fitted only on batches that strictly precede
-        it (the first batch, having no predecessor, uses the classic PPI weight of
-        1), and builds an anytime-valid empirical-Bernstein confidence sequence on
-        the running mean of those estimates. An alarm is raised at every batch where
-        the sequence crosses the user-supplied ``threshold``.
+        Splits the data by batch, computes a prediction-powered estimate per batch,
+        and builds an anytime-valid empirical-Bernstein confidence sequence on the
+        running mean of those estimates. An alarm is raised at every batch where the
+        sequence crosses the user-supplied ``threshold``.
 
         Rows must be ordered oldest batch first and grouped into contiguous blocks;
         identifier values are not compared, so any label type works. Batches must be
