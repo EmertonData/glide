@@ -50,7 +50,10 @@ Once human labels $Y_i$ have been collected for samples with $\xi_i = 1$, the es
 
 ---
 
+Once the system is deployed, the same estimate can be tracked over successive batches of production data to detect drift. This requires repeatedly checking the metric against a threshold without inflating the false-alarm rate, a guarantee provided by the anytime-valid monitoring methodology described in [Monitors](monitors.md).
+
 ## In this guide
 
 - [Samplers](samplers.md) — mathematical foundations of the available samplers in the library.
 - [Estimators](estimators.md) — mathematical foundations of the available estimators in the library.
+- [Monitors](monitors.md) — mathematical foundations of anytime-valid drift monitoring, for tracking a deployed metric over successive batches.
