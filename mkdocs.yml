@@ -111,6 +111,7 @@ nav:
     - Simulators: api/simulators.md
     - Samplers: api/samplers.md
     - Estimators: api/estimators.md
+    - Monitors: api/monitors.md
     - Confidence Intervals: api/confidence_intervals.md
     - Confidence Sequences: api/confidence_sequences.md
     - Inference Results: api/mean_inference_results.md
