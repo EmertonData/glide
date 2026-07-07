@@ -31,7 +31,8 @@ def dataset():
     xis = []
     for _ in range(n_batches):
         xi_batch = np.zeros(batch_size)
-        xi_batch[rng.choice(batch_size, size=n_labeled_per_batch)] = 1
+        labeled_indices = rng.choice(batch_size, size=n_labeled_per_batch)
+        xi_batch[labeled_indices] = 1
         xis.append(xi_batch)
     xi = np.hstack(xis)
     y_true = simulate_annotation(y_true_oracle, xi)

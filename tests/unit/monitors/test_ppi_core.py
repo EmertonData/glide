@@ -12,16 +12,24 @@ from glide.monitors.ppi_core import (
 
 # --- fixtures ---
 @pytest.fixture
-def data():
-    return np.array([0.1, 0.3]), np.array([0.15, 0.25]), np.array([0.2, 0.4])
+def y_true_labeled():
+    return np.array([0.1, 0.3])
+
+
+@pytest.fixture
+def y_proxy_labeled():
+    return np.array([0.15, 0.25])
+
+
+@pytest.fixture
+def y_proxy_unlabeled():
+    return np.array([0.2, 0.4])
 
 
 # --- _compute_clipped_tuning_parameter ---
 
 
-def test_compute_clipped_tuning_parameter_delegates(data):
-    y_true_labeled, y_proxy_labeled, y_proxy_unlabeled = data
-
+def test_compute_clipped_tuning_parameter_delegates(y_true_labeled, y_proxy_labeled, y_proxy_unlabeled):
     with patch("glide.monitors.ppi_core._compute_tuning_parameter") as mock_compute_tuning_parameter:
         mock_compute_tuning_parameter.return_value = 0.5
         _compute_clipped_tuning_parameter(
@@ -35,9 +43,7 @@ def test_compute_clipped_tuning_parameter_delegates(data):
     assert mock_compute_tuning_parameter.call_args[0][3] is False
 
 
-def test_compute_clipped_tuning_parameter_known_value(data):
-    y_true_labeled, y_proxy_labeled, y_proxy_unlabeled = data
-
+def test_compute_clipped_tuning_parameter_known_value(y_true_labeled, y_proxy_labeled, y_proxy_unlabeled):
     expected = 0.428
     result = _compute_clipped_tuning_parameter(
         y_true_labeled, y_proxy_labeled, y_proxy_unlabeled, power_tuning=True, max_tuning_parameter=1.0
