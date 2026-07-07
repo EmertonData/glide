@@ -1,6 +1,6 @@
 # Monitors
 
-Once a metric has been estimated validating an AI system's deployment, the question shifts from "what is the metric today?" to "has the metric drifted?" GLIDE's monitors answer this with **anytime-valid drift monitoring** [[2](#ref-2)]: a sequential procedure that watches a metric across successive batches of production data and raises an alarm the moment there is statistically valid evidence that it has crossed a threshold.
+Once a metric has been estimated validating an AI system's deployment, the question shifts from "what is the metric today?" to "has the metric drifted?" GLIDE's monitors answer this with **anytime-valid drift monitoring**: a sequential procedure that watches a metric across successive batches of production data and raises an alarm the moment there is statistically valid evidence that it has crossed a threshold.
 
 ---
 
@@ -84,7 +84,7 @@ There is no previous batch before the first one, so $c_1$ must be seeded by a co
 
 $$W_t = \int_0^1 W_t(\beta) \, q(\beta) \, d\beta.$$
 
-A mixture of nonnegative supermartingales, each starting at $1$, is itself a nonnegative supermartingale starting at $1$, so Ville's inequality applies for *any* choice of $q$; the density affects the tightness of the resulting bound but not its validity. A clever choice of *conjugate* mixture $q$ (Gaussian, Gamma, ...) can help tighten the bound at a target horizon [[3](#ref-3)]. For simplicity, one can take $q$ uniform on $(0, 1)$. This parameter-free choice stays valid regardless of horizon, at the price of being less tight than a correctly tuned conjugate mixture.
+A mixture of nonnegative supermartingales, each starting at $1$, is itself a nonnegative supermartingale starting at $1$, so Ville's inequality applies for *any* choice of $q$; the density affects the tightness of the resulting bound but not its validity. A clever choice of *conjugate* mixture $q$ (Gaussian, Gamma, ...) can help tighten the bound at a target horizon [[2](#ref-2)]. For simplicity, one can take $q$ uniform on $(0, 1)$. This parameter-free choice stays valid regardless of horizon, at the price of being less tight than a correctly tuned conjugate mixture.
 
 ### The Empirical-Bernstein Boundary
 
@@ -122,7 +122,7 @@ Finally, a caveat on what this monitors: $\bar{R}_t$ averages over the entire ac
 
 ## Prediction-Powered Risk Monitoring (PPRM)
 
-The human labels collected in a batch can be scarce, which limits how quickly a monitor based on them alone can react to real drift. **Prediction-Powered Risk Monitoring (PPRM)** [[2](#ref-2)] instead combines those human labels with a large pool of cheap proxy labels, the same way [Prediction-Powered Inference (PPI++)](estimators.md#prediction-powered-inference-ppi) does for one-off estimation. The anytime-valid guarantee derived above, the confidence sequence, Ville's inequality, the betting supermartingale, the empirical-Bernstein boundary, and the alarm rule, carries over unchanged: only the per-batch estimate $\hat{R}_s$ changes, now obtained from the PPI++ estimator instead of a plain sample mean of the batch's labels. That single change brings two additional requirements, addressed in turn below: the estimate must be renormalized onto $[0, 1]$, and its power-tuning weight must be predictable.
+The human labels collected in a batch can be scarce, which limits how quickly a monitor based on them alone can react to real drift. **Prediction-Powered Risk Monitoring (PPRM)** [[3](#ref-3)] instead combines those human labels with a large pool of cheap proxy labels, the same way [Prediction-Powered Inference (PPI++)](estimators.md#prediction-powered-inference-ppi) does for one-off estimation. The anytime-valid guarantee derived above, the confidence sequence, Ville's inequality, the betting supermartingale, the empirical-Bernstein boundary, and the alarm rule, carries over unchanged: only the per-batch estimate $\hat{R}_s$ changes, now obtained from the PPI++ estimator instead of a plain sample mean of the batch's labels. That single change brings two additional requirements, addressed in turn below: the estimate must be renormalized onto $[0, 1]$, and its power-tuning weight must be predictable.
 
 ### Setting
 
@@ -169,6 +169,6 @@ now backed by the more sample-efficient PPI++ estimate, at the same single false
 
 <a id="ref-1"></a>[1] <a id="ref-1-link" href="https://academic.oup.com/jrsssb/article/86/1/1/7043257">Waudby-Smith, Ian, and Aaditya Ramdas. "Estimating means of bounded random variables by betting." Journal of the Royal Statistical Society Series B: Statistical Methodology 86, no. 1 (2024): 1-27.</a>.
 
-<a id="ref-2"></a>[2] <a id="ref-2-link" href="https://arxiv.org/abs/2602.02229">Zhang, Guangyi, Yunlong Cai, Guanding Yu, and Osvaldo Simeone. "Prediction-Powered Risk Monitoring of Deployed Models for Detecting Harmful Distribution Shifts." arXiv preprint arXiv:2602.02229 (2026).</a>.
+<a id="ref-2"></a>[2] <a id="ref-2-link" href="https://projecteuclid.org/journals/The-Annals-of-Statistics/volume-49/issue-2/Time-uniform-nonparametric-nonasymptotic-confidence-sequences/10.1214/20-AOS1991.full">Howard, Steven R., Aaditya Ramdas, Jon McAuliffe, and Jasjeet Sekhon. "Time-uniform, nonparametric, nonasymptotic confidence sequences." The Annals of Statistics 49, no. 2 (2021): 1055-1080.</a>.
 
-<a id="ref-3"></a>[3] <a id="ref-3-link" href="https://arxiv.org/abs/1810.08240">Howard, Steven R., Aaditya Ramdas, Jon McAuliffe, and Jasjeet Sekhon. "Time-uniform, nonparametric, nonasymptotic confidence sequences." The Annals of Statistics 49, no. 2 (2021): 1055-1080.</a>.
+<a id="ref-3"></a>[3] <a id="ref-3-link" href="https://arxiv.org/abs/2602.02229">Zhang, Guangyi, Yunlong Cai, Guanding Yu, and Osvaldo Simeone. "Prediction-Powered Risk Monitoring of Deployed Models for Detecting Harmful Distribution Shifts." arXiv preprint arXiv:2602.02229 (2026).</a>.
