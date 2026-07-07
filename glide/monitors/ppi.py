@@ -30,14 +30,12 @@ class PPIMeanMonitor:
     It uses a per-batch Prediction-Powered Inference (PPI) estimate: a small set of
     true labels and a large set of proxy labels, combined with a power-tuning
     parameter fitted on the batches that strictly precede it (predictable, as
-    required for validity). To be used on accumulated non-overlapping production
-    batches by calling :meth:`detect` on the whole accumulated dataset at any time.
-    Data is passed oldest batch first, and every batch is monitored. The monitor
-    builds an anytime-valid confidence sequence on the running mean of the per-batch
-    PPI estimates, and raises a drift alarm when it crosses a user-supplied
-    ``threshold`` (the worst tolerable metric value). Because the bounds are valid at
-    all times simultaneously, :meth:`detect` may be called after every new batch
-    without inflating the false-alarm probability.
+    required for validity). The monitor builds an anytime-valid confidence sequence
+    on the running mean of the per-batch PPI estimates, and raises a drift alarm
+    when it crosses a user-supplied ``threshold`` (the worst tolerable metric
+    value). Because the bounds are valid at all times simultaneously, :meth:`detect`
+    may be called after every new batch without inflating the false-alarm
+    probability.
 
     References
     ----------
