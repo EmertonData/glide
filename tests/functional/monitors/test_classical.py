@@ -42,13 +42,7 @@ def test_detect_batch_mean_estimates_match_classical_estimator(y, batches):
 
 
 def test_detect_prefix_consistency(y, batches):
-    """Detecting on a growing history is prefix-consistent with detecting on the full history.
-
-    Every batch is monitored (there is no reference batch to exclude), so restricting
-    the call to the first k batches must reproduce exactly the first k entries of the
-    arrays returned by the call on the full dataset. This is the property that makes
-    repeated calls on a growing history jointly valid.
-    """
+    """Detecting on a growing history is prefix-consistent with detecting on the full history."""
     monitor = ClassicalMeanMonitor()
     full = monitor.detect(y, batches, higher_is_better=False, threshold=0.5)
     prefix_mask = batches <= 2

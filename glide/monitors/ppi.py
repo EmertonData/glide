@@ -64,6 +64,8 @@ class PPIMeanMonitor:
     >>> result = monitor.detect(y_true, y_proxy, batches, higher_is_better=False, threshold=0.5)
     >>> result.drift_detected
     True
+    >>> result.first_alarm_index
+    23
     """
 
     def _preprocess(
@@ -243,10 +245,9 @@ class PPIMeanMonitor:
         confidence_level : float, optional
             How confident each alarm should be. At the default ``0.8`` the monitor
             raises "80% confident" alarms: under no drift it has at most a 20% chance
-            of *ever* raising a false alarm, no matter how often you look. Raising it
-            (say to ``0.95``) demands more evidence before alarming, so alarms become
-            more trustworthy but arrive later; lowering it detects sooner at the cost
-            of more false alarms.
+            of raising a false alarm. Raising this value demands more evidence before
+            alarming, so alarms become more trustworthy but arrive later; lowering it
+            detects sooner at the cost of more false alarms.
         power_tuning : bool, optional
             If ``True`` (default), compute the power-tuning parameter of each batch on
             all previous batches (the first batch, having no predecessor, uses 1). If
@@ -299,7 +300,7 @@ class PPIMeanMonitor:
 
         risk_batch_estimates = np.empty(n_batches)
         for position in range(n_batches):
-            if position == 0:
+            if position == 0 or (not power_tuning):
                 tuning_parameter = 1.0
             else:
                 earlier_mask = batch_codes < position
