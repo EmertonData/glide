@@ -104,7 +104,7 @@ class PPIMeanMonitor:
             upper=metric_upper_bound,
             error_message=(
                 f"'threshold' must lie between 'metric_lower_bound'={metric_lower_bound!r} and "
-                f"'metric_upper_bound'={metric_upper_bound!r}."
+                f"'metric_upper_bound'={metric_upper_bound!r}; got {threshold!r}."
             ),
         )
         _validate_y_proxy(y_proxy)
@@ -250,8 +250,11 @@ class PPIMeanMonitor:
             detects sooner at the cost of more false alarms.
         power_tuning : bool, optional
             If ``True`` (default), compute the power-tuning parameter of each batch on
-            all previous batches (the first batch, having no predecessor, uses 1). If
-            ``False``, use 1 everywhere (classic PPI).
+            all previous batches (the first batch, having no predecessor, uses
+            ``min(1.0, max_tuning_parameter)``). If ``False``, use
+            ``min(1.0, max_tuning_parameter)`` everywhere (classic PPI). A tuning
+            parameter computed from data is additionally clipped to be no lower than
+            zero if the computation would otherwise turn out negative.
         metric_lower_bound : float, optional
             Known lower bound of the metric. Defaults to ``0.0``.
         metric_upper_bound : float, optional
@@ -301,7 +304,7 @@ class PPIMeanMonitor:
         risk_batch_estimates = np.empty(n_batches)
         for position in range(n_batches):
             if position == 0 or (not power_tuning):
-                tuning_parameter = 1.0
+                tuning_parameter = min(1.0, max_tuning_parameter)
             else:
                 earlier_mask = batch_codes < position
                 y_true_earlier, y_proxy_labeled_earlier, y_proxy_unlabeled_earlier, _ = _split_labeled_unlabeled(

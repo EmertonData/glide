@@ -33,7 +33,7 @@ def dataset():
         xi_batch = np.zeros(batch_size)
         xi_batch[rng.choice(batch_size, size=n_labeled_per_batch)] = 1
         xis.append(xi_batch)
-    xi = np.concat(xis)
+    xi = np.hstack(xis)
     y_true = simulate_annotation(y_true_oracle, xi)
     return y_true, y_proxy, batches
 
