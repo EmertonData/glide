@@ -50,9 +50,17 @@
 
 ## Monitors
 
+### Classical
+
 | Class | Description |
 |-------|-------------|
 | [`ClassicalMeanMonitor`](monitors.md#glide.monitors.classical.ClassicalMeanMonitor) | Anytime-valid drift monitor over batched labels, without proxy predictions |
+
+### Prediction-Powered
+
+| Class | Description |
+|-------|-------------|
+| [`PPIMeanMonitor`](monitors.md#glide.monitors.ppi.PPIMeanMonitor) | Anytime-valid drift monitor combining true and proxy labels |
 
 ## Confidence Intervals
 

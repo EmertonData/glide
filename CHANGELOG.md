@@ -9,6 +9,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 ## [Next release]
 
 ### ✨ Added
+- `PPIMeanMonitor` in `glide.monitors`: anytime-valid drift detection over batched production data combining true and proxy labels.
 - `glide.monitors` module with `ClassicalMeanMonitor`: detects drift of a metric across batches of labeled data.
 - `glide.confidence_sequences` module with the `ConfidenceSequence` protocol and `EmpiricalBernsteinConfidenceSequence`: an anytime-valid empirical-Bernstein confidence sequence.
 - `glide.mean_monitoring_results` module with `MeanMonitoringResult`, `ClassicalMeanMonitoringResult` and `PredictionPoweredMeanMonitoringResult`: result objects for drift-monitoring procedures over batched datasets.

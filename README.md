@@ -88,6 +88,7 @@ If you use GLIDE in your work, please cite us using the "Cite this repository" b
 | Stratified Predict-Then-Debias | `estimators.StratifiedPTDMeanEstimator` | [[7]](#ref-7) | [Link](https://github.com/DanKluger/PTDBoot) |
 | Clustered Predict-Then-Debias | `estimators.ClusteredPTDMeanEstimator` | [[7]](#ref-7) | [Link](https://github.com/DanKluger/PTDBoot) |
 | IPW Predict-Then-Debias | `estimators.IPWPTDMeanEstimator` | [[7]](#ref-7) | [Link](https://github.com/DanKluger/PTDBoot) |
+| Prediction-Powered Risk Monitoring (PPRM) | `monitors.PPIMeanMonitor` | [[9]](#ref-9), [[10]](#ref-10) | — |
 
 ### 📖 References
 
@@ -106,6 +107,10 @@ If you use GLIDE in your work, please cite us using the "Cite this repository" b
 <a id="ref-7"></a>[7] <a href="https://arxiv.org/abs/2501.18577">Kluger, Dan M., Kerri Lu, Tijana Zrnic, Sherrie Wang, and Stephen Bates. "Prediction-powered inference with imputed covariates and nonuniform sampling." arXiv preprint arXiv:2501.18577 (2025).</a>
 
 <a id="ref-8"></a>[8] <a id="ref-8-link" href="https://arxiv.org/abs/2509.21707">Shan, Jiawei, Zhifeng Chen, Yiming Dong, Yazhen Wang, and Jiwei Zhao. "SADA: Safe and Adaptive Aggregation of Multiple Black-Box Predictions in Semi-Supervised Learning." arXiv preprint arXiv:2509.21707 (2025).</a>.
+
+<a id="ref-9"></a>[9] <a href="https://arxiv.org/abs/2602.02229">Zhang, Guangyi, Yunlong Cai, Guanding Yu, and Osvaldo Simeone. "Prediction-Powered Risk Monitoring of Deployed Models for Detecting Harmful Distribution Shifts." arXiv preprint arXiv:2602.02229 (2026).</a>
+
+<a id="ref-10"></a>[10] <a href="https://arxiv.org/abs/2110.06177">Podkopaev, Aleksandr, and Aaditya Ramdas. "Tracking the risk of a deployed model and detecting harmful distribution shifts." International Conference on Learning Representations (ICLR), 2022.</a>
 
 ## 📬 Stay Updated
 
