@@ -49,7 +49,7 @@ def test_compute_mixture_boundary_increases_with_confidence():
 
 @pytest.fixture
 def batch_estimates():
-    return np.array([0.4, 0.6, 0.5])
+    return np.array([0.4, 0.6, 0.5, 0.5, 0.5, 0.5])
 
 
 def test_compute_empirical_bernstein_bounds_delegates_to_validation(batch_estimates):
@@ -65,8 +65,8 @@ def test_compute_empirical_bernstein_bounds(batch_estimates):
     running_mean_estimates, lower_bounds = _compute_empirical_bernstein_bounds(
         batch_estimates, seed_center=0.5, miscoverage=0.2
     )
-    expected_lower_bound = np.array([-2.27458313, -0.86521862, -0.41014575])
-    np.testing.assert_allclose(running_mean_estimates, np.array([0.4, 0.5, 0.5]))
+    expected_lower_bound = np.array([0.0, 0.0, 0.0, 0.0, 0.0, 0.04492713])
+    np.testing.assert_allclose(running_mean_estimates, np.array([0.4, 0.5, 0.5, 0.5, 0.5, 0.5]))
     np.testing.assert_allclose(lower_bounds, expected_lower_bound, atol=1e-6)
 
 
