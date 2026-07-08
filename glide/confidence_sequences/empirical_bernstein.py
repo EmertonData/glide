@@ -3,20 +3,24 @@ from typing import Literal, Tuple
 
 import numpy as np
 from numpy.typing import NDArray
-from scipy.integrate import quad
 from scipy.optimize import brentq
+from scipy.special import gammainc, gammaln
 
 from glide.core.validation import _validate_bounds, _validate_literal
 
 
 def _compute_mixture_wealth(deviation: float, variance_process_value: float) -> float:
-    def integrand(betting_parameter: float) -> float:
-        psi_exponential = -np.log(1 - betting_parameter) - betting_parameter
-        value = np.exp(betting_parameter * deviation - psi_exponential * variance_process_value)
-        return value
-
-    integral, _ = quad(integrand, 0.0, 1.0)
-    return integral
+    exponent_argument = deviation + variance_process_value
+    if exponent_argument == 0.0:
+        return 1.0
+    log_wealth = (
+        exponent_argument
+        - (variance_process_value + 1) * np.log(exponent_argument)
+        + gammaln(variance_process_value + 1)
+        + np.log(gammainc(variance_process_value + 1, exponent_argument))
+    )
+    wealth = np.exp(log_wealth)
+    return wealth
 
 
 def _compute_mixture_boundary(variance_process_value: float, miscoverage: float) -> float:
