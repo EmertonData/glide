@@ -3,7 +3,6 @@ from typing import Literal, Tuple
 
 import numpy as np
 from numpy.typing import NDArray
-from scipy.optimize import brentq
 from scipy.special import gammainc, gammaln
 
 from glide.core.validation import _validate_bounds, _validate_literal
@@ -30,10 +29,17 @@ def _compute_mixture_boundary(variance_process_value: float, miscoverage: float)
         value = _compute_mixture_wealth(deviation, variance_process_value) - wealth_target
         return value
 
-    upper_bracket = 1.0
-    while excess_wealth(upper_bracket) < 0.0:
-        upper_bracket *= 2.0
-    boundary = brentq(excess_wealth, 0.0, upper_bracket)
+    # upper_bracket = 1.0
+    # while excess_wealth(upper_bracket) < 0.0:
+    #     upper_bracket *= 2.0
+    # boundary = brentq(excess_wealth, 0.0, upper_bracket)
+
+    lamda = 0.999
+
+    def psi_E(x):
+        return -np.log(1 - x) - x
+
+    boundary = (np.log(1 / miscoverage) + psi_E(lamda) * variance_process_value) / lamda
     return boundary
 
 
@@ -48,7 +54,8 @@ def _compute_empirical_bernstein_bounds(
     running_mean_estimates = np.cumsum(batch_estimates) / batch_counts
     predictable_centers = np.hstack([np.array([seed_center]), running_mean_estimates[:-1]])
     variance_process = np.cumsum((batch_estimates - predictable_centers) ** 2)
-    boundaries = np.array([_compute_mixture_boundary(value, miscoverage) for value in variance_process])
+    # boundaries = np.array([_compute_mixture_boundary(value, miscoverage) for value in variance_process])
+    boundaries = _compute_mixture_boundary(variance_process, miscoverage)
     lower_bounds = running_mean_estimates - boundaries / batch_counts
     return running_mean_estimates, lower_bounds
 
