@@ -172,6 +172,25 @@ def test_postprocess_delegates_to_scaling(monitor):
     np.testing.assert_array_equal(mock_scale_from_unit_risk.call_args_list[2][0][0], risk_batch_mean_estimates)
 
 
+def test_postprocess_clips_risk_values(monitor):
+    risk_running_means = np.array([-0.5, 1.5])
+    risk_confidence_bounds = np.array([-0.5, 1.5])
+    risk_batch_mean_estimates = np.array([-0.5, 1.5])
+
+    running_means, confidence_bounds, batch_mean_estimates = monitor._postprocess(
+        risk_running_means,
+        risk_confidence_bounds,
+        risk_batch_mean_estimates,
+        higher_is_better=False,
+        metric_lower_bound=0.0,
+        metric_upper_bound=1.0,
+    )
+
+    np.testing.assert_allclose(running_means, np.array([0.0, 1.0]))
+    np.testing.assert_allclose(confidence_bounds, np.array([0.0, 1.0]))
+    np.testing.assert_allclose(batch_mean_estimates, np.array([0.0, 1.0]))
+
+
 # --- detect ---
 
 
@@ -201,7 +220,7 @@ def test_detect_metadata(monitor, y_true, y_proxy, batches):
 
 def test_detect_custom_confidence_level(monitor, y_true, y_proxy, batches):
     expected_running_means = np.array([0.25, 0.292647])
-    expected_confidence_bounds = np.array([-1.0, -1.0])
+    expected_confidence_bounds = np.array([0.0, 0.0])
 
     result = monitor.detect(
         y_true, y_proxy, batches, higher_is_better=False, threshold=0.5, metric_name="risk", confidence_level=0.90

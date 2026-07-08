@@ -128,11 +128,12 @@ class ClassicalMeanMonitor:
         metric_lower_bound: float,
         metric_upper_bound: float,
     ) -> Tuple[NDArray, NDArray, NDArray]:
+        clipped_risk_confidence_bounds = np.clip(risk_confidence_bounds, 0.0, 1.0)
         running_means = _scale_from_unit_risk(
             risk_running_means, metric_lower_bound, metric_upper_bound, higher_is_better
         )
         confidence_bounds = _scale_from_unit_risk(
-            risk_confidence_bounds, metric_lower_bound, metric_upper_bound, higher_is_better
+            clipped_risk_confidence_bounds, metric_lower_bound, metric_upper_bound, higher_is_better
         )
         batch_mean_estimates = _scale_from_unit_risk(
             risk_batch_mean_estimates, metric_lower_bound, metric_upper_bound, higher_is_better

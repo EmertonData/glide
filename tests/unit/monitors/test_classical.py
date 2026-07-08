@@ -141,6 +141,25 @@ def test_postprocess_delegates_to_scaling(monitor):
     np.testing.assert_array_equal(mock_scale_from_unit_risk.call_args_list[2][0][0], risk_batch_mean_estimates)
 
 
+def test_postprocess_clips_confidence_bounds(monitor):
+    risk_running_means = np.array([0.2, 0.25])
+    risk_confidence_bounds = np.array([-0.5, 1.5])
+    risk_batch_mean_estimates = np.array([0.2, 0.3])
+
+    running_means, confidence_bounds, batch_mean_estimates = monitor._postprocess(
+        risk_running_means,
+        risk_confidence_bounds,
+        risk_batch_mean_estimates,
+        higher_is_better=False,
+        metric_lower_bound=0.0,
+        metric_upper_bound=1.0,
+    )
+
+    np.testing.assert_allclose(confidence_bounds, np.array([0.0, 1.0]))
+    np.testing.assert_allclose(running_means, risk_running_means)
+    np.testing.assert_allclose(batch_mean_estimates, risk_batch_mean_estimates)
+
+
 # --- detect ---
 
 
