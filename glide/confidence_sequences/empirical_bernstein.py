@@ -39,7 +39,7 @@ def _compute_mixture_boundary(variance_process_value: float, miscoverage: float)
     def psi_E(x):
         return -np.log(1 - x) - x
 
-    boundary = (np.log(1 / miscoverage) + psi_E(lamda) * variance_process_value) / lamda
+    boundary = (np.log(wealth_target) + psi_E(lamda) * variance_process_value) / lamda
     return boundary
 
 
