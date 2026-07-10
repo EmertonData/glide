@@ -19,8 +19,6 @@ from glide.mean_monitoring_results import PredictionPoweredMeanMonitoringResult
 from glide.monitors.core import _scale_from_unit_risk, _scale_to_unit_risk, _unique_ordered_batches
 from glide.monitors.ppi_core import (
     _compute_clipped_tuning_parameter,
-    _denormalize_from_unit_interval,
-    _normalize_to_unit_interval,
 )
 
 
@@ -324,16 +322,21 @@ class PPIMeanMonitor:
                 y_true_labeled, y_proxy_labeled, y_proxy_unlabeled, tuning_parameter
             )
 
-        normalized_estimates = _normalize_to_unit_interval(risk_batch_estimates, max_tuning_parameter)
-        normalized_threshold = _normalize_to_unit_interval(risk_threshold, max_tuning_parameter)
+        risk_batch_estimates = np.clip(risk_batch_estimates, 0.0, 1.0)
+        # normalized_estimates = _normalize_to_unit_interval(risk_batch_estimates, max_tuning_parameter)
+        # normalized_threshold = _normalize_to_unit_interval(risk_threshold, max_tuning_parameter)
 
         miscoverage = 1.0 - confidence_level
-        normalized_running_means, normalized_lower_bounds = _compute_empirical_bernstein_bounds(
-            normalized_estimates, normalized_threshold, miscoverage
-        )
+        # normalized_running_means, normalized_lower_bounds = _compute_empirical_bernstein_bounds(
+        #     normalized_estimates, normalized_threshold, miscoverage
+        # )
 
-        risk_running_means = _denormalize_from_unit_interval(normalized_running_means, max_tuning_parameter)
-        risk_lower_bounds = _denormalize_from_unit_interval(normalized_lower_bounds, max_tuning_parameter)
+        # risk_running_means = _denormalize_from_unit_interval(normalized_running_means, max_tuning_parameter)
+        # risk_lower_bounds = _denormalize_from_unit_interval(normalized_lower_bounds, max_tuning_parameter)
+
+        risk_running_means, risk_lower_bounds = _compute_empirical_bernstein_bounds(
+            risk_batch_estimates, risk_threshold, miscoverage
+        )
         running_means, confidence_bounds, batch_mean_estimates = self._postprocess(
             risk_running_means,
             risk_lower_bounds,
