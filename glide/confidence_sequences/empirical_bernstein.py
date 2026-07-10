@@ -23,24 +23,17 @@ def _compute_mixture_wealth(deviation: float, variance_process_value: float) -> 
     return wealth
 
 
-def _compute_mixture_boundary(variance_process_value: float, miscoverage: float) -> float:
+def _compute_mixture_boundary(variance_process_value: float, miscoverage: float, upper_bracket: float) -> float:
     wealth_target = 1.0 / miscoverage
 
     def excess_wealth(deviation: float) -> float:
         value = _compute_mixture_wealth(deviation, variance_process_value) - wealth_target
         return value
 
-    upper_bracket = 1.0
-    while excess_wealth(upper_bracket) < 0.0:
-        upper_bracket *= 2.0
+    if excess_wealth(upper_bracket) < 0:
+        return upper_bracket
+
     boundary = brentq(excess_wealth, 0.0, upper_bracket)
-
-    # lamda = 0.999
-
-    # def psi_E(x):
-    #     return -np.log(1 - x) - x
-
-    # boundary = (np.log(wealth_target) + psi_E(lamda) * variance_process_value) / lamda
     return boundary
 
 
@@ -55,8 +48,12 @@ def _compute_empirical_bernstein_bounds(
     running_mean_estimates = np.cumsum(batch_estimates) / batch_counts
     predictable_centers = np.hstack([np.array([seed_center]), running_mean_estimates[:-1]])
     variance_process = np.cumsum((batch_estimates - predictable_centers) ** 2)
-    boundaries = np.array([_compute_mixture_boundary(value, miscoverage) for value in variance_process])
-    # boundaries = _compute_mixture_boundary(variance_process, miscoverage)
+    boundaries = np.array(
+        [
+            _compute_mixture_boundary(variance_process[i], miscoverage, running_mean_estimates[i] * batch_counts[i])
+            for i in range(n_batches)
+        ]
+    )
     lower_bounds = running_mean_estimates - boundaries / batch_counts
     return running_mean_estimates, lower_bounds
 

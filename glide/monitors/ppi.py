@@ -61,7 +61,7 @@ class PPIMeanMonitor:
     >>> result.drift_detected
     True
     >>> result.first_alarm_index
-    23
+    11
     """
 
     def _preprocess(
@@ -323,17 +323,8 @@ class PPIMeanMonitor:
             )
 
         risk_batch_estimates = np.clip(risk_batch_estimates, 0.0, 1.0)
-        # normalized_estimates = _normalize_to_unit_interval(risk_batch_estimates, max_tuning_parameter)
-        # normalized_threshold = _normalize_to_unit_interval(risk_threshold, max_tuning_parameter)
 
         miscoverage = 1.0 - confidence_level
-        # normalized_running_means, normalized_lower_bounds = _compute_empirical_bernstein_bounds(
-        #     normalized_estimates, normalized_threshold, miscoverage
-        # )
-
-        # risk_running_means = _denormalize_from_unit_interval(normalized_running_means, max_tuning_parameter)
-        # risk_lower_bounds = _denormalize_from_unit_interval(normalized_lower_bounds, max_tuning_parameter)
-
         risk_running_means, risk_lower_bounds = _compute_empirical_bernstein_bounds(
             risk_batch_estimates, risk_threshold, miscoverage
         )
