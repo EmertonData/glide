@@ -11,12 +11,12 @@ from glide.monitors import PPIMeanMonitor
 
 @pytest.fixture
 def y_true():
-    return np.array([0.1, 0.3, np.nan, np.nan, 0.2, 0.4, np.nan, np.nan])
+    return np.array([0.49, 0.51, np.nan, np.nan, 0.5, 0.54, np.nan, np.nan])
 
 
 @pytest.fixture
 def y_proxy():
-    return np.array([0.1, 0.3, 0.15, 0.35, 0.2, 0.4, 0.25, 0.45])
+    return np.array([0.5, 0.5, 0.49, 0.55, 0.52, 0.48, 0.5, 0.52])
 
 
 @pytest.fixture
@@ -104,7 +104,7 @@ def test_preprocess_delegates_to_validation(monitor, y_true, y_proxy, batches):
         assert mock_validate_bounds.call_args_list[3][1]["upper"] == 1.0
         assert "'threshold' must lie between" in mock_validate_bounds.call_args_list[3][1]["error_message"]
 
-        np.testing.assert_array_equal(mock_validate_bounds.call_args_list[4][0][0], np.array([0.1, 0.3, 0.2, 0.4]))
+        np.testing.assert_array_equal(mock_validate_bounds.call_args_list[4][0][0], np.array([0.49, 0.51, 0.5, 0.54]))
         assert mock_validate_bounds.call_args_list[4][0][1] == "y_true"
         assert "'y_true' values must lie between" in mock_validate_bounds.call_args_list[4][1]["error_message"]
 
@@ -219,13 +219,13 @@ def test_detect_metadata(monitor, y_true, y_proxy, batches):
 
 
 def test_detect_custom_confidence_level(monitor, y_true, y_proxy, batches):
-    expected_running_means = np.array([0.25, 0.292647])
-    expected_confidence_bounds = np.array([0.0, 0.0])
+    expected_running_means = np.array([0.52, 0.52])
+    expected_confidence_bounds = np.array([0.312, 0.416])
 
     result = monitor.detect(
-        y_true, y_proxy, batches, higher_is_better=False, threshold=0.5, metric_name="risk", confidence_level=0.90
+        y_true, y_proxy, batches, higher_is_better=False, threshold=0.5, metric_name="risk", confidence_level=0.10
     )
 
-    assert result.confidence_level == 0.90
+    assert result.confidence_level == 0.10
     np.testing.assert_allclose(result.running_means, expected_running_means, atol=0.001)
     np.testing.assert_allclose(result.confidence_bounds, expected_confidence_bounds, atol=0.001)
