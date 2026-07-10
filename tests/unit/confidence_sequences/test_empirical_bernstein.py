@@ -68,9 +68,9 @@ def test_compute_empirical_bernstein_bounds_delegates_to_validation(batch_estima
 
 def test_compute_empirical_bernstein_bounds(batch_estimates):
     running_mean_estimates, lower_bounds = _compute_empirical_bernstein_bounds(
-        batch_estimates, seed_center=0.5, miscoverage=0.2
+        batch_estimates, seed_center=0.5, miscoverage=0.8
     )
-    expected_lower_bound = np.array([0.0, 0.0, 0.0, 0.0, 0.0, 0.04492713])
+    expected_lower_bound = np.array([0.0, 0.258218, 0.338812, 0.379109, 0.403287, 0.419406])
     np.testing.assert_allclose(running_mean_estimates, np.array([0.4, 0.5, 0.5, 0.5, 0.5, 0.5]))
     np.testing.assert_allclose(lower_bounds, expected_lower_bound, atol=1e-6)
 
