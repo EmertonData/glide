@@ -50,7 +50,9 @@ def _compute_empirical_bernstein_bounds(
     variance_process = np.cumsum((batch_estimates - predictable_centers) ** 2)
     boundaries = np.array(
         [
-            _compute_mixture_boundary(variance_process[i], miscoverage, running_mean_estimates[i] * batch_counts[i])
+            _compute_mixture_boundary(
+                variance_process[i], miscoverage, upper_bracket=running_mean_estimates[i] * batch_counts[i]
+            )
             for i in range(n_batches)
         ]
     )

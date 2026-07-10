@@ -96,7 +96,19 @@ the right edge of the acceptance region, expressed as a deviation budget, where 
 
 $$W(s, v) = \int_0^1 \exp\!\left(\beta s - \psi_E(\beta) v\right) d\beta.$$
 
-This function is continuous and strictly increasing in $s$: its derivative with respect to $s$ is strictly positive, and $W(s, v)$ rises from a value $\le 1$ at $s = 0$ to $\infty$ as $s \to \infty$. The supremum defining $u(v)$ is therefore attained at the unique root of
+Given the choice of $\psi_E(\beta)$, this integral can be written in closed form via the following derivation
+
+$$
+\begin{align*}
+    \int_0^1 &\exp(\beta s + (\log(1- \beta) + \beta)v)d\beta \\
+    &= \int_0^1 \exp((s+v)\beta)(1- \beta)^vd\beta \\
+    &= \int_0^1 \exp((s+v)(1-\beta))\beta^v d\beta \\
+    &= \exp(s+v)\int_0^1 \exp(-\beta(s+v))\beta^v d\beta \\
+    &= \frac{\exp(s+v)}{(s+v)^{v+1}}\underbrace{\int_0^{s+v} e^{-\beta}\beta^{(v+1)-1} d\beta}_{\Gamma(v+1, s+v)}
+\end{align*}
+$$
+
+Where $\Gamma(z, x) = \int_0^{x} e^{-t}t^{z-1} dt$ is the partial $\Gamma$ function. As a result, $W(s, v)$ is continuous and strictly increasing in $s$: its derivative with respect to $s$ is strictly positive, and it rises from a value $\le 1$ at $s = 0$ to $\infty$ as $s \to \infty$. The supremum defining $u(v)$ is therefore attained at the unique root of
 
 $$\int_0^1 \exp\!\left(\beta \, u(v) - \psi_E(\beta) \, v\right) d\beta = \frac{1}{\delta}.$$
 
@@ -143,13 +155,7 @@ which is the [Prediction-Powered Inference (PPI++)](estimators.md#prediction-pow
 
 ### Normalization onto the Unit Interval
 
-The empirical-Bernstein boundary derived above is valid only for variables confined to a *known* bounded range. A prediction-powered estimate of a metric in $[0, 1]$ does not itself lie in $[0, 1]$: the power-tuning weight $\lambda$ is a variance-minimizing regression slope which is not confined to $[0, 1]$, so an under-dispersed or anti-correlated proxy can push $\lambda$, and with it the estimate, outside any fixed interval.
-
-Clipping the power-tuning weight to $[0, \lambda_{\max}]$ confines a $[0, 1]$-metric estimate $\hat{R}$ to the range $[-\lambda_{\max},\, 1 + \lambda_{\max}]$. The affine map
-
-$$\frac{\hat{R} + \lambda_{\max}}{1 + 2\lambda_{\max}}$$
-
-maps that range back onto $[0, 1]$, producing the normalized estimate that plays the role directly held by $\hat{R}_s$ in the classical section.
+The empirical-Bernstein boundary derived above is valid only for variables confined to a *known* bounded range. A prediction-powered estimate of a metric in $[0, 1]$ does not itself lie in $[0, 1]$: the power-tuning weight $\lambda$ is a variance-minimizing regression slope which is not confined to $[0, 1]$, so an under-dispersed or anti-correlated proxy can push $\lambda$, and with it the estimate, outside any fixed interval. This is fixed by clipping $\hat{R}_s$ to the $[0, 1]$ interval producing the normalized estimate needed in the classical section.
 
 ### Predictable Power-Tuning
 

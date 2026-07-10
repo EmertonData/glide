@@ -14,12 +14,9 @@ from glide.core.validation import (
     _validate_y_true,
 )
 from glide.estimators.core import _split_labeled_unlabeled
-from glide.estimators.ppi_core import _compute_mean_estimate
+from glide.estimators.ppi_core import _compute_mean_estimate, _compute_tuning_parameter
 from glide.mean_monitoring_results import PredictionPoweredMeanMonitoringResult
 from glide.monitors.core import _scale_from_unit_risk, _scale_to_unit_risk, _unique_ordered_batches
-from glide.monitors.ppi_core import (
-    _compute_clipped_tuning_parameter,
-)
 
 
 class PPIMeanMonitor:
@@ -171,12 +168,11 @@ class PPIMeanMonitor:
         metric_lower_bound: float,
         metric_upper_bound: float,
     ) -> Tuple[NDArray, NDArray, NDArray]:
-        clipped_risk_confidence_bounds = np.clip(risk_confidence_bounds, 0.0, 1.0)
         running_means = _scale_from_unit_risk(
             risk_running_means, metric_lower_bound, metric_upper_bound, higher_is_better
         )
         confidence_bounds = _scale_from_unit_risk(
-            clipped_risk_confidence_bounds, metric_lower_bound, metric_upper_bound, higher_is_better
+            risk_confidence_bounds, metric_lower_bound, metric_upper_bound, higher_is_better
         )
         batch_mean_estimates = _scale_from_unit_risk(
             risk_batch_mean_estimates, metric_lower_bound, metric_upper_bound, higher_is_better
@@ -255,9 +251,7 @@ class PPIMeanMonitor:
         metric_upper_bound : float, optional
             Known upper bound of the metric. Defaults to ``1.0``.
         max_tuning_parameter : float, optional
-            Upper clip for the power-tuning parameter. Larger values allow more
-            reliance on the proxy but widen the confidence sequence through the
-            affine normalization. Defaults to ``1.0``.
+            Upper clip for the power-tuning parameter. Defaults to ``1.0``.
 
         Returns
         -------
@@ -305,13 +299,10 @@ class PPIMeanMonitor:
                 y_true_earlier, y_proxy_labeled_earlier, y_proxy_unlabeled_earlier, _ = _split_labeled_unlabeled(
                     risk_y_true[earlier_mask], risk_y_proxy[earlier_mask]
                 )
-                tuning_parameter = _compute_clipped_tuning_parameter(
-                    y_true_earlier,
-                    y_proxy_labeled_earlier,
-                    y_proxy_unlabeled_earlier,
-                    power_tuning,
-                    max_tuning_parameter,
+                tuning_parameter = _compute_tuning_parameter(
+                    y_true_earlier, y_proxy_labeled_earlier, y_proxy_unlabeled_earlier, power_tuning
                 )
+                tuning_parameter = min(max(tuning_parameter, 0.0), max_tuning_parameter)
             batch_mask = batch_codes == position
             y_true_labeled, y_proxy_labeled, y_proxy_unlabeled, _ = _split_labeled_unlabeled(
                 risk_y_true[batch_mask], risk_y_proxy[batch_mask]
@@ -320,11 +311,11 @@ class PPIMeanMonitor:
                 y_true_labeled, y_proxy_labeled, y_proxy_unlabeled, tuning_parameter
             )
 
-        risk_batch_estimates = np.clip(risk_batch_estimates, 0.0, 1.0)
+        clipped_risk_batch_estimates = np.clip(risk_batch_estimates, 0.0, 1.0)
 
         miscoverage = 1.0 - confidence_level
         risk_running_means, risk_lower_bounds = _compute_empirical_bernstein_bounds(
-            risk_batch_estimates, risk_threshold, miscoverage
+            clipped_risk_batch_estimates, risk_threshold, miscoverage
         )
         running_means, confidence_bounds, batch_mean_estimates = self._postprocess(
             risk_running_means,
