@@ -34,9 +34,15 @@ The package has multiple layers:
 
 **`glide/confidence_intervals/`** — Confidence interval implementations depending on statistical methods.
 
+**`glide/confidence_sequences/`** — Anytime-valid confidence sequences (time-uniform analogue of confidence intervals, multiple successive bounds). `base.py` defines the `ConfidenceSequence` protocol; `empirical_bernstein.py` implements the empirical-Bernstein sequence and its computation.
+
 **`glide/samplers/`** — Sampler object implementations (uniform, stratified, cost-optimal, cost-optimal-random, active).
 
+**`glide/monitors/`** — Public API for drift monitoring over batched data (classical, PPI ...). `core.py` holds shared internals.
+
 **`glide/mean_inference_results/`** — Result dataclasses returned by estimators. `base.py` defines `MeanInferenceResult`; `classical.py` and `prediction_powered.py` extend it.
+
+**`glide/mean_monitoring_results/`** — Result dataclasses returned by monitors. `base.py` defines `MeanMonitoringResult`, wrapping a `ConfidenceSequence`; `classical.py` and `prediction_powered.py` extend it.
 
 **`glide/core/`** — Centralized parameter validation helpers (`validation.py`). Import from here rather than duplicating checks across modules.
 
