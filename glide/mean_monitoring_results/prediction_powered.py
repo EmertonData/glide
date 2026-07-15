@@ -30,7 +30,7 @@ class PredictionPoweredMeanMonitoringResult(MeanMonitoringResult):
 
     def __str__(self) -> str:
         lines = self._common_lines() + [
-            f"batch_n_true: {self.batch_n_true.tolist()}",
-            f"batch_n_proxy: {self.batch_n_proxy.tolist()}",
+            f"n_true: {self.batch_n_true.sum()}",
+            f"n_proxy: {self.batch_n_proxy.sum()}",
         ]
         return "\n".join(lines)
