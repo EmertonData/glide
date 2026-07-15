@@ -14,14 +14,9 @@ from glide.core.validation import (
     _validate_y_true,
 )
 from glide.estimators.core import _split_labeled_unlabeled
-from glide.estimators.ppi_core import _compute_mean_estimate
+from glide.estimators.ppi_core import _compute_mean_estimate, _compute_tuning_parameter
 from glide.mean_monitoring_results import PredictionPoweredMeanMonitoringResult
 from glide.monitors.core import _scale_from_unit_risk, _scale_to_unit_risk, _unique_ordered_batches
-from glide.monitors.ppi_core import (
-    _compute_clipped_tuning_parameter,
-    _denormalize_from_unit_interval,
-    _normalize_to_unit_interval,
-)
 
 
 class PPIMeanMonitor:
@@ -63,7 +58,7 @@ class PPIMeanMonitor:
     >>> result.drift_detected
     True
     >>> result.first_alarm_index
-    23
+    11
     """
 
     def _preprocess(
@@ -74,7 +69,6 @@ class PPIMeanMonitor:
         higher_is_better: bool,
         threshold: float,
         confidence_level: float,
-        max_tuning_parameter: float,
         metric_lower_bound: float,
         metric_upper_bound: float,
     ) -> Tuple[NDArray, NDArray, float, NDArray, NDArray, NDArray]:
@@ -84,7 +78,6 @@ class PPIMeanMonitor:
         _validate_bounds(
             confidence_level, "confidence_level", lower=0, upper=1, left_inclusive=False, right_inclusive=False
         )
-        _validate_bounds(max_tuning_parameter, "max_tuning_parameter", lower=0, left_inclusive=False)
         _validate_bounds(
             metric_lower_bound,
             "metric_lower_bound",
@@ -196,7 +189,6 @@ class PPIMeanMonitor:
         power_tuning: bool = True,
         metric_lower_bound: float = 0.0,
         metric_upper_bound: float = 1.0,
-        max_tuning_parameter: float = 1.0,
     ) -> PredictionPoweredMeanMonitoringResult:
         """Detect a drift of the running mean across a batched dataset.
 
@@ -247,18 +239,11 @@ class PPIMeanMonitor:
         power_tuning : bool, optional
             If ``True`` (default), compute the power-tuning parameter of each batch on
             all previous batches (the first batch, having no predecessor, uses
-            ``min(1.0, max_tuning_parameter)``). If ``False``, use
-            ``min(1.0, max_tuning_parameter)`` everywhere (classic PPI). A tuning
-            parameter computed from data is additionally clipped to be no lower than
-            zero if the computation would otherwise turn out negative.
+            ``1.0``). If ``False``, use ``1.0`` everywhere (classic PPI).
         metric_lower_bound : float, optional
             Known lower bound of the metric. Defaults to ``0.0``.
         metric_upper_bound : float, optional
             Known upper bound of the metric. Defaults to ``1.0``.
-        max_tuning_parameter : float, optional
-            Upper clip for the power-tuning parameter. Larger values allow more
-            reliance on the proxy but widen the confidence sequence through the
-            affine normalization. Defaults to ``1.0``.
 
         Returns
         -------
@@ -274,7 +259,6 @@ class PPIMeanMonitor:
             - If ``y_true``, ``y_proxy`` and ``batches`` have different lengths.
             - If ``batches`` contains NaN values (numeric dtype) or None values (non-numeric dtype).
             - If ``confidence_level`` is not in (0, 1).
-            - If ``max_tuning_parameter`` is not strictly positive.
             - If ``metric_lower_bound >= metric_upper_bound``.
             - If ``threshold`` falls outside ``[metric_lower_bound, metric_upper_bound]``.
             - If any proxy value is NaN or all proxy values are identical.
@@ -291,7 +275,6 @@ class PPIMeanMonitor:
             higher_is_better,
             threshold,
             confidence_level,
-            max_tuning_parameter,
             metric_lower_bound,
             metric_upper_bound,
         )
@@ -300,19 +283,16 @@ class PPIMeanMonitor:
         risk_batch_estimates = np.empty(n_batches)
         for position in range(n_batches):
             if position == 0 or (not power_tuning):
-                tuning_parameter = min(1.0, max_tuning_parameter)
+                tuning_parameter = 1.0
             else:
                 earlier_mask = batch_codes < position
                 y_true_earlier, y_proxy_labeled_earlier, y_proxy_unlabeled_earlier, _ = _split_labeled_unlabeled(
                     risk_y_true[earlier_mask], risk_y_proxy[earlier_mask]
                 )
-                tuning_parameter = _compute_clipped_tuning_parameter(
-                    y_true_earlier,
-                    y_proxy_labeled_earlier,
-                    y_proxy_unlabeled_earlier,
-                    power_tuning,
-                    max_tuning_parameter,
+                tuning_parameter = _compute_tuning_parameter(
+                    y_true_earlier, y_proxy_labeled_earlier, y_proxy_unlabeled_earlier, power_tuning
                 )
+
             batch_mask = batch_codes == position
             y_true_labeled, y_proxy_labeled, y_proxy_unlabeled, _ = _split_labeled_unlabeled(
                 risk_y_true[batch_mask], risk_y_proxy[batch_mask]
@@ -321,16 +301,12 @@ class PPIMeanMonitor:
                 y_true_labeled, y_proxy_labeled, y_proxy_unlabeled, tuning_parameter
             )
 
-        normalized_estimates = _normalize_to_unit_interval(risk_batch_estimates, max_tuning_parameter)
-        normalized_threshold = _normalize_to_unit_interval(risk_threshold, max_tuning_parameter)
+        clipped_risk_batch_estimates = np.clip(risk_batch_estimates, 0.0, 1.0)
 
         miscoverage = 1.0 - confidence_level
-        normalized_running_means, normalized_lower_bounds = _compute_empirical_bernstein_bounds(
-            normalized_estimates, normalized_threshold, miscoverage
+        risk_running_means, risk_lower_bounds = _compute_empirical_bernstein_bounds(
+            clipped_risk_batch_estimates, risk_threshold, miscoverage
         )
-
-        risk_running_means = _denormalize_from_unit_interval(normalized_running_means, max_tuning_parameter)
-        risk_lower_bounds = _denormalize_from_unit_interval(normalized_lower_bounds, max_tuning_parameter)
         running_means, confidence_bounds, batch_mean_estimates = self._postprocess(
             risk_running_means,
             risk_lower_bounds,

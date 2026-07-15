@@ -3,32 +3,36 @@ from typing import Literal, Tuple
 
 import numpy as np
 from numpy.typing import NDArray
-from scipy.integrate import quad
 from scipy.optimize import brentq
+from scipy.special import gammainc, gammaln
 
 from glide.core.validation import _validate_bounds, _validate_literal
 
 
 def _compute_mixture_wealth(deviation: float, variance_process_value: float) -> float:
-    def integrand(betting_parameter: float) -> float:
-        psi_exponential = -np.log(1 - betting_parameter) - betting_parameter
-        value = np.exp(betting_parameter * deviation - psi_exponential * variance_process_value)
-        return value
+    exponent_argument = deviation + variance_process_value
+    if exponent_argument == 0.0:
+        return 1.0
+    log_wealth = (
+        exponent_argument
+        - (variance_process_value + 1) * np.log(exponent_argument)
+        + gammaln(variance_process_value + 1)
+        + np.log(gammainc(variance_process_value + 1, exponent_argument))
+    )
+    wealth = np.exp(log_wealth)
+    return wealth
 
-    integral, _ = quad(integrand, 0.0, 1.0)
-    return integral
 
-
-def _compute_mixture_boundary(variance_process_value: float, miscoverage: float) -> float:
+def _compute_mixture_boundary(variance_process_value: float, miscoverage: float, upper_bracket: float) -> float:
     wealth_target = 1.0 / miscoverage
 
     def excess_wealth(deviation: float) -> float:
         value = _compute_mixture_wealth(deviation, variance_process_value) - wealth_target
         return value
 
-    upper_bracket = 1.0
-    while excess_wealth(upper_bracket) < 0.0:
-        upper_bracket *= 2.0
+    if excess_wealth(upper_bracket) < 0:
+        return upper_bracket
+
     boundary = brentq(excess_wealth, 0.0, upper_bracket)
     return boundary
 
@@ -44,7 +48,14 @@ def _compute_empirical_bernstein_bounds(
     running_mean_estimates = np.cumsum(batch_estimates) / batch_counts
     predictable_centers = np.hstack([np.array([seed_center]), running_mean_estimates[:-1]])
     variance_process = np.cumsum((batch_estimates - predictable_centers) ** 2)
-    boundaries = np.array([_compute_mixture_boundary(value, miscoverage) for value in variance_process])
+    boundaries = np.array(
+        [
+            _compute_mixture_boundary(
+                variance_process[i], miscoverage, upper_bracket=running_mean_estimates[i] * batch_counts[i]
+            )
+            for i in range(n_batches)
+        ]
+    )
     lower_bounds = running_mean_estimates - boundaries / batch_counts
     return running_mean_estimates, lower_bounds
 

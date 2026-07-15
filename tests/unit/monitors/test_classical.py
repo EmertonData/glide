@@ -11,7 +11,7 @@ from glide.monitors import ClassicalMeanMonitor
 
 @pytest.fixture
 def y():
-    return np.array([0.1, 0.3, 0.2, 0.4])
+    return np.array([0.49, 0.51, 0.5, 0.54])
 
 
 @pytest.fixture
@@ -173,13 +173,13 @@ def test_detect_metadata(monitor, y, batches):
 
 
 def test_detect_custom_confidence_level(monitor, y, batches):
-    expected_running_means = np.array([0.2, 0.25])
-    expected_confidence_bounds = np.array([-3.551, -1.633])
+    expected_running_means = np.array([0.5, 0.51])
+    expected_confidence_bounds = np.array([0.292, 0.406])
 
     result = monitor.detect(
-        y, batches, higher_is_better=False, threshold=0.5, metric_name="perf", confidence_level=0.90
+        y, batches, higher_is_better=False, threshold=0.5, metric_name="perf", confidence_level=0.10
     )
 
-    assert result.confidence_level == 0.90
+    assert result.confidence_level == 0.10
     np.testing.assert_allclose(result.running_means, expected_running_means, atol=0.001)
     np.testing.assert_allclose(result.confidence_bounds, expected_confidence_bounds, atol=0.001)
