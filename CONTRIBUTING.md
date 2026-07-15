@@ -133,9 +133,9 @@ New estimators and samplers should be backed by a scientific publication. Please
 3. **Export** the new class from `glide/estimators/__init__.py`.
 4. **Write unit tests** in `tests/unit/estimators/test_<name>.py`. Cover at minimum:
    - Correct output type and shape.
-   - Known analytical results (e.g., the estimator reduces to the classical mean in special cases).
+   - Known outputs for fixed inputs.
    - Doctests in the class docstring.
-5. **Write functional tests** in `tests/functional/estimators/test_<name>.py`. If applicable, test expected behaviors and properties of your estimator in specific situations, see existing files in `tests/functional/estimators` for examples
+5. **Write functional tests** in `tests/functional/estimators/test_<name>.py`. If applicable, test expected behaviors and properties of your estimator in specific situations (e.g., the estimator reduces to the classical mean in special cases), see existing files in `tests/functional/estimators` for examples
 6. **Write a numpy-style docstring** that includes the reference paper, parameter descriptions, and a small `Examples` section with a minimalistic runnable doctest. See existing estimators for inspiration.
 7. **Add an example script** in `docs/examples/plot_<name>.py` demonstrating the estimator on some synthetic data.
 8. **Update `CHANGELOG.md`** under the `[Next release]` section.
@@ -168,9 +168,9 @@ New estimators and samplers should be backed by a scientific publication. Please
 3. **Export** the new class from `glide/monitors/__init__.py`.
 4. **Write unit tests** in `tests/unit/monitors/test_<name>.py`. Cover at minimum:
    - Correct output type and shape.
-   - Known analytical results (e.g., the monitor's per-batch estimates match the corresponding one-shot estimator).
+   - Known outputs for fixed inputs.
    - Doctests in the class docstring.
-5. **Write functional tests** in `tests/functional/monitors/test_<name>.py`. If applicable, test expected behaviors and properties of your monitor in specific situations, see existing files in `tests/functional/monitors` for examples.
+5. **Write functional tests** in `tests/functional/monitors/test_<name>.py`. If applicable, test expected behaviors and properties of your monitor in specific situations (e.g., the monitor's per-batch estimates match the corresponding one-shot estimator), see existing files in `tests/functional/monitors` for examples.
 6. **Write a numpy-style docstring** that includes the reference paper, parameter descriptions, and a small `Examples` section with a minimalistic runnable doctest. See existing monitors for inspiration.
 7. **Update `CHANGELOG.md`** under the `[Next release]` section.
 
