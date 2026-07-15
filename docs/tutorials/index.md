@@ -63,3 +63,7 @@ Use the table below to find the tutorial that matches your situation.
 | Yes | Yes | No | No | No | Cost-optimal | ASI | [Cost and uncertainty scores available (Cost-Optimal Sampling)](cost_optimal.ipynb) |
 
 If your data contains fewer than 50 human labels: use the PTD variant of the estimators above (`PTDMeanEstimator` for PPI++, `StratifiedPTDMeanEstimator` for Stratified PPI++, `ClusteredPTDMeanEstimator` for Clustered PPI++, and `IPWPTDMeanEstimator` for ASI). In the stratified case, the `StratifiedPTDMeanEstimator` should be used whenever one of the strata has fewer than 50 labels. The tutorial workflow for the respective estimators is identical; only the estimator class changes.
+
+## Monitoring a deployed system for drift
+
+Once a system is deployed, the question shifts from estimating a metric once to watching it over time: has it drifted past an acceptable threshold? This is a different problem from the sampler/estimator selection above, since it is not about a one-off estimate but about re-estimating a metric on successive batches of production data while keeping repeated checks statistically valid. The [Monitoring a deployed system for drift (PPI Monitor)](ppi_monitor.ipynb) tutorial walks through this post-deployment workflow with `PPIMeanMonitor`, the natural follow-on once you have picked and validated an estimator above.
