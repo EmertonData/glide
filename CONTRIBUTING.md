@@ -62,11 +62,15 @@ Note: Notebook testing also runs in CI for all pull requests, so local testing i
 
 ## Architectural overview
 
-The package is organised around four concerns: **estimators**, **samplers**, **core building blocks**, and **I/O**.
+The package is organised around five concerns: **estimators**, **samplers**, **monitors**, **core building blocks**, and **I/O**.
 
 ```
 glide/
 ├── estimators/             # Public API — mean estimators
+│   ├── ppi.py
+│   ├── ...
+│
+├── monitors/               # Public API — drift monitors over batched data
 │   ├── ppi.py
 │   ├── ...
 │
@@ -82,9 +86,20 @@ glide/
 │   ├── base.py
 │   ├── ...
 │
+├── confidence_sequences/   # Anytime-valid confidence sequences (used by monitors)
+│   ├── base.py
+│   ├── ...
+│
 ├── mean_inference_results/ # Result types returned by estimators
 │   ├── base.py
 │   ├── ...
+│
+├── mean_monitoring_results/ # Result types returned by monitors
+│   ├── base.py
+│   ├── ...
+│
+├── core/                   # Centralized parameter validation helpers
+│   └── validation.py
 │
 ├── utils.py                # General-purpose helpers
 │
@@ -92,7 +107,7 @@ glide/
     └── export.py
 ```
 
-**How the pieces fit together.** Estimators accept raw NumPy arrays and return a `MeanInferenceResult` subclass: prediction-powered estimators return a `PredictionPoweredMeanInferenceResult`, classical ones a `ClassicalMeanInferenceResult`. Every result embeds a `ConfidenceInterval` (e.g. `CLTConfidenceInterval`). Samplers produce the labeled arrays that estimators consume. The `io` module serialises result objects.
+**How the pieces fit together.** Estimators accept raw NumPy arrays and return a `MeanInferenceResult` subclass: prediction-powered estimators return a `PredictionPoweredMeanInferenceResult`, classical ones a `ClassicalMeanInferenceResult`. Every result embeds a `ConfidenceInterval` (e.g. `CLTConfidenceInterval`). Samplers produce the labeled arrays that estimators consume. Monitors follow the same shape for batched, accumulating data: they return a `MeanMonitoringResult` subclass embedding a `ConfidenceSequence` (e.g. `EmpiricalBernsteinConfidenceSequence`). The `io` module serialises result objects.
 
 ---
 
@@ -112,15 +127,15 @@ New estimators and samplers should be backed by a scientific publication. Please
 
 1. **Identify** the inputs, outputs, and any tunable hyperparameters.
 2. **Implement** the estimator class:
-   - If your estimator belongs to an existing family, add it to the corresponding file (e.g. PPI-based methods go in `glide/estimators/ppi.py`). Otherwise, create `glide/estimators/<name>.py`.
+   - Create a properly named file `glide/estimators/<name>.py` for your estimator.
    - `estimate(array1, array2, ...)` runs the method and returns an inference result object. Reuse one from `glide/mean_inference_results` (e.g. a `MeanInferenceResult` subclass) or add a new one there.
    - If your estimator has hyperparameters, these should be optional parameters of `estimate()` with default values.
 3. **Export** the new class from `glide/estimators/__init__.py`.
 4. **Write unit tests** in `tests/unit/estimators/test_<name>.py`. Cover at minimum:
    - Correct output type and shape.
-   - Known analytical results (e.g., the estimator reduces to the classical mean in special cases).
+   - Known outputs for fixed inputs.
    - Doctests in the class docstring.
-5. **Write functional tests** in `tests/functional/estimators/test_<name>.py`. If applicable, test expected behaviors and properties of your estimator in specific situations, see existing files in `tests/functional/estimators` for examples
+5. **Write functional tests** in `tests/functional/estimators/test_<name>.py`. If applicable, test expected behaviors and properties of your estimator in specific situations (e.g., the estimator reduces to the classical mean in special cases), see existing files in `tests/functional/estimators` for examples
 6. **Write a numpy-style docstring** that includes the reference paper, parameter descriptions, and a small `Examples` section with a minimalistic runnable doctest. See existing estimators for inspiration.
 7. **Add an example script** in `docs/examples/plot_<name>.py` demonstrating the estimator on some synthetic data.
 8. **Update `CHANGELOG.md`** under the `[Next release]` section.
@@ -140,6 +155,23 @@ New estimators and samplers should be backed by a scientific publication. Please
    - Doctests in the class docstring.
 5. **Write functional tests** in `tests/functional/samplers/test_<name>.py`. If applicable, test expected behaviors and properties of your sampler. See existing files in `tests/functional/samplers` for examples.
 6. **Write a numpy-style docstring** that includes the reference paper, parameter descriptions, and a small `Examples` section with a minimalistic runnable doctest. See existing samplers for inspiration.
+7. **Update `CHANGELOG.md`** under the `[Next release]` section.
+
+**Adding a new monitor — step by step**
+
+1. **Identify** the inputs (e.g. batched labels, the alarm threshold, metric bounds), outputs, and any tunable hyperparameters.
+2. **Implement** the monitor class:
+   - Create a properly named file `glide/monitors/<name>.py` for your monitor.
+   - `detect(y, batches, ...)` runs the method and returns a monitoring result object. Reuse one from `glide/mean_monitoring_results` (e.g. a `MeanMonitoringResult` subclass) or add a new one there.
+   - The result embeds a `ConfidenceSequence`: reuse one from `glide/confidence_sequences` (e.g. `EmpiricalBernsteinConfidenceSequence`) or add a new one there.
+   - If your monitor has hyperparameters, these should be optional parameters of `detect()` with default values.
+3. **Export** the new class from `glide/monitors/__init__.py`.
+4. **Write unit tests** in `tests/unit/monitors/test_<name>.py`. Cover at minimum:
+   - Correct output type and shape.
+   - Known outputs for fixed inputs.
+   - Doctests in the class docstring.
+5. **Write functional tests** in `tests/functional/monitors/test_<name>.py`. If applicable, test expected behaviors and properties of your monitor in specific situations (e.g., the monitor's per-batch estimates match the corresponding one-shot estimator), see existing files in `tests/functional/monitors` for examples.
+6. **Write a numpy-style docstring** that includes the reference paper, parameter descriptions, and a small `Examples` section with a minimalistic runnable doctest. See existing monitors for inspiration.
 7. **Update `CHANGELOG.md`** under the `[Next release]` section.
 
 ### 3. Documentation
