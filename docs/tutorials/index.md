@@ -66,4 +66,4 @@ If your data contains fewer than 50 human labels: use the PTD variant of the est
 
 ## Monitoring a deployed system for drift
 
-Once a system is deployed, the question shifts from estimating a metric once to watching it over time: has it drifted past an acceptable threshold? This is a different problem from the sampler/estimator selection above, since it is not about a one-off estimate but about re-estimating a metric on successive batches of production data while keeping repeated checks statistically valid.
+Once a system is deployed, the question shifts from estimating a metric once to watching it over time: has it drifted past an acceptable threshold? This is a different problem from the sampler/estimator selection above, since it is not about a one-off estimate but about re-estimating a metric on successive batches of production data while keeping repeated checks statistically valid. The [Monitoring a deployed system for drift (PPRM)](ppi_monitor.ipynb) tutorial walks through this post-deployment workflow with `PPIMeanMonitor`.
