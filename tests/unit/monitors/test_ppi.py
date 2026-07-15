@@ -50,7 +50,6 @@ def test_preprocess_delegates_to_validation(monitor, y_true, y_proxy, batches):
             higher_is_better=False,
             threshold=0.5,
             confidence_level=0.8,
-            max_tuning_parameter=1.0,
             metric_lower_bound=0.0,
             metric_upper_bound=1.0,
         )
@@ -78,7 +77,7 @@ def test_preprocess_delegates_to_validation(monitor, y_true, y_proxy, batches):
         mock_unique_ordered_batches.assert_called_once()
         np.testing.assert_array_equal(mock_unique_ordered_batches.call_args[0][0], batches)
 
-        assert mock_validate_bounds.call_count == 8
+        assert mock_validate_bounds.call_count == 7
 
         assert mock_validate_bounds.call_args_list[0][0] == (0.8, "confidence_level")
         assert mock_validate_bounds.call_args_list[0][1] == {
@@ -88,42 +87,39 @@ def test_preprocess_delegates_to_validation(monitor, y_true, y_proxy, batches):
             "right_inclusive": False,
         }
 
-        assert mock_validate_bounds.call_args_list[1][0] == (1.0, "max_tuning_parameter")
-        assert mock_validate_bounds.call_args_list[1][1] == {"lower": 0, "left_inclusive": False}
-
-        assert mock_validate_bounds.call_args_list[2][0] == (0.0, "metric_lower_bound")
-        assert mock_validate_bounds.call_args_list[2][1]["upper"] == 1.0
-        assert mock_validate_bounds.call_args_list[2][1]["right_inclusive"] is False
+        assert mock_validate_bounds.call_args_list[1][0] == (0.0, "metric_lower_bound")
+        assert mock_validate_bounds.call_args_list[1][1]["upper"] == 1.0
+        assert mock_validate_bounds.call_args_list[1][1]["right_inclusive"] is False
         assert (
             "'metric_lower_bound' must be strictly smaller than 'metric_upper_bound'"
-            in mock_validate_bounds.call_args_list[2][1]["error_message"]
+            in mock_validate_bounds.call_args_list[1][1]["error_message"]
         )
 
-        assert mock_validate_bounds.call_args_list[3][0] == (0.5, "threshold")
-        assert mock_validate_bounds.call_args_list[3][1]["lower"] == 0.0
-        assert mock_validate_bounds.call_args_list[3][1]["upper"] == 1.0
-        assert "'threshold' must lie between" in mock_validate_bounds.call_args_list[3][1]["error_message"]
+        assert mock_validate_bounds.call_args_list[2][0] == (0.5, "threshold")
+        assert mock_validate_bounds.call_args_list[2][1]["lower"] == 0.0
+        assert mock_validate_bounds.call_args_list[2][1]["upper"] == 1.0
+        assert "'threshold' must lie between" in mock_validate_bounds.call_args_list[2][1]["error_message"]
 
-        np.testing.assert_array_equal(mock_validate_bounds.call_args_list[4][0][0], np.array([0.49, 0.51, 0.5, 0.54]))
-        assert mock_validate_bounds.call_args_list[4][0][1] == "y_true"
-        assert "'y_true' values must lie between" in mock_validate_bounds.call_args_list[4][1]["error_message"]
+        np.testing.assert_array_equal(mock_validate_bounds.call_args_list[3][0][0], np.array([0.49, 0.51, 0.5, 0.54]))
+        assert mock_validate_bounds.call_args_list[3][0][1] == "y_true"
+        assert "'y_true' values must lie between" in mock_validate_bounds.call_args_list[3][1]["error_message"]
 
-        np.testing.assert_array_equal(mock_validate_bounds.call_args_list[5][0][0], y_proxy)
-        assert mock_validate_bounds.call_args_list[5][0][1] == "y_proxy"
-        assert "'y_proxy' values must lie between" in mock_validate_bounds.call_args_list[5][1]["error_message"]
+        np.testing.assert_array_equal(mock_validate_bounds.call_args_list[4][0][0], y_proxy)
+        assert mock_validate_bounds.call_args_list[4][0][1] == "y_proxy"
+        assert "'y_proxy' values must lie between" in mock_validate_bounds.call_args_list[4][1]["error_message"]
+
+        assert mock_validate_bounds.call_args_list[5][0] == (2, "y_true")
+        assert mock_validate_bounds.call_args_list[5][1]["lower"] == 2
+        assert (
+            "'y_true' must have at least 2 labeled values per batch"
+            in mock_validate_bounds.call_args_list[5][1]["error_message"]
+        )
 
         assert mock_validate_bounds.call_args_list[6][0] == (2, "y_true")
         assert mock_validate_bounds.call_args_list[6][1]["lower"] == 2
         assert (
-            "'y_true' must have at least 2 labeled values per batch"
-            in mock_validate_bounds.call_args_list[6][1]["error_message"]
-        )
-
-        assert mock_validate_bounds.call_args_list[7][0] == (2, "y_true")
-        assert mock_validate_bounds.call_args_list[7][1]["lower"] == 2
-        assert (
             "'y_true' must have at least 2 unlabeled values per batch"
-            in mock_validate_bounds.call_args_list[7][1]["error_message"]
+            in mock_validate_bounds.call_args_list[6][1]["error_message"]
         )
 
 
@@ -135,7 +131,6 @@ def test_preprocess_known_output(monitor, y_true, y_proxy, batches):
         higher_is_better=False,
         threshold=0.5,
         confidence_level=0.8,
-        max_tuning_parameter=1.0,
         metric_lower_bound=0.0,
         metric_upper_bound=1.0,
     )

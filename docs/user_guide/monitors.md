@@ -8,7 +8,7 @@ Once a metric has been estimated validating an AI system's deployment, the quest
 
 After deployment, the metric is re-estimated on successive batches of production data $t = 1, 2, \dots$, for instance a fresh weekly batch with new labeled samples. Each batch $t$ yields an estimate $\hat{\theta}_t$. The question is whether the sequence proves that the metric has drifted past a threshold $\tau$ that the user fixes in advance: the worst running value they are willing to tolerate.
 
-The naive approach is statistically invalid. Comparing each $\hat{\theta}_t$ to $\tau$ with an ordinary confidence interval at level $1 - \alpha$ carries its own false-alarm probability $\alpha$ for that single comparison. Checking after every batch means accumulating many such chances to be wrong. More precisely, the probability that at least one confidence interval misses the estimated value after $t$ tests is $1-(1-\alpha)^t$, so a false alarm becomes almost certain over a long enough horizon. This is a form of **multiple testing**, here called **peeking**, and it is exactly what invalidates repeated per-batch significance testing.
+The naive approach is statistically invalid. Comparing each $\hat{\theta}_t$ to $\tau$ with an ordinary confidence interval at level $1 - \alpha$ carries its own false-alarm probability $\alpha$ for that single comparison. Checking after every batch means accumulating many such chances to be wrong. More precisely, the probability that at least one confidence interval misses the true value after $t$ tests is $1-(1-\alpha)^t$, so a false alarm becomes almost certain over a long enough horizon. This is a form of **multiple testing**, here called **peeking**, and it is exactly what invalidates repeated per-batch significance testing.
 
 The fix is a **confidence sequence**: a sequence of intervals $\{C_t\}_{t \ge 1}$ that covers the target *simultaneously at all times*,
 
@@ -32,7 +32,7 @@ Each batch $t$ contributes a set of human labels.
 |---|---|---|
 | $Y_{t,j}$ | All labeled samples in batch $t$ | Ground-truth label |
 
-In the following, we will assume that all labels $Y_{t,j}$ are in $[0, 1]$. Every batch is monitored relatively to a user-fixed threshold $\tau$.
+In the following, we will assume that all labels $Y_{t,j}$ are in $[0, 1]$. Every batch is monitored relative to a user-fixed threshold $\tau$.
 
 The derivation treats the metric as a **risk** $R$, where lower is better (for example an error rate). The running risk after $t$ batches is the average of the per-batch estimates:
 
@@ -88,7 +88,7 @@ A mixture of nonnegative supermartingales, each starting at $1$, is itself a non
 
 ### The Empirical-Bernstein Boundary
 
-Fix the variance process at a value $v$. The **boundary** is the largest cumulative deviation still consistent with $H_0$, expressed through the mixture wealth process $W(s, v)$ introduced above, now viewed as a function of a candidate deviation $s$ at fixed variance $v$:
+Fix the value of the variance process at $v$. The **boundary** is the largest cumulative deviation still consistent with $H_0$, expressed through the mixture wealth process $W(s, v)$ introduced above, now viewed as a function of a candidate deviation $s$ at fixed variance $v$:
 
 $$u(v) = \sup\{\, s \ge 0 : W(s, v) \le 1/\delta \,\},$$
 
@@ -100,17 +100,17 @@ Given the choice of $\psi_E(\beta)$, this integral can be written in closed form
 
 $$
 \begin{align*}
-    \int_0^1 &\exp(\beta s + (\log(1- \beta) + \beta)v)d\beta \\
-    &= \int_0^1 \exp((s+v)\beta)(1- \beta)^vd\beta \\
-    &= \int_0^1 \exp((s+v)(1-\beta))\beta^v d\beta \\
-    &= \exp(s+v)\int_0^1 \exp(-\beta(s+v))\beta^v d\beta \\
-    &= \frac{\exp(s+v)}{(s+v)^{v+1}}\underbrace{\int_0^{s+v} e^{-\beta}\beta^{(v+1)-1} d\beta}_{\Gamma(v+1, s+v)}
+    \int_0^1 &\exp(\beta s + (\log(1 - \beta) + \beta) v) d\beta \\
+    &= \int_0^1 \exp((s + v) \beta)(1 - \beta)^v d\beta \\
+    &= \int_0^1 \exp((s + v)(1 - \beta)) \beta^v d\beta \\
+    &= \exp(s + v)\int_0^1 \exp(-\beta(s + v))\beta^v d\beta \\
+    &= \frac{\exp(s + v)}{(s + v)^{v + 1}}\underbrace{\int_0^{s + v} e^{-\beta}\beta^{(v + 1) - 1} d\beta}_{\Gamma(v + 1, s + v)}
 \end{align*}
 $$
 
 Where $\Gamma(z, x) = \int_0^{x} e^{-t}t^{z-1} dt$ is the partial $\Gamma$ function. As a result, $W(s, v)$ is continuous and strictly increasing in $s$: its derivative with respect to $s$ is strictly positive, and it rises from a value $\le 1$ at $s = 0$ to $\infty$ as $s \to \infty$. The supremum defining $u(v)$ is therefore attained at the unique root of
 
-$$\int_0^1 \exp\!\left(\beta \, u(v) - \psi_E(\beta) \, v\right) d\beta = \frac{1}{\delta}.$$
+$$\frac{\exp(s+v)}{(s+v)^{v+1}}\Gamma(v+1, s+v) = \frac{1}{\delta}.$$
 
 The boundary is called "empirical-Bernstein" because its width adapts to the *observed* variability $V_t$ rather than assuming a fixed, known worst-case variance [[1](#ref-1)], which is what makes it tight in practice.
 
@@ -155,7 +155,7 @@ which is the [Prediction-Powered Inference (PPI++)](estimators.md#prediction-pow
 
 ### Normalization onto the Unit Interval
 
-The empirical-Bernstein boundary derived above is valid only for variables confined to a *known* bounded range. A prediction-powered estimate of a metric in $[0, 1]$ does not itself lie in $[0, 1]$: the power-tuning weight $\lambda$ is a variance-minimizing regression slope which is not confined to $[0, 1]$, so an under-dispersed or anti-correlated proxy can push $\lambda$, and with it the estimate, outside any fixed interval. This is fixed by clipping $\hat{R}_s$ to the $[0, 1]$ interval producing the normalized estimate needed in the classical section.
+The empirical-Bernstein boundary derived above is valid only for variables confined to a *known* bounded range. A prediction-powered estimate of a metric in $[0, 1]$ does not itself lie in $[0, 1]$: the power-tuning weight $\lambda$ is a variance-minimizing regression slope which is not confined to $[0, 1]$, so an under-dispersed or anti-correlated proxy can push $\lambda$, and with it the estimate, outside any fixed interval. This is fixed by clipping $\hat{R}_s$ to the $[0, 1]$ interval, producing the normalized estimate needed in the classical section.
 
 ### Predictable Power-Tuning
 

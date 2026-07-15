@@ -69,7 +69,6 @@ class PPIMeanMonitor:
         higher_is_better: bool,
         threshold: float,
         confidence_level: float,
-        max_tuning_parameter: float,
         metric_lower_bound: float,
         metric_upper_bound: float,
     ) -> Tuple[NDArray, NDArray, float, NDArray, NDArray, NDArray]:
@@ -79,7 +78,6 @@ class PPIMeanMonitor:
         _validate_bounds(
             confidence_level, "confidence_level", lower=0, upper=1, left_inclusive=False, right_inclusive=False
         )
-        _validate_bounds(max_tuning_parameter, "max_tuning_parameter", lower=0, left_inclusive=False)
         _validate_bounds(
             metric_lower_bound,
             "metric_lower_bound",
@@ -191,7 +189,6 @@ class PPIMeanMonitor:
         power_tuning: bool = True,
         metric_lower_bound: float = 0.0,
         metric_upper_bound: float = 1.0,
-        max_tuning_parameter: float = 1.0,
     ) -> PredictionPoweredMeanMonitoringResult:
         """Detect a drift of the running mean across a batched dataset.
 
@@ -242,16 +239,11 @@ class PPIMeanMonitor:
         power_tuning : bool, optional
             If ``True`` (default), compute the power-tuning parameter of each batch on
             all previous batches (the first batch, having no predecessor, uses
-            ``min(1.0, max_tuning_parameter)``). If ``False``, use
-            ``min(1.0, max_tuning_parameter)`` everywhere (classic PPI). A tuning
-            parameter computed from data is additionally clipped to be no lower than
-            zero if the computation would otherwise turn out negative.
+            ``1.0``). If ``False``, use ``1.0`` everywhere (classic PPI).
         metric_lower_bound : float, optional
             Known lower bound of the metric. Defaults to ``0.0``.
         metric_upper_bound : float, optional
             Known upper bound of the metric. Defaults to ``1.0``.
-        max_tuning_parameter : float, optional
-            Upper clip for the power-tuning parameter. Defaults to ``1.0``.
 
         Returns
         -------
@@ -267,7 +259,6 @@ class PPIMeanMonitor:
             - If ``y_true``, ``y_proxy`` and ``batches`` have different lengths.
             - If ``batches`` contains NaN values (numeric dtype) or None values (non-numeric dtype).
             - If ``confidence_level`` is not in (0, 1).
-            - If ``max_tuning_parameter`` is not strictly positive.
             - If ``metric_lower_bound >= metric_upper_bound``.
             - If ``threshold`` falls outside ``[metric_lower_bound, metric_upper_bound]``.
             - If any proxy value is NaN or all proxy values are identical.
@@ -284,7 +275,6 @@ class PPIMeanMonitor:
             higher_is_better,
             threshold,
             confidence_level,
-            max_tuning_parameter,
             metric_lower_bound,
             metric_upper_bound,
         )
@@ -293,7 +283,7 @@ class PPIMeanMonitor:
         risk_batch_estimates = np.empty(n_batches)
         for position in range(n_batches):
             if position == 0 or (not power_tuning):
-                tuning_parameter = min(1.0, max_tuning_parameter)
+                tuning_parameter = 1.0
             else:
                 earlier_mask = batch_codes < position
                 y_true_earlier, y_proxy_labeled_earlier, y_proxy_unlabeled_earlier, _ = _split_labeled_unlabeled(
@@ -302,7 +292,7 @@ class PPIMeanMonitor:
                 tuning_parameter = _compute_tuning_parameter(
                     y_true_earlier, y_proxy_labeled_earlier, y_proxy_unlabeled_earlier, power_tuning
                 )
-                tuning_parameter = min(max(tuning_parameter, 0.0), max_tuning_parameter)
+
             batch_mask = batch_codes == position
             y_true_labeled, y_proxy_labeled, y_proxy_unlabeled, _ = _split_labeled_unlabeled(
                 risk_y_true[batch_mask], risk_y_proxy[batch_mask]
