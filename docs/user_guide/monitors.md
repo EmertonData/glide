@@ -103,8 +103,8 @@ $$
     \int_0^1 &\exp(\beta s + (\log(1 - \beta) + \beta) v) d\beta \\
     &= \int_0^1 \exp((s + v) \beta)(1 - \beta)^v d\beta \\
     &= \int_0^1 \exp((s + v)(1 - \beta)) \beta^v d\beta \\
-    &= \exp(s + v)\int_0^1 \exp(-\beta(s + v))\beta^v d\beta \\
-    &= \frac{\exp(s + v)}{(s + v)^{v + 1}}\underbrace{\int_0^{s + v} e^{-\beta}\beta^{(v + 1) - 1} d\beta}_{\Gamma(v + 1, s + v)}
+    &= \exp(s + v)\int_0^1 \exp(-\beta(s + v)) \beta^v d\beta \\
+    &= \frac{\exp(s + v)}{(s + v)^{v + 1}} \underbrace{\int_0^{s + v} e^{-\beta} \beta^{(v + 1) - 1} d\beta}_{\Gamma(v + 1, s + v)}
 \end{align*}
 $$
 
