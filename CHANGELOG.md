@@ -9,18 +9,26 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 ## [Next release]
 
 ### ✨ Added
-- `PPIMeanMonitor` in `glide.monitors`: anytime-valid drift detection over batched production data combining true and proxy labels.
-- `glide.monitors` module with `ClassicalMeanMonitor`: detects drift of a metric across batches of labeled data.
-- `glide.confidence_sequences` module with the `ConfidenceSequence` protocol and `EmpiricalBernsteinConfidenceSequence`: an anytime-valid empirical-Bernstein confidence sequence.
+
+### 🔄 Changed
+
+### 🐛 Fixed
+
+### 💛 Contributors
+
+## [0.9.0] – 2026-07-16
+
+### ✨ Added
+- Drift monitoring: `glide.monitors` module with `ClassicalMeanMonitor` and `PPIMeanMonitor`, detecting drift of a metric across batches of labeled and proxy-labeled production data.
+- `glide.confidence_sequences` module with the `ConfidenceSequence` protocol and `EmpiricalBernsteinConfidenceSequence`, an anytime-valid empirical-Bernstein confidence sequence powering the drift monitors.
 - `glide.mean_monitoring_results` module with `MeanMonitoringResult`, `ClassicalMeanMonitoringResult` and `PredictionPoweredMeanMonitoringResult`: result objects for drift-monitoring procedures over batched datasets.
 - GitHub Pages landing page at [emertondata.github.io/glide](https://emertondata.github.io/glide).
 
 ### 🔄 Changed
 - Reorganized deep dive docs into a `Case Studies` section and a `Scientific Validation` section with `Estimators` and `Monitors` subsections.
 
-### 🐛 Fixed
-
 ### 💛 Contributors
+Thank you to everyone who contributed to this release: @gmartinon-ed, @imerad
 
 ## [0.8.0] – 2026-06-26
 
