@@ -67,6 +67,6 @@ def test_classical_str(classical_result):
         "Running Mean: 0.600\n"
         "Confidence Bound: 0.550\n"
         "Confidence Level: 0.95\n"
-        "batch_n: 22"
+        "batch_n: [10, 12]"
     )
     assert str(classical_result) == expected
