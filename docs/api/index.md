@@ -47,6 +47,7 @@
 | [`StratifiedPTDMeanEstimator`](estimators.md#glide.estimators.stratified_ptd.StratifiedPTDMeanEstimator) | PTD with per-stratum optimal weighting |
 | [`ClusteredPTDMeanEstimator`](estimators.md#glide.estimators.clustered_ptd.ClusteredPTDMeanEstimator) | PTD for clustered data |
 | [`IPWPTDMeanEstimator`](estimators.md#glide.estimators.ipw_ptd.IPWPTDMeanEstimator) | PTD with inverse probability weighting |
+| [`MultiPTDMeanEstimator`](estimators.md#glide.estimators.multi_ptd.MultiPTDMeanEstimator) | Combines labeled data with predictions from multiple proxies via PTD |
 
 ## Monitors
 

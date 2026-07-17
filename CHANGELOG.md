@@ -9,6 +9,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 ## [Next release]
 
 ### ✨ Added
+- `MultiPTDMeanEstimator`: generalizes `PTDMeanEstimator` to combine multiple proxy predictors via a bootstrap-tuned weight vector.
 
 ### 🔄 Changed
 - Renamed `PPIMeanMonitor` to `EmpiricalPPIMeanMonitor` (`glide.monitors.ppi` → `glide.monitors.empirical_ppi`) and `ClassicalMeanMonitor` to `EmpiricalClassicalMeanMonitor` (`glide.monitors.classical` → `glide.monitors.empirical_classical`).
