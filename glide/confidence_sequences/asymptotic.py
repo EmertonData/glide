@@ -22,16 +22,13 @@ def _compute_asymptotic_bounds(
         lower=0.0,
         error_message=f"'batch_std_estimates' must be non-negative; got {batch_std_estimates.min()!r}.",
     )
-    # The one-sided boundary uses the two-sided formula at twice the miscoverage,
-    # which is only defined below 1, hence the 0.5 upper bound.
     _validate_bounds(miscoverage, "miscoverage", lower=0.0, upper=0.5, left_inclusive=False, right_inclusive=False)
     _validate_is_integer(tightest_at_batch, "tightest_at_batch")
     _validate_bounds(tightest_at_batch, "tightest_at_batch", lower=1)
     n_batches = len(batch_estimates)
     batch_counts = np.arange(1, n_batches + 1)
     running_mean_estimates = np.cumsum(batch_estimates) / batch_counts
-    # Intrinsic time of the Gaussian approximation: the accumulated squared
-    # standard errors of the batch estimates, not their realized scatter.
+
     variance_process = np.cumsum(batch_std_estimates**2)
     target_position = min(tightest_at_batch, n_batches) - 1
     target_intrinsic_time = variance_process[target_position]
@@ -81,7 +78,7 @@ class AsymptoticConfidenceSequence(ConfidenceSequence):
     ----------
     Waudby-Smith, Ian, David Arbour, Ritwik Sinha, Edward H. Kennedy, and Aaditya
     Ramdas. "Time-uniform central limit theory and asymptotic confidence
-    sequences." arXiv preprint arXiv:2103.06476 (2024).
+    sequences." The Annals of Statistics 52, no. 6 (2024): 2613-2640.
 
     Robbins, Herbert. "Statistical methods related to the law of the iterated
     logarithm." The Annals of Mathematical Statistics 41, no. 5 (1970): 1397-1409.

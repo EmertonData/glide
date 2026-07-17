@@ -52,21 +52,6 @@ def test_compute_asymptotic_bounds_delegates_to_validation(batch_estimates, batc
         assert "must accumulate a positive variance" in mock_validate_bounds.call_args_list[3][1]["error_message"]
 
 
-def test_compute_asymptotic_bounds_empty_batch_estimates():
-    with pytest.raises(ValueError, match="'batch_estimates' must be non-empty"):
-        _compute_asymptotic_bounds(np.array([]), np.array([]), miscoverage=0.2, tightest_at_batch=1)
-
-
-def test_compute_asymptotic_bounds_mismatched_lengths(batch_estimates):
-    with pytest.raises(ValueError, match="must have the same length"):
-        _compute_asymptotic_bounds(batch_estimates, np.array([0.1]), miscoverage=0.2, tightest_at_batch=1)
-
-
-def test_compute_asymptotic_bounds_negative_std(batch_estimates):
-    with pytest.raises(ValueError, match="'batch_std_estimates' must be non-negative"):
-        _compute_asymptotic_bounds(batch_estimates, np.array([-0.1, 0.2]), miscoverage=0.2, tightest_at_batch=1)
-
-
 def test_compute_asymptotic_bounds(batch_estimates, batch_std_estimates):
     running_means, lower_bounds = _compute_asymptotic_bounds(
         batch_estimates, batch_std_estimates, miscoverage=0.2, tightest_at_batch=1
