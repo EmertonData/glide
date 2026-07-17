@@ -11,7 +11,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 ### ✨ Added
 
 ### 🔄 Changed
-- **Breaking:** renamed `PPIMeanMonitor` to `EmpiricalPPIMeanMonitor` (`glide.monitors.ppi` → `glide.monitors.empirical_ppi`) and `ClassicalMeanMonitor` to `EmpiricalClassicalMeanMonitor` (`glide.monitors.classical` → `glide.monitors.empirical_classical`), to make room for upcoming asymptotic-confidence-sequence counterparts.
+- Renamed `PPIMeanMonitor` to `EmpiricalPPIMeanMonitor` (`glide.monitors.ppi` → `glide.monitors.empirical_ppi`) and `ClassicalMeanMonitor` to `EmpiricalClassicalMeanMonitor` (`glide.monitors.classical` → `glide.monitors.empirical_classical`).
 
 ### 🐛 Fixed
 
