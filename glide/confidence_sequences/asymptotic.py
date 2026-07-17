@@ -1,10 +1,11 @@
+from dataclasses import dataclass
 from typing import Tuple
 
 import numpy as np
 from numpy.typing import NDArray
 
 from glide.confidence_sequences.base import ConfidenceSequence
-from glide.core.validation import _validate_bounds
+from glide.core.validation import _validate_bounds, _validate_equal_lengths, _validate_is_integer, _validate_non_empty
 
 
 def _compute_asymptotic_bounds(
@@ -13,9 +14,18 @@ def _compute_asymptotic_bounds(
     miscoverage: float,
     tightest_at_batch: int,
 ) -> Tuple[NDArray, NDArray]:
+    _validate_non_empty(batch_estimates, "batch_estimates")
+    _validate_equal_lengths(batch_estimates, batch_std_estimates, names=["batch_estimates", "batch_std_estimates"])
+    _validate_bounds(
+        batch_std_estimates,
+        "batch_std_estimates",
+        lower=0.0,
+        error_message=f"'batch_std_estimates' must be non-negative; got {batch_std_estimates.min()!r}.",
+    )
     # The one-sided boundary uses the two-sided formula at twice the miscoverage,
     # which is only defined below 1, hence the 0.5 upper bound.
     _validate_bounds(miscoverage, "miscoverage", lower=0.0, upper=0.5, left_inclusive=False, right_inclusive=False)
+    _validate_is_integer(tightest_at_batch, "tightest_at_batch")
     _validate_bounds(tightest_at_batch, "tightest_at_batch", lower=1)
     n_batches = len(batch_estimates)
     batch_counts = np.arange(1, n_batches + 1)
@@ -49,6 +59,7 @@ def _compute_asymptotic_bounds(
     return running_mean_estimates, lower_bounds
 
 
+@dataclass
 class AsymptoticConfidenceSequence(ConfidenceSequence):
     """Anytime-valid asymptotic confidence sequence on a running mean.
 

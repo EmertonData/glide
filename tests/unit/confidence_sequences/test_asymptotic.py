@@ -20,21 +20,51 @@ def batch_std_estimates():
 
 
 def test_compute_asymptotic_bounds_delegates_to_validation(batch_estimates, batch_std_estimates):
-    with patch.object(asymptotic_module, "_validate_bounds") as mock_validate_bounds:
+    with (
+        patch.object(asymptotic_module, "_validate_non_empty") as mock_validate_non_empty,
+        patch.object(asymptotic_module, "_validate_equal_lengths") as mock_validate_equal_lengths,
+        patch.object(asymptotic_module, "_validate_is_integer") as mock_validate_is_integer,
+        patch.object(asymptotic_module, "_validate_bounds") as mock_validate_bounds,
+    ):
         _compute_asymptotic_bounds(batch_estimates, batch_std_estimates, miscoverage=0.2, tightest_at_batch=1)
 
-        assert mock_validate_bounds.call_count == 3
-        assert mock_validate_bounds.call_args_list[0][0] == (0.2, "miscoverage")
-        assert mock_validate_bounds.call_args_list[0][1] == {
+        mock_validate_non_empty.assert_called_once_with(batch_estimates, "batch_estimates")
+        mock_validate_equal_lengths.assert_called_once()
+        np.testing.assert_array_equal(mock_validate_equal_lengths.call_args[0][0], batch_estimates)
+        np.testing.assert_array_equal(mock_validate_equal_lengths.call_args[0][1], batch_std_estimates)
+        assert mock_validate_equal_lengths.call_args[1] == {"names": ["batch_estimates", "batch_std_estimates"]}
+        mock_validate_is_integer.assert_called_once_with(1, "tightest_at_batch")
+
+        assert mock_validate_bounds.call_count == 4
+        np.testing.assert_array_equal(mock_validate_bounds.call_args_list[0][0][0], batch_std_estimates)
+        assert mock_validate_bounds.call_args_list[0][0][1] == "batch_std_estimates"
+        assert mock_validate_bounds.call_args_list[0][1]["lower"] == 0.0
+        assert mock_validate_bounds.call_args_list[1][0] == (0.2, "miscoverage")
+        assert mock_validate_bounds.call_args_list[1][1] == {
             "lower": 0.0,
             "upper": 0.5,
             "left_inclusive": False,
             "right_inclusive": False,
         }
-        assert mock_validate_bounds.call_args_list[1][0] == (1, "tightest_at_batch")
-        assert mock_validate_bounds.call_args_list[1][1] == {"lower": 1}
-        assert mock_validate_bounds.call_args_list[2][0][1] == "batch_std_estimates"
-        assert "must accumulate a positive variance" in mock_validate_bounds.call_args_list[2][1]["error_message"]
+        assert mock_validate_bounds.call_args_list[2][0] == (1, "tightest_at_batch")
+        assert mock_validate_bounds.call_args_list[2][1] == {"lower": 1}
+        assert mock_validate_bounds.call_args_list[3][0][1] == "batch_std_estimates"
+        assert "must accumulate a positive variance" in mock_validate_bounds.call_args_list[3][1]["error_message"]
+
+
+def test_compute_asymptotic_bounds_empty_batch_estimates():
+    with pytest.raises(ValueError, match="'batch_estimates' must be non-empty"):
+        _compute_asymptotic_bounds(np.array([]), np.array([]), miscoverage=0.2, tightest_at_batch=1)
+
+
+def test_compute_asymptotic_bounds_mismatched_lengths(batch_estimates):
+    with pytest.raises(ValueError, match="must have the same length"):
+        _compute_asymptotic_bounds(batch_estimates, np.array([0.1]), miscoverage=0.2, tightest_at_batch=1)
+
+
+def test_compute_asymptotic_bounds_negative_std(batch_estimates):
+    with pytest.raises(ValueError, match="'batch_std_estimates' must be non-negative"):
+        _compute_asymptotic_bounds(batch_estimates, np.array([-0.1, 0.2]), miscoverage=0.2, tightest_at_batch=1)
 
 
 def test_compute_asymptotic_bounds(batch_estimates, batch_std_estimates):

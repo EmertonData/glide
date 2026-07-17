@@ -12,8 +12,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - `AsymptoticConfidenceSequence`, an anytime-valid confidence sequence whose width scales with the known standard errors of per-batch estimates.
 
 ### 🔄 Changed
-- Renamed `PPIMeanMonitor` to `EmpiricalPPIMeanMonitor` (`glide.monitors.ppi` → `glide.monitors.empirical_ppi`) and `ClassicalMeanMonitor` to `EmpiricalClassicalMeanMonitor` (`glide.monitors.classical` → `glide.monitors.empirical_classical`).
 - `ConfidenceSequence` is now a concrete base class rather than a structural protocol.
+- Renamed `PPIMeanMonitor` to `EmpiricalPPIMeanMonitor` (`glide.monitors.ppi` → `glide.monitors.empirical_ppi`) and `ClassicalMeanMonitor` to `EmpiricalClassicalMeanMonitor` (`glide.monitors.classical` → `glide.monitors.empirical_classical`).
 
 ### 🐛 Fixed
 

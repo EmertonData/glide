@@ -1,3 +1,4 @@
+from dataclasses import dataclass
 from typing import Tuple
 
 import numpy as np
@@ -60,6 +61,7 @@ def _compute_empirical_bernstein_bounds(
     return running_mean_estimates, lower_bounds
 
 
+@dataclass
 class EmpiricalBernsteinConfidenceSequence(ConfidenceSequence):
     """Anytime-valid empirical-Bernstein confidence sequence on a running mean.
 
