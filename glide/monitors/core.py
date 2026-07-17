@@ -56,3 +56,21 @@ def _scale_from_unit_risk(
         values = 1.0 - values
     original = metric_lower_bound + values * (metric_upper_bound - metric_lower_bound)
     return original
+
+
+def _postprocess(
+    risk_running_means: NDArray,
+    risk_confidence_bounds: NDArray,
+    risk_batch_mean_estimates: NDArray,
+    higher_is_better: bool,
+    metric_lower_bound: float,
+    metric_upper_bound: float,
+) -> Tuple[NDArray, NDArray, NDArray]:
+    running_means = _scale_from_unit_risk(risk_running_means, metric_lower_bound, metric_upper_bound, higher_is_better)
+    confidence_bounds = _scale_from_unit_risk(
+        risk_confidence_bounds, metric_lower_bound, metric_upper_bound, higher_is_better
+    )
+    batch_mean_estimates = _scale_from_unit_risk(
+        risk_batch_mean_estimates, metric_lower_bound, metric_upper_bound, higher_is_better
+    )
+    return running_means, confidence_bounds, batch_mean_estimates
