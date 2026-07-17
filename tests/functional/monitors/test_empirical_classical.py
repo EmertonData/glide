@@ -1,4 +1,4 @@
-"""Functional tests for ClassicalMeanMonitor.
+"""Functional tests for EmpiricalClassicalMeanMonitor.
 
 These tests verify end-to-end statistical properties rather than implementation
 details, and therefore require larger datasets to hold reliably.
@@ -8,7 +8,7 @@ import numpy as np
 import pytest
 
 from glide.estimators import ClassicalMeanEstimator
-from glide.monitors import ClassicalMeanMonitor
+from glide.monitors import EmpiricalClassicalMeanMonitor
 from glide.simulators import generate_binary_dataset
 
 # ── fixtures ───────────────────────────────────────────────────────────────────
@@ -30,7 +30,7 @@ def batches():
 
 def test_detect_batch_mean_estimates_match_classical_estimator(y, batches):
     """Each batch estimate equals the classical estimator computed on that batch alone."""
-    result = ClassicalMeanMonitor().detect(y, batches, higher_is_better=False, threshold=0.5)
+    result = EmpiricalClassicalMeanMonitor().detect(y, batches, higher_is_better=False, threshold=0.5)
     n_batches = len(np.unique(batches))
     estimator_means = np.zeros(n_batches)
     for batch_id in range(n_batches):
@@ -43,7 +43,7 @@ def test_detect_batch_mean_estimates_match_classical_estimator(y, batches):
 
 def test_detect_prefix_consistency(y, batches):
     """Detecting on a growing history is prefix-consistent with detecting on the full history."""
-    monitor = ClassicalMeanMonitor()
+    monitor = EmpiricalClassicalMeanMonitor()
     full = monitor.detect(y, batches, higher_is_better=False, threshold=0.5)
     prefix_mask = batches <= 2
     prefix = monitor.detect(y[prefix_mask], batches[prefix_mask], higher_is_better=False, threshold=0.5)
@@ -54,8 +54,8 @@ def test_detect_prefix_consistency(y, batches):
 
 def test_detect_higher_is_better_symmetry(y, batches):
     """Monitoring a performance is the mirror image of monitoring its complement as a risk."""
-    risk = ClassicalMeanMonitor().detect(y, batches, higher_is_better=False, threshold=0.3)
-    performance = ClassicalMeanMonitor().detect(1.0 - y, batches, higher_is_better=True, threshold=0.7)
+    risk = EmpiricalClassicalMeanMonitor().detect(y, batches, higher_is_better=False, threshold=0.3)
+    performance = EmpiricalClassicalMeanMonitor().detect(1.0 - y, batches, higher_is_better=True, threshold=0.7)
 
     np.testing.assert_array_equal(performance.alarms, risk.alarms)
     np.testing.assert_allclose(performance.confidence_bounds, 1.0 - risk.confidence_bounds)

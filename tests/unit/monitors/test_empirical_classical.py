@@ -3,10 +3,10 @@ from unittest.mock import patch
 import numpy as np
 import pytest
 
-import glide.monitors.classical as classical_module
+import glide.monitors.empirical_classical as empirical_classical_module
 from glide.confidence_sequences import EmpiricalBernsteinConfidenceSequence
 from glide.mean_monitoring_results import ClassicalMeanMonitoringResult
-from glide.monitors import ClassicalMeanMonitor
+from glide.monitors import EmpiricalClassicalMeanMonitor
 
 
 @pytest.fixture
@@ -21,7 +21,7 @@ def batches():
 
 @pytest.fixture
 def monitor():
-    return ClassicalMeanMonitor()
+    return EmpiricalClassicalMeanMonitor()
 
 
 # --- _preprocess ---
@@ -29,11 +29,11 @@ def monitor():
 
 def test_preprocess_delegates_to_validation(monitor, y, batches):
     with (
-        patch.object(classical_module, "_validate_equal_lengths") as mock_validate_equal_lengths,
-        patch.object(classical_module, "_validate_non_empty") as mock_validate_non_empty,
-        patch.object(classical_module, "_validate_has_no_nan") as mock_validate_has_no_nan,
-        patch.object(classical_module, "_validate_bounds") as mock_validate_bounds,
-        patch.object(classical_module, "_unique_ordered_batches") as mock_unique_ordered_batches,
+        patch.object(empirical_classical_module, "_validate_equal_lengths") as mock_validate_equal_lengths,
+        patch.object(empirical_classical_module, "_validate_non_empty") as mock_validate_non_empty,
+        patch.object(empirical_classical_module, "_validate_has_no_nan") as mock_validate_has_no_nan,
+        patch.object(empirical_classical_module, "_validate_bounds") as mock_validate_bounds,
+        patch.object(empirical_classical_module, "_unique_ordered_batches") as mock_unique_ordered_batches,
     ):
         mock_unique_ordered_batches.return_value = (np.array([0, 1]), np.array([0, 0, 1, 1]))
         monitor._preprocess(
@@ -117,30 +117,6 @@ def test_preprocess_known_output(monitor, y, batches):
     np.testing.assert_array_equal(batch_n, np.array([2, 2]))
 
 
-# --- _postprocess ---
-
-
-def test_postprocess_delegates_to_scaling(monitor):
-    risk_running_means = np.array([0.2, 0.25])
-    risk_confidence_bounds = np.array([0.1, 0.2])
-    risk_batch_mean_estimates = np.array([0.2, 0.3])
-
-    with patch.object(classical_module, "_scale_from_unit_risk") as mock_scale_from_unit_risk:
-        monitor._postprocess(
-            risk_running_means,
-            risk_confidence_bounds,
-            risk_batch_mean_estimates,
-            higher_is_better=True,
-            metric_lower_bound=0.0,
-            metric_upper_bound=1.0,
-        )
-
-    assert mock_scale_from_unit_risk.call_count == 3
-    np.testing.assert_array_equal(mock_scale_from_unit_risk.call_args_list[0][0][0], risk_running_means)
-    np.testing.assert_array_equal(mock_scale_from_unit_risk.call_args_list[1][0][0], risk_confidence_bounds)
-    np.testing.assert_array_equal(mock_scale_from_unit_risk.call_args_list[2][0][0], risk_batch_mean_estimates)
-
-
 # --- detect ---
 
 
@@ -154,7 +130,7 @@ def test_detect_is_valid_monitoring_result(monitor, y, batches):
 
     assert isinstance(result, ClassicalMeanMonitoringResult)
     assert isinstance(result.confidence_sequence, EmpiricalBernsteinConfidenceSequence)
-    assert result.monitor_name == "ClassicalMeanMonitor"
+    assert result.monitor_name == "EmpiricalClassicalMeanMonitor"
     assert np.isfinite(result.running_means).all()
     assert (result.running_means >= result.confidence_bounds).all()
 
@@ -165,7 +141,7 @@ def test_detect_metadata(monitor, y, batches):
     )
 
     assert result.metric_name == "accuracy"
-    assert result.monitor_name == "ClassicalMeanMonitor"
+    assert result.monitor_name == "EmpiricalClassicalMeanMonitor"
     assert result.higher_is_better is True
     assert result.alarm_threshold == 0.5
     assert result.confidence_level == 0.85

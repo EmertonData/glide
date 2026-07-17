@@ -88,7 +88,7 @@ If you use GLIDE in your work, please cite us using the "Cite this repository" b
 | Stratified Predict-Then-Debias | `estimators.StratifiedPTDMeanEstimator` | [[7]](#ref-7) | [Link](https://github.com/DanKluger/PTDBoot) |
 | Clustered Predict-Then-Debias | `estimators.ClusteredPTDMeanEstimator` | [[7]](#ref-7) | [Link](https://github.com/DanKluger/PTDBoot) |
 | IPW Predict-Then-Debias | `estimators.IPWPTDMeanEstimator` | [[7]](#ref-7) | [Link](https://github.com/DanKluger/PTDBoot) |
-| Prediction-Powered Risk Monitoring (PPRM) | `monitors.PPIMeanMonitor` | [[9]](#ref-9), [[10]](#ref-10) | — |
+| Prediction-Powered Risk Monitoring (PPRM) | `monitors.EmpiricalPPIMeanMonitor` | [[9]](#ref-9), [[10]](#ref-10) | — |
 
 ### 📖 References
 

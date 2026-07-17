@@ -1,7 +1,7 @@
 # Monitors
 
-::: glide.monitors.classical.ClassicalMeanMonitor
+::: glide.monitors.empirical_classical.EmpiricalClassicalMeanMonitor
 
 ---
 
-::: glide.monitors.ppi.PPIMeanMonitor
+::: glide.monitors.empirical_ppi.EmpiricalPPIMeanMonitor

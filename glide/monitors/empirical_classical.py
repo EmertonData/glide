@@ -7,10 +7,10 @@ from glide.confidence_sequences import EmpiricalBernsteinConfidenceSequence
 from glide.confidence_sequences.empirical_bernstein import _compute_empirical_bernstein_bounds
 from glide.core.validation import _validate_bounds, _validate_equal_lengths, _validate_has_no_nan, _validate_non_empty
 from glide.mean_monitoring_results import ClassicalMeanMonitoringResult
-from glide.monitors.core import _scale_from_unit_risk, _scale_to_unit_risk, _unique_ordered_batches
+from glide.monitors.core import _postprocess, _scale_to_unit_risk, _unique_ordered_batches
 
 
-class ClassicalMeanMonitor:
+class EmpiricalClassicalMeanMonitor:
     """Anytime-valid drift monitor over a batched dataset of labels.
 
     It uses the plain sample mean per batch. Unlabeled entries are passed as
@@ -40,12 +40,12 @@ class ClassicalMeanMonitor:
     Examples
     --------
     >>> import numpy as np
-    >>> from glide.monitors import ClassicalMeanMonitor
+    >>> from glide.monitors import EmpiricalClassicalMeanMonitor
     >>> pre_drift_batch = np.array([0.0, 0.2, np.nan, np.nan])
     >>> post_drift_batch = np.array([0.8, 1.0, np.nan, np.nan])
     >>> y = np.hstack([pre_drift_batch, np.tile(post_drift_batch, 50)])
     >>> batches = np.repeat(np.arange(51), 4)
-    >>> monitor = ClassicalMeanMonitor()
+    >>> monitor = EmpiricalClassicalMeanMonitor()
     >>> result = monitor.detect(y, batches, higher_is_better=False, threshold=0.5)
     >>> result.drift_detected
     True
@@ -118,26 +118,6 @@ class ClassicalMeanMonitor:
         risk_y = _scale_to_unit_risk(labeled_values, metric_lower_bound, metric_upper_bound, higher_is_better)
         risk_threshold = _scale_to_unit_risk(threshold, metric_lower_bound, metric_upper_bound, higher_is_better)
         return risk_y, risk_threshold, batch_codes, batch_n
-
-    def _postprocess(
-        self,
-        risk_running_means: NDArray,
-        risk_confidence_bounds: NDArray,
-        risk_batch_mean_estimates: NDArray,
-        higher_is_better: bool,
-        metric_lower_bound: float,
-        metric_upper_bound: float,
-    ) -> Tuple[NDArray, NDArray, NDArray]:
-        running_means = _scale_from_unit_risk(
-            risk_running_means, metric_lower_bound, metric_upper_bound, higher_is_better
-        )
-        confidence_bounds = _scale_from_unit_risk(
-            risk_confidence_bounds, metric_lower_bound, metric_upper_bound, higher_is_better
-        )
-        batch_mean_estimates = _scale_from_unit_risk(
-            risk_batch_mean_estimates, metric_lower_bound, metric_upper_bound, higher_is_better
-        )
-        return running_means, confidence_bounds, batch_mean_estimates
 
     def detect(
         self,
@@ -230,7 +210,7 @@ class ClassicalMeanMonitor:
             risk_batch_mean_estimates, risk_threshold, miscoverage
         )
 
-        running_means, confidence_bounds, batch_mean_estimates = self._postprocess(
+        running_means, confidence_bounds, batch_mean_estimates = _postprocess(
             risk_running_means,
             risk_confidence_bounds,
             risk_batch_mean_estimates,

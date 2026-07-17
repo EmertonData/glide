@@ -16,10 +16,10 @@ from glide.core.validation import (
 from glide.estimators.core import _split_labeled_unlabeled
 from glide.estimators.ppi_core import _compute_mean_estimate, _compute_tuning_parameter
 from glide.mean_monitoring_results import PredictionPoweredMeanMonitoringResult
-from glide.monitors.core import _scale_from_unit_risk, _scale_to_unit_risk, _unique_ordered_batches
+from glide.monitors.core import _postprocess, _scale_to_unit_risk, _unique_ordered_batches
 
 
-class PPIMeanMonitor:
+class EmpiricalPPIMeanMonitor:
     """Anytime-valid drift monitor over a batched dataset of true and proxy labels.
 
     It uses a per-batch Prediction-Powered Inference (PPI) estimate: a small set of
@@ -45,7 +45,7 @@ class PPIMeanMonitor:
     Examples
     --------
     >>> import numpy as np
-    >>> from glide.monitors import PPIMeanMonitor
+    >>> from glide.monitors import EmpiricalPPIMeanMonitor
     >>> pre_drift_y_true = np.array([0.0, 0.2, np.nan, np.nan])
     >>> pre_drift_y_proxy = np.array([0.0, 0.2, 0.0, 0.2])
     >>> post_drift_y_true = np.array([0.8, 1.0, np.nan, np.nan])
@@ -53,7 +53,7 @@ class PPIMeanMonitor:
     >>> y_true = np.hstack([pre_drift_y_true, np.tile(post_drift_y_true, 50)])
     >>> y_proxy = np.hstack([pre_drift_y_proxy, np.tile(post_drift_y_proxy, 50)])
     >>> batches = np.repeat(np.arange(51), 4)
-    >>> monitor = PPIMeanMonitor()
+    >>> monitor = EmpiricalPPIMeanMonitor()
     >>> result = monitor.detect(y_true, y_proxy, batches, higher_is_better=False, threshold=0.5)
     >>> result.drift_detected
     True
@@ -156,26 +156,6 @@ class PPIMeanMonitor:
         risk_y_proxy = _scale_to_unit_risk(y_proxy, metric_lower_bound, metric_upper_bound, higher_is_better)
         risk_threshold = _scale_to_unit_risk(threshold, metric_lower_bound, metric_upper_bound, higher_is_better)
         return risk_y_true, risk_y_proxy, risk_threshold, batch_codes, batch_n_true, batch_n_proxy
-
-    def _postprocess(
-        self,
-        risk_running_means: NDArray,
-        risk_confidence_bounds: NDArray,
-        risk_batch_mean_estimates: NDArray,
-        higher_is_better: bool,
-        metric_lower_bound: float,
-        metric_upper_bound: float,
-    ) -> Tuple[NDArray, NDArray, NDArray]:
-        running_means = _scale_from_unit_risk(
-            risk_running_means, metric_lower_bound, metric_upper_bound, higher_is_better
-        )
-        confidence_bounds = _scale_from_unit_risk(
-            risk_confidence_bounds, metric_lower_bound, metric_upper_bound, higher_is_better
-        )
-        batch_mean_estimates = _scale_from_unit_risk(
-            risk_batch_mean_estimates, metric_lower_bound, metric_upper_bound, higher_is_better
-        )
-        return running_means, confidence_bounds, batch_mean_estimates
 
     def detect(
         self,
@@ -307,7 +287,7 @@ class PPIMeanMonitor:
         risk_running_means, risk_lower_bounds = _compute_empirical_bernstein_bounds(
             clipped_risk_batch_estimates, risk_threshold, miscoverage
         )
-        running_means, confidence_bounds, batch_mean_estimates = self._postprocess(
+        running_means, confidence_bounds, batch_mean_estimates = _postprocess(
             risk_running_means,
             risk_lower_bounds,
             risk_batch_estimates,

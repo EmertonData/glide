@@ -1,4 +1,4 @@
-"""Functional tests for PPIMeanMonitor.
+"""Functional tests for EmpiricalPPIMeanMonitor.
 
 These tests verify end-to-end statistical properties rather than implementation
 details, and therefore require larger datasets to hold reliably.
@@ -8,7 +8,7 @@ import numpy as np
 import pytest
 
 from glide.estimators import PPIMeanEstimator
-from glide.monitors import PPIMeanMonitor
+from glide.monitors import EmpiricalPPIMeanMonitor
 from glide.simulators import generate_stratified_binary_dataset, simulate_annotation
 
 # ── fixtures ───────────────────────────────────────────────────────────────────
@@ -45,7 +45,7 @@ def dataset():
 def test_detect_batch_estimates_match_ppi_estimator(dataset):
     """Each batch estimate equals the PPI estimator computed on that batch alone when power tuning is disabled."""
     y_true, y_proxy, batches = dataset
-    monitor_result = PPIMeanMonitor().detect(
+    monitor_result = EmpiricalPPIMeanMonitor().detect(
         y_true,
         y_proxy,
         batches,
@@ -66,7 +66,7 @@ def test_detect_batch_estimates_match_ppi_estimator(dataset):
 def test_detect_prefix_consistency(dataset):
     """Detecting on a growing history is prefix-consistent with detecting on the full history."""
     y_true, y_proxy, batches = dataset
-    monitor = PPIMeanMonitor()
+    monitor = EmpiricalPPIMeanMonitor()
     full = monitor.detect(
         y_true,
         y_proxy,
@@ -90,14 +90,14 @@ def test_detect_prefix_consistency(dataset):
 def test_detect_higher_is_better_symmetry(dataset):
     """Monitoring a performance is the mirror image of monitoring its negation as a risk."""
     y_true, y_proxy, batches = dataset
-    risk = PPIMeanMonitor().detect(
+    risk = EmpiricalPPIMeanMonitor().detect(
         y_true,
         y_proxy,
         batches,
         higher_is_better=False,
         threshold=0.3,
     )
-    performance = PPIMeanMonitor().detect(
+    performance = EmpiricalPPIMeanMonitor().detect(
         1 - y_true,
         1 - y_proxy,
         batches,

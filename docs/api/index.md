@@ -54,13 +54,13 @@
 
 | Class | Description |
 |-------|-------------|
-| [`ClassicalMeanMonitor`](monitors.md#glide.monitors.classical.ClassicalMeanMonitor) | Anytime-valid drift monitor over batched labels, without proxy predictions |
+| [`EmpiricalClassicalMeanMonitor`](monitors.md#glide.monitors.empirical_classical.EmpiricalClassicalMeanMonitor) | Anytime-valid drift monitor over batched labels, without proxy predictions |
 
 ### Prediction-Powered
 
 | Class | Description |
 |-------|-------------|
-| [`PPIMeanMonitor`](monitors.md#glide.monitors.ppi.PPIMeanMonitor) | Anytime-valid drift monitor combining true and proxy labels |
+| [`EmpiricalPPIMeanMonitor`](monitors.md#glide.monitors.empirical_ppi.EmpiricalPPIMeanMonitor) | Anytime-valid drift monitor combining true and proxy labels |
 
 ## Confidence Intervals
 

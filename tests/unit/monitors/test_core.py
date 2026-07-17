@@ -1,7 +1,10 @@
+from unittest.mock import patch
+
 import numpy as np
 import pytest
 
-from glide.monitors.core import _scale_from_unit_risk, _scale_to_unit_risk, _unique_ordered_batches
+import glide.monitors.core as core_module
+from glide.monitors.core import _postprocess, _scale_from_unit_risk, _scale_to_unit_risk, _unique_ordered_batches
 
 
 @pytest.fixture
@@ -70,3 +73,27 @@ def test_scale_from_unit_risk_higher_is_better(values_scaled):
         values_scaled, metric_lower_bound=0.0, metric_upper_bound=10.0, higher_is_better=True
     )
     np.testing.assert_allclose(result, expected)
+
+
+# --- _postprocess ---
+
+
+def test_postprocess_delegates_to_scaling():
+    risk_running_means = np.array([0.2, 0.25])
+    risk_confidence_bounds = np.array([0.1, 0.2])
+    risk_batch_mean_estimates = np.array([0.2, 0.3])
+
+    with patch.object(core_module, "_scale_from_unit_risk") as mock_scale_from_unit_risk:
+        _postprocess(
+            risk_running_means,
+            risk_confidence_bounds,
+            risk_batch_mean_estimates,
+            higher_is_better=True,
+            metric_lower_bound=0.0,
+            metric_upper_bound=1.0,
+        )
+
+    assert mock_scale_from_unit_risk.call_count == 3
+    np.testing.assert_array_equal(mock_scale_from_unit_risk.call_args_list[0][0][0], risk_running_means)
+    np.testing.assert_array_equal(mock_scale_from_unit_risk.call_args_list[1][0][0], risk_confidence_bounds)
+    np.testing.assert_array_equal(mock_scale_from_unit_risk.call_args_list[2][0][0], risk_batch_mean_estimates)
