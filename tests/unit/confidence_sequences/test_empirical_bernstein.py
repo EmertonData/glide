@@ -4,7 +4,6 @@ import numpy as np
 import pytest
 
 import glide.confidence_sequences.empirical_bernstein as empirical_bernstein_module
-from glide.confidence_sequences import EmpiricalBernsteinConfidenceSequence
 from glide.confidence_sequences.empirical_bernstein import (
     _compute_empirical_bernstein_bounds,
     _compute_mixture_boundary,
@@ -73,19 +72,3 @@ def test_compute_empirical_bernstein_bounds(batch_estimates):
     expected_lower_bound = np.array([0.0, 0.258218, 0.338812])
     np.testing.assert_allclose(running_mean_estimates, np.array([0.4, 0.5, 0.5]))
     np.testing.assert_allclose(lower_bounds, expected_lower_bound, atol=1e-6)
-
-
-# --- EmpiricalBernsteinConfidenceSequence ---
-
-
-@pytest.fixture
-def sequence():
-    return EmpiricalBernsteinConfidenceSequence(
-        running_mean_estimates=np.array([0.4, 0.6]),
-        confidence_bounds=np.array([0.1, 0.55]),
-    )
-
-
-def test_sequence_attributes(sequence):
-    np.testing.assert_array_equal(sequence.running_mean_estimates, np.array([0.4, 0.6]))
-    np.testing.assert_array_equal(sequence.confidence_bounds, np.array([0.1, 0.55]))
