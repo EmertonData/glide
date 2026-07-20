@@ -12,13 +12,13 @@ class AsymptoticClassicalMeanMonitor:
     """Anytime-valid label-only drift monitor leveraging each batch estimate's
     standard deviation.
 
-    It computes a per-batch sample mean of the labeled values and monitors the
-    running mean of those estimates against a user-supplied ``threshold``,
-    through a Gaussian-mixture asymptotic confidence sequence whose width scales
-    with the standard error of each batch mean, so genuine drifts are detected
-    early. The false-alarm guarantee is asymptotic: each batch needs enough
-    labeled samples (preferably tens) for its sample mean to be approximately
-    Gaussian with a consistently estimated variance.
+    It computes a per-batch sample mean of the labeled values, then tracks the
+    running mean of those estimates against a user-supplied ``threshold``. The
+    comparison uses a Gaussian-mixture asymptotic confidence sequence whose
+    width scales with the standard error of each batch mean, so genuine drifts
+    get flagged early. The false-alarm guarantee is asymptotic: each batch
+    needs enough labeled samples (preferably tens) for its sample mean to be
+    approximately Gaussian with a consistently estimated variance.
 
     References
     ----------
