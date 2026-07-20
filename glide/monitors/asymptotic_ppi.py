@@ -146,6 +146,7 @@ class AsymptoticPPIMeanMonitor:
             - If ``threshold`` falls outside ``[metric_lower_bound, metric_upper_bound]``.
             - If any proxy value is NaN or all proxy values are identical.
             - If labeled ``y_true`` values are constant.
+            - If any value falls outside ``[metric_lower_bound, metric_upper_bound]``.
             - If batches are interleaved rather than grouped into contiguous blocks.
             - If any batch has fewer than 2 labeled or fewer than 2 unlabeled samples.
             - If proxy values are constant across the prior batches (with ``power_tuning=True``).

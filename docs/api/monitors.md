@@ -4,11 +4,11 @@
 
 ---
 
-::: glide.monitors.empirical_ppi.EmpiricalPPIMeanMonitor
+::: glide.monitors.asymptotic_classical.AsymptoticClassicalMeanMonitor
 
 ---
 
-::: glide.monitors.asymptotic_classical.AsymptoticClassicalMeanMonitor
+::: glide.monitors.empirical_ppi.EmpiricalPPIMeanMonitor
 
 ---
 
