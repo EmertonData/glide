@@ -17,6 +17,11 @@ def batches():
     return np.array([0, 0, 1, 1])
 
 
+@pytest.fixture
+def batch_n():
+    return np.array([2, 2])
+
+
 # --- _preprocess ---
 
 
@@ -25,6 +30,7 @@ def test_preprocess_delegates_to_validation(y, batches):
         patch.object(classical_core_module, "_validate_equal_lengths") as mock_validate_equal_lengths,
         patch.object(classical_core_module, "_validate_non_empty") as mock_validate_non_empty,
         patch.object(classical_core_module, "_validate_has_no_nan") as mock_validate_has_no_nan,
+        patch.object(classical_core_module, "_validate_min_samples") as mock_validate_min_samples,
         patch.object(classical_core_module, "_validate_bounds") as mock_validate_bounds,
         patch.object(classical_core_module, "_unique_ordered_batches") as mock_unique_ordered_batches,
     ):
@@ -51,6 +57,10 @@ def test_preprocess_delegates_to_validation(y, batches):
         mock_validate_has_no_nan.assert_called_once()
         np.testing.assert_array_equal(mock_validate_has_no_nan.call_args[0][0], batches)
         assert mock_validate_has_no_nan.call_args[0][1] == "batches"
+
+        mock_validate_min_samples.assert_called_once()
+        np.testing.assert_array_equal(mock_validate_min_samples.call_args[0][0], y)
+        assert mock_validate_min_samples.call_args[0][1] == "y"
 
         assert mock_validate_bounds.call_count == 5
 
@@ -113,11 +123,11 @@ def test_preprocess_known_output(y, batches):
 # --- _compute_batch_estimates ---
 
 
-def test_compute_batch_estimates(y, batches):
+def test_compute_batch_estimates(y, batches, batch_n):
     expected_batch_mean_estimates = np.array([0.5, 0.52])
     expected_batch_std_estimates = np.array([0.01, 0.02])
 
-    batch_mean_estimates, batch_std_estimates = _compute_batch_estimates(y, batches)
+    batch_mean_estimates, batch_std_estimates = _compute_batch_estimates(y, batches, batch_n)
 
     np.testing.assert_allclose(batch_mean_estimates, expected_batch_mean_estimates)
     np.testing.assert_allclose(batch_std_estimates, expected_batch_std_estimates, atol=1e-10)

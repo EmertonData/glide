@@ -133,7 +133,7 @@ class EmpiricalClassicalMeanMonitor:
         risk_y, risk_threshold, batch_codes, batch_n = _preprocess(
             y, batches, higher_is_better, threshold, confidence_level, metric_lower_bound, metric_upper_bound
         )
-        risk_batch_mean_estimates, _ = _compute_batch_estimates(risk_y, batch_codes)
+        risk_batch_mean_estimates, _ = _compute_batch_estimates(risk_y, batch_codes, batch_n)
 
         miscoverage = 1.0 - confidence_level
         risk_running_means, risk_confidence_bounds = _compute_empirical_bernstein_bounds(

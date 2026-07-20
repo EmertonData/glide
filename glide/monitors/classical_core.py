@@ -3,7 +3,13 @@ from typing import Tuple
 import numpy as np
 from numpy.typing import NDArray
 
-from glide.core.validation import _validate_bounds, _validate_equal_lengths, _validate_has_no_nan, _validate_non_empty
+from glide.core.validation import (
+    _validate_bounds,
+    _validate_equal_lengths,
+    _validate_has_no_nan,
+    _validate_min_samples,
+    _validate_non_empty,
+)
 from glide.monitors.core import _scale_to_unit_risk, _unique_ordered_batches
 
 
@@ -44,6 +50,8 @@ def _preprocess(
     )
     labeled_mask = ~np.isnan(y)
     labeled_values = y[labeled_mask]
+    _validate_min_samples(labeled_values, "y")
+
     _validate_bounds(
         labeled_values,
         "y",
@@ -76,8 +84,8 @@ def _preprocess(
 def _compute_batch_estimates(
     risk_y: NDArray,
     batch_codes: NDArray,
+    batch_n: NDArray,
 ) -> Tuple[NDArray, NDArray]:
-    batch_n = np.bincount(batch_codes)
     batch_sums = np.bincount(batch_codes, weights=risk_y)
     batch_mean_estimates = batch_sums / batch_n
     batch_squared_sums = np.bincount(batch_codes, weights=risk_y**2)
