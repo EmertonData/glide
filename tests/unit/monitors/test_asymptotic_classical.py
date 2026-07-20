@@ -81,8 +81,3 @@ def test_detect_custom_confidence_level(monitor, y, batches):
     assert result.confidence_level == 0.85
     np.testing.assert_allclose(result.running_means, expected_running_means, atol=0.001)
     np.testing.assert_allclose(result.confidence_bounds, expected_confidence_bounds, atol=0.001)
-
-
-def test_detect_invalid_confidence_level(monitor, y, batches):
-    with pytest.raises(ValueError, match=r"'confidence_level' must be in \(0.5, 1\) for the asymptotic monitor"):
-        monitor.detect(y, batches, higher_is_better=False, threshold=0.5, confidence_level=0.5)

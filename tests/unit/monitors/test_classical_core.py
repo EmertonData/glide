@@ -17,11 +17,6 @@ def batches():
     return np.array([0, 0, 1, 1])
 
 
-@pytest.fixture
-def batch_n():
-    return np.array([2, 2])
-
-
 # --- _preprocess ---
 
 
@@ -123,11 +118,11 @@ def test_preprocess_known_output(y, batches):
 # --- _compute_batch_estimates ---
 
 
-def test_compute_batch_estimates(y, batches, batch_n):
+def test_compute_batch_estimates(y, batches):
     expected_batch_mean_estimates = np.array([0.5, 0.52])
     expected_batch_std_estimates = np.array([0.01, 0.02])
 
-    batch_mean_estimates, batch_std_estimates = _compute_batch_estimates(y, batches, batch_n)
+    batch_mean_estimates, batch_std_estimates = _compute_batch_estimates(y, batches)
 
     np.testing.assert_allclose(batch_mean_estimates, expected_batch_mean_estimates)
     np.testing.assert_allclose(batch_std_estimates, expected_batch_std_estimates, atol=1e-10)

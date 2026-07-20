@@ -68,10 +68,10 @@ class AsymptoticClassicalMeanMonitor:
         every call makes the anytime-valid guarantee hold jointly over all calls.
         Alternatively the data may be restricted to the most recent batches, in which
         case the guarantee holds within each restriction but not across the moving
-        history as a whole. When the history is shorter than ``tightest_at_batch``,
-        the tuning target moves with it, so bounds up to that batch recalibrate
-        between successive calls; from ``tightest_at_batch`` onward they are
-        prefix-consistent.
+        history as a whole. When the history has fewer batches than ``tightest_at_batch``,
+        the tuning target is set to the last batch. Prefix-consistency only holds between
+        calls using the same ``tightest_at_batch`` value and with histories containing
+        at least ``tightest_at_batch`` batches.
 
         Parameters
         ----------
@@ -146,7 +146,7 @@ class AsymptoticClassicalMeanMonitor:
         risk_y, _, batch_codes, batch_n = _preprocess(
             y, batches, higher_is_better, threshold, confidence_level, metric_lower_bound, metric_upper_bound
         )
-        batch_mean_estimates, batch_std_estimates = _compute_batch_estimates(risk_y, batch_codes, batch_n)
+        batch_mean_estimates, batch_std_estimates = _compute_batch_estimates(risk_y, batch_codes)
         miscoverage = 1.0 - confidence_level
         risk_running_means, risk_lower_bounds = _compute_asymptotic_bounds(
             batch_mean_estimates, batch_std_estimates, miscoverage, tightest_at_batch

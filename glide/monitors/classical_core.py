@@ -84,11 +84,12 @@ def _preprocess(
 def _compute_batch_estimates(
     risk_y: NDArray,
     batch_codes: NDArray,
-    batch_n: NDArray,
 ) -> Tuple[NDArray, NDArray]:
+    batch_n = np.bincount(batch_codes)
     batch_sums = np.bincount(batch_codes, weights=risk_y)
     batch_mean_estimates = batch_sums / batch_n
-    batch_squared_sums = np.bincount(batch_codes, weights=risk_y**2)
-    batch_variances = np.maximum(batch_squared_sums - batch_n * batch_mean_estimates**2, 0.0) / (batch_n - 1)
+    batch_deviations = risk_y - batch_mean_estimates[batch_codes]
+    batch_sum_squared_deviations = np.bincount(batch_codes, weights=batch_deviations**2)
+    batch_variances = batch_sum_squared_deviations / (batch_n - 1)
     batch_std_estimates = np.sqrt(batch_variances / batch_n)
     return batch_mean_estimates, batch_std_estimates
