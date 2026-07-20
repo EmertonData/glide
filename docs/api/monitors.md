@@ -5,3 +5,7 @@
 ---
 
 ::: glide.monitors.empirical_ppi.EmpiricalPPIMeanMonitor
+
+---
+
+::: glide.monitors.asymptotic_classical.AsymptoticClassicalMeanMonitor
