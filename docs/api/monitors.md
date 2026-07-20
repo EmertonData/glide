@@ -9,3 +9,7 @@
 ---
 
 ::: glide.monitors.asymptotic_classical.AsymptoticClassicalMeanMonitor
+
+---
+
+::: glide.monitors.asymptotic_ppi.AsymptoticPPIMeanMonitor
