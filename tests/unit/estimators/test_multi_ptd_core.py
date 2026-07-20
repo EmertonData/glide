@@ -3,7 +3,6 @@ import pytest
 from numpy.typing import NDArray
 
 from glide.estimators.multi_ptd_core import (
-    _compute_bootstrap_labeled_means,
     _compute_bootstrap_mean_estimates,
     _compute_tuning_parameters,
 )
@@ -27,19 +26,6 @@ def bootstrap_y_proxies_labeled_means() -> NDArray:
 @pytest.fixture
 def cov_matrix_proxies_unlabeled() -> NDArray:
     return np.array([[0.5, 0.1], [0.1, 0.3]])
-
-
-# --- _compute_bootstrap_labeled_means ---
-
-
-def test_compute_bootstrap_labeled_means_known_result(rng):
-    y_true = np.array([5.0, 6.0, 7.0])
-    y_proxies_labeled = np.array([[4.5, 5.0], [5.5, 5.8], [6.5, 7.2]])
-    y_true_means, y_proxies_means = _compute_bootstrap_labeled_means(y_true, y_proxies_labeled, n_bootstrap=4, rng=rng)
-    expected_y_true_means = np.array([6.333333, 5.0, 5.0, 6.666667])
-    expected_y_proxies_means = np.array([[5.833333, 6.266667], [4.5, 5.0], [4.5, 5.0], [6.166667, 6.733333]])
-    np.testing.assert_allclose(y_true_means, expected_y_true_means, rtol=1e-5)
-    np.testing.assert_allclose(y_proxies_means, expected_y_proxies_means, rtol=1e-5)
 
 
 # --- _compute_tuning_parameters ---

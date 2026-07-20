@@ -14,10 +14,10 @@ from glide.core.validation import (
 from glide.estimators.classical import ClassicalMeanEstimator
 from glide.estimators.core import _split_labeled_unlabeled
 from glide.estimators.multi_ptd_core import (
-    _compute_bootstrap_labeled_means,
     _compute_bootstrap_mean_estimates,
     _compute_tuning_parameters,
 )
+from glide.estimators.ptd_core import _compute_bootstrap_labeled_means
 from glide.mean_inference_results import PredictionPoweredMeanInferenceResult
 
 

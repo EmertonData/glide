@@ -1,20 +1,5 @@
-from typing import Tuple
-
 import numpy as np
 from numpy.typing import NDArray
-
-
-def _compute_bootstrap_labeled_means(
-    y_true: NDArray,
-    y_proxies_labeled: NDArray,
-    n_bootstrap: int,
-    rng: np.random.Generator,
-) -> Tuple[NDArray, NDArray]:
-    n_labeled = len(y_true)
-    idx = rng.choice(n_labeled, size=(n_bootstrap, n_labeled), replace=True)
-    bootstrap_y_true_means = np.mean(y_true[idx], axis=1)
-    bootstrap_y_proxies_labeled_means = np.mean(y_proxies_labeled[idx], axis=1)
-    return bootstrap_y_true_means, bootstrap_y_proxies_labeled_means
 
 
 def _compute_tuning_parameters(
