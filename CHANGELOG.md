@@ -9,6 +9,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 ## [Next release]
 
 ### ✨ Added
+- `AsymptoticClassicalMeanMonitor`, a label-only drift monitor built on `AsymptoticConfidenceSequence` and using the batch estimates' standard errors.
 - `AsymptoticConfidenceSequence`, an anytime-valid confidence sequence whose width scales with the known standard errors of per-batch estimates.
 
 ### 🔄 Changed
