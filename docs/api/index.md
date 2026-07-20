@@ -74,6 +74,7 @@
 | Class | Description |
 |-------|-------------|
 | [`EmpiricalBernsteinConfidenceSequence`](confidence_sequences.md#glide.confidence_sequences.empirical_bernstein.EmpiricalBernsteinConfidenceSequence) | Anytime-valid empirical-Bernstein confidence sequence |
+| [`AsymptoticConfidenceSequence`](confidence_sequences.md#glide.confidence_sequences.asymptotic.AsymptoticConfidenceSequence) | Anytime-valid asymptotic confidence sequence |
 
 ## Inference Results
 
