@@ -24,6 +24,8 @@ The following section presents anytime-valid constructions allowing to build con
 
 ### Empirical-Bernstein Confidence Sequences
 
+#### Setting
+
 One can build an anytime-valid lower bound on the running mean of any sequence of per-batch risk estimates $\hat{R}_s$ known to lie in $[0, 1]$, using only that boundedness. The running risk after $t$ batches is the average of the per-batch estimates,
 
 $$\bar{R}_t = \frac{1}{t} \sum_{s=1}^{t} \hat{R}_s,$$
@@ -112,8 +114,6 @@ By construction, $L_t$ satisfies the simultaneous coverage guarantee $\Pr(\foral
 
 A smaller $\delta$ widens the confidence sequence and delays alarms, so the budget directly governs detection speed, not just the false-alarm rate.
 
-Finally, a caveat on what this monitors: $\bar{R}_t$ averages over the entire accumulated history, which gives a long stable run inertia that a recent drift must overcome. An isolated spike, drowned in that history, barely moves $\bar{R}_t$ and is unlikely to raise an alarm; a sustained drift will eventually push $L_t$ above $\tau$, but only after a delay that grows with the length of the preceding stable history. Sensitivity to recent drift is recovered by restricting the running average to the most recent batches rather than the full history.
-
 ### Asymptotic Confidence Sequences
 
 This time, the confidence sequence is built by exploiting the variance of each batch estimate, rather than only the fact that it lies in $[0, 1]$.
@@ -164,11 +164,9 @@ A drift alarm fires the moment the anytime-valid lower bound on the running risk
 
 $$L_t > \tau,$$
 
-at the same single false-alarm budget $\delta$: the probability of ever raising a false alarm this way is at most $\delta$ indepndently of the number of checked batches. A smaller $\delta$ widens the confidence sequence and delays alarms, so the budget influences both the detection speed and the false-alarm rate.
+at the same single false-alarm budget $\delta$: the probability of ever raising a false alarm this way is at most $\delta$ independently of the number of checked batches. A smaller $\delta$ widens the confidence sequence and delays alarms, so the budget influences both the detection speed and the false-alarm rate.
 
 Note that the monitored quantity $\bar{R}_t$ averages over the entire accumulated history, which gives a long stable run inertia that a recent drift must overcome. An isolated spike, drowned in that history, barely moves $\bar{R}_t$ and is unlikely to raise an alarm; a sustained drift will eventually push $L_t$ above $\tau$, but only after a delay that grows with the length of the preceding stable history. 
-
-Due to the previously mentioned asymptotic trait of this guarantee, it holds in the limit of enough batches with consistently estimated standard errors. This is because the false-alarm probability converges to at most $\delta$ as the horizon grows rather than being equal to $\delta$ from the start. This means the budget may be transiently exceeded over the first few batches but is rarely observed.
 
 ---
 
@@ -176,7 +174,7 @@ Due to the previously mentioned asymptotic trait of this guarantee, it holds in 
 
 ### Empirical Classical Risk Monitoring
 
-The empirical Bernstein confidence sequence above is used here in the setting where the per-batch estimate comes directly from a batch of human-labeled samples.
+The empirical-Bernstein confidence sequence above is used here in the setting where the per-batch estimate comes directly from a batch of human-labeled samples.
 
 #### Setting
 
@@ -223,7 +221,7 @@ with $\lambda_s$ a predictable power-tuning weight defined further below.
 
 Unlike a plain sample mean, $\hat{R}_s$ is not guaranteed to fall in $[0, 1]$ which is necessary for the empirical-Bernstein boundary to be valid. The power-tuning weight $\lambda_s$ is a variance-minimizing regression slope not confined to $[0, 1]$, so an under-dispersed or anti-correlated proxy can push $\lambda_s$, and with it the estimate, outside any fixed interval. 
 
-This is fixed by clipping $\hat{R}_s$ to the $[0, 1]$ interval before it is plugged into the empirical Bernstein confidence sequence.
+This is fixed by clipping $\hat{R}_s$ to the $[0, 1]$ interval before it is plugged into the empirical-Bernstein confidence sequence.
 
 #### Predictable Power-Tuning
 
@@ -275,14 +273,14 @@ This method combines scarce human labels with a large pool of cheap proxy labels
 
 #### Setting
 
-Each batch $t$ carries as inputs: a small set of human labels together with a larger set of proxy labels, both specific to that batch.
+Each batch $t$ carries the following inputs: a small set of human labels together with a larger set of proxy labels, both specific to that batch.
 
 | Value | Present for | Description |
 |---|---|---|
 | $\tilde{Y}_{t,i}$ | All samples in batch $t$ | Proxy label |
 | $Y_{t,j}$ | Labeled samples in batch $t$ only | Ground-truth label |
 
-The per-batch estimate $\hat{R}_s$ is the PPI++ estimate on batch $s$ as in Empirical PPRM together with its standard error. Unlike Empirical PPRM, $\hat{R}_s$ is used directly here, without clipping onto $[0, 1]$: the asymptotic construction does not require the estimate itself to lie in a bounded range, only that it is approximately Gaussian with a known standard error.
+The per-batch estimate $\hat{R}_s$ is the PPI++ estimate on batch $s$ as in Empirical PPRM, together with its standard error $\hat{\sigma}_s$, obtained by applying the [Prediction-Powered Inference (PPI++)](estimators.md#prediction-powered-inference-ppi) variance formula within batch $s$. Unlike Empirical PPRM, $\hat{R}_s$ is used directly here, without clipping onto $[0, 1]$: the asymptotic construction does not require the estimate itself to lie in a bounded range, only that it is approximately Gaussian with a known standard error.
 
 #### Predictable Power-Tuning
 
@@ -300,12 +298,12 @@ now backed by the more sample-efficient PPI++ estimate, and a **drift alarm fire
 
 ## References
 
-<a id="ref-1"></a>[1] <a id="ref-1-link" href="https://academic.oup.com/jrsssb/article/86/1/1/7043257">Waudby-Smith, Ian, and Aaditya Ramdas. "Estimating means of bounded random variables by betting." Journal of the Royal Statistical Society Series B: Statistical Methodology 86, no. 1 (2024): 1-27.</a>.
+<a id="ref-1"></a>[1] <a id="ref-1-link" href="https://academic.oup.com/jrsssb/article/86/1/1/7043257">Waudby-Smith, Ian, and Aaditya Ramdas. "Estimating means of bounded random variables by betting." Journal of the Royal Statistical Society Series B: Statistical Methodology 86, no. 1 (2024): 1-27</a>.
 
-<a id="ref-2"></a>[2] <a id="ref-2-link" href="https://projecteuclid.org/journals/The-Annals-of-Statistics/volume-49/issue-2/Time-uniform-nonparametric-nonasymptotic-confidence-sequences/10.1214/20-AOS1991.full">Howard, Steven R., Aaditya Ramdas, Jon McAuliffe, and Jasjeet Sekhon. "Time-uniform, nonparametric, nonasymptotic confidence sequences." The Annals of Statistics 49, no. 2 (2021): 1055-1080.</a>.
+<a id="ref-2"></a>[2] <a id="ref-2-link" href="https://projecteuclid.org/journals/The-Annals-of-Statistics/volume-49/issue-2/Time-uniform-nonparametric-nonasymptotic-confidence-sequences/10.1214/20-AOS1991.full">Howard, Steven R., Aaditya Ramdas, Jon McAuliffe, and Jasjeet Sekhon. "Time-uniform, nonparametric, nonasymptotic confidence sequences." The Annals of Statistics 49, no. 2 (2021): 1055-1080</a>.
 
-<a id="ref-3"></a>[3] <a id="ref-3-link" href="https://arxiv.org/abs/2602.02229">Zhang, Guangyi, Yunlong Cai, Guanding Yu, and Osvaldo Simeone. "Prediction-Powered Risk Monitoring of Deployed Models for Detecting Harmful Distribution Shifts." arXiv preprint arXiv:2602.02229 (2026).</a>.
+<a id="ref-3"></a>[3] <a id="ref-3-link" href="https://arxiv.org/abs/2602.02229">Zhang, Guangyi, Yunlong Cai, Guanding Yu, and Osvaldo Simeone. "Prediction-Powered Risk Monitoring of Deployed Models for Detecting Harmful Distribution Shifts." arXiv preprint arXiv:2602.02229 (2026)</a>.
 
-<a id="ref-4"></a>[4] <a id="ref-4-link" href="https://doi.org/10.1214/24-AOS2408">Waudby-Smith, Ian, David Arbour, Ritwik Sinha, Edward H. Kennedy, and Aaditya Ramdas. "Time-uniform central limit theory and asymptotic confidence sequences." The Annals of Statistics 52, no. 6 (2024): 2613-2640.</a>.
+<a id="ref-4"></a>[4] <a id="ref-4-link" href="https://doi.org/10.1214/24-AOS2408">Waudby-Smith, Ian, David Arbour, Ritwik Sinha, Edward H. Kennedy, and Aaditya Ramdas. "Time-uniform central limit theory and asymptotic confidence sequences." The Annals of Statistics 52, no. 6 (2024): 2613-2640</a>.
 
-<a id="ref-5"></a>[5] <a id="ref-5-link" href="https://projecteuclid.org/journals/annals-of-mathematical-statistics/volume-41/issue-5/Statistical-Methods-Related-to-the-Law-of-the-Iterated-Logarithm/10.1214/aoms/1177696786.full">Robbins, Herbert. "Statistical methods related to the law of the iterated logarithm." The Annals of Mathematical Statistics 41, no. 5 (1970): 1397-1409.</a>.
+<a id="ref-5"></a>[5] <a id="ref-5-link" href="https://projecteuclid.org/journals/annals-of-mathematical-statistics/volume-41/issue-5/Statistical-Methods-Related-to-the-Law-of-the-Iterated-Logarithm/10.1214/aoms/1177696786.full">Robbins, Herbert. "Statistical methods related to the law of the iterated logarithm." The Annals of Mathematical Statistics 41, no. 5 (1970): 1397-1409</a>.
