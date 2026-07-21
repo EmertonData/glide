@@ -161,7 +161,7 @@ These three document types have distinct purposes and must not bleed into each o
 
 #### Scientific consistency in notebooks
 
-Figures, printed values, and inline text must be mutually consistent — if the text says one number and the figure or table shows another, all occurrences must be corrected together. Sampling rules and notation must match the paper (e.g., πᵢ ∈ (0,1), not [0,1], in theory sections). Statistical framing must be precise: never say "removes bias" without specifying which bias.
+Figures, printed values, and inline text must be mutually consistent — if the text says one number and the figure or table shows another, all occurrences must be corrected together. Sampling rules and notation must match the paper (e.g., πᵢ ∈ (0,1), not [0,1], in theory sections). Statistical framing must be precise: never say "removes bias" without specifying which bias. Avoid stating explicit variable or experimental numerical values (rates, delays, batch counts, percentages) directly in prose; describe results qualitatively instead (e.g., "detects faster", "stays within budget") and let the figures, tables, and printed cell outputs carry the precise numbers, so nothing in the text needs to be hand-updated when the notebook is re-run or its parameters change.
 
 ### Code Hygiene
 
