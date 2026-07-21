@@ -88,7 +88,8 @@ If you use GLIDE in your work, please cite us using the "Cite this repository" b
 | Stratified Predict-Then-Debias | `estimators.StratifiedPTDMeanEstimator` | [[7]](#ref-7) | [Link](https://github.com/DanKluger/PTDBoot) |
 | Clustered Predict-Then-Debias | `estimators.ClusteredPTDMeanEstimator` | [[7]](#ref-7) | [Link](https://github.com/DanKluger/PTDBoot) |
 | IPW Predict-Then-Debias | `estimators.IPWPTDMeanEstimator` | [[7]](#ref-7) | [Link](https://github.com/DanKluger/PTDBoot) |
-| Prediction-Powered Risk Monitoring (PPRM) | `monitors.EmpiricalPPIMeanMonitor` | [[9]](#ref-9), [[10]](#ref-10) | — |
+| Prediction-Powered Risk Monitoring (PPRM) | `monitors.EmpiricalPPIMeanMonitor` | [[9]](#ref-9), [[10]](#ref-10), [[11]](#ref-11) | — |
+| Asymptotic Prediction-Powered Risk Monitoring | `monitors.AsymptoticPPIMeanMonitor` | [[9]](#ref-9), [[12]](#ref-12) | — |
 
 ### 📖 References
 
@@ -111,6 +112,10 @@ If you use GLIDE in your work, please cite us using the "Cite this repository" b
 <a id="ref-9"></a>[9] <a href="https://arxiv.org/abs/2602.02229">Zhang, Guangyi, Yunlong Cai, Guanding Yu, and Osvaldo Simeone. "Prediction-Powered Risk Monitoring of Deployed Models for Detecting Harmful Distribution Shifts." arXiv preprint arXiv:2602.02229 (2026).</a>
 
 <a id="ref-10"></a>[10] <a href="https://arxiv.org/abs/2110.06177">Podkopaev, Aleksandr, and Aaditya Ramdas. "Tracking the risk of a deployed model and detecting harmful distribution shifts." International Conference on Learning Representations (ICLR), 2022.</a>
+
+<a id="ref-11"></a>[11] <a href="https://doi.org/10.1093/jrsssb/qkad009">Waudby-Smith, Ian, and Aaditya Ramdas. "Estimating means of bounded random variables by betting." Journal of the Royal Statistical Society Series B: Statistical Methodology 86, no. 1 (2024): 1-27.</a>
+
+<a id="ref-12"></a>[12] <a href="https://doi.org/10.1214/24-AOS2408">Waudby-Smith, Ian, David Arbour, Ritwik Sinha, Edward H. Kennedy, and Aaditya Ramdas. "Time-uniform central limit theory and asymptotic confidence sequences." The Annals of Statistics 52, no. 6 (2024): 2613-2640.</a>
 
 ## 📬 Stay Updated
 

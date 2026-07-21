@@ -32,8 +32,8 @@ class AsymptoticClassicalMeanMonitor:
     >>> from glide.monitors import AsymptoticClassicalMeanMonitor
     >>> pre_drift_batch = np.array([0.0, 0.2, np.nan, np.nan])
     >>> post_drift_batch = np.array([0.8, 1.0, np.nan, np.nan])
-    >>> y = np.hstack([pre_drift_batch, np.tile(post_drift_batch, 50)])
-    >>> batches = np.repeat(np.arange(51), 4)
+    >>> y = np.hstack([pre_drift_batch, np.tile(post_drift_batch, 5)])
+    >>> batches = np.repeat(np.arange(6), 4)
     >>> monitor = AsymptoticClassicalMeanMonitor()
     >>> result = monitor.detect(y, batches, higher_is_better=False, threshold=0.5)
     >>> result.drift_detected

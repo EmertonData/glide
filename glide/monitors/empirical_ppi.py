@@ -39,9 +39,9 @@ class EmpiricalPPIMeanMonitor:
     >>> pre_drift_y_proxy = np.array([0.0, 0.2, 0.0, 0.2])
     >>> post_drift_y_true = np.array([0.8, 1.0, np.nan, np.nan])
     >>> post_drift_y_proxy = np.array([0.8, 1.0, 0.8, 1.0])
-    >>> y_true = np.hstack([pre_drift_y_true, np.tile(post_drift_y_true, 50)])
-    >>> y_proxy = np.hstack([pre_drift_y_proxy, np.tile(post_drift_y_proxy, 50)])
-    >>> batches = np.repeat(np.arange(51), 4)
+    >>> y_true = np.hstack([pre_drift_y_true, np.tile(post_drift_y_true, 15)])
+    >>> y_proxy = np.hstack([pre_drift_y_proxy, np.tile(post_drift_y_proxy, 15)])
+    >>> batches = np.repeat(np.arange(16), 4)
     >>> monitor = EmpiricalPPIMeanMonitor()
     >>> result = monitor.detect(y_true, y_proxy, batches, higher_is_better=False, threshold=0.5)
     >>> result.drift_detected
