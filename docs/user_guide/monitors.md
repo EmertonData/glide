@@ -114,6 +114,8 @@ By construction, $L_t$ satisfies the simultaneous coverage guarantee $\Pr(\foral
 
 A smaller $\delta$ widens the confidence sequence and delays alarms, so the budget directly governs detection speed, not just the false-alarm rate.
 
+Finally, a caveat on what this monitors: $\bar{R}_t$ averages over the entire accumulated history, which gives a long stable run inertia that a recent drift must overcome. An isolated spike, drowned in that history, barely moves $\bar{R}_t$ and is unlikely to raise an alarm; a sustained drift will eventually push $L_t$ above $\tau$, but only after a delay that grows with the length of the preceding stable history. Sensitivity to recent drift is recovered by restricting the running average to the most recent batches rather than the full history.
+
 ### Asymptotic Confidence Sequences
 
 This time, the confidence sequence is built by exploiting the variance of each batch estimate, rather than only the fact that it lies in $[0, 1]$.
@@ -166,7 +168,7 @@ $$L_t > \tau,$$
 
 at the same single false-alarm budget $\delta$: the probability of ever raising a false alarm this way is at most $\delta$ independently of the number of checked batches. A smaller $\delta$ widens the confidence sequence and delays alarms, so the budget influences both the detection speed and the false-alarm rate.
 
-Note that the monitored quantity $\bar{R}_t$ averages over the entire accumulated history, which gives a long stable run inertia that a recent drift must overcome. An isolated spike, drowned in that history, barely moves $\bar{R}_t$ and is unlikely to raise an alarm; a sustained drift will eventually push $L_t$ above $\tau$, but only after a delay that grows with the length of the preceding stable history. 
+As before, the monitored quantity $\bar{R}_t$ averages over the entire accumulated history, this gives a long stable run inertia that a recent drift must overcome.
 
 ---
 
@@ -211,7 +213,7 @@ Each batch $t$ carries the following inputs: a small set of human labels togethe
 | $\tilde{Y}_{t,i}$ | All samples in batch $t$ | Proxy label |
 | $Y_{t,j}$ | Labeled samples in batch $t$ only | Ground-truth label |
 
-All labels $\tilde{Y}_{t,i}$ and $Y_{t,j}$ are assumed to lie in $[0, 1]$.
+As in the previous section, all labels $\tilde{Y}_{t,i}$ and $Y_{t,j}$ are assumed to lie in $[0, 1]$.
 
 The per-batch estimate $\hat{R}_s$ is the PPI++ estimate on batch $s$. Denoting $\tilde{Y}_s^{\bullet}$ and $\tilde{Y}_s^{\circ}$ the labeled and unlabeled proxies of batch $s$ respectively, with $n_s$ and $N_s$ their respective counts,
 
