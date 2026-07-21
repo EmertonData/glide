@@ -171,6 +171,68 @@ now backed by the more sample-efficient PPI++ estimate, at the same single false
 
 ---
 
+## Asymptotic Confidence Sequences
+
+This time, the confidence sequence is built by directly exploiting the variance of each batch estimate, rather than only the fact that it lies in $[0, 1]$.
+
+### Setting
+
+Each batch $t$ contributes a per-batch estimate $\hat{R}_t$ together with its own standard error $\hat{\sigma}_t$. This applies whether $\hat{R}_t$ is a plain sample mean of the batch's labeled values, with standard error the sample standard deviation over the square root of the label count, or a prediction-powered estimate combining labels with proxies, with standard error obtained from the same central-limit argument that underlies its fixed-time confidence interval. As before, the running risk after $t$ batches is $\bar{R}_t = \frac{1}{t}\sum_{s=1}^{t}\hat{R}_s$, monitored against a user-fixed threshold $\tau$, and each $\hat{R}_s$ is assumed to be approximately Gaussian around the batch's own risk.
+
+Define the **intrinsic time**
+
+$$\nu_t = \sum_{s \le t} \hat{\sigma}_s^2,$$
+
+the accumulated variances of the per-batch estimates.
+
+### From a Gaussian Wealth Process to an Anytime-Valid Bound
+
+The anytime-valid guarantee rests on the same two classical facts used throughout this guide. Markov's inequality states that a nonnegative random variable $W$ with $E[W] \le 1$ satisfies $\Pr(W \ge 1/\delta) \le \delta \, E[W] \le \delta$. Ville's inequality upgrades this to a nonnegative supermartingale $\{W_t\}_{t \ge 0}$ with $W_0 = 1$: $\Pr(\exists t \ge 1 : W_t \ge 1/\delta) \le \delta$, bounding the probability of *ever* crossing $1/\delta$ rather than the probability at one fixed time, which is exactly the anytime-valid property needed to check a sequence after every batch.
+
+Read $W_t$ as the wealth of a gambler betting against $H_0$, the null hypothesis of no drift, starting with one unit of capital. For a betting rate $\lambda \in \mathbb{R}$, define
+
+$$W_t(\lambda) = \exp\!\left(\lambda S_t - \frac{\lambda^2}{2}\nu_t\right),$$
+
+where $S_t = \sum_{s \le t}(\hat{R}_s - c_s)$ is the cumulative deviation of the per-batch estimates from their predictable centers $c_s$ (the running mean of all strictly earlier batches, seeded at the threshold $\tau$ for the first batch). If the deviations $\hat{R}_s - c_s$ were exactly $\mathcal{N}(0, \hat{\sigma}_s^2)$-distributed, $W_t(\lambda)$ would be an exact supermartingale for every $\lambda$, since $\nu_t$ is precisely the cumulant-generating-function penalty that keeps a Gaussian exponential tilt fair.
+
+Rather than commit to one $\lambda$, mix over a **folded Gaussian** density of scale $\rho$, a Gaussian density restricted to $\lambda > 0$ and doubled so that it integrates to one, the natural conjugate mixing distribution for Gaussian increments [[5](#ref-5)]:
+
+$$W_t = \int_0^\infty W_t(\lambda) \cdot \frac{2}{\sqrt{2\pi\rho^2}}\exp\!\left(-\frac{\lambda^2}{2\rho^2}\right) d\lambda.$$
+
+A mixture of nonnegative supermartingales, each starting at $1$, is itself a nonnegative supermartingale starting at $1$, so Ville's inequality applies for any choice of $\rho > 0$; the scale only affects tightness, never validity. Carrying out the Gaussian integral and inverting $W_t \ge 1/\delta$ for the largest deviation still consistent with $H_0$, the same "boundary" idea used elsewhere in this guide but solvable here in closed form, gives the anytime-valid lower bound on the running risk after $t$ batches,
+
+$$L_t = \bar{R}_t - \sqrt{ \frac{2(\nu_t \rho^2 + 1)}{t^2 \rho^2} \log\!\left(1 + \frac{\sqrt{\nu_t \rho^2 + 1}}{2\delta}\right) }.$$
+
+This bound is exact if the per-batch deviations are truly Gaussian. In practice they are only approximately so, and a further argument, a strong approximation [[4](#ref-4)], is needed: it shows that the partial sums of the actual per-batch estimates stay close enough, almost surely and uniformly over time, to those of a genuinely Gaussian process that the same boundary remains valid in the limit of enough batches. This is the price of the construction, an asymptotic rather than exact guarantee, detailed further below.
+
+### Tuning and Interpreting the Boundary
+
+No anytime-valid boundary can be tightest at every batch: tightening it at one horizon necessarily loosens it at others, so the scale $\rho$ controls where that tightness is spent. Choosing
+
+$$\rho^2 = \frac{-2\log(2\delta) + \log\bigl(-2\log(2\delta) + 1\bigr)}{\nu_{t^\star}}$$
+
+makes $L_t$ tightest at a user-chosen target batch $t^\star$. This choice affects tightness only, never the anytime-valid guarantee itself, and the penalty for choosing a target smaller than needed is mild: a target set a full order of magnitude earlier than where the boundary is actually needed still keeps it within about 10% of the width it would have had with the right target.
+
+A boundary built only from the fact that each estimate lies in $[0, 1]$, without using any standard error, has two structural weaknesses. First, its width never drops below a fixed floor no matter how precise the estimates are: at zero observed variability such a boundary's width is a constant divided by $t$ (about $2.66/t$ at $\delta = 0.2$). Second, its notion of variability is built from each estimate's deviation from the running mean of the previous batches, so a genuine drift inflates it and widens the bound exactly when a tight bound matters most for fast detection.
+
+The boundary above avoids both weaknesses. Its width scales as $\sqrt{\nu_t \log \nu_t}/t$, shrinking with the actual precision of the per-batch estimates instead of sitting at a fixed floor. And because $\nu_t$ accumulates each batch's own internal standard error rather than any deviation between batches, a shift in the risk from one batch to the next changes $\bar{R}_t$ but never $\nu_t$: the boundary is immune to drift-inflation.
+
+### The Alarm Rule and the Asymptotic Guarantee
+
+A drift alarm fires the moment the anytime-valid lower bound on the running risk crosses the user-fixed threshold,
+
+$$L_t > \tau,$$
+
+at the same single false-alarm budget $\delta$: the probability of ever raising a false alarm this way is at most $\delta$, no matter how many batches are checked.
+
+**What is kept.** The guarantee is time-uniform, $\Pr(\forall t \ge 1 : \bar{R}_t \ge L_t) \ge 1 - \delta$, so peeking after every batch stays safe. It is also valid for time-varying means: nothing above assumed a stationary risk, so the guarantee is not predicated on the absence of drift.
+
+**What is weakened.** The guarantee above holds only in the limit of enough batches with consistently estimated standard errors. Concretely, this needs the intrinsic time $\nu_t$ to keep growing, a mild tail (Lindeberg-type) condition on the per-batch estimates that is automatically satisfied here because every estimate is confined to a known bounded range, and each $\hat{\sigma}_s$ to consistently estimate the batch's true standard error. Under these conditions the false-alarm probability converges to at most $\delta$ only as the monitoring horizon grows, so the budget can be transiently exceeded over the first few batches.
+
+Prefer this construction when batches are reasonably sized and detection speed matters, since its boundary tightens with the actual precision of the estimates rather than sitting at a fixed floor; prefer a boundary built purely from a known bounded range when an exact, finite-sample guarantee is required regardless of batch size.
+
+---
+
 ## References
 
 <a id="ref-1"></a>[1] <a id="ref-1-link" href="https://academic.oup.com/jrsssb/article/86/1/1/7043257">Waudby-Smith, Ian, and Aaditya Ramdas. "Estimating means of bounded random variables by betting." Journal of the Royal Statistical Society Series B: Statistical Methodology 86, no. 1 (2024): 1-27.</a>.
@@ -178,3 +240,7 @@ now backed by the more sample-efficient PPI++ estimate, at the same single false
 <a id="ref-2"></a>[2] <a id="ref-2-link" href="https://projecteuclid.org/journals/The-Annals-of-Statistics/volume-49/issue-2/Time-uniform-nonparametric-nonasymptotic-confidence-sequences/10.1214/20-AOS1991.full">Howard, Steven R., Aaditya Ramdas, Jon McAuliffe, and Jasjeet Sekhon. "Time-uniform, nonparametric, nonasymptotic confidence sequences." The Annals of Statistics 49, no. 2 (2021): 1055-1080.</a>.
 
 <a id="ref-3"></a>[3] <a id="ref-3-link" href="https://arxiv.org/abs/2602.02229">Zhang, Guangyi, Yunlong Cai, Guanding Yu, and Osvaldo Simeone. "Prediction-Powered Risk Monitoring of Deployed Models for Detecting Harmful Distribution Shifts." arXiv preprint arXiv:2602.02229 (2026).</a>.
+
+<a id="ref-4"></a>[4] <a id="ref-4-link" href="https://doi.org/10.1214/24-AOS2408">Waudby-Smith, Ian, David Arbour, Ritwik Sinha, Edward H. Kennedy, and Aaditya Ramdas. "Time-uniform central limit theory and asymptotic confidence sequences." The Annals of Statistics 52, no. 6 (2024): 2613-2640.</a>.
+
+<a id="ref-5"></a>[5] <a id="ref-5-link" href="https://projecteuclid.org/journals/annals-of-mathematical-statistics/volume-41/issue-5/Statistical-Methods-Related-to-the-Law-of-the-Iterated-Logarithm/10.1214/aoms/1177696786.full">Robbins, Herbert. "Statistical methods related to the law of the iterated logarithm." The Annals of Mathematical Statistics 41, no. 5 (1970): 1397-1409.</a>.
