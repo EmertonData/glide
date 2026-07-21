@@ -62,6 +62,7 @@
 | Class | Description |
 |-------|-------------|
 | [`EmpiricalPPIMeanMonitor`](monitors.md#glide.monitors.empirical_ppi.EmpiricalPPIMeanMonitor) | Anytime-valid drift monitor combining true and proxy labels |
+| [`AsymptoticPPIMeanMonitor`](monitors.md#glide.monitors.asymptotic_ppi.AsymptoticPPIMeanMonitor) | Anytime-valid drift monitor combining true and proxy labels via an asymptotic confidence sequence |
 
 ## Confidence Intervals
 
