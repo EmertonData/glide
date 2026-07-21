@@ -44,6 +44,10 @@ class MultiPTDMeanEstimator:
     "Prediction-powered inference with imputed covariates and nonuniform sampling."
     arXiv preprint arXiv:2501.18577 (2025).
 
+    Shan, Jiawei, Zhifeng Chen, Yiming Dong, Yazhen Wang, and Jiwei Zhao.
+    "SADA: Safe and Adaptive Aggregation of Multiple Black-Box Predictions in Semi-Supervised Learning."
+    arXiv preprint arXiv:2509.21707 (2025).
+
     Examples
     --------
     >>> import numpy as np
