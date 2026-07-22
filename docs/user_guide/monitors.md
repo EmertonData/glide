@@ -22,19 +22,9 @@ The following section presents anytime-valid constructions allowing to build con
 
 ## Confidence Sequences
 
-### Empirical-Bernstein Confidence Sequences
+### From Markov to Ville: the Anytime-Valid Guarantee
 
-#### Setting
-
-One can build an anytime-valid lower bound on the running mean of any sequence of per-batch risk estimates $\hat{R}_s$ known to lie in $[0, 1]$, using only that boundedness. The running risk after $t$ batches is the average of the per-batch estimates,
-
-$$\bar{R}_t = \frac{1}{t} \sum_{s=1}^{t} \hat{R}_s,$$
-
-monitored against a user-fixed threshold $\tau$. The construction below does not depend on how $\hat{R}_s$ itself is computed.
-
-#### From Markov to Ville: the Anytime-Valid Guarantee
-
-The anytime-valid guarantee is built from first principles, in three steps: a classical tail bound, its sequential upgrade, and a betting interpretation that makes the upgrade constructive.
+The anytime-valid guarantee running through every confidence sequence in this guide rests on two classical facts: a tail bound, and its sequential upgrade.
 
 **Markov's inequality.** For a nonnegative random variable $W$ with $E[W] \le 1$,
 
@@ -48,7 +38,19 @@ $$\Pr\!\left(\exists t \ge 1:\; W_t \ge 1/\delta\right) \le \delta.$$
 
 The difference from Markov is essential: the probability bounded here is that of *ever* crossing $1/\delta$, over an unbounded horizon, instead of the probability at one fixed time. This is the anytime-valid property needed for a confidence sequence.
 
-**The betting / wealth reading.** Ville's inequality becomes constructive once $W_t$ is read as the wealth of a gambler betting against $H_0$, the null hypothesis "no drift", starting with one unit of capital. Under $H_0$, the sequence $W_t$ is a supermartingale, so the gambler cannot expect to get rich: Ville's inequality caps how much luck they can have, over the whole sequence of bets. Under genuine drift, however, the bets are informative and tend to pay off, so the wealth grows; reaching $W_t \ge 1/\delta$ is therefore calibrated evidence of drift.
+**The betting / wealth reading.** Ville's inequality becomes constructive once $W_t$ is read as the wealth of a gambler betting against $H_0$, the null hypothesis "no drift", starting with one unit of capital. Under $H_0$, the sequence $W_t$ is a supermartingale, so the gambler cannot expect to get rich: Ville's inequality caps how much luck they can have, over the whole sequence of bets. Under genuine drift, however, the bets are informative and tend to pay off, so the wealth grows; reaching $W_t \ge 1/\delta$ is therefore calibrated evidence of drift. The constructions below define their own wealth process realizing this reading.
+
+### Empirical-Bernstein Confidence Sequences
+
+#### Setting
+
+One can build an anytime-valid lower bound on the running mean of any sequence of per-batch risk estimates $\hat{R}_s$ known to lie in $[0, 1]$, using only that boundedness. The running risk after $t$ batches is the average of the per-batch estimates,
+
+$$\bar{R}_t = \frac{1}{t} \sum_{s=1}^{t} \hat{R}_s,$$
+
+monitored against a user-fixed threshold $\tau$. The construction below does not depend on how $\hat{R}_s$ itself is computed.
+
+#### The Betting Wealth Process
 
 The **betting parameter** $\beta \in (0, 1)$ controls how aggressively the gambler bets at each step. For a fixed $\beta$, the wealth process takes the form derived in [[1](#ref-1)]:
 
@@ -130,11 +132,9 @@ $$\nu_t = \sum_{s \le t} \hat{\sigma}_s^2,$$
 
 the accumulated variances of the per-batch estimates.
 
-#### From a Gaussian Wealth Process to an Anytime-Valid Bound
+#### The Gaussian Wealth Process
 
-The anytime-valid guarantee rests on the same two classical facts used throughout this guide. Markov's inequality states that a nonnegative random variable $W$ with $E[W] \le 1$ satisfies $\Pr(W \ge 1/\delta) \le \delta \, E[W] \le \delta$. Ville's inequality upgrades this to a nonnegative supermartingale $\{W_t\}_{t \ge 0}$ with $W_0 = 1$ yielding: $\Pr(\exists t \ge 1 : W_t \ge 1/\delta) \le \delta$, bounding the probability of *ever* crossing $1/\delta$ rather than the probability at one fixed time.
-
-Read $W_t$ as the wealth of a gambler betting against $H_0$, the null hypothesis of no drift, starting with one unit of capital. For a betting rate $\lambda \in \mathbb{R}$, define
+Let $W_t$ represent the wealth of a gambler betting against $H_0$, the null hypothesis of no drift, starting with one unit of capital. For a betting rate $\lambda \in \mathbb{R}$, define
 
 $$W_t(\lambda) = \exp\!\left(\lambda S_t - \frac{\lambda^2}{2}\nu_t\right),$$
 
@@ -144,7 +144,7 @@ Rather than commit to one $\lambda$, mix over a **folded Gaussian** density of s
 
 $$W_t = \int_0^\infty W_t(\lambda) \cdot \frac{2}{\sqrt{2\pi\rho^2}}\exp\!\left(-\frac{\lambda^2}{2\rho^2}\right) d\lambda.$$
 
-A mixture of nonnegative supermartingales, each starting at $1$, is itself a nonnegative supermartingale starting at $1$, so Ville's inequality applies for any choice of $\rho > 0$; the scale determines the tightness of downstream bounds. Carrying out the Gaussian integral and inverting $W_t \ge 1/\delta$ for the largest deviation still consistent with $H_0$, the same "boundary" idea used elsewhere in this guide but solvable here in closed form, gives the anytime-valid lower bound on the running risk after $t$ batches,
+A mixture of nonnegative supermartingales, each starting at $1$, is itself a nonnegative supermartingale starting at $1$, so Ville's inequality applies for any choice of $\rho > 0$; the scale determines the tightness of downstream bounds. Carrying out the Gaussian integral and inverting $W_t \ge 1/\delta$ for the largest deviation still consistent with $H_0$, we can obtain the anytime-valid lower bound on the running risk after $t$ batches with a closed form,
 
 $$L_t = \bar{R}_t - \sqrt{ \frac{2(\nu_t \rho^2 + 1)}{t^2 \rho^2} \log\!\left(1 + \frac{\sqrt{\nu_t \rho^2 + 1}}{2\delta}\right) }.$$
 
@@ -158,7 +158,7 @@ $$\rho^2 = \frac{-2\log(2\delta) + \log\bigl(-2\log(2\delta) + 1\bigr)}{\nu_{t^\
 
 makes $L_t$ tightest at a user-chosen target batch $t^\star$. Note, however, that the penalty for choosing a different target than needed is generally mild in practice.
 
-The above boundary's width scales as $\sqrt{\nu_t \log \nu_t}/t$, shrinking with the actual precision of the per-batch estimates. Moreover, since $\nu_t$ accumulates each batch's own internal standard error rather than deviations between batches, a shift in the risk from one batch to the next only affects $\bar{R}_t$ and not $\nu_t$: the boundary is immune to drift-inflation.
+The above boundary's width scales as $\sqrt{\nu_t \log \nu_t}/t$, shrinking with the actual precision of the per-batch estimates.
 
 #### The Alarm Rule and the Asymptotic Guarantee
 
@@ -219,9 +219,9 @@ The per-batch estimate $\hat{R}_s$ is the PPI++ estimate on batch $s$. Denoting 
 
 $$\hat{R}_s = \frac{1}{n_s}\sum_{j=1}^{n_s} Y_{s,j} + \lambda_s\left[\frac{1}{N_s}\sum_{i=1}^{N_s} \tilde{Y}_{s,i}^{\circ} - \frac{1}{n_s}\sum_{j=1}^{n_s} \tilde{Y}_{s,j}^{\bullet}\right],$$
 
-with $\lambda_s$ a predictable power-tuning weight defined further below. 
+with $\lambda_s$ a predictable power-tuning weight defined further below.
 
-Unlike a plain sample mean, $\hat{R}_s$ is not guaranteed to fall in $[0, 1]$ which is necessary for the empirical-Bernstein boundary to be valid. The power-tuning weight $\lambda_s$ is a variance-minimizing regression slope not confined to $[0, 1]$, so an under-dispersed or anti-correlated proxy can push $\lambda_s$, and with it the estimate, outside any fixed interval. 
+Unlike a plain sample mean, $\hat{R}_s$ is not guaranteed to fall in $[0, 1]$ which is necessary for the empirical-Bernstein boundary to be valid. The power-tuning weight $\lambda_s$ is a variance-minimizing regression slope not confined to $[0, 1]$, so an under-dispersed or anti-correlated proxy can push $\lambda_s$, and with it the estimate, outside any fixed interval.
 
 This is fixed by clipping $\hat{R}_s$ to the $[0, 1]$ interval before it is plugged into the empirical-Bernstein confidence sequence.
 
@@ -251,7 +251,7 @@ Each batch $t$ contributes a set of human labels.
 |---|---|---|
 | $Y_{t,j}$ | All labeled samples in batch $t$ | Ground-truth label |
 
-Every batch is monitored relative to a user-fixed threshold $\tau$ and the metric is treated as a **risk** $R$, where lower is better; a performance metric is monitored by applying the same methodology to $1 - R$ instead of $R$.
+Every batch is monitored relative to a user-fixed threshold $\tau$ and the metric is treated as a **risk** $R$, where lower is better.
 
 The per-batch risk estimate is the classical sample mean of the $n_s$ labels in batch $s$,
 
@@ -263,11 +263,7 @@ $$\hat{\sigma}_s = \sqrt{\frac{\widehat{\mathrm{Var}}(Y_s)}{n_s}}.$$
 
 #### Bound and Alarm Rule
 
-Plugging $\hat{R}_s$ and $\hat{\sigma}_s$ into the [Asymptotic Confidence Sequences](#asymptotic-confidence-sequences) gives the anytime-valid lower bound on the running risk,
-
-$$L_t = \bar{R}_t - \sqrt{ \frac{2(\nu_t \rho^2 + 1)}{t^2 \rho^2} \log\!\left(1 + \frac{\sqrt{\nu_t \rho^2 + 1}}{2\delta}\right) },$$
-
-with $\nu_t = \sum_{s \le t}\hat{\sigma}_s^2$ computed from these classical per-batch standard errors, and a **drift alarm fires** as soon as $L_t > \tau$, the user-fixed threshold.
+Plugging the values $\hat{R}_s$ and $\hat{\sigma}_s$ into the [Asymptotic Confidence Sequences](#asymptotic-confidence-sequences) gives the anytime-valid lower bound $L_t$ derived there. The **drift alarm** fires as soon as $L_t > \tau$, the user-fixed threshold.
 
 ### Asymptotic Prediction-Powered Risk Monitoring (Asymptotic PPRM)
 
@@ -286,15 +282,11 @@ The per-batch estimate $\hat{R}_s$ is the PPI++ estimate on batch $s$ as in Empi
 
 #### Predictable Power-Tuning
 
-As in Empirical PPRM, the power-tuning weight $\lambda_t$ used to form $\hat{R}_t$ must be **predictable**: computed only from batches strictly earlier than $t$. The power-tuning factors are therefore computed using strictly earlier batches. The first batch has no predecessor, so it uses the neutral weight $\lambda_1 = 1$.
+As in Empirical PPRM, the power-tuning weight $\lambda_t$ used to form $\hat{R}_t$ must be **predictable**: computed only from batches strictly earlier than $t$. The first batch has no predecessor, so it uses the neutral weight $\lambda_1 = 1$.
 
 #### Bound and Alarm Rule
 
-Plugging $\hat{R}_s$ and $\hat{\sigma}_s$ into the [Asymptotic Confidence Sequences](#asymptotic-confidence-sequences) construction gives the anytime-valid lower bound on the running risk,
-
-$$L_t = \bar{R}_t - \sqrt{ \frac{2(\nu_t \rho^2 + 1)}{t^2 \rho^2} \log\!\left(1 + \frac{\sqrt{\nu_t \rho^2 + 1}}{2\delta}\right) },$$
-
-now backed by the more sample-efficient PPI++ estimate, and a **drift alarm fires** as soon as $L_t > \tau$, the user-fixed threshold.
+Plugging $\hat{R}_s$ and $\hat{\sigma}_s$ into the [Asymptotic Confidence Sequences](#asymptotic-confidence-sequences) construction gives the anytime-valid lower bound $L_t$ derived there. The **drift alarm** fires as soon as $L_t > \tau$, the user-fixed threshold.
 
 ---
 
