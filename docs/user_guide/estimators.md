@@ -627,7 +627,7 @@ where each $\hat{\theta}^{(b)}_{\text{Multi-PTD}}$ is computed during the bootst
 
 ### Bootstrap procedure
 
-Before the bootstrap loop, compute the mean and sampling covariance matrix of the unlabeled proxy vectors:
+Before the bootstrap loop, compute the mean and covariance of the unlabeled proxy vectors:
 
 $$\bar{\tilde{\mathbf{Y}}}^\circ = \frac{1}{N}\sum_{i=1}^{N}\tilde{\mathbf{Y}}^\circ_i, \qquad \hat{\Sigma}_\gamma^\circ = \frac{\widehat{\text{Cov}}(\tilde{\mathbf{Y}}^\circ)}{N}$$
 
@@ -661,7 +661,9 @@ $$\left(\widehat{\text{Cov}}_B\!\left(\hat{\boldsymbol{\mu}}_{\text{proxy}}\righ
 
 where $\widehat{\text{Cov}}_B\!\left(\hat{\boldsymbol{\mu}}_{\text{proxy}}\right)$ is the $M \times M$ sample covariance matrix of the labeled bootstrap proxy means across the $B$ replicates, and $\widehat{\text{Cov}}_B\!\left(\hat{\mu}_{\text{true}},\, \hat{\boldsymbol{\mu}}_{\text{proxy}}\right)$ is the $M$-dimensional sample cross-covariance vector between the bootstrap true means and each proxy's bootstrap means. This is the same formula as PTD power-tuning, with the scalar variance and covariance replaced by an $M \times M$ matrix and an $M$-dimensional vector respectively. For $M = 1$, it reduces to the scalar PTD formula.
 
-When a proxy is informative (high bootstrap covariance with the ground-truth means), its corresponding component of $\boldsymbol{\lambda}$ is large and the estimate benefits from that proxy's signal. When a proxy is uninformative, its component shrinks toward 0, down-weighting it without affecting the other components. If the combined covariance matrix on the left-hand side is singular, typically because two or more proxies are perfectly correlated, no solution exists and an error is raised instead. Setting $\boldsymbol{\lambda}$ to $\left(1/\sqrt{M}, \ldots, 1/\sqrt{M}\right)^\top$ recovers the unweighted, equally-combined variant. When $M = 1$, Multi-PTD is equivalent to PTD with the same power-tuning setting.
+When a proxy is informative (high bootstrap covariance with the ground-truth means), its corresponding component of $\boldsymbol{\lambda}$ is large and the estimate benefits from that proxy's signal. When a proxy is uninformative, its component shrinks toward 0, down-weighting it without affecting the other components. The combined covariance matrix on the left-hand side may be singular, for example, if two or more proxies are perfectly correlated. In this case, redundant proxies should be discarded. 
+
+Setting $\boldsymbol{\lambda}$ to $\left(1/\sqrt{M}, \ldots, 1/\sqrt{M}\right)^\top$ recovers the unweighted, equally-combined variant. When $M = 1$, Multi-PTD is equivalent to PTD with the same power-tuning setting.
 
 ---
 
