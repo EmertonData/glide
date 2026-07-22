@@ -28,14 +28,6 @@ def y_arrays() -> Tuple[NDArray, NDArray]:
 # ── _preprocess ───────────────────────────────────────────────────────────────
 
 
-def test_preprocess_valid_output(estimator, y_arrays):
-    y_true_all, y_proxies_all = y_arrays
-    y_true, y_proxies_labeled, y_proxies_unlabeled = estimator._preprocess(y_true_all, y_proxies_all)
-    np.testing.assert_array_equal(y_true, np.array([5.0, 6.0, 7.0]))
-    np.testing.assert_array_equal(y_proxies_labeled, np.array([[4.5, 4.0], [5.5, 6.0], [6.5, 7.0]]))
-    np.testing.assert_array_equal(y_proxies_unlabeled, np.array([[6.0, 6.0], [7.0, 7.0], [8.0, 9.0]]))
-
-
 def test_preprocess_delegates(estimator, y_arrays):
     y_true, y_proxies = y_arrays
     labeled_mask = np.array([True, True, True, False, False, False])
@@ -62,6 +54,14 @@ def test_preprocess_delegates(estimator, y_arrays):
         np.testing.assert_array_equal(mock_split_labeled_unlabeled.call_args[0][1], y_proxies)
         mock_validate_sample_sizes.assert_called_once()
         np.testing.assert_array_equal(mock_validate_sample_sizes.call_args[0][0], labeled_mask)
+
+
+def test_preprocess_valid_output(estimator, y_arrays):
+    y_true_all, y_proxies_all = y_arrays
+    y_true, y_proxies_labeled, y_proxies_unlabeled = estimator._preprocess(y_true_all, y_proxies_all)
+    np.testing.assert_array_equal(y_true, np.array([5.0, 6.0, 7.0]))
+    np.testing.assert_array_equal(y_proxies_labeled, np.array([[4.5, 4.0], [5.5, 6.0], [6.5, 7.0]]))
+    np.testing.assert_array_equal(y_proxies_unlabeled, np.array([[6.0, 6.0], [7.0, 7.0], [8.0, 9.0]]))
 
 
 # ── estimate ──────────────────────────────────────────────────────────────────

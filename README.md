@@ -74,6 +74,15 @@ If you use GLIDE in your work, please cite us using the "Cite this repository" b
 
 ## 📚 Implemented Algorithms <a name="implemented-algorithms"></a>
 
+### Samplers
+
+| Name | Class | Reference Paper(s) | Original Implementation |
+|------|-------|-----------------|------------------------|
+| Stratified Sampling | `samplers.StratifiedSampler` | [[4]](#ref-4) | [Link](https://github.com/amazon-science/ssepy) |
+| Active Sampling | `samplers.ActiveSampler` | [[5]](#ref-5), [[6]](#ref-6) | [Link](https://github.com/kristinagligoric/confidence-driven-inference) |
+
+### Estimators
+
 | Name | Class | Reference Paper(s) | Original Implementation |
 |------|-------|-----------------|------------------------|
 | Prediction-Powered Inference | `estimators.PPIMeanEstimator` (with `power_tuning=False`) | [[1]](#ref-1) | [Link](https://github.com/aangelopoulos/ppi_py/) |
@@ -82,13 +91,16 @@ If you use GLIDE in your work, please cite us using the "Cite this repository" b
 | Clustered Prediction-Powered Inference | `estimators.ClusteredPPIMeanEstimator` | — | [Link](https://github.com/davidbroska/ppi_py) |
 | Multi-Proxy Prediction-Powered Inference | `estimators.MultiPPIMeanEstimator` | [[8]](#ref-8) | [Link](https://github.com/jw-shan/sada) |
 | Multi-Proxy Predict-Then-Debias | `estimators.MultiPTDMeanEstimator` | [[7]](#ref-7), [[8]](#ref-8) | — |
-| Stratified Sampling | `samplers.StratifiedSampler` | [[4]](#ref-4) | [Link](https://github.com/amazon-science/ssepy) |
 | Active Statistical Inference | `estimators.ASIMeanEstimator` | [[5]](#ref-5), [[6]](#ref-6) | [Link](https://github.com/tijana-zrnic/active-inference) |
-| Active Sampling | `samplers.ActiveSampler` | [[5]](#ref-5), [[6]](#ref-6) | [Link](https://github.com/kristinagligoric/confidence-driven-inference) |
 | Predict-Then-Debias | `estimators.PTDMeanEstimator` | [[7]](#ref-7) | [Link](https://github.com/DanKluger/PTDBoot) |
 | Stratified Predict-Then-Debias | `estimators.StratifiedPTDMeanEstimator` | [[7]](#ref-7) | [Link](https://github.com/DanKluger/PTDBoot) |
 | Clustered Predict-Then-Debias | `estimators.ClusteredPTDMeanEstimator` | [[7]](#ref-7) | [Link](https://github.com/DanKluger/PTDBoot) |
 | IPW Predict-Then-Debias | `estimators.IPWPTDMeanEstimator` | [[7]](#ref-7) | [Link](https://github.com/DanKluger/PTDBoot) |
+
+### Monitors
+
+| Name | Class | Reference Paper(s) | Original Implementation |
+|------|-------|-----------------|------------------------|
 | Prediction-Powered Risk Monitoring (PPRM) | `monitors.EmpiricalPPIMeanMonitor` | [[9]](#ref-9), [[10]](#ref-10), [[11]](#ref-11) | — |
 | Asymptotic Prediction-Powered Risk Monitoring | `monitors.AsymptoticPPIMeanMonitor` | [[9]](#ref-9), [[12]](#ref-12) | — |
 

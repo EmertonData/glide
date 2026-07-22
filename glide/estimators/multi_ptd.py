@@ -56,8 +56,14 @@ class MultiPTDMeanEstimator:
     >>> y_proxies = np.array([[4.9], [6.1], [5.2], [6.1]])
     >>> estimator = MultiPTDMeanEstimator()
     >>> result = estimator.estimate(y_true, y_proxies, n_bootstrap=5, random_seed=0)
-    >>> print(result.estimator_name)
-    MultiPTDMeanEstimator
+    >>> print(result)
+    Metric: Metric
+    Point Estimate: 5.552
+    Confidence Interval (95%): [5.211, 5.865]
+    Estimator : MultiPTDMeanEstimator
+    n_true: 2
+    n_proxy: 4
+    Effective Sample Size: 5
     """
 
     def _preprocess(

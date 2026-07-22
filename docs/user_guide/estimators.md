@@ -623,7 +623,7 @@ The Multi-PTD mean estimate is the average of $B$ bootstrap estimates:
 
 $$\hat{\theta}_{\text{Multi-PTD}} = \frac{1}{B}\sum_{b=1}^{B}\hat{\theta}^{(b)}_{\text{Multi-PTD}}$$
 
-where each $\hat{\theta}^{(b)}_{\text{Multi-PTD}}$ is computed during the bootstrap procedure described below, using a tuning vector $\boldsymbol{\lambda} \in \mathbb{R}^M$ shared across all $B$ iterations.
+where each $\hat{\theta}^{(b)}_{\text{Multi-PTD}}$ is computed during the bootstrap procedure described below, using a tuning vector $\lambda \in \mathbb{R}^M$ shared across all $B$ iterations.
 
 ### Bootstrap procedure
 
@@ -635,19 +635,19 @@ where $\widehat{\text{Cov}}(\tilde{\mathbf{Y}}^\circ)$ is the $M \times M$ sampl
 
 For $b = 1, \dots, B$, sample a set of indices $\mathcal{I}^{(b)}$ of size $n$ uniformly with replacement from $\{1, \dots, n\}$, shared across the ground truth and all $M$ proxies, and compute the bootstrap means of the labeled ground-truth and proxy vectors:
 
-$$\hat{\mu}^{(b)}_{\text{true}} = \frac{1}{n}\sum_{j\in \mathcal{I}^{(b)}} Y_j, \qquad \hat{\boldsymbol{\mu}}^{(b)}_{\text{proxy}} = \frac{1}{n}\sum_{j\in \mathcal{I}^{(b)}} \tilde{\mathbf{Y}}^\bullet_j$$
+$$\hat{\mu}^{(b)}_{\text{true}} = \frac{1}{n}\sum_{j\in \mathcal{I}^{(b)}} Y_j, \qquad \hat{\mu}^{(b)}_{\text{proxy}} = \frac{1}{n}\sum_{j\in \mathcal{I}^{(b)}} \tilde{\mathbf{Y}}^\bullet_j$$
 
-The tuning vector $\boldsymbol{\lambda}$ is estimated once, after these $B$ bootstrap replicates are available (see Power-tuning below). Given $\boldsymbol{\lambda}$, the unlabeled contribution is a scalar perturbation of the projected unlabeled proxy mean, drawn once per iteration:
+The tuning vector $\lambda$ is estimated once, after these $B$ bootstrap replicates are available (see Power-tuning below). Given $\lambda$, the unlabeled contribution is a scalar perturbation of the projected unlabeled proxy mean, drawn once per iteration:
 
-$$\bar{\gamma}^{(b)}_{\boldsymbol{\lambda}} = \boldsymbol{\lambda}^\top \bar{\tilde{\mathbf{Y}}}^\circ + Z^{(b)} \cdot \sqrt{\boldsymbol{\lambda}^\top \hat{\Sigma}_\gamma^\circ \boldsymbol{\lambda}}, \qquad Z^{(b)} \sim \mathcal{N}(0,\, 1)$$
+$$\bar{\gamma}^{(b)}_{\lambda} = \lambda^\top \bar{\tilde{\mathbf{Y}}}^\circ + Z^{(b)} \cdot \sqrt{\lambda^\top \hat{\Sigma}_\gamma^\circ \lambda}, \qquad Z^{(b)} \sim \mathcal{N}(0,\, 1)$$
 
-Projecting the multivariate unlabeled uncertainty onto $\boldsymbol{\lambda}$ before drawing keeps the per-iteration cost at $O(n)$ regardless of $M$, exactly as the scalar CLT speedup does in PTD.
+Projecting the multivariate unlabeled uncertainty onto $\lambda$ before drawing keeps the per-iteration cost at $O(n)$ regardless of $M$, exactly as the scalar CLT speedup does in PTD.
 
 Combining the labeled bootstrap means with this perturbed projection gives:
 
-$$\hat{\theta}^{(b)}_{\text{Multi-PTD}} = \bar{\gamma}^{(b)}_{\boldsymbol{\lambda}} + \left(\hat{\mu}^{(b)}_{\text{true}} - \boldsymbol{\lambda}^\top \hat{\boldsymbol{\mu}}^{(b)}_{\text{proxy}}\right)$$
+$$\hat{\theta}^{(b)}_{\text{Multi-PTD}} = \bar{\gamma}^{(b)}_{\lambda} + \left(\hat{\mu}^{(b)}_{\text{true}} - \lambda^\top \hat{\mu}^{(b)}_{\text{proxy}}\right)$$
 
-The term $\hat{\mu}^{(b)}_{\text{true}} - \boldsymbol{\lambda}^\top \hat{\boldsymbol{\mu}}^{(b)}_{\text{proxy}}$ captures the combined proxy bias measured on the labeled set, while $\bar{\gamma}^{(b)}_{\boldsymbol{\lambda}}$ contributes the combined proxy signal on the unlabeled population.
+The term $\hat{\mu}^{(b)}_{\text{true}} - \lambda^\top \hat{\mu}^{(b)}_{\text{proxy}}$ captures the combined proxy bias measured on the labeled set, while $\bar{\gamma}^{(b)}_{\lambda}$ contributes the combined proxy signal on the unlabeled population.
 
 ### Confidence intervals
 
@@ -655,15 +655,15 @@ The confidence interval at level $1 - \alpha$ is the interval between the $\alph
 
 ### Power-tuning
 
-The tuning vector $\boldsymbol{\lambda} \in \mathbb{R}^M$ generalises the scalar PTD tuning parameter to $M$ proxies, one weight per proxy, in the same way Multi-PPI generalises PPI++ power-tuning. It is estimated from the bootstrap covariances by solving the linear system:
+The tuning vector $\lambda \in \mathbb{R}^M$ generalises the scalar PTD tuning parameter to $M$ proxies, one weight per proxy, in the same way Multi-PPI generalises PPI++ power-tuning. It is estimated from the bootstrap covariances by solving the linear system:
 
-$$\left(\widehat{\text{Cov}}_B\!\left(\hat{\boldsymbol{\mu}}_{\text{proxy}}\right) + \hat{\Sigma}_\gamma^\circ\right) \boldsymbol{\lambda} = \widehat{\text{Cov}}_B\!\left(\hat{\mu}_{\text{true}},\; \hat{\boldsymbol{\mu}}_{\text{proxy}}\right)$$
+$$\left(\widehat{\text{Cov}}_B\!\left(\hat{\mu}_{\text{proxy}}\right) + \hat{\Sigma}_\gamma^\circ\right) \lambda = \widehat{\text{Cov}}_B\!\left(\hat{\mu}_{\text{true}},\; \hat{\mu}_{\text{proxy}}\right)$$
 
-where $\widehat{\text{Cov}}_B\!\left(\hat{\boldsymbol{\mu}}_{\text{proxy}}\right)$ is the $M \times M$ sample covariance matrix of the labeled bootstrap proxy means across the $B$ replicates, and $\widehat{\text{Cov}}_B\!\left(\hat{\mu}_{\text{true}},\, \hat{\boldsymbol{\mu}}_{\text{proxy}}\right)$ is the $M$-dimensional sample cross-covariance vector between the bootstrap true means and each proxy's bootstrap means. This is the same formula as PTD power-tuning, with the scalar variance and covariance replaced by an $M \times M$ matrix and an $M$-dimensional vector respectively. For $M = 1$, it reduces to the scalar PTD formula.
+where $\widehat{\text{Cov}}_B\!\left(\hat{\mu}_{\text{proxy}}\right)$ is the $M \times M$ sample covariance matrix of the labeled bootstrap proxy means across the $B$ replicates, and $\widehat{\text{Cov}}_B\!\left(\hat{\mu}_{\text{true}},\, \hat{\mu}_{\text{proxy}}\right)$ is the $M$-dimensional sample cross-covariance vector between the bootstrap true means and each proxy's bootstrap means. This is the same formula as PTD power-tuning, with the scalar variance and covariance replaced by an $M \times M$ matrix and an $M$-dimensional vector respectively. For $M = 1$, it reduces to the scalar PTD formula.
 
-When a proxy is informative (high bootstrap covariance with the ground-truth means), its corresponding component of $\boldsymbol{\lambda}$ is large and the estimate benefits from that proxy's signal. When a proxy is uninformative, its component shrinks toward 0, down-weighting it without affecting the other components. The combined covariance matrix on the left-hand side may be singular, for example, if two or more proxies are perfectly correlated. In this case, redundant proxies should be discarded. 
+When a proxy is informative (high bootstrap covariance with the ground-truth means), its corresponding component of $\lambda$ is large and the estimate benefits from that proxy's signal. When a proxy is uninformative, its component shrinks toward 0, down-weighting it without affecting the other components. The combined covariance matrix on the left-hand side may be singular, for example, if two or more proxies are perfectly correlated. In this case, redundant proxies should be discarded. 
 
-Setting $\boldsymbol{\lambda}$ to $\left(1/\sqrt{M}, \ldots, 1/\sqrt{M}\right)^\top$ recovers the unweighted, equally-combined variant. When $M = 1$, Multi-PTD is equivalent to PTD with the same power-tuning setting.
+Setting $\lambda$ to $\left(1/\sqrt{M}, \ldots, 1/\sqrt{M}\right)^\top$ recovers the unweighted, equally-combined variant. When $M = 1$, Multi-PTD is equivalent to PTD with the same power-tuning setting.
 
 ---
 
