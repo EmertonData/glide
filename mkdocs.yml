@@ -104,7 +104,8 @@ nav:
         - Clustered PTD Validation: deep_dive/scientific_validation/estimators/clustered_ptd.ipynb
         - Multi-PTD Validation: deep_dive/scientific_validation/estimators/multi_ptd.ipynb
       - Monitors:
-        - PPI Monitor validation: deep_dive/scientific_validation/monitors/empirical_ppi.ipynb
+        - Empirical PPI Monitor validation: deep_dive/scientific_validation/monitors/empirical_ppi.ipynb
+        - Asymptotic PPI Monitor validation: deep_dive/scientific_validation/monitors/asymptotic_ppi.ipynb
     - Case Studies:
       - Agentic System Evaluation: deep_dive/case_studies/r_judge.ipynb
       - Text-to-SQL Accuracy Estimation: deep_dive/case_studies/spider.ipynb

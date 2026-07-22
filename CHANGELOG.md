@@ -10,8 +10,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### ✨ Added
 - `MultiPTDMeanEstimator`: generalizes `PTDMeanEstimator` to combine multiple proxy predictors via a bootstrap-tuned weight vector.
+- `AsymptoticPPIMeanMonitor`, a prediction-powered drift monitor built on `AsymptoticConfidenceSequence` and using the batch estimates' standard errors.
+- `AsymptoticClassicalMeanMonitor`, a label-only drift monitor built on `AsymptoticConfidenceSequence` and using the batch estimates' standard errors.
+- `AsymptoticConfidenceSequence`, an anytime-valid confidence sequence whose width scales with the known standard errors of per-batch estimates.
 
 ### 🔄 Changed
+- `ConfidenceSequence` is now a concrete base class rather than a structural protocol.
 - Renamed `PPIMeanMonitor` to `EmpiricalPPIMeanMonitor` (`glide.monitors.ppi` → `glide.monitors.empirical_ppi`) and `ClassicalMeanMonitor` to `EmpiricalClassicalMeanMonitor` (`glide.monitors.classical` → `glide.monitors.empirical_classical`).
 
 ### 🐛 Fixed

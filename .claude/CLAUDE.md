@@ -148,6 +148,7 @@ Only add a comment when the *why* is non-obvious: a hidden constraint, a subtle 
 - Update `CHANGELOG.md` for any user-facing changes (Keep a Changelog format, SemVer)
 - Always add elements to the "Added" or "Changed" sections of `CHANGELOG.md` at the top of the existing list
 - Keep the `CHANGELOG.md` user-friendly and concise
+- Whenever a new public estimator, sampler, or monitor class is added, update the "Implemented Algorithms" table in `README.md` in the same PR, but only for classes implementing a published method, e.g. PPI (`estimators.PPIMeanEstimator`) or PPRM (`monitors.EmpiricalPPIMeanMonitor`) get an entry, a classical baseline (e.g. `estimators.ClassicalMeanEstimator`) does not. Add a row to the table and append any newly cited papers to the numbered References list, reusing existing reference numbers if applicable. A row's reference numbers should correspond to the papers cited in that class's own docstring.
 - Avoid using and escaping underscores in math mode in jupyter notebooks.
 - Avoid making excessive use of dashes like this — when writing documentation and notebooks. Prefer commas, colons and parentheses where possible.
 - In documentation and tutorials, always spell out "confidence interval" instead of using "CI", which is easily confused with "continuous integration".
@@ -162,7 +163,7 @@ These three document types have distinct purposes and must not bleed into each o
 
 #### Scientific consistency in notebooks
 
-Figures, printed values, and inline text must be mutually consistent — if the text says one number and the figure or table shows another, all occurrences must be corrected together. Sampling rules and notation must match the paper (e.g., πᵢ ∈ (0,1), not [0,1], in theory sections). Statistical framing must be precise: never say "removes bias" without specifying which bias.
+Figures, printed values, and inline text must be mutually consistent — if the text says one number and the figure or table shows another, all occurrences must be corrected together. Sampling rules and notation must match the paper (e.g., πᵢ ∈ (0,1), not [0,1], in theory sections). Statistical framing must be precise: never say "removes bias" without specifying which bias. Avoid stating explicit variable or experimental numerical values (rates, delays, batch counts, percentages) directly in prose; describe results qualitatively instead (e.g., "detects faster", "stays within budget") and let the figures, tables, and printed cell outputs carry the precise numbers, so nothing in the text needs to be hand-updated when the notebook is re-run or its parameters change.
 
 ### Code Hygiene
 
