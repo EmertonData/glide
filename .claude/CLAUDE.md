@@ -26,6 +26,8 @@ make doc            # Build and serve documentation locally with MkDocs
 
 Run a single test file: `uv run pytest tests/unit/test_foo.py -vsx`
 
+Do not run `make doc` (or `mkdocs build`) — it executes every tutorial notebook and takes over 10 minutes to complete.
+
 ## Architecture
 
 The package has multiple layers:
