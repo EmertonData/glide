@@ -67,7 +67,7 @@ def test_preprocess_valid_output(estimator, y_arrays):
 # --- estimate ---
 
 
-def test_estimate_is_valid_inference_result(estimator, y_arrays):
+def test_estimate_returns_valid_inference_result(estimator, y_arrays):
     y_true, y_proxies = y_arrays
     result = estimator.estimate(y_true, y_proxies)
     assert isinstance(result, PredictionPoweredMeanInferenceResult)

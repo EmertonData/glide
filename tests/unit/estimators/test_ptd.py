@@ -31,10 +31,9 @@ def y_arrays() -> Tuple[NDArray, NDArray]:
 def test_preprocess_valid_output(estimator, y_arrays):
     y_true_all, y_proxy_all = y_arrays
     y_true, y_proxy_labeled, y_proxy_unlabeled = estimator._preprocess(y_true_all, y_proxy_all)
-    assert len(y_true) == 3
-    assert len(y_proxy_labeled) == 3
-    assert len(y_proxy_unlabeled) == 3
-    assert not np.any(np.isnan(y_true))
+    np.testing.assert_array_equal(y_true, np.array([5.0, 6.0, 7.0]))
+    np.testing.assert_array_equal(y_proxy_labeled, np.array([4.5, 5.5, 6.5]))
+    np.testing.assert_array_equal(y_proxy_unlabeled, np.array([6.0, 7.0, 8.0]))
 
 
 def test_preprocess_delegates(estimator):
