@@ -87,7 +87,8 @@ nav:
     - Multiple Proxies (Multi-PPI++): tutorials/multi_ppi.ipynb
     - Cost estimates available (Cost-Optimal Random Sampling): tutorials/cost_optimal_random.ipynb
     - Cost and uncertainty scores available (Cost-Optimal Sampling): tutorials/cost_optimal.ipynb
-    - Monitoring a deployed system for drift (PPRM): tutorials/empirical_ppi_monitor.ipynb
+    - Monitoring a deployed system for drift (Empirical PPRM): tutorials/empirical_ppi_monitor.ipynb
+    - Monitoring a deployed system for drift (Asymptotic PPRM): tutorials/asymptotic_ppi_monitor.ipynb
   - Deep Dive:
     - Overview: deep_dive/index.md
     - Scientific Validation:
@@ -102,6 +103,7 @@ nav:
         - Stratified PTD Validation: deep_dive/scientific_validation/estimators/stratified_ptd.ipynb
         - IPW PTD Validation: deep_dive/scientific_validation/estimators/ipwptd.ipynb
         - Clustered PTD Validation: deep_dive/scientific_validation/estimators/clustered_ptd.ipynb
+        - Multi-PTD Validation: deep_dive/scientific_validation/estimators/multi_ptd.ipynb
       - Monitors:
         - Empirical PPI Monitor validation: deep_dive/scientific_validation/monitors/empirical_ppi.ipynb
         - Asymptotic PPI Monitor validation: deep_dive/scientific_validation/monitors/asymptotic_ppi.ipynb
