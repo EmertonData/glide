@@ -63,7 +63,7 @@ doc = [
     "matplotlib>=3.11.1",
     "mkdocs>=1.6.1",
     "mkdocs-jupyter>=0.26.3",
-    "mkdocs-material>=9.7.6",
+    "mkdocs-material>=9.7.7",
     "mkdocstrings[python]>=1.0.4",
     "scikit-learn>=1.9.0",
 ]
