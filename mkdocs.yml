@@ -102,6 +102,7 @@ nav:
         - Stratified PTD Validation: deep_dive/scientific_validation/estimators/stratified_ptd.ipynb
         - IPW PTD Validation: deep_dive/scientific_validation/estimators/ipwptd.ipynb
         - Clustered PTD Validation: deep_dive/scientific_validation/estimators/clustered_ptd.ipynb
+        - Multi-PTD Validation: deep_dive/scientific_validation/estimators/multi_ptd.ipynb
       - Monitors:
         - Empirical PPI Monitor validation: deep_dive/scientific_validation/monitors/empirical_ppi.ipynb
         - Asymptotic PPI Monitor validation: deep_dive/scientific_validation/monitors/asymptotic_ppi.ipynb
