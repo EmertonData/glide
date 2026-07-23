@@ -80,6 +80,8 @@ If you use GLIDE in your work, please cite us using the "Cite this repository" b
 |------|-------|-----------------|------------------------|
 | Stratified Sampling | `samplers.StratifiedSampler` | [[4]](#ref-4) | [Link](https://github.com/amazon-science/ssepy) |
 | Active Sampling | `samplers.ActiveSampler` | [[5]](#ref-5), [[6]](#ref-6) | [Link](https://github.com/kristinagligoric/confidence-driven-inference) |
+| Cost-Optimal Sampling | `samplers.CostOptimalSampler` | [[8]](#ref-8) | — |
+| Cost-Optimal Random Sampling | `samplers.CostOptimalRandomSampler` | [[8]](#ref-8) | — |
 
 ### Estimators
 
@@ -89,11 +91,11 @@ If you use GLIDE in your work, please cite us using the "Cite this repository" b
 | PPI++ | `estimators.PPIMeanEstimator` | [[2]](#ref-2) | [Link](https://github.com/aangelopoulos/ppi_py/tree/ppi++) |
 | Stratified Prediction-Powered Inference | `estimators.StratifiedPPIMeanEstimator` | [[3]](#ref-3) | — |
 | Clustered Prediction-Powered Inference | `estimators.ClusteredPPIMeanEstimator` | — | [Link](https://github.com/davidbroska/ppi_py) |
-| Multi-Proxy Prediction-Powered Inference | `estimators.MultiPPIMeanEstimator` | [[8]](#ref-8) | [Link](https://github.com/jw-shan/sada) |
-| Multi-Proxy Predict-Then-Debias | `estimators.MultiPTDMeanEstimator` | [[7]](#ref-7), [[8]](#ref-8) | — |
+| Multi-Proxy Prediction-Powered Inference | `estimators.MultiPPIMeanEstimator` | [[9]](#ref-9) | [Link](https://github.com/jw-shan/sada) |
 | Active Statistical Inference | `estimators.ASIMeanEstimator` | [[5]](#ref-5), [[6]](#ref-6) | [Link](https://github.com/tijana-zrnic/active-inference) |
 | Predict-Then-Debias | `estimators.PTDMeanEstimator` | [[7]](#ref-7) | [Link](https://github.com/DanKluger/PTDBoot) |
 | Stratified Predict-Then-Debias | `estimators.StratifiedPTDMeanEstimator` | [[7]](#ref-7) | [Link](https://github.com/DanKluger/PTDBoot) |
+| Multi-Proxy Predict-Then-Debias | `estimators.MultiPTDMeanEstimator` | [[7]](#ref-7), [[9]](#ref-9) | — |
 | Clustered Predict-Then-Debias | `estimators.ClusteredPTDMeanEstimator` | [[7]](#ref-7) | [Link](https://github.com/DanKluger/PTDBoot) |
 | IPW Predict-Then-Debias | `estimators.IPWPTDMeanEstimator` | [[7]](#ref-7) | [Link](https://github.com/DanKluger/PTDBoot) |
 
@@ -101,8 +103,8 @@ If you use GLIDE in your work, please cite us using the "Cite this repository" b
 
 | Name | Class | Reference Paper(s) | Original Implementation |
 |------|-------|-----------------|------------------------|
-| Prediction-Powered Risk Monitoring (PPRM) | `monitors.EmpiricalPPIMeanMonitor` | [[9]](#ref-9), [[10]](#ref-10), [[11]](#ref-11) | — |
-| Asymptotic Prediction-Powered Risk Monitoring | `monitors.AsymptoticPPIMeanMonitor` | [[9]](#ref-9), [[12]](#ref-12) | — |
+| Prediction-Powered Risk Monitoring (PPRM) | `monitors.EmpiricalPPIMeanMonitor` | [[10]](#ref-10), [[11]](#ref-11), [[12]](#ref-12) | — |
+| Asymptotic Prediction-Powered Risk Monitoring | `monitors.AsymptoticPPIMeanMonitor` | [[10]](#ref-10), [[13]](#ref-13) | — |
 
 ### 📖 References
 
@@ -120,15 +122,17 @@ If you use GLIDE in your work, please cite us using the "Cite this repository" b
 
 <a id="ref-7"></a>[7] <a href="https://arxiv.org/abs/2501.18577">Kluger, Dan M., Kerri Lu, Tijana Zrnic, Sherrie Wang, and Stephen Bates. "Prediction-powered inference with imputed covariates and nonuniform sampling." arXiv preprint arXiv:2501.18577 (2025).</a>
 
-<a id="ref-8"></a>[8] <a id="ref-8-link" href="https://arxiv.org/abs/2509.21707">Shan, Jiawei, Zhifeng Chen, Yiming Dong, Yazhen Wang, and Jiwei Zhao. "SADA: Safe and Adaptive Aggregation of Multiple Black-Box Predictions in Semi-Supervised Learning." arXiv preprint arXiv:2509.21707 (2025).</a>.
+<a id="ref-8"></a>[8] <a href="https://arxiv.org/pdf/2506.07949">Angelopoulos, Anastasios N., Jacob Eisenstein, Jonathan Berant, Alekh Agarwal, and Adam Fisch. "Cost-optimal active ai model evaluation." arXiv preprint arXiv:2506.07949 (2025).</a>
 
-<a id="ref-9"></a>[9] <a href="https://arxiv.org/abs/2602.02229">Zhang, Guangyi, Yunlong Cai, Guanding Yu, and Osvaldo Simeone. "Prediction-Powered Risk Monitoring of Deployed Models for Detecting Harmful Distribution Shifts." arXiv preprint arXiv:2602.02229 (2026).</a>
+<a id="ref-9"></a>[9] <a id="ref-9-link" href="https://arxiv.org/abs/2509.21707">Shan, Jiawei, Zhifeng Chen, Yiming Dong, Yazhen Wang, and Jiwei Zhao. "SADA: Safe and Adaptive Aggregation of Multiple Black-Box Predictions in Semi-Supervised Learning." arXiv preprint arXiv:2509.21707 (2025).</a>.
 
-<a id="ref-10"></a>[10] <a href="https://arxiv.org/abs/2110.06177">Podkopaev, Aleksandr, and Aaditya Ramdas. "Tracking the risk of a deployed model and detecting harmful distribution shifts." International Conference on Learning Representations (ICLR), 2022.</a>
+<a id="ref-10"></a>[10] <a href="https://arxiv.org/abs/2602.02229">Zhang, Guangyi, Yunlong Cai, Guanding Yu, and Osvaldo Simeone. "Prediction-Powered Risk Monitoring of Deployed Models for Detecting Harmful Distribution Shifts." arXiv preprint arXiv:2602.02229 (2026).</a>
 
-<a id="ref-11"></a>[11] <a href="https://doi.org/10.1093/jrsssb/qkad009">Waudby-Smith, Ian, and Aaditya Ramdas. "Estimating means of bounded random variables by betting." Journal of the Royal Statistical Society Series B: Statistical Methodology 86, no. 1 (2024): 1-27.</a>
+<a id="ref-11"></a>[11] <a href="https://arxiv.org/abs/2110.06177">Podkopaev, Aleksandr, and Aaditya Ramdas. "Tracking the risk of a deployed model and detecting harmful distribution shifts." International Conference on Learning Representations (ICLR), 2022.</a>
 
-<a id="ref-12"></a>[12] <a href="https://doi.org/10.1214/24-AOS2408">Waudby-Smith, Ian, David Arbour, Ritwik Sinha, Edward H. Kennedy, and Aaditya Ramdas. "Time-uniform central limit theory and asymptotic confidence sequences." The Annals of Statistics 52, no. 6 (2024): 2613-2640.</a>
+<a id="ref-12"></a>[12] <a href="https://doi.org/10.1093/jrsssb/qkad009">Waudby-Smith, Ian, and Aaditya Ramdas. "Estimating means of bounded random variables by betting." Journal of the Royal Statistical Society Series B: Statistical Methodology 86, no. 1 (2024): 1-27.</a>
+
+<a id="ref-13"></a>[13] <a href="https://doi.org/10.1214/24-AOS2408">Waudby-Smith, Ian, David Arbour, Ritwik Sinha, Edward H. Kennedy, and Aaditya Ramdas. "Time-uniform central limit theory and asymptotic confidence sequences." The Annals of Statistics 52, no. 6 (2024): 2613-2640.</a>
 
 ## 📬 Stay Updated
 
