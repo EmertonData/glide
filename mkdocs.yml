@@ -57,6 +57,10 @@ plugins:
   - mkdocs-jupyter:
       include_source: true
       execute: true
+      execute_ignore:
+        - "*/scientific_validation/estimators/ipwptd.ipynb"
+        - "*/scientific_validation/estimators/clustered_ptd.ipynb"
+        - "*/scientific_validation/monitors/empirical_ppi.ipynb"
 
 markdown_extensions:
   - attr_list
