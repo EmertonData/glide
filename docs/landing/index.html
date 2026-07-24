@@ -93,16 +93,31 @@
       color: #212529 !important;
     }
 
+    /* Icon circles: override Bootstrap button vars so hover still works. */
+    .nav-btn.brand-github     { --bs-btn-bg: #181717; --bs-btn-border-color: #181717; --bs-btn-hover-bg: #000000; --bs-btn-hover-border-color: #000000; --bs-btn-color: #fff; --bs-btn-hover-color: #fff; }
+    .nav-btn.brand-docs       { --bs-btn-bg: #103050; --bs-btn-border-color: #103050; --bs-btn-hover-bg: #0a2238; --bs-btn-hover-border-color: #0a2238; --bs-btn-color: #fff; --bs-btn-hover-color: #fff; }
+    .nav-btn.brand-pypi       { --bs-btn-bg: #ffd43b; --bs-btn-border-color: #ffd43b; --bs-btn-hover-bg: #f5c518; --bs-btn-hover-border-color: #f5c518; --bs-btn-color: #3776ab; --bs-btn-hover-color: #3776ab; }
+    .nav-btn.brand-paper      { --bs-btn-bg: #b31b1b; --bs-btn-border-color: #b31b1b; --bs-btn-hover-bg: #8f1515; --bs-btn-hover-border-color: #8f1515; --bs-btn-color: #fff; --bs-btn-hover-color: #fff; }
+    .nav-btn.brand-newsletter { --bs-btn-bg: #0a66c2; --bs-btn-border-color: #0a66c2; --bs-btn-hover-bg: #08539e; --bs-btn-hover-border-color: #08539e; --bs-btn-color: #fff; --bs-btn-hover-color: #fff; }
+    .nav-btn.brand-ed         { --bs-btn-bg: #20a0e0; --bs-btn-border-color: #20a0e0; --bs-btn-hover-bg: #1885bd; --bs-btn-hover-border-color: #1885bd; --bs-btn-color: #fff; --bs-btn-hover-color: #fff; }
+
+    /* Labels: match the icon brand color (darkened where needed for contrast). */
+    .nav-label.brand-docs       { color: #103050; }
+    .nav-label.brand-pypi       { color: #b8860b; }
+    .nav-label.brand-paper      { color: #b31b1b; }
+    .nav-label.brand-newsletter { color: #0a66c2; }
+    .nav-label.brand-ed         { color: #1885bd; }
+
     .hero-card {
-      border-left: 4px solid #4361ee;
-      background-color: #eef2ff;
+      border-left: 4px solid #103050;
+      background-color: #eaf2fb;
       border-radius: 0 0.4rem 0.4rem 0;
       padding: 1rem 1.25rem;
     }
 
-    .hero-card.violet {
-      border-left-color: #3a0ca3;
-      background-color: #f0eaff;
+    .hero-card.gold {
+      border-left-color: #f0c020;
+      background-color: #fdf6e3;
     }
 
     .hero-card .card-label {
@@ -111,12 +126,12 @@
       text-transform: uppercase;
       letter-spacing: 0.1em;
       font-weight: 700;
-      color: #4361ee;
+      color: #103050;
       margin-bottom: 0.3rem;
     }
 
-    .hero-card.violet .card-label {
-      color: #3a0ca3;
+    .hero-card.gold .card-label {
+      color: #b8860b;
     }
 
     .hero-card .card-message {
@@ -246,28 +261,28 @@
 
         <div class="nav-btn-list">
           <a href="https://github.com/EmertonData/glide" class="nav-item" target="_blank" rel="noopener">
-            <span class="btn btn-dark nav-btn"><i class="fa-brands fa-github"></i></span>
+            <span class="btn nav-btn brand-github"><i class="fa-brands fa-github"></i></span>
             <span class="nav-label text-dark">Repository</span>
           </a>
           <a href="https://glide-py.readthedocs.io" class="nav-item" target="_blank" rel="noopener">
-            <span class="btn btn-primary nav-btn"><i class="fa-solid fa-book"></i></span>
-            <span class="nav-label text-primary">Documentation</span>
+            <span class="btn nav-btn brand-docs"><i class="fa-solid fa-book"></i></span>
+            <span class="nav-label brand-docs">Documentation</span>
           </a>
           <a href="https://pypi.org/project/glide-py/" class="nav-item" target="_blank" rel="noopener">
-            <span class="btn btn-warning nav-btn text-white"><i class="fa-brands fa-python"></i></span>
-            <span class="nav-label text-warning">PyPI</span>
+            <span class="btn nav-btn brand-pypi"><i class="fa-brands fa-python"></i></span>
+            <span class="nav-label brand-pypi">PyPI</span>
           </a>
           <a href="https://arxiv.org/abs/2605.31278" class="nav-item" target="_blank" rel="noopener">
-            <span class="btn btn-danger nav-btn"><i class="fa-solid fa-file-lines"></i></span>
-            <span class="nav-label text-danger">Paper</span>
+            <span class="btn nav-btn brand-paper"><i class="fa-solid fa-file-lines"></i></span>
+            <span class="nav-label brand-paper">Paper</span>
           </a>
           <a href="https://www.linkedin.com/newsletters/evaluating-genai-with-glide-7453423077557952512/" class="nav-item" target="_blank" rel="noopener">
-            <span class="btn btn-secondary nav-btn"><i class="fa-solid fa-envelope"></i></span>
-            <span class="nav-label text-secondary">Newsletter</span>
+            <span class="btn nav-btn brand-newsletter"><i class="fa-solid fa-envelope"></i></span>
+            <span class="nav-label brand-newsletter">Newsletter</span>
           </a>
           <a href="https://www.emerton-data.com" class="nav-item" target="_blank" rel="noopener">
-            <span class="btn btn-secondary nav-btn"><i class="fa-solid fa-building"></i></span>
-            <span class="nav-label text-secondary">Emerton Data</span>
+            <span class="btn nav-btn brand-ed"><i class="fa-solid fa-building"></i></span>
+            <span class="nav-label brand-ed">Emerton Data</span>
           </a>
         </div>
 
@@ -304,7 +319,7 @@
             </div>
           </div>
 
-          <div class="hero-card violet flex-fill mb-0">
+          <div class="hero-card gold flex-fill mb-0">
             <div class="card-label">Stop guessing, start measuring</div>
             <div class="card-message">
               Not "91% accuracy (LLM judge)."<br>
