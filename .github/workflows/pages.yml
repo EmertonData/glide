@@ -33,13 +33,16 @@ jobs:
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v6
 
-      - name: Copy shared assets into landing page
-        run: cp -r docs/assets docs/landing/
+      - name: Stage site
+        run: |
+          mkdir -p _site/assets
+          cp docs/landing/index.html _site/
+          cp docs/assets/*.png docs/assets/*.jpg _site/assets/
 
       - name: Upload landing page as Pages artifact
         uses: actions/upload-pages-artifact@v5
         with:
-          path: docs/landing/
+          path: _site/
 
       - name: Deploy to GitHub Pages
         id: deployment
