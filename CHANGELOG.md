@@ -9,18 +9,25 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 ## [Next release]
 
 ### ✨ Added
-- `MultiPTDMeanEstimator`: generalizes `PTDMeanEstimator` to combine multiple proxy predictors via a bootstrap-tuned weight vector.
-- `AsymptoticPPRM`, a prediction-powered drift monitor built on `AsymptoticConfidenceSequence` and using the batch estimates' standard errors.
-- `AsymptoticClassicalMeanMonitor`, a label-only drift monitor built on `AsymptoticConfidenceSequence` and using the batch estimates' standard errors.
-- `AsymptoticConfidenceSequence`, an anytime-valid confidence sequence whose width scales with the known standard errors of per-batch estimates.
 
 ### 🔄 Changed
-- `ConfidenceSequence` is now a concrete base class rather than a structural protocol.
-- Renamed `PPIMeanMonitor` to `EmpiricalPPRM` (`glide.monitors.ppi` → `glide.monitors.empirical_pprm`) and `ClassicalMeanMonitor` to `EmpiricalClassicalMeanMonitor` (`glide.monitors.classical` → `glide.monitors.empirical_classical`).
 
 ### 🐛 Fixed
 
 ### 💛 Contributors
+
+## [0.10.0] – 2026-07-27
+
+### ✨ Added
+- `MultiPTDMeanEstimator`: generalizes `PTDMeanEstimator` to combine multiple proxy predictors via a bootstrap-tuned weight vector.
+- `AsymptoticPPRM` and `AsymptoticClassicalMeanMonitor`, new drift monitors (prediction-powered and label-only) built on `AsymptoticConfidenceSequence`, an anytime-valid confidence sequence whose width scales with the known standard errors of per-batch estimates.
+
+### 🔄 Changed
+- Renamed `PPIMeanMonitor` to `EmpiricalPPRM` and `ClassicalMeanMonitor` to `EmpiricalClassicalMeanMonitor` for consistency with the new asymptotic monitors.
+- `ConfidenceSequence` is now a concrete base class instead of a structural protocol.
+
+### 💛 Contributors
+Thank you to everyone who contributed to this release: @gmartinon-ed, @imerad
 
 ## [0.9.0] – 2026-07-16
 
