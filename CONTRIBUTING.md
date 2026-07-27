@@ -71,7 +71,7 @@ glide/
 │   ├── ...
 │
 ├── monitors/               # Public API — drift monitors over batched data
-│   ├── empirical_ppi.py
+│   ├── empirical_pprm.py
 │   ├── ...
 │
 ├── samplers/               # Public API — sampling strategies

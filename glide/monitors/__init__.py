@@ -1,11 +1,11 @@
 from glide.monitors.asymptotic_classical import AsymptoticClassicalMeanMonitor
-from glide.monitors.asymptotic_ppi import AsymptoticPPIMeanMonitor
+from glide.monitors.asymptotic_pprm import AsymptoticPPRM
 from glide.monitors.empirical_classical import EmpiricalClassicalMeanMonitor
-from glide.monitors.empirical_ppi import EmpiricalPPIMeanMonitor
+from glide.monitors.empirical_pprm import EmpiricalPPRM
 
 __all__ = [
     "AsymptoticClassicalMeanMonitor",
-    "AsymptoticPPIMeanMonitor",
+    "AsymptoticPPRM",
     "EmpiricalClassicalMeanMonitor",
-    "EmpiricalPPIMeanMonitor",
+    "EmpiricalPPRM",
 ]

@@ -103,8 +103,8 @@ If you use GLIDE in your work, please cite us using the "Cite this repository" b
 
 | Name | Class | Reference Paper(s) | Original Implementation |
 |------|-------|-----------------|------------------------|
-| Prediction-Powered Risk Monitoring (PPRM) | `monitors.EmpiricalPPIMeanMonitor` | [[10]](#ref-10), [[11]](#ref-11), [[12]](#ref-12) | — |
-| Asymptotic Prediction-Powered Risk Monitoring | `monitors.AsymptoticPPIMeanMonitor` | [[10]](#ref-10), [[13]](#ref-13) | — |
+| Prediction-Powered Risk Monitoring (PPRM) | `monitors.EmpiricalPPRM` | [[10]](#ref-10), [[11]](#ref-11), [[12]](#ref-12) | — |
+| Asymptotic Prediction-Powered Risk Monitoring | `monitors.AsymptoticPPRM` | [[10]](#ref-10), [[13]](#ref-13) | — |
 
 ### 📖 References
 
