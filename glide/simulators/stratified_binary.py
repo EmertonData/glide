@@ -8,7 +8,7 @@ from glide.simulators.binary import generate_binary_dataset
 
 
 def generate_stratified_binary_dataset(
-    n_total: ArrayLike,
+    n_samples: ArrayLike,
     true_mean: ArrayLike,
     proxy_mean: ArrayLike,
     correlation: ArrayLike,
@@ -17,12 +17,12 @@ def generate_stratified_binary_dataset(
     """Generate a synthetic stratified binary-label oracle dataset.
 
     Generate multiple strata with potentially different parameters (true_mean, proxy_mean,
-    correlation, n_total per stratum). This enables simulation of heterogeneous data where
+    correlation, n_samples per stratum). This enables simulation of heterogeneous data where
     different groups have different proxy-truth relationships.
 
     Parameters
     ----------
-    n_total : list of int or NDArray of shape (K,)
+    n_samples : list of int or NDArray of shape (K,)
         Total number of samples per stratum. All samples have both true and proxy labels.
         Length must equal number of strata.
     true_mean : list of float or NDArray of shape (K,)
@@ -40,7 +40,7 @@ def generate_stratified_binary_dataset(
     Returns
     -------
     Tuple[NDArray, NDArray, NDArray]
-        Let ``N = sum(n_total)`` be the total number of samples across all strata.
+        Let ``N = sum(n_samples)`` be the total number of samples across all strata.
 
         [0]: array of shape ``(N,)``, y_true containing ground-truth labels.
         [1]: array of shape ``(N,)``, y_proxy containing proxy labels.
@@ -60,7 +60,7 @@ def generate_stratified_binary_dataset(
     >>> import numpy as np
     >>> from glide.simulators import generate_stratified_binary_dataset
     >>> y_true, y_proxy, groups = generate_stratified_binary_dataset(
-    ...     n_total=[6, 8],
+    ...     n_samples=[6, 8],
     ...     true_mean=[0.6, 0.8],
     ...     proxy_mean=[0.5, 0.7],
     ...     correlation=[0.7, 0.75],
@@ -77,20 +77,20 @@ def generate_stratified_binary_dataset(
     >>> bool(np.all(np.isin(y_proxy, [0.0, 1.0])))
     True
     """
-    n_total_arr = np.asarray(n_total, dtype=int)
+    n_samples_arr = np.asarray(n_samples, dtype=int)
     true_mean_arr = np.asarray(true_mean, dtype=float)
     proxy_mean_arr = np.asarray(proxy_mean, dtype=float)
     correlation_arr = np.asarray(correlation, dtype=float)
 
-    _validate_non_empty(n_total_arr, "n_total")
-    num_strata = len(n_total_arr)
+    _validate_non_empty(n_samples_arr, "n_samples")
+    num_strata = len(n_samples_arr)
 
     _validate_equal_lengths(
-        n_total_arr,
+        n_samples_arr,
         true_mean_arr,
         proxy_mean_arr,
         correlation_arr,
-        names=["n_total", "true_mean", "proxy_mean", "correlation"],
+        names=["n_samples", "true_mean", "proxy_mean", "correlation"],
     )
 
     # Generate data for each stratum
@@ -103,7 +103,7 @@ def generate_stratified_binary_dataset(
 
     for stratum_id in range(num_strata):
         y_true_k, y_proxy_k = generate_binary_dataset(
-            n_total=n_total_arr[stratum_id],
+            n_samples=n_samples_arr[stratum_id],
             true_mean=true_mean_arr[stratum_id],
             proxy_mean=proxy_mean_arr[stratum_id],
             correlation=correlation_arr[stratum_id],

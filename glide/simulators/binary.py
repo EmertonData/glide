@@ -7,7 +7,7 @@ from glide.core.validation import _validate_bounds
 
 
 def generate_binary_dataset(
-    n_total: int,
+    n_samples: int,
     true_mean: float = 0.7,
     proxy_mean: float = 0.6,
     correlation: float = 0.8,
@@ -17,7 +17,7 @@ def generate_binary_dataset(
 
     Parameters
     ----------
-    n_total : int
+    n_samples : int
         Total number of samples. All samples have both true and proxy labels.
     true_mean : float
         Expected mean value of the true labels.
@@ -31,8 +31,8 @@ def generate_binary_dataset(
     Returns
     -------
     Tuple[NDArray, NDArray]
-        [0]: array of shape ``(n_total,)``, y_true containing ground-truth labels.
-        [1]: array of shape ``(n_total,)``, y_proxy containing proxy labels.
+        [0]: array of shape ``(n_samples,)``, y_true containing ground-truth labels.
+        [1]: array of shape ``(n_samples,)``, y_proxy containing proxy labels.
 
     Raises
     ------
@@ -93,7 +93,7 @@ def generate_binary_dataset(
 
     **Step 3 — Two-stage generation**
 
-    ``y_true`` is sampled first for all ``n_total`` observations from a
+    ``y_true`` is sampled first for all ``n_samples`` observations from a
     ``Bernoulli(p_t)`` distribution.  For each observation, the corresponding
     conditional probability from Step 2 is selected, and ``y_proxy`` is then
     drawn from that conditional Bernoulli distribution:
@@ -111,7 +111,7 @@ def generate_binary_dataset(
     --------
     >>> import numpy as np
     >>> from glide.simulators import generate_binary_dataset
-    >>> y_true, y_proxy = generate_binary_dataset(n_total=8, random_seed=42)
+    >>> y_true, y_proxy = generate_binary_dataset(n_samples=8, random_seed=42)
     >>> len(y_true)
     8
     >>> len(y_proxy)
@@ -140,7 +140,7 @@ def generate_binary_dataset(
         )
 
     rng = np.random.default_rng(seed=random_seed)
-    y_true = rng.binomial(1, p_t, size=n_total).astype(float)
+    y_true = rng.binomial(1, p_t, size=n_samples).astype(float)
 
     p11 = correlation * D + p_t * p_p
     p01 = p_p - p11

@@ -7,7 +7,7 @@ from glide.core.validation import _validate_bounds
 
 
 def generate_gaussian_dataset(
-    n_total: int,
+    n_samples: int,
     true_mean: float = 0.7,
     true_std: float = 1,
     proxy_mean: float = 0.6,
@@ -19,7 +19,7 @@ def generate_gaussian_dataset(
 
     Parameters
     ----------
-    n_total : int
+    n_samples : int
         Total number of samples to generate.
     true_mean : float
         Mean of the true label distribution.
@@ -37,8 +37,8 @@ def generate_gaussian_dataset(
     Returns
     -------
     Tuple[NDArray, NDArray]
-        [0]: array of shape ``(n_total,)``, oracle true labels
-        [1]: array of shape ``(n_total,)``, proxy labels
+        [0]: array of shape ``(n_samples,)``, oracle true labels
+        [1]: array of shape ``(n_samples,)``, proxy labels
 
     Notes
     -----
@@ -84,14 +84,14 @@ def generate_gaussian_dataset(
 
     **Step 2 — Sampling via the linear transform**
 
-    Let ``Z`` be a ``2 × n_total`` matrix whose entries are i.i.d. standard normals
+    Let ``Z`` be a ``2 × n_samples`` matrix whose entries are i.i.d. standard normals
     ``Z_i ~ N(0, 1)``. Then:
 
     ```
     Y = L @ Z
     ```
 
-    gives a ``2 × n_total`` matrix where each column is a zero-mean sample from
+    gives a ``2 × n_samples`` matrix where each column is a zero-mean sample from
     ``N(0, Σ)``. In component form, each column ``(Z₁, Z₂)`` maps to:
 
     ```
@@ -117,7 +117,7 @@ def generate_gaussian_dataset(
     --------
     >>> import numpy as np
     >>> from glide.simulators import generate_gaussian_dataset
-    >>> y_true, y_proxy = generate_gaussian_dataset(n_total=8, random_seed=42)
+    >>> y_true, y_proxy = generate_gaussian_dataset(n_samples=8, random_seed=42)
     >>> len(y_true)
     8
     >>> len(y_proxy)
@@ -128,7 +128,7 @@ def generate_gaussian_dataset(
     angle = np.arccos(correlation)
     lin_transform = np.array([[true_std, 0], [proxy_std * np.cos(angle), proxy_std * np.sin(angle)]])
 
-    Y = lin_transform @ rng.standard_normal(size=(2, n_total))
+    Y = lin_transform @ rng.standard_normal(size=(2, n_samples))
 
     y_true = true_mean + Y[0, :]
     y_proxy = proxy_mean + Y[1, :]

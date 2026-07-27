@@ -16,7 +16,7 @@ from glide.simulators import generate_binary_dataset
 
 @pytest.fixture
 def y():
-    y_true, _ = generate_binary_dataset(n_total=20, true_mean=0.5, random_seed=0)
+    y_true, _ = generate_binary_dataset(n_samples=20, true_mean=0.5, random_seed=0)
     return y_true
 
 

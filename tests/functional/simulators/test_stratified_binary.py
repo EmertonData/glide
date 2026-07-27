@@ -5,20 +5,20 @@ from glide.simulators import generate_stratified_binary_dataset
 
 
 def test_generate_stratified_binary_dataset_empirical_means_and_correlation_per_stratum():
-    n_total = [250, 250]
+    n_samples = [250, 250]
     true_mean = [0.9, 0.8]
     proxy_mean = [0.8, 0.7]
     correlation = [0.5, 0.75]
 
     y_true, y_proxy, groups = generate_stratified_binary_dataset(
-        n_total=n_total,
+        n_samples=n_samples,
         true_mean=true_mean,
         proxy_mean=proxy_mean,
         correlation=correlation,
         random_seed=4,
     )
 
-    for stratum_id in range(len(n_total)):
+    for stratum_id in range(len(n_samples)):
         stratum_mask = groups == stratum_id
         y_true_stratum = y_true[stratum_mask]
         y_proxy_stratum = y_proxy[stratum_mask]
