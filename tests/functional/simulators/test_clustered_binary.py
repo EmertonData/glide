@@ -5,7 +5,7 @@ from glide.simulators import generate_clustered_binary_dataset
 
 
 def test_generate_clustered_binary_dataset_empirical_means_and_correlation():
-    n_total = 5000
+    n_samples = 5000
     n_clusters = 50
     true_mean = 0.7
     proxy_mean = 0.6
@@ -13,7 +13,7 @@ def test_generate_clustered_binary_dataset_empirical_means_and_correlation():
     within_cluster_diversity = 0.5
 
     y_true, y_proxy, clusters = generate_clustered_binary_dataset(
-        n_total=n_total,
+        n_samples=n_samples,
         n_clusters=n_clusters,
         true_mean=true_mean,
         proxy_mean=proxy_mean,

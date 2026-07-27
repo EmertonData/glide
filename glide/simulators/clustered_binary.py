@@ -8,7 +8,7 @@ from glide.simulators.binary import generate_binary_dataset
 
 
 def generate_clustered_binary_dataset(
-    n_total: int,
+    n_samples: int,
     n_clusters: int,
     true_mean: float = 0.7,
     proxy_mean: float = 0.6,
@@ -18,14 +18,14 @@ def generate_clustered_binary_dataset(
 ) -> Tuple[NDArray, NDArray, NDArray]:
     """Generate a synthetic clustered binary-label dataset for evaluation.
 
-    Draws ``n_total`` i.i.d. ``(y_true, y_proxy)`` pairs from the
+    Draws ``n_samples`` i.i.d. ``(y_true, y_proxy)`` pairs from the
     joint binary distribution defined by ``true_mean``, ``proxy_mean``, and
     ``correlation``, then randomly partitions the observations into
     ``n_clusters`` non-empty groups.
 
     Parameters
     ----------
-    n_total : int
+    n_samples : int
         Exact total number of observations across all clusters.
     n_clusters : int
         Exact number of clusters. Must be at least 2.
@@ -48,9 +48,9 @@ def generate_clustered_binary_dataset(
     Returns
     -------
     Tuple[NDArray, NDArray, NDArray]
-        [0]: ``y_true`` — shape ``(n_total,)``, values in ``{0.0, 1.0}``.
-        [1]: ``y_proxy`` — shape ``(n_total,)``, values in ``{0.0, 1.0}``.
-        [2]: ``clusters`` — shape ``(n_total,)``, integer cluster
+        [0]: ``y_true`` — shape ``(n_samples,)``, values in ``{0.0, 1.0}``.
+        [1]: ``y_proxy`` — shape ``(n_samples,)``, values in ``{0.0, 1.0}``.
+        [2]: ``clusters`` — shape ``(n_samples,)``, integer cluster
              identifiers in ``{0, 1, ..., n_clusters - 1}``.
 
     Raises
@@ -65,13 +65,13 @@ def generate_clustered_binary_dataset(
     ValueError
         If ``n_clusters < 2``.
     ValueError
-        If ``n_total < n_clusters``.
+        If ``n_samples < n_clusters``.
 
     Notes
     -----
     **Step 1 — Draw observations**
 
-    Call ``generate_binary_dataset(n_total, ...)`` to obtain ``n_total``
+    Call ``generate_binary_dataset(n_samples, ...)`` to obtain ``n_samples``
     i.i.d. ``(y_true, y_proxy)`` pairs from the joint binary
     distribution defined by ``true_mean``, ``proxy_mean``, and
     ``correlation``.
@@ -79,9 +79,9 @@ def generate_clustered_binary_dataset(
     **Step 2 — Random cluster partition**
 
     Draw ``n_clusters - 1`` cut positions uniformly without replacement from
-    ``{1, 2, ..., n_total - 1}`` and sort them. Combined with ``0`` and
-    ``n_total``, these define ``n_clusters`` contiguous intervals of random
-    lengths that sum to ``n_total``. Assign cluster identifier ``k`` to all
+    ``{1, 2, ..., n_samples - 1}`` and sort them. Combined with ``0`` and
+    ``n_samples``, these define ``n_clusters`` contiguous intervals of random
+    lengths that sum to ``n_samples``. Assign cluster identifier ``k`` to all
     observations whose position falls in the ``k``-th interval. Every cluster
     contains at least 1 observation by construction.
 
@@ -108,7 +108,7 @@ def generate_clustered_binary_dataset(
     >>> import numpy as np
     >>> from glide.simulators import generate_clustered_binary_dataset
     >>> y_true, y_proxy, clusters = generate_clustered_binary_dataset(
-    ...     n_total=10, n_clusters=4, random_seed=0
+    ...     n_samples=10, n_clusters=4, random_seed=0
     ... )
     >>> y_true
     array([0., 1., 1., 1., 1., 1., 1., 0., 1., 1.])
@@ -119,10 +119,10 @@ def generate_clustered_binary_dataset(
     """
     _validate_bounds(n_clusters, "n_clusters", lower=2, error_message=f"'n_clusters' must be >= 2; got {n_clusters}.")
     _validate_bounds(
-        n_total,
-        "n_total",
+        n_samples,
+        "n_samples",
         lower=n_clusters,
-        error_message=f"'n_total' must be >= 'n_clusters'; got n_total={n_total} and n_clusters={n_clusters}.",
+        error_message=f"'n_samples' must be >= 'n_clusters'; got n_samples={n_samples} and n_clusters={n_clusters}.",
     )
     _validate_bounds(within_cluster_diversity, "within_cluster_diversity", lower=0, upper=1)
 
@@ -133,7 +133,7 @@ def generate_clustered_binary_dataset(
     data_seed, partition_seed = seed_sequence.spawn(2)
 
     y_true, y_proxy = generate_binary_dataset(
-        n_total=n_total,
+        n_samples=n_samples,
         true_mean=true_mean,
         proxy_mean=proxy_mean,
         correlation=correlation,
@@ -142,8 +142,8 @@ def generate_clustered_binary_dataset(
 
     rng = np.random.default_rng(partition_seed)
 
-    cut_positions = np.sort(rng.choice(n_total - 1, size=n_clusters - 1, replace=False) + 1)
-    interval_lengths = np.diff(np.hstack([[0], cut_positions, [n_total]]))
+    cut_positions = np.sort(rng.choice(n_samples - 1, size=n_clusters - 1, replace=False) + 1)
+    interval_lengths = np.diff(np.hstack([[0], cut_positions, [n_samples]]))
     clusters = np.repeat(np.arange(n_clusters, dtype=np.int64), interval_lengths)
     rng.shuffle(clusters)
 

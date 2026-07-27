@@ -13,7 +13,7 @@ def test_generate_gaussian_dataset_empirical_means_and_correlation():
     eps = 0.03
 
     y_true, y_proxy = generate_gaussian_dataset(
-        n_total=1000,
+        n_samples=1000,
         true_mean=true_mean,
         true_std=true_std,
         proxy_mean=proxy_mean,

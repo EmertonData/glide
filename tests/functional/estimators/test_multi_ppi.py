@@ -19,7 +19,7 @@ def test_single_proxy_equals_ppi():
     the scalar PPI++ tuning parameter. The point estimate, standard error, and
     confidence interval bounds must match to floating-point precision.
     """
-    y_true_oracle, y_proxy_1d = generate_binary_dataset(n_total=25, random_seed=0)
+    y_true_oracle, y_proxy_1d = generate_binary_dataset(n_samples=25, random_seed=0)
     xi = np.hstack([np.ones(5), np.zeros(20)])
     y_true = simulate_annotation(y_true_oracle, xi)
     y_proxies_2d = y_proxy_1d[:, np.newaxis]

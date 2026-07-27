@@ -21,7 +21,7 @@ def dataset():
     n_labeled_per_batch = 8
 
     y_true_oracle, y_proxy, batches = generate_stratified_binary_dataset(
-        n_total=[batch_size] * n_batches,
+        n_samples=[batch_size] * n_batches,
         true_mean=[0.5] * n_batches,
         proxy_mean=[0.6] * n_batches,
         correlation=[0.8] * n_batches,

@@ -25,7 +25,7 @@ def test_two_equal_strata_matches_ptd():
     n_bootstrap = 2000
 
     # Generate base numpy arrays
-    y_true_oracle, y_proxy = generate_gaussian_dataset(n_total=n_labeled + n_unlabeled, random_seed=random_seed)
+    y_true_oracle, y_proxy = generate_gaussian_dataset(n_samples=n_labeled + n_unlabeled, random_seed=random_seed)
     xi = np.hstack([np.ones(n_labeled), np.zeros(n_unlabeled)])
     y_true = simulate_annotation(y_true_oracle, xi)
 
@@ -60,7 +60,7 @@ def test_single_stratum_matches_ptd():
     random_seed = 7
     n_bootstrap = 2000
 
-    y_true_oracle, y_proxy = generate_gaussian_dataset(n_total=n_labeled + n_unlabeled, random_seed=random_seed)
+    y_true_oracle, y_proxy = generate_gaussian_dataset(n_samples=n_labeled + n_unlabeled, random_seed=random_seed)
     xi = np.hstack([np.ones(n_labeled), np.zeros(n_unlabeled)])
     y_true = simulate_annotation(y_true_oracle, xi)
     groups = np.full(len(y_true), "A")
@@ -86,12 +86,12 @@ def test_stratified_ptd_narrower_ci_with_heterogeneous_strata():
     xi = np.hstack([np.ones(n_labeled), np.zeros(n_unlabeled)])
     # Stratum A: low proxy noise
     y_true_oracle_a, y_proxy_a = generate_gaussian_dataset(
-        n_total=n_labeled + n_unlabeled, true_mean=0.6, true_std=0.1, random_seed=random_seed
+        n_samples=n_labeled + n_unlabeled, true_mean=0.6, true_std=0.1, random_seed=random_seed
     )
     y_true_a = simulate_annotation(y_true_oracle_a, xi)
     # Stratum B: high proxy noise → lower lambda is optimal
     y_true_oracle_b, y_proxy_b = generate_gaussian_dataset(
-        n_total=n_labeled + n_unlabeled, true_mean=0.4, true_std=1.5, random_seed=random_seed
+        n_samples=n_labeled + n_unlabeled, true_mean=0.4, true_std=1.5, random_seed=random_seed
     )
     y_true_b = simulate_annotation(y_true_oracle_b, xi)
 

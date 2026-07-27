@@ -26,7 +26,7 @@ def test_deterministic_probabilities_match_simple_ptd():
     random_seed = 0
 
     y_true_oracle, y_proxy = generate_gaussian_dataset(
-        n_total=n_labeled + n_unlabeled,
+        n_samples=n_labeled + n_unlabeled,
         true_mean=true_mean,
         true_std=true_std,
         proxy_mean=proxy_mean,
@@ -68,7 +68,7 @@ def test_large_sample_matches_asi():
     rng = np.random.default_rng(seed=random_seed)
 
     y_true, y_proxy = generate_gaussian_dataset(
-        n_total=n_samples,
+        n_samples=n_samples,
         true_mean=true_mean,
         true_std=true_std,
         proxy_mean=proxy_mean,

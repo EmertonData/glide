@@ -7,7 +7,7 @@ from glide.core.validation import _validate_bounds, _validate_equal_lengths
 
 
 def generate_multi_binary_dataset(
-    n_total: int,
+    n_samples: int,
     true_mean: float,
     proxy_means: ArrayLike,
     correlations: ArrayLike,
@@ -17,7 +17,7 @@ def generate_multi_binary_dataset(
 
     Parameters
     ----------
-    n_total : int
+    n_samples : int
         Total number of samples.
     true_mean : float
         Expected mean value of the true labels. Must be in (0, 1).
@@ -34,8 +34,8 @@ def generate_multi_binary_dataset(
     Returns
     -------
     Tuple[NDArray, NDArray]
-        [0]: array of shape ``(n_total,)``, y_true containing ground-truth labels.
-        [1]: array of shape ``(n_total, n_proxies)``, y_proxies where column m contains
+        [0]: array of shape ``(n_samples,)``, y_true containing ground-truth labels.
+        [1]: array of shape ``(n_samples, n_proxies)``, y_proxies where column m contains
              proxy labels with mean ``proxy_means[m]`` and correlation ``correlations[m]``
              with y_true.
 
@@ -87,7 +87,7 @@ def generate_multi_binary_dataset(
     proxy_{m,i} | y_true_i ~ Bernoulli(P(proxy_m = 1 | y_true_i))
     ```
 
-    All proxies are generated in a single vectorised call over the ``(n_total, n_proxies)``
+    All proxies are generated in a single vectorised call over the ``(n_samples, n_proxies)``
     matrix of conditional probabilities. The proxies are conditionally independent given
     y_true, so they have positive marginal correlation with each other only through the
     shared y_true.
@@ -139,7 +139,7 @@ def generate_multi_binary_dataset(
             )
 
     rng = np.random.default_rng(seed=random_seed)
-    y_true = rng.binomial(1, p_t, size=n_total).astype(float)
+    y_true = rng.binomial(1, p_t, size=n_samples).astype(float)
 
     p11 = correlations_arr * D + p_t * p_p
     p01 = p_p - p11

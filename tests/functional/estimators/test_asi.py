@@ -31,7 +31,7 @@ def test_equal_probabilities_match_simple_ppi():
     random_seed = 0
 
     y_true_oracle, y_proxy = generate_gaussian_dataset(
-        n_total=n_labeled + n_unlabeled,
+        n_samples=n_labeled + n_unlabeled,
         true_mean=true_mean,
         true_std=true_std,
         proxy_mean=proxy_mean,

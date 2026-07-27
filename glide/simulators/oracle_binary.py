@@ -7,7 +7,7 @@ from glide.core.validation import _validate_bounds
 
 
 def generate_binary_dataset_with_oracle_sampling(
-    n_total: int,
+    n_samples: int,
     true_mean: float = 0.7,
     proxy_mean: float = 0.6,
     correlation: float = 0.8,
@@ -15,7 +15,7 @@ def generate_binary_dataset_with_oracle_sampling(
 ) -> Tuple[NDArray, NDArray, NDArray]:
     """Generate a synthetic binary dataset with oracle sampling probabilities.
 
-    All n_total samples have ground-truth labels (y_true_oracle), proxy predictions (y_proxy),
+    All samples have ground-truth labels (y_true_oracle), proxy predictions (y_proxy),
     and an oracle uncertainty score derived from the analytical
     proxy error. The uncertainty values are non-uniform: samples where the proxy is less
     reliable receive higher uncertainty following the optimal sampling rule.
@@ -28,7 +28,7 @@ def generate_binary_dataset_with_oracle_sampling(
 
     Parameters
     ----------
-    n_total : int
+    n_samples : int
         Total number of samples.
     true_mean : float
         Expected mean of y_true_oracle. Must be in (0, 1).
@@ -42,10 +42,10 @@ def generate_binary_dataset_with_oracle_sampling(
     Returns
     -------
     Tuple[NDArray, NDArray, NDArray]
-        [0]: array of shape ``(n_total,)``, y_true_oracle with the full ground-truth labels for all n_total
+        [0]: array of shape ``(n_samples,)``, y_true_oracle with the full ground-truth labels for all
         samples (no NaN); use ``simulate_annotation`` to mask unlabeled rows
-        [1]: array of shape ``(n_total,)``, y_proxy with proxy predictions
-        [2]: array of shape ``(n_total,)``, uncertainty (oracle uncertainty score) per sample
+        [1]: array of shape ``(n_samples,)``, y_proxy with proxy predictions
+        [2]: array of shape ``(n_samples,)``, uncertainty (oracle uncertainty score) per sample
 
     Raises
     ------
@@ -167,7 +167,7 @@ def generate_binary_dataset_with_oracle_sampling(
     Examples
     --------
     >>> from glide.simulators import generate_binary_dataset_with_oracle_sampling
-    >>> y_true_oracle, y_proxy, uncertainty = generate_binary_dataset_with_oracle_sampling(n_total=4, random_seed=0)
+    >>> y_true_oracle, y_proxy, uncertainty = generate_binary_dataset_with_oracle_sampling(n_samples=4, random_seed=0)
     >>> len(y_true_oracle)
     4
     >>> len(y_proxy)
@@ -215,7 +215,7 @@ def generate_binary_dataset_with_oracle_sampling(
     correlation_spread = 0.9 * max_safe_correlation_spread
 
     # Latent variable: controls per-sample proxy correlation
-    x = rng.uniform(-1.0, 1.0, size=n_total)
+    x = rng.uniform(-1.0, 1.0, size=n_samples)
 
     # Per-sample conditional joint distribution
     correlation_x = correlation + correlation_spread * x
@@ -224,7 +224,7 @@ def generate_binary_dataset_with_oracle_sampling(
 
     # Vectorized CDF inversion to sample (y_true, y_proxy) per sample
     p00_x = 1.0 - p_t - p_p + p11_x
-    u = rng.uniform(0.0, 1.0, size=n_total)
+    u = rng.uniform(0.0, 1.0, size=n_samples)
     samples = np.where(
         u < p00_x,
         0,
