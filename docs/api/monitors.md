@@ -8,8 +8,8 @@
 
 ---
 
-::: glide.monitors.empirical_ppi.EmpiricalPPIMeanMonitor
+::: glide.monitors.empirical_pprm.EmpiricalPPRM
 
 ---
 
-::: glide.monitors.asymptotic_ppi.AsymptoticPPIMeanMonitor
+::: glide.monitors.asymptotic_pprm.AsymptoticPPRM
