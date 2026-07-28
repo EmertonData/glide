@@ -1,0 +1,4 @@
+pandas
+jinja2
+openai
+huggingface-hub

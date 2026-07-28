@@ -18,4 +18,4 @@ The case studies apply GLIDE end-to-end to real benchmarks, using an automatic p
 |---|---|---|
 | Agentic safety evaluation (R-Judge) | Uniform PPI++, Stratified PPI++, ASI | [Agentic System Evaluation](case_studies/r_judge.ipynb) |
 | Text-to-SQL accuracy estimation (Spider) | Stratified PPI++ | [Text-to-SQL Accuracy Estimation](case_studies/spider.ipynb) |
-| RAG answer faithfulness estimation (ExpertQA) | Stratified PPI++ | [RAG Answer Faithfulness Estimation](case_studies/expertqa.ipynb) |
+| RAG answer faithfulness estimation (MEMERAG) | Stratified PPI++ | [RAG Answer Faithfulness Estimation](case_studies/memerag.ipynb) |
