@@ -4,7 +4,7 @@ from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 
 import pandas as pd
-from download_dataset import DEFAULT_REPO_DIR, download_memerag
+from download_dataset import DEFAULT_REPO_DIR
 from jinja2 import Environment, FileSystemLoader, Template
 
 LANGUAGES = ["en", "de", "es", "fr", "hi"]
@@ -16,14 +16,15 @@ AMBIGUOUS_FACTUALITY_LABEL = "Challenging to determine"
 def load_memerag_dataset(repo_dir: str = str(DEFAULT_REPO_DIR)) -> pd.DataFrame:
     """Load MEMERAG's per-sentence human annotations into a flat table.
 
-    Downloads MEMERAG into `repo_dir` first if not already present there. Answer sentences whose
-    human `factuality` label is `"Challenging to determine"` (neither `"Supported"` nor
-    `"Not Supported"`) are dropped, since they carry no clean binary ground truth.
+    Answer sentences whose human `factuality` label is `"Challenging to determine"` (neither
+    `"Supported"` nor `"Not Supported"`) are dropped, since they carry no clean binary ground
+    truth.
 
     Parameters
     ----------
     repo_dir : str
-        Directory holding (or to hold) MEMERAG's data and prompts; see `download_dataset.py`.
+        Directory holding MEMERAG's data and prompts, downloaded beforehand via
+        `download_dataset.py`.
 
     Returns
     -------
@@ -33,7 +34,6 @@ def load_memerag_dataset(repo_dir: str = str(DEFAULT_REPO_DIR)) -> pd.DataFrame:
         `factuality` (human ground-truth label, encoded as `1` for `"Supported"` and `0` for
         `"Not Supported"`), `fine_grained_factuality`, `relevance`.
     """
-    download_memerag(Path(repo_dir))
     data_dir = Path(repo_dir) / "data" / "memerag"
     rows = []
     for language in LANGUAGES:
@@ -80,8 +80,6 @@ def build_example_id(row: pd.Series) -> str:
 def load_prompt_templates(prompt_variant: str, repo_dir: str = str(DEFAULT_REPO_DIR)) -> Tuple[Template, Template]:
     """Load MEMERAG's Jinja2 system/task judge prompt templates for one prompting strategy.
 
-    Downloads MEMERAG into `repo_dir` first if not already present there.
-
     Parameters
     ----------
     prompt_variant : str
@@ -89,7 +87,8 @@ def load_prompt_templates(prompt_variant: str, repo_dir: str = str(DEFAULT_REPO_
         `src/prompts/` subdirectories. `"ag_cot"` (annotation guidelines + chain-of-thought) is
         MEMERAG's best-performing strategy.
     repo_dir : str
-        Directory holding (or to hold) MEMERAG's data and prompts; see `download_dataset.py`.
+        Directory holding MEMERAG's data and prompts, downloaded beforehand via
+        `download_dataset.py`.
 
     Returns
     -------
@@ -98,7 +97,6 @@ def load_prompt_templates(prompt_variant: str, repo_dir: str = str(DEFAULT_REPO_
     """
     if prompt_variant not in PROMPT_VARIANTS:
         raise ValueError(f"'prompt_variant' must be one of {PROMPT_VARIANTS}; got {prompt_variant!r}.")
-    download_memerag(Path(repo_dir))
     prompt_dir = Path(repo_dir) / "src" / "prompts" / prompt_variant
     environment = Environment(loader=FileSystemLoader(prompt_dir), autoescape=True)
     system_template = environment.get_template("sys_prompt.md")

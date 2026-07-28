@@ -63,13 +63,17 @@ Install dependencies:
 pip install -r scripts/requirements.txt
 ```
 
-Then, from the repository root, generate the labels. The script downloads MEMERAG's per-sentence data and judge
-prompt templates automatically on first use; `scripts/download_dataset.py` can also be run standalone
-(`python scripts/download_dataset.py --output-dir data/MEMERAG`) to pre-download without doing anything else.
+Then, from the repository root, download MEMERAG's per-sentence data and judge prompt templates:
+
+```bash
+python scripts/download_dataset.py --output-dir data/MEMERAG
+```
+
+Finally, generate the labels:
 
 ```bash
 export OPENAI_API_KEY=...
-python scripts/annotate_memerag.py --prompt-variant ag_cot --model gpt-5.4-mini \
+python scripts/annotate_memerag.py --prompt-variant ag_cot --model gpt-5.4 \
     --output memerag_llm_judge.jsonl
 ```
 
@@ -77,17 +81,19 @@ Requires an OpenAI API key set as `OPENAI_API_KEY`. Checkpoints to `--output`: e
 and flushed to disk immediately after every API call, so the run can be resumed if accidentally interrupted. This
 skips entries already present in the output file. Transient API errors (rate limits, 5xx) are retried with
 exponential backoff (`--base-delay`, `--max-retries`); non-retryable errors and unparseable completions are skipped.
+The judge is queried at zero temperature for deterministic labels, and completions are capped at `--max-output-tokens`
+(default 500) tokens.
 
 `ag_cot` (annotation guidelines + chain-of-thought) is MEMERAG's best-performing prompting strategy and is the
-default, but all 4 are supported via `--prompt-variant` (`zero_shot`, `cot`, `ag`, `ag_cot`). `cot` and `ag_cot` ask
-the model to write a free-text `<rationale>` block before its label, so their completions run longer than
-`zero_shot` / `ag`, which only ask for the label.
+default. All 4 variants are supported via `--prompt-variant` (`zero_shot`, `cot`, `ag`, `ag_cot`). `cot` and `ag_cot`
+ask the model to write a free-text `<rationale>` block before its label, so their completions run longer. `zero_shot`
+and `ag` only ask for the label.
 
 Pass `--limit N` to annotate only the first N sentences, e.g. as a pilot run to sanity-check the actual completion
 length before committing to a full run:
 
 ```bash
-python scripts/annotate_memerag.py --prompt-variant ag_cot --model gpt-5.4-mini \
+python scripts/annotate_memerag.py --prompt-variant ag_cot --model gpt-5.4 \
     --limit 20 --output pilot.jsonl
 ```
 
@@ -97,7 +103,7 @@ Requires a Hugging Face access token with write access, set as `HF_TOKEN` or via
 
 ```bash
 export HF_TOKEN=...
-python scripts/annotate_memerag.py --prompt-variant ag_cot --model gpt-5.4-mini \
+python scripts/annotate_memerag.py --prompt-variant ag_cot --model gpt-5.4 \
     --output memerag_llm_judge.jsonl --push-to-hub
 ```
 

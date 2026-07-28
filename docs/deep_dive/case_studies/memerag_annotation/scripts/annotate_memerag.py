@@ -87,8 +87,7 @@ def annotate_dataset(
     prompt_variant: str,
     model: str,
     output_path: Path,
-    temperature: Optional[float] = None,
-    top_p: Optional[float] = None,
+    max_output_tokens: int = 500,
     max_retries: int = 3,
     base_delay: float = 2.0,
     sleep: float = 0.3,
@@ -103,17 +102,15 @@ def annotate_dataset(
     dataset : pandas.DataFrame
         Output of `load_memerag_dataset` (optionally row-limited for a pilot run).
     repo_dir : str
-        Directory holding (or to download) MEMERAG's data and prompts; see `download_dataset.py`.
+        Directory holding MEMERAG's data and prompts, downloaded beforehand via `download_dataset.py`.
     prompt_variant : str
         One of `"zero_shot"`, `"cot"`, `"ag"`, `"ag_cot"`.
     model : str
-        OpenAI model name to call as the judge, e.g. `"gpt-5.4-mini"`.
+        OpenAI model name to call as the judge, e.g. `"gpt-5.4"`.
     output_path : Path
         Append-only JSONL checkpoint file.
-    temperature : Optional[float]
-        Sampling temperature. Omitted from the request when `None`.
-    top_p : Optional[float]
-        Nucleus sampling parameter. Omitted from the request when `None`.
+    max_output_tokens : int
+        Maximum number of completion tokens allowed per request.
     max_retries : int
         Maximum attempts per sentence, covering both transient API errors and unparseable output.
     base_delay : float
@@ -129,11 +126,7 @@ def annotate_dataset(
     client = openai.OpenAI()
     system_template, task_template = load_prompt_templates(prompt_variant, repo_dir)
 
-    sampling_kwargs: Dict[str, float] = {}
-    if temperature is not None:
-        sampling_kwargs["temperature"] = temperature
-    if top_p is not None:
-        sampling_kwargs["top_p"] = top_p
+    sampling_kwargs: Dict[str, float] = {"temperature": 0.0, "max_completion_tokens": max_output_tokens}
 
     example_ids = dataset.apply(build_example_id, axis=1)
     processed = load_checkpoint(output_path)
@@ -217,13 +210,17 @@ def _parse_args():
     parser.add_argument(
         "--repo-dir",
         default=str(DEFAULT_REPO_DIR),
-        help="Directory holding (or to download) MEMERAG's data and prompts.",
+        help="Directory holding MEMERAG's data and prompts, downloaded beforehand via download_dataset.py.",
     )
     parser.add_argument("--prompt-variant", default="ag_cot", choices=["zero_shot", "cot", "ag", "ag_cot"])
-    parser.add_argument("--model", default="gpt-5.4-mini", help="OpenAI model name to call as the judge.")
-    parser.add_argument("--temperature", type=float, default=None)
-    parser.add_argument("--top-p", type=float, default=None)
+    parser.add_argument("--model", default="gpt-5.4", help="OpenAI model name to call as the judge.")
     parser.add_argument("--limit", type=int, default=None, help="Annotate only the first N sentences (pilot run).")
+    parser.add_argument(
+        "--max-output-tokens",
+        type=int,
+        default=500,
+        help="Maximum number of completion tokens allowed per request. (default: 500)",
+    )
     parser.add_argument(
         "--output",
         type=Path,
@@ -274,8 +271,7 @@ if __name__ == "__main__":
         args.prompt_variant,
         args.model,
         args.output,
-        temperature=args.temperature,
-        top_p=args.top_p,
+        max_output_tokens=args.max_output_tokens,
         max_retries=args.max_retries,
         base_delay=args.base_delay,
         sleep=args.sleep,
