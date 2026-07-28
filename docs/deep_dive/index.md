@@ -12,9 +12,10 @@ The scientific validation notebooks verify statistical properties of GLIDE's alg
 
 ## Case Studies
 
-The case studies apply GLIDE end-to-end to real benchmarks, using an LLM judge as the proxy annotator. Each notebook demonstrates a complete pipeline: loading a public dataset, running GLIDE's sampling and estimation workflows, verifying coverage validity, and quantifying efficiency gains over classical baselines. They address the central empirical question: do GLIDE's debiasing guarantees hold on realistic data, and how large is the reduction in confidence interval width relative to using human labels alone?
+The case studies apply GLIDE end-to-end to real benchmarks, using an automatic proxy annotator in place of human labels. Each notebook demonstrates a complete pipeline: loading a public dataset, running GLIDE's sampling and estimation workflows, verifying coverage validity, and quantifying efficiency gains over classical baselines. They address the central empirical question: do GLIDE's debiasing guarantees hold on realistic data, and how large is the reduction in confidence interval width relative to using human labels alone?
 
 | Task | Workflows | Notebook |
 |---|---|---|
 | Agentic safety evaluation (R-Judge) | Uniform PPI++, Stratified PPI++, ASI | [Agentic System Evaluation](case_studies/r_judge.ipynb) |
 | Text-to-SQL accuracy estimation (Spider) | Stratified PPI++ | [Text-to-SQL Accuracy Estimation](case_studies/spider.ipynb) |
+| RAG answer faithfulness estimation (ExpertQA) | Stratified PPI++ | [RAG Answer Faithfulness Estimation](case_studies/expertqa.ipynb) |
