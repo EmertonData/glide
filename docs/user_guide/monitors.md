@@ -144,7 +144,7 @@ Rather than commit to one $\lambda$, mix over a **folded Gaussian** density of s
 
 $$W_t = \int_0^\infty W_t(\lambda) \cdot \frac{2}{\sqrt{2\pi\rho^2}}\exp\!\left(-\frac{\lambda^2}{2\rho^2}\right) d\lambda.$$
 
-A mixture of nonnegative supermartingales, each starting at $1$, is itself a nonnegative supermartingale starting at $1$, so Ville's inequality applies for any choice of $\rho > 0$; the scale determines the tightness of downstream bounds. Carrying out the Gaussian integral and inverting $W_t \ge 1/\delta$ for the largest deviation still consistent with $H_0$, we can obtain the anytime-valid lower bound on the running risk after $t$ batches with a closed form,
+A mixture of nonnegative supermartingales, each starting at $1$, is itself a nonnegative supermartingale starting at $1$, so Ville's inequality applies for any choice of $\rho > 0$; the scale determines the tightness of downstream bounds. Carrying out the Gaussian integral and inverting $W_t \ge 1/\delta$ for the largest deviation still consistent with $H_0$, we can obtain the anytime-valid lower bound on the running risk after $t$ batches with a closed form (see [[4](#ref-4), Proposition B.2]),
 
 $$L_t = \bar{R}_t - \sqrt{ \frac{2(\nu_t \rho^2 + 1)}{t^2 \rho^2} \log\!\left(1 + \frac{\sqrt{\nu_t \rho^2 + 1}}{2\delta}\right) }.$$
 
@@ -156,7 +156,7 @@ No anytime-valid boundary can be tight at every batch: tightening it at one hori
 
 $$\rho^2 = \frac{-2\log(2\delta) + \log\bigl(-2\log(2\delta) + 1\bigr)}{\nu_{t^\star}}$$
 
-makes $L_t$ tightest at a user-chosen target batch $t^\star$. Note, however, that the penalty for choosing a different target than needed is generally mild in practice.
+(see [[4](#ref-4), Equation (50)], used here with a doubled miscoverage $2\delta$ since this is a one-sided rather than two-sided confidence sequence) makes $L_t$ tightest at a user-chosen target batch $t^\star$. Note, however, that the penalty for choosing a different target than needed is generally mild in practice.
 
 The above boundary's width scales as $\sqrt{\nu_t \log \nu_t}/t$, shrinking with the actual precision of the per-batch estimates.
 
