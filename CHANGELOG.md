@@ -9,6 +9,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 ## [Next release]
 
 ### ✨ Added
+- RAG answer faithfulness (MEMERAG) case study in the documentation.
 
 ### 🔄 Changed
 - Renamed `n_total` to `n_samples` in `glide.simulators` dataset generators.

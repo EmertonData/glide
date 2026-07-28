@@ -157,8 +157,10 @@ def encode_factuality_label(label: str) -> int:
 def extract_factuality_label(llm_output: str) -> Optional[str]:
     """Extract the "Supported" / "Not Supported" label from a raw LLM completion.
 
-    Mirrors MEMERAG's own `extract_answer_factuality`: looks inside `<answer>` tags first,
-    falls back to `<rationale>` tags, then to fuzzy substring matching.
+    Mirrors MEMERAG's own `extract_answer_factuality`: checks `<answer>` tags first. When an
+    `<answer>` tag is found but its content isn't a clean label, checks `<rationale>` tags next.
+    When no `<answer>` tag is found, falls back directly to fuzzy substring matching over the
+    raw output.
 
     Parameters
     ----------
