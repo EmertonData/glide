@@ -44,19 +44,25 @@ arXiv IDs use `YYMM.NNNNN` format — the YYMM prefix encodes the submission yea
 
 **Longer window (> 3 days):** for each month in scope (from the Date range section above), fetch `https://arxiv.org/list/stat/YYYY-MM?skip=0&show=2000` — where `YYYY-MM` is the four-digit year and two-digit month (e.g., `2025-02` for February 2025). If the window spans multiple months, fire all fetches in a **single message**. Extract all paper entries: arXiv ID, title, authors, and submission date. Date filtering to the exact window happens in Step 5.
 
+> Note: for short windows, also fetch `https://arxiv.org/list/stat.ME/recent?skip=0&show=2000` and `https://arxiv.org/list/stat.ML/recent?skip=0&show=2000` in the same message as the `stat/recent` fetch. WebFetch summarises each listing rather than returning it whole, and the three listings surface *different* subsets of the same batch — several in-window papers appeared only in stat.ME or stat.ML. Treat the union as the batch.
+
 > Note: the monthly listing is unreliable for the *current* month's most recent days. WebFetch summarises only the beginning of the listing (oldest IDs of the month), so late-month / recent submissions never surface no matter the `skip` value. When the window's end is within the last few days of today (a recent window that happens to exceed 3 days), do NOT rely on the monthly listing — instead use the `stat/recent` listing (covers the last ~3 announcement days) plus the Step 2–3 searches ordered by `-announced_date_first` (which surface the newest papers first) as the authoritative sources. Reserve the monthly listing for windows fully in past months.
 
 ## Step 2 — Parallel topic searches
 
 In a **single message**, fire all 5 WebFetch calls simultaneously:
 
-1. `https://arxiv.org/search/?query=prediction-powered+inference&searchtype=all&start=0&order=-announced_date_first`
-2. `https://arxiv.org/search/?query=active+statistical+inference&searchtype=all&start=0&order=-announced_date_first`
-3. `https://arxiv.org/search/?query=semi-supervised+inference+debiasing&searchtype=all&start=0&order=-announced_date_first`
-4. `https://arxiv.org/search/?query=LLM+annotation+bias+correction+inference&searchtype=all&start=0&order=-announced_date_first`
-5. `https://arxiv.org/search/?query=proxy+labels+imputation+inference&searchtype=all&start=0&order=-announced_date_first`
+1. `https://arxiv.org/search/?query=%22prediction-powered+inference%22&searchtype=abstract&start=0&order=-announced_date_first`
+2. `https://arxiv.org/search/?query=%22active+statistical+inference%22&searchtype=abstract&start=0&order=-announced_date_first`
+3. `https://arxiv.org/search/?query=%22semi-supervised+inference%22&searchtype=abstract&start=0&order=-announced_date_first`
+4. `https://arxiv.org/search/?query=%22proxy+labels%22+OR+%22LLM+annotations%22+OR+%22surrogate+outcomes%22&searchtype=abstract&start=0&order=-announced_date_first`
+5. `https://arxiv.org/search/?query=%22confidence+sequence%22+OR+%22anytime-valid%22&searchtype=abstract&start=0&order=-announced_date_first`
 
 For each result extract: arXiv ID, title, authors, submission date.
+
+> Note: use `searchtype=abstract` with the phrase in `%22`…`%22` quotes, not `searchtype=all` with a bare term list. `searchtype=all` matches each word independently across the full text and returns almost pure noise (a query for "prediction-powered inference" returned gravitational-lensing and video-segmentation papers, and zero actual PPI papers). The quoted-abstract form returns a clean, dense list of genuine hits.
+
+> Note: do NOT use the advanced-search URL form (`terms-0-operator=AND&terms-0-term=…&terms-0-field=abstract`). It returns the arXiv search *help page* rather than results. The simple `query=…&searchtype=abstract` form above is the one that works.
 
 ## Step 3 — Parallel author searches
 
