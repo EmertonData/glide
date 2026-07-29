@@ -238,6 +238,46 @@
         min-height: auto;
       }
     }
+
+    .slider-group {
+      margin-bottom: 1rem;
+    }
+
+    .slider-group label {
+      display: flex;
+      justify-content: space-between;
+      font-weight: 600;
+      font-size: 0.85rem;
+      color: #212529;
+      margin-bottom: 0.2rem;
+    }
+
+    .slider-value {
+      font-family: 'Space Mono', monospace;
+      color: #103050;
+    }
+
+    .simulator-chart-wrap {
+      background-color: rgba(255, 255, 255, 0.7);
+      border-radius: 0.4rem;
+      padding: 1rem;
+      margin-bottom: 1rem;
+    }
+
+    .readout-block {
+      font-family: 'Space Mono', monospace;
+      background-color: #212529;
+      color: #f8f9fa;
+      border-radius: 0.4rem;
+      padding: 0.9rem 1.1rem;
+      font-size: 0.85rem;
+      line-height: 1.7;
+    }
+
+    .readout-block .readout-highlight {
+      color: #ffd43b;
+      font-weight: 700;
+    }
   </style>
 </head>
 
@@ -360,10 +400,192 @@
           </button>
         </div>
 
+        <!-- SIMULATOR -->
+        <div class="section-heading">Try it yourself</div>
+        <div class="row g-3">
+          <div class="col-sm-6">
+            <div class="slider-group">
+              <label for="totalSize">
+                Total Evaluation Dataset Size (N)
+                <span class="slider-value" id="totalSizeValue"></span>
+              </label>
+              <input type="range" class="form-range" id="totalSize" min="200" max="10000" step="100" value="3300" />
+            </div>
+            <div class="slider-group">
+              <label for="humanSize">
+                Human-Labeled Sample Size (n)
+                <span class="slider-value" id="humanSizeValue"></span>
+              </label>
+              <input type="range" class="form-range" id="humanSize" min="20" max="1000" step="5" value="265" />
+            </div>
+            <div class="slider-group">
+              <label for="correlation">
+                Human/Judge Correlation
+                <span class="slider-value" id="correlationValue"></span>
+              </label>
+              <input type="range" class="form-range" id="correlation" min="0" max="1" step="0.01" value="0.6" />
+            </div>
+          </div>
+          <div class="col-sm-6">
+            <div class="slider-group">
+              <label for="trueMean">
+                Observed Human Accuracy
+                <span class="slider-value" id="trueMeanValue"></span>
+              </label>
+              <input type="range" class="form-range" id="trueMean" min="0.50" max="0.99" step="0.01" value="0.77" />
+            </div>
+            <div class="slider-group">
+              <label for="proxyMean">
+                Naive LLM Judge Score
+                <span class="slider-value" id="proxyMeanValue"></span>
+              </label>
+              <input type="range" class="form-range" id="proxyMean" min="0.50" max="0.99" step="0.01" value="0.76" />
+            </div>
+          </div>
+        </div>
+
+        <div class="simulator-chart-wrap">
+          <canvas id="ppiChart" height="200"></canvas>
+        </div>
+
+        <div class="readout-block" id="simulatorReadout"></div>
+
       </div><!-- /main -->
 
     </div><!-- /row -->
   </div><!-- /container -->
+
+  <!-- Chart.js -->
+  <script
+    src="https://cdn.jsdelivr.net/npm/chart.js@4.5.1/dist/chart.umd.min.js"
+    integrity="sha384-jb8JQMbMoBUzgWatfe6COACi2ljcDdZQ2OxczGA3bGNeWe+6DChMTBJemed7ZnvJ"
+    crossorigin="anonymous"
+  ></script>
+  <!-- chartjs-chart-error-bars -->
+  <script
+    src="https://cdn.jsdelivr.net/npm/chartjs-chart-error-bars@4.4.5/build/index.umd.min.js"
+    integrity="sha384-pmEzimiQMD67BbR0zE+ss0ugx98UAGIaiNlaKtGz7BBQ3UaT69z1CN323+oCogy0"
+    crossorigin="anonymous"
+  ></script>
+  <script type="module">
+    import { simulate } from './ppi.js';
+
+    const sliders = {
+      totalSize: document.getElementById('totalSize'),
+      humanSize: document.getElementById('humanSize'),
+      trueMean: document.getElementById('trueMean'),
+      proxyMean: document.getElementById('proxyMean'),
+      correlation: document.getElementById('correlation'),
+    };
+
+    const valueLabels = {
+      totalSize: document.getElementById('totalSizeValue'),
+      humanSize: document.getElementById('humanSizeValue'),
+      trueMean: document.getElementById('trueMeanValue'),
+      proxyMean: document.getElementById('proxyMeanValue'),
+      correlation: document.getElementById('correlationValue'),
+    };
+
+    const readout = document.getElementById('simulatorReadout');
+    const barColors = ['#adb5bd', '#f0c020', '#103050'];
+    const barBorderColors = ['#6c757d', '#b8860b', '#0a2238'];
+    let chart;
+
+    function readParams() {
+      return {
+        totalSize: Number(sliders.totalSize.value),
+        humanSize: Number(sliders.humanSize.value),
+        trueMean: Number(sliders.trueMean.value),
+        proxyMean: Number(sliders.proxyMean.value),
+        correlation: Number(sliders.correlation.value),
+      };
+    }
+
+    function clampHumanSize(totalSize) {
+      const step = Number(sliders.humanSize.step);
+      const maxHumanSize = totalSize - step;
+      sliders.humanSize.max = maxHumanSize;
+      if (Number(sliders.humanSize.value) > maxHumanSize) {
+        sliders.humanSize.value = maxHumanSize;
+      }
+    }
+
+    function updateValueLabels(params) {
+      valueLabels.totalSize.textContent = params.totalSize;
+      valueLabels.humanSize.textContent = params.humanSize;
+      valueLabels.trueMean.textContent = `${Math.round(params.trueMean * 100)}%`;
+      valueLabels.proxyMean.textContent = `${Math.round(params.proxyMean * 100)}%`;
+      valueLabels.correlation.textContent = params.correlation.toFixed(2);
+    }
+
+    function updateChart(result) {
+      const data = {
+        labels: ['Human only', 'Judge only', 'PPI'],
+        datasets: [
+          {
+            label: 'Estimate (95% CI)',
+            data: [
+              {
+                y: result.humanOnly.mean,
+                yMin: result.humanOnly.mean - result.humanOnly.halfWidth,
+                yMax: result.humanOnly.mean + result.humanOnly.halfWidth,
+              },
+              {
+                y: result.judgeOnly.mean,
+                yMin: result.judgeOnly.mean - result.judgeOnly.halfWidth,
+                yMax: result.judgeOnly.mean + result.judgeOnly.halfWidth,
+              },
+              {
+                y: result.ppi.mean,
+                yMin: result.ppi.mean - result.ppi.halfWidth,
+                yMax: result.ppi.mean + result.ppi.halfWidth,
+              },
+            ],
+            backgroundColor: barColors,
+            borderColor: barBorderColors,
+            borderWidth: 1,
+          },
+        ],
+      };
+
+      if (!chart) {
+        chart = new Chart(document.getElementById('ppiChart').getContext('2d'), {
+          type: 'barWithErrorBars',
+          data,
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: { y: { min: 0, max: 1, title: { display: true, text: 'Accuracy' } } },
+          },
+        });
+      } else {
+        chart.data = data;
+        chart.update();
+      }
+    }
+
+    function updateReadout(result) {
+      readout.innerHTML = `
+        PPI estimate: <span class="readout-highlight">${(result.ppi.mean * 100).toFixed(1)}% &plusmn; ${(result.ppi.halfWidth * 100).toFixed(1)}%</span> (95% confidence interval)<br />
+        Human-only half-width: ${(result.humanOnly.halfWidth * 100).toFixed(1)}%<br />
+        Power multiplier: ${(result.powerMultiplier * 100).toFixed(0)}%<br />
+        Effective sample size: <span class="readout-highlight">${result.effectiveSampleSize}</span>
+      `;
+    }
+
+    function render() {
+      clampHumanSize(Number(sliders.totalSize.value));
+      const params = readParams();
+      updateValueLabels(params);
+      const result = simulate(params);
+      updateChart(result);
+      updateReadout(result);
+    }
+
+    Object.values(sliders).forEach((slider) => slider.addEventListener('input', render));
+    document.addEventListener('DOMContentLoaded', render);
+  </script>
 
   <script>
     function copyInstall(btn) {

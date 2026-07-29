@@ -49,6 +49,9 @@ branch:
 	@test -n "$(name)" || (echo "Usage: make branch name=<branch-name>"; exit 1)
 	git checkout main && git pull && git checkout -b $(name)
   
+landing-tests:
+	node --test docs/landing/tests/*.mjs
+
 test-notebooks:
 	@find docs -name "*.ipynb" ! -path "*/generated/*" | while read notebook; do \
 		echo "Testing $$notebook..."; \
