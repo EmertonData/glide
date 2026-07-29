@@ -247,14 +247,26 @@
       display: flex;
       justify-content: space-between;
       font-weight: 600;
-      font-size: 0.85rem;
+      font-size: 1rem;
       color: #212529;
       margin-bottom: 0.2rem;
+    }
+
+    .slider-group .form-text {
+      font-size: 0.95rem;
     }
 
     .slider-value {
       font-family: 'Space Mono', monospace;
       color: #103050;
+    }
+
+    #correlation.form-range::-webkit-slider-runnable-track {
+      background: var(--correlation-track, var(--bs-secondary-bg));
+    }
+
+    #correlation.form-range::-moz-range-track {
+      background: var(--correlation-track, var(--bs-secondary-bg));
     }
 
     .simulator-chart-wrap {
@@ -390,58 +402,46 @@
           <li>Works for any metric, any AI system, any unstructured output requiring annotation</li>
         </ul>
 
-        <!-- INSTALL -->
-        <div class="section-heading">Get started</div>
-        <div class="install-block">
-          <span>pip install glide-py</span>
-          <button class="copy-btn" title="Copy to clipboard" onclick="copyInstall(this)">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
-              <path d="M4 1.5H3a2 2 0 0 0-2 2V14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V3.5a2 2 0 0 0-2-2h-1v1h1a1 1 0 0 1 1 1V14a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V3.5a1 1 0 0 1 1-1h1z"/>
-              <path d="M9.5 1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-3a.5.5 0 0 1-.5-.5v-1a.5.5 0 0 1 .5-.5zm-3-1A1.5 1.5 0 0 0 5 1.5v1A1.5 1.5 0 0 0 6.5 4h3A1.5 1.5 0 0 0 11 2.5v-1A1.5 1.5 0 0 0 9.5 0z"/>
-            </svg>
-          </button>
-        </div>
-
         <!-- SIMULATOR -->
         <div class="section-heading">Try it yourself</div>
         <div class="row g-3">
           <div class="col-sm-5">
             <div class="slider-group">
               <label for="totalSize">
-                Total Evaluation Dataset Size
+                Sample Size
                 <span class="slider-value" id="totalSizeValue"></span>
               </label>
-              <input type="range" class="form-range" id="totalSize" min="200" max="10000" step="100" value="5000" />
+              <input type="range" class="form-range" id="totalSize" min="50" max="2000" step="50" value="1000" />
             </div>
             <div class="slider-group">
               <label for="humanSize">
-                Human-Labeled Sample Size
+                Number of Ground Truths
                 <span class="slider-value" id="humanSizeValue"></span>
               </label>
-              <input type="range" class="form-range" id="humanSize" min="20" max="1000" step="5" value="500" />
+              <input type="range" class="form-range" id="humanSize" min="20" max="1995" step="5" value="500" />
             </div>
             <div class="slider-group">
               <label for="trueMean">
-                Human Label Average
+                Ground Truth Estimate
                 <span class="slider-value" id="trueMeanValue"></span>
               </label>
               <input type="range" class="form-range" id="trueMean" min="0.01" max="0.99" step="0.01" value="0.65" />
             </div>
             <div class="slider-group">
               <label for="proxyMean">
-                Proxy LLM Judge Average
+                Proxy Estimate
                 <span class="slider-value" id="proxyMeanValue"></span>
               </label>
               <input type="range" class="form-range" id="proxyMean" min="0.01" max="0.99" step="0.01" value="0.62" />
             </div>
             <div class="slider-group">
               <label for="correlation">
-                Human/Judge Correlation
+                Ground Truth/Proxy Correlation
                 <span class="slider-value" id="correlationValue"></span>
               </label>
               <input type="range" class="form-range" id="correlation" min="0" max="1" step="0.01" value="0.85" />
               <div class="form-text">
-                Note : The range of possible correlations depends on the Human Label Average and Proxy LLM Judge Average values above.
+                Note : The range of possible correlations depends on the ground truth estimate and proxy estimate values above.
               </div>
             </div>
           </div>
@@ -453,6 +453,18 @@
         </div>
 
         <div class="readout-block" id="simulatorReadout"></div>
+
+        <!-- INSTALL -->
+        <div class="section-heading">Get started</div>
+        <div class="install-block">
+          <span>pip install glide-py</span>
+          <button class="copy-btn" title="Copy to clipboard" onclick="copyInstall(this)">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+              <path d="M4 1.5H3a2 2 0 0 0-2 2V14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V3.5a2 2 0 0 0-2-2h-1v1h1a1 1 0 0 1 1 1V14a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V3.5a1 1 0 0 1 1-1h1z"/>
+              <path d="M9.5 1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-3a.5.5 0 0 1-.5-.5v-1a.5.5 0 0 1 .5-.5zm-3-1A1.5 1.5 0 0 0 5 1.5v1A1.5 1.5 0 0 0 6.5 4h3A1.5 1.5 0 0 0 11 2.5v-1A1.5 1.5 0 0 0 9.5 0z"/>
+            </svg>
+          </button>
+        </div>
 
       </div><!-- /main -->
 
@@ -491,10 +503,11 @@
     };
 
     const readout = document.getElementById('simulatorReadout');
-    const pointColors = ['#adb5bd', '#f0c020', '#103050'];
-    const pointBorderColors = ['#6c757d', '#b8860b', '#0a2238'];
+    const pointColors = ['#103050', '#90caf9', '#ffd43b'];
+    const pointBorderColors = ['#0a2238', '#5aa9e6', '#b8860b'];
     let chart;
     let trueMeanValue = null;
+    let latestPoints = [];
 
     const trueMeanLinePlugin = {
       id: 'trueMeanLine',
@@ -533,18 +546,24 @@
       }
     }
 
+    function updateCorrelationTrack(min, max) {
+      const minPercent = min * 100;
+      const maxPercent = max * 100;
+      const gradient = `linear-gradient(to right, #ced4da 0%, #ced4da ${minPercent}%, #90caf9 ${minPercent}%, #90caf9 ${maxPercent}%, #ced4da ${maxPercent}%, #ced4da 100%)`;
+      sliders.correlation.style.setProperty('--correlation-track', gradient);
+    }
+
     function clampCorrelation(trueMean, proxyMean) {
       const { minCorrelation, maxCorrelation } = getCorrelationBounds(trueMean, proxyMean);
       const step = Number(sliders.correlation.step);
       const roundedMin = Math.max(0, Math.ceil(minCorrelation / step) * step);
       const roundedMax = Math.floor(maxCorrelation / step) * step;
-      sliders.correlation.min = roundedMin;
-      sliders.correlation.max = roundedMax;
       if (Number(sliders.correlation.value) < roundedMin) {
         sliders.correlation.value = roundedMin;
       } else if (Number(sliders.correlation.value) > roundedMax) {
         sliders.correlation.value = roundedMax;
       }
+      updateCorrelationTrack(roundedMin, roundedMax);
     }
 
     function updateValueLabels(params) {
@@ -579,9 +598,15 @@
       ];
     }
 
+    function buildPointMarkers(points) {
+      return points.map((point) => ({ y: point.y }));
+    }
+
     function updateChart(result) {
       trueMeanValue = result.humanOnly.mean;
       const points = buildPoints(result);
+      latestPoints = points;
+      const pointMarkers = buildPointMarkers(points);
 
       if (!chart) {
         chart = new Chart(document.getElementById('ppiChart').getContext('2d'), {
@@ -590,19 +615,26 @@
             labels: ['Human only', 'Judge only', 'PPI'],
             datasets: [
               {
-                label: 'Estimate (95% CI)',
-                data: points,
+                label: 'Point estimate',
+                data: pointMarkers,
                 showLine: false,
                 pointStyle: 'circle',
-                pointRadius: 10,
-                pointHoverRadius: 12,
+                pointRadius: 24,
+                pointHoverRadius: 28,
                 pointBackgroundColor: pointColors,
                 pointBorderColor: pointBorderColors,
-                pointBorderWidth: 2,
+                pointBorderWidth: 4,
+              },
+              {
+                label: 'Confidence interval (95%)',
+                data: points,
+                showLine: false,
+                pointRadius: 0,
+                pointHoverRadius: 0,
                 errorBarColor: pointBorderColors,
-                errorBarLineWidth: 3,
+                errorBarLineWidth: 5,
                 errorBarWhiskerColor: pointBorderColors,
-                errorBarWhiskerLineWidth: 2,
+                errorBarWhiskerLineWidth: 4,
                 errorBarWhiskerSize: 30,
               },
             ],
@@ -611,32 +643,54 @@
           options: {
             responsive: true,
             maintainAspectRatio: false,
-            plugins: { legend: { display: false } },
+            plugins: {
+              legend: { display: false },
+              tooltip: {
+                titleFont: { size: 16, weight: 'bold' },
+                bodyFont: { size: 15 },
+                callbacks: {
+                  labelColor(context) {
+                    return {
+                      backgroundColor: pointColors[context.dataIndex],
+                      borderColor: pointBorderColors[context.dataIndex],
+                    };
+                  },
+                  label(context) {
+                    const point = latestPoints[context.dataIndex];
+                    return [
+                      `Point estimate: ${point.y.toFixed(3)}`,
+                      `Lower bound (95% confidence): ${point.yMin.toFixed(3)}`,
+                      `Upper bound (95% confidence): ${point.yMax.toFixed(3)}`,
+                    ];
+                  },
+                },
+              },
+            },
             scales: {
               x: {
                 offset: true,
-                ticks: { font: { size: 14, weight: 'bold' } },
+                ticks: { font: { size: 20, weight: 'bold' } },
               },
               y: {
                 min: 0,
                 max: 1,
-                title: { display: true, text: 'Metric', font: { size: 14, weight: 'bold' } },
+                ticks: { font: { size: 18 } },
+                title: { display: true, text: 'Metric', font: { size: 20, weight: 'bold' } },
               },
             },
           },
         });
       } else {
-        chart.data.datasets[0].data = points;
+        chart.data.datasets[0].data = pointMarkers;
+        chart.data.datasets[1].data = points;
         chart.update();
       }
     }
 
-    function updateReadout(result) {
+    function updateReadout(result, params) {
       readout.innerHTML = `
-        PPI estimate: <span class="readout-highlight">${(result.ppi.mean * 100).toFixed(1)}% &plusmn; ${(result.ppi.halfWidth * 100).toFixed(1)}%</span> (95% confidence interval)<br />
-        Human-only half-width: ${(result.humanOnly.halfWidth * 100).toFixed(1)}%<br />
-        Power multiplier: ${(result.powerMultiplier * 100).toFixed(0)}%<br />
-        Effective sample size: <span class="readout-highlight">${result.effectiveSampleSize}</span>
+        Effective sample size: <span class="readout-highlight">${result.effectiveSampleSize}</span><br />
+        GLIDE's estimate is as precise as if you had <span class="readout-highlight">${result.effectiveSampleSize}</span> ground truth annotations, instead of the provided <span class="readout-highlight">${params.humanSize}</span>
       `;
     }
 
@@ -647,7 +701,7 @@
       updateValueLabels(params);
       const result = simulate(params);
       updateChart(result);
-      updateReadout(result);
+      updateReadout(result, params);
     }
 
     Object.values(sliders).forEach((slider) => slider.addEventListener('input', render));
