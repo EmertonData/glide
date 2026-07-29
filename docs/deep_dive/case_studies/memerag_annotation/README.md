@@ -18,8 +18,8 @@ tags:
 # MEMERAG Faithfulness LLM-Judge Labels
 
 This dataset extends [MEMERAG](https://github.com/amazon-science/MEMERAG) (Cruz Blandón et al., 2025, ACL 2025,
-[arXiv:2502.17163](https://arxiv.org/abs/2502.17163)) with LLM-judge faithfulness predictions from an OpenAI model,
-reusing MEMERAG's own data and judge prompt templates.
+[arXiv:2502.17163](https://arxiv.org/abs/2502.17163)) with LLM-judge faithfulness predictions from `gpt-5.4`, reusing
+MEMERAG's own data and judge prompt templates.
 
 ## Files
 
@@ -77,12 +77,8 @@ python scripts/annotate_memerag.py --prompt-variant ag_cot --model gpt-5.4 \
     --output memerag_llm_judge.jsonl
 ```
 
-Requires an OpenAI API key set as `OPENAI_API_KEY`. Checkpoints to `--output`: each record is keyed by `example_id`
-and flushed to disk immediately after every API call, so the run can be resumed if accidentally interrupted. This
-skips entries already present in the output file. Transient API errors (rate limits, 5xx) are retried with
-exponential backoff (`--base-delay`, `--max-retries`); non-retryable errors and unparseable completions are skipped.
-The judge is queried at zero temperature for deterministic labels, and completions are capped at `--max-output-tokens`
-(default 500) tokens.
+Requires an OpenAI API key set as `OPENAI_API_KEY`. Checkpoints to `--output` and can be safely interrupted and
+resumed. Run with `--help` for the full list of options (retries, temperature, output token cap).
 
 `ag_cot` (annotation guidelines + chain-of-thought) is MEMERAG's best-performing prompting strategy and is the
 default. All 4 variants are supported via `--prompt-variant` (`zero_shot`, `cot`, `ag`, `ag_cot`). `cot` and `ag_cot`
