@@ -37,6 +37,13 @@ test("simulate raises when trueMean is out of range", () => {
   );
 });
 
+test("simulate raises when correlation is out of range", () => {
+  assert.throws(
+    () => simulate({ totalSize: 100, humanSize: 10, trueMean: 0.7, proxyMean: 0.6, correlation: -0.5 }),
+    /'correlation' must be in \[0, 1\]/,
+  );
+});
+
 test("simulate clamps infeasible correlation", () => {
   const output = simulate({ totalSize: 100, humanSize: 10, trueMean: 0.6, proxyMean: 0.8, correlation: 1 });
   assert.ok(Number.isFinite(output.ppi.halfWidth));

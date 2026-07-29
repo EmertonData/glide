@@ -39,16 +39,21 @@ export function getCorrelationBounds(trueMean, proxyMean) {
  * @param {number} params.humanSize      Human-labeled subset size n, 0 < n < N (e.g. 265).
  * @param {number} params.trueMean       Human accuracy p in (0, 1).
  * @param {number} params.proxyMean      Judge accuracy q in (0, 1).
- * @param {number} params.correlation    Human/judge correlation rho in [-1, 1].
+ * @param {number} params.correlation    Human/judge correlation rho in [0, 1].
  * @returns {{humanOnly: {mean: number, halfWidth: number}, judgeOnly: {mean: number, halfWidth: number}, ppi: {mean: number, halfWidth: number}, effectiveSampleSize: number, powerMultiplier: number}}
  */
 export function simulate({ totalSize, humanSize, trueMean, proxyMean, correlation }) {
   if (!(humanSize > 0 && humanSize < totalSize)) {
     throw new Error(`'humanSize' must satisfy 0 < humanSize < totalSize; got ${humanSize}.`);
   }
-  for (const [name, value] of [["trueMean", trueMean], ["proxyMean", proxyMean]]) {
-    if (!(value > 0 && value < 1)) {
-      throw new Error(`'${name}' must be in (0, 1); got ${value}.`);
+  const validations = [
+    ["trueMean", trueMean, (value) => value > 0 && value < 1, "(0, 1)"],
+    ["proxyMean", proxyMean, (value) => value > 0 && value < 1, "(0, 1)"],
+    ["correlation", correlation, (value) => value >= 0 && value <= 1, "[0, 1]"],
+  ];
+  for (const [name, value, isValid, rangeDescription] of validations) {
+    if (!isValid(value)) {
+      throw new Error(`'${name}' must be in ${rangeDescription}; got ${value}.`);
     }
   }
 

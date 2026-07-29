@@ -1,5 +1,6 @@
 import json
 from pathlib import Path
+from typing import Dict
 
 import numpy as np
 
@@ -14,7 +15,7 @@ CASES = [
 ]
 
 
-def build_fixtures() -> dict:
+def build_fixtures() -> Dict:
     simulate_fixtures = []
     for case in CASES:
         human_size = int(case["humanSize"])

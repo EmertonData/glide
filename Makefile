@@ -24,7 +24,11 @@ unit-tests:
 functional-tests:
 	uv run pytest $(FUNCTIONAL_DIRS) -vsx
 
-tests: unit-tests functional-tests
+check-landing-fixtures:
+	uv run python docs/landing/tests/generate_fixtures.py
+	git diff --exit-code docs/landing/tests/fixtures.json
+
+tests: unit-tests functional-tests check-landing-fixtures
 
 coverage:
 	uv run pytest -vsx \
