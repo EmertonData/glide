@@ -894,7 +894,7 @@ dev = [
     { name = "prek", specifier = ">=0.4.10" },
     { name = "pytest", specifier = ">=9.1.1" },
     { name = "pytest-coverage", specifier = ">=0.0" },
-    { name = "ruff", specifier = ">=0.15.22" },
+    { name = "ruff", specifier = ">=0.16.0" },
     { name = "ty", specifier = ">=0.0.64" },
 ]
 doc = [
