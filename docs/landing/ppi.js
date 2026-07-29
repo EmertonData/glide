@@ -35,8 +35,8 @@ export function getCorrelationBounds(trueMean, proxyMean) {
  * Simulate the three estimators (human-only, judge-only, PPI) from population parameters.
  *
  * @param {Object} params
- * @param {number} params.totalSize      Total proxy-labeled dataset size N (e.g. 3300).
- * @param {number} params.humanSize      Human-labeled subset size n, 0 < n < N (e.g. 265).
+ * @param {number} params.totalSize      Total proxy-labeled dataset size N.
+ * @param {number} params.humanSize      Human-labeled subset size n, 0 < n < N.
  * @param {number} params.trueMean       Human accuracy p in (0, 1).
  * @param {number} params.proxyMean      Judge accuracy q in (0, 1).
  * @param {number} params.correlation    Human/judge correlation rho in [0, 1].
