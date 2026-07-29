@@ -1,13 +1,34 @@
 export const Z_SCORE_95 = 1.959963984540054;
 
-// Fréchet bounds: a covariance between two Bernoulli(p), Bernoulli(q) variables is feasible
-// only within [max(0, p + q - 1) - p*q, min(p, q) - p*q]. Clamp so impossible correlations
-// (e.g. rho = 1 with p != q) degrade gracefully instead of producing a negative variance.
-function clampCovariance(rawCovariance, trueMean, proxyMean) {
+function computeCovarianceBounds(trueMean, proxyMean) {
   const lowerCovariance = Math.max(0, trueMean + proxyMean - 1) - trueMean * proxyMean;
   const upperCovariance = Math.min(trueMean, proxyMean) - trueMean * proxyMean;
+  return { lowerCovariance, upperCovariance };
+}
+
+function clampCovariance(rawCovariance, trueMean, proxyMean) {
+  const { lowerCovariance, upperCovariance } = computeCovarianceBounds(trueMean, proxyMean);
   const clamped = Math.min(Math.max(rawCovariance, lowerCovariance), upperCovariance);
   return clamped;
+}
+
+/**
+ * Feasible human/judge correlation range for the given Bernoulli accuracies.
+ *
+ * @param {number} trueMean   Human accuracy p in (0, 1).
+ * @param {number} proxyMean  Judge accuracy q in (0, 1).
+ * @returns {{minCorrelation: number, maxCorrelation: number}} The Fréchet bounds on the correlation.
+ */
+export function getCorrelationBounds(trueMean, proxyMean) {
+  const trueVariance = trueMean * (1 - trueMean);
+  const proxyVariance = proxyMean * (1 - proxyMean);
+  const { lowerCovariance, upperCovariance } = computeCovarianceBounds(trueMean, proxyMean);
+  const standardDeviationProduct = Math.sqrt(trueVariance * proxyVariance);
+  const bounds = {
+    minCorrelation: lowerCovariance / standardDeviationProduct,
+    maxCorrelation: upperCovariance / standardDeviationProduct,
+  };
+  return bounds;
 }
 
 /**
@@ -37,22 +58,16 @@ export function simulate({ totalSize, humanSize, trueMean, proxyMean, correlatio
   const rawCovariance = correlation * Math.sqrt(trueVariance * proxyVariance);
   const labeledCovariance = clampCovariance(rawCovariance, trueMean, proxyMean);
 
-  // Power-tuned lambda (PPI++) with population moments: lambda* = cov / ((1 + n/N) * Var(f)).
   const factor = 1 + humanSize / numberUnlabeled;
   const tuningParameter = labeledCovariance / (factor * proxyVariance);
 
-  // PPI standard error: the asymptotic limit of glide's _compute_std_estimate with population
-  // variances. Var(Y - lambda*f) = Var(Y) - 2*lambda*Cov + lambda^2 * Var(f).
   const residualVariance = trueVariance - 2 * tuningParameter * labeledCovariance + tuningParameter ** 2 * proxyVariance;
   const ppiVariance = residualVariance / humanSize + (tuningParameter ** 2 * proxyVariance) / numberUnlabeled;
   const ppiStd = Math.sqrt(ppiVariance);
 
-  // Human-only (classical) and judge-only (naive: treats every proxy label as ground truth).
   const humanStd = Math.sqrt(trueVariance / humanSize);
   const judgeStd = Math.sqrt(proxyVariance / totalSize);
 
-  // Effective sample size, mirroring glide: floor(n * Var_classical / Var_ppi),
-  // with Var_classical = Var(Y)/n, hence floor(Var(Y) / Var_ppi).
   const effectiveSampleSize = Math.floor(trueVariance / ppiVariance);
 
   const result = {

@@ -262,6 +262,8 @@
       border-radius: 0.4rem;
       padding: 1rem;
       margin-bottom: 1rem;
+      height: 380px;
+      box-sizing: border-box;
     }
 
     .readout-block {
@@ -403,49 +405,51 @@
         <!-- SIMULATOR -->
         <div class="section-heading">Try it yourself</div>
         <div class="row g-3">
-          <div class="col-sm-6">
+          <div class="col-sm-5">
             <div class="slider-group">
               <label for="totalSize">
-                Total Evaluation Dataset Size (N)
+                Total Evaluation Dataset Size
                 <span class="slider-value" id="totalSizeValue"></span>
               </label>
-              <input type="range" class="form-range" id="totalSize" min="200" max="10000" step="100" value="3300" />
+              <input type="range" class="form-range" id="totalSize" min="200" max="10000" step="100" value="5000" />
             </div>
             <div class="slider-group">
               <label for="humanSize">
-                Human-Labeled Sample Size (n)
+                Human-Labeled Sample Size
                 <span class="slider-value" id="humanSizeValue"></span>
               </label>
-              <input type="range" class="form-range" id="humanSize" min="20" max="1000" step="5" value="265" />
+              <input type="range" class="form-range" id="humanSize" min="20" max="1000" step="5" value="500" />
+            </div>
+            <div class="slider-group">
+              <label for="trueMean">
+                Human Label Average
+                <span class="slider-value" id="trueMeanValue"></span>
+              </label>
+              <input type="range" class="form-range" id="trueMean" min="0.01" max="0.99" step="0.01" value="0.65" />
+            </div>
+            <div class="slider-group">
+              <label for="proxyMean">
+                Proxy LLM Judge Average
+                <span class="slider-value" id="proxyMeanValue"></span>
+              </label>
+              <input type="range" class="form-range" id="proxyMean" min="0.01" max="0.99" step="0.01" value="0.62" />
             </div>
             <div class="slider-group">
               <label for="correlation">
                 Human/Judge Correlation
                 <span class="slider-value" id="correlationValue"></span>
               </label>
-              <input type="range" class="form-range" id="correlation" min="0" max="1" step="0.01" value="0.6" />
+              <input type="range" class="form-range" id="correlation" min="0" max="1" step="0.01" value="0.8" />
+              <div class="form-text">
+                Note : The range of possible correlations depends on the Human Label Average and Proxy LLM Judge Average values above.
+              </div>
             </div>
           </div>
-          <div class="col-sm-6">
-            <div class="slider-group">
-              <label for="trueMean">
-                Observed Human Accuracy
-                <span class="slider-value" id="trueMeanValue"></span>
-              </label>
-              <input type="range" class="form-range" id="trueMean" min="0.50" max="0.99" step="0.01" value="0.77" />
-            </div>
-            <div class="slider-group">
-              <label for="proxyMean">
-                Naive LLM Judge Score
-                <span class="slider-value" id="proxyMeanValue"></span>
-              </label>
-              <input type="range" class="form-range" id="proxyMean" min="0.50" max="0.99" step="0.01" value="0.76" />
+          <div class="col-sm-7">
+            <div class="simulator-chart-wrap">
+              <canvas id="ppiChart"></canvas>
             </div>
           </div>
-        </div>
-
-        <div class="simulator-chart-wrap">
-          <canvas id="ppiChart" height="200"></canvas>
         </div>
 
         <div class="readout-block" id="simulatorReadout"></div>
@@ -468,7 +472,7 @@
     crossorigin="anonymous"
   ></script>
   <script type="module">
-    import { simulate } from './ppi.js';
+    import { simulate, getCorrelationBounds } from './ppi.js';
 
     const sliders = {
       totalSize: document.getElementById('totalSize'),
@@ -487,9 +491,28 @@
     };
 
     const readout = document.getElementById('simulatorReadout');
-    const barColors = ['#adb5bd', '#f0c020', '#103050'];
-    const barBorderColors = ['#6c757d', '#b8860b', '#0a2238'];
+    const pointColors = ['#adb5bd', '#f0c020', '#103050'];
+    const pointBorderColors = ['#6c757d', '#b8860b', '#0a2238'];
     let chart;
+    let trueMeanValue = null;
+
+    const trueMeanLinePlugin = {
+      id: 'trueMeanLine',
+      afterDatasetsDraw(chartInstance) {
+        if (trueMeanValue === null) return;
+        const { ctx, chartArea, scales } = chartInstance;
+        const y = scales.y.getPixelForValue(trueMeanValue);
+        ctx.save();
+        ctx.setLineDash([6, 4]);
+        ctx.lineWidth = 2;
+        ctx.strokeStyle = '#103050';
+        ctx.beginPath();
+        ctx.moveTo(chartArea.left, y);
+        ctx.lineTo(chartArea.right, y);
+        ctx.stroke();
+        ctx.restore();
+      },
+    };
 
     function readParams() {
       return {
@@ -510,6 +533,20 @@
       }
     }
 
+    function clampCorrelation(trueMean, proxyMean) {
+      const { minCorrelation, maxCorrelation } = getCorrelationBounds(trueMean, proxyMean);
+      const step = Number(sliders.correlation.step);
+      const roundedMin = Math.max(0, Math.ceil(minCorrelation / step) * step);
+      const roundedMax = Math.floor(maxCorrelation / step) * step;
+      sliders.correlation.min = roundedMin;
+      sliders.correlation.max = roundedMax;
+      if (Number(sliders.correlation.value) < roundedMin) {
+        sliders.correlation.value = roundedMin;
+      } else if (Number(sliders.correlation.value) > roundedMax) {
+        sliders.correlation.value = roundedMax;
+      }
+    }
+
     function updateValueLabels(params) {
       valueLabels.totalSize.textContent = params.totalSize;
       valueLabels.humanSize.textContent = params.humanSize;
@@ -518,49 +555,78 @@
       valueLabels.correlation.textContent = params.correlation.toFixed(2);
     }
 
+    function clampUnitInterval(value) {
+      return Math.min(1, Math.max(0, value));
+    }
+
+    function buildPoints(result) {
+      return [
+        {
+          y: result.humanOnly.mean,
+          yMin: clampUnitInterval(result.humanOnly.mean - result.humanOnly.halfWidth),
+          yMax: clampUnitInterval(result.humanOnly.mean + result.humanOnly.halfWidth),
+        },
+        {
+          y: result.judgeOnly.mean,
+          yMin: clampUnitInterval(result.judgeOnly.mean - result.judgeOnly.halfWidth),
+          yMax: clampUnitInterval(result.judgeOnly.mean + result.judgeOnly.halfWidth),
+        },
+        {
+          y: result.ppi.mean,
+          yMin: clampUnitInterval(result.ppi.mean - result.ppi.halfWidth),
+          yMax: clampUnitInterval(result.ppi.mean + result.ppi.halfWidth),
+        },
+      ];
+    }
+
     function updateChart(result) {
-      const data = {
-        labels: ['Human only', 'Judge only', 'PPI'],
-        datasets: [
-          {
-            label: 'Estimate (95% CI)',
-            data: [
-              {
-                y: result.humanOnly.mean,
-                yMin: result.humanOnly.mean - result.humanOnly.halfWidth,
-                yMax: result.humanOnly.mean + result.humanOnly.halfWidth,
-              },
-              {
-                y: result.judgeOnly.mean,
-                yMin: result.judgeOnly.mean - result.judgeOnly.halfWidth,
-                yMax: result.judgeOnly.mean + result.judgeOnly.halfWidth,
-              },
-              {
-                y: result.ppi.mean,
-                yMin: result.ppi.mean - result.ppi.halfWidth,
-                yMax: result.ppi.mean + result.ppi.halfWidth,
-              },
-            ],
-            backgroundColor: barColors,
-            borderColor: barBorderColors,
-            borderWidth: 1,
-          },
-        ],
-      };
+      trueMeanValue = result.humanOnly.mean;
+      const points = buildPoints(result);
 
       if (!chart) {
         chart = new Chart(document.getElementById('ppiChart').getContext('2d'), {
-          type: 'barWithErrorBars',
-          data,
+          type: 'lineWithErrorBars',
+          data: {
+            labels: ['Human only', 'Judge only', 'PPI'],
+            datasets: [
+              {
+                label: 'Estimate (95% CI)',
+                data: points,
+                showLine: false,
+                pointStyle: 'circle',
+                pointRadius: 10,
+                pointHoverRadius: 12,
+                pointBackgroundColor: pointColors,
+                pointBorderColor: pointBorderColors,
+                pointBorderWidth: 2,
+                errorBarColor: pointBorderColors,
+                errorBarLineWidth: 3,
+                errorBarWhiskerColor: pointBorderColors,
+                errorBarWhiskerLineWidth: 2,
+                errorBarWhiskerSize: 30,
+              },
+            ],
+          },
+          plugins: [trueMeanLinePlugin],
           options: {
             responsive: true,
             maintainAspectRatio: false,
             plugins: { legend: { display: false } },
-            scales: { y: { min: 0, max: 1, title: { display: true, text: 'Accuracy' } } },
+            scales: {
+              x: {
+                offset: true,
+                ticks: { font: { size: 14, weight: 'bold' } },
+              },
+              y: {
+                min: 0,
+                max: 1,
+                title: { display: true, text: 'Metric', font: { size: 14, weight: 'bold' } },
+              },
+            },
           },
         });
       } else {
-        chart.data = data;
+        chart.data.datasets[0].data = points;
         chart.update();
       }
     }
@@ -576,6 +642,7 @@
 
     function render() {
       clampHumanSize(Number(sliders.totalSize.value));
+      clampCorrelation(Number(sliders.trueMean.value), Number(sliders.proxyMean.value));
       const params = readParams();
       updateValueLabels(params);
       const result = simulate(params);

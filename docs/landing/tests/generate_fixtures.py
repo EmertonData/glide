@@ -6,10 +6,8 @@ import numpy as np
 from glide.estimators import ClassicalMeanEstimator, PPIMeanEstimator
 from glide.simulators import generate_binary_dataset
 
-Z_SCORE_95 = 1.959963984540054
+CONFIDENCE_LEVEL = 0.95
 
-# Each case mirrors the five simulator inputs. totalSize is large so glide's finite-sample
-# estimate and the analytical population limit in `simulate` agree within the test tolerances.
 CASES = [
     {"totalSize": 20000, "humanSize": 4000, "trueMean": 0.77, "proxyMean": 0.76, "correlation": 0.6},
     {"totalSize": 20000, "humanSize": 2000, "trueMean": 0.82, "proxyMean": 0.70, "correlation": 0.3},
@@ -29,13 +27,15 @@ def build_fixtures() -> dict:
         )
         y_true_masked = y_true.copy()
         y_true_masked[human_size:] = np.nan
-        ppi_result = PPIMeanEstimator().estimate(y_true_masked, y_proxy, power_tuning=True)
-        human_result = ClassicalMeanEstimator().estimate(y_true[:human_size])
+        ppi_result = PPIMeanEstimator().estimate(
+            y_true_masked, y_proxy, power_tuning=True, confidence_level=CONFIDENCE_LEVEL
+        )
+        human_result = ClassicalMeanEstimator().estimate(y_true[:human_size], confidence_level=CONFIDENCE_LEVEL)
         simulate_fixtures.append(
             {
                 "params": case,
-                "ppi_half_width": Z_SCORE_95 * ppi_result.std,
-                "human_half_width": Z_SCORE_95 * human_result.std,
+                "ppi_half_width": ppi_result.confidence_interval.width / 2,
+                "human_half_width": human_result.confidence_interval.width / 2,
                 "effective_sample_size": ppi_result.effective_sample_size,
             }
         )

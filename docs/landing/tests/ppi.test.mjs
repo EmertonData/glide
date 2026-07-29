@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { simulate } from "../ppi.js";
+import { simulate, getCorrelationBounds } from "../ppi.js";
 
 const fixtures = JSON.parse(readFileSync(new URL("./fixtures.json", import.meta.url)));
 
@@ -37,8 +37,20 @@ test("simulate raises when trueMean is out of range", () => {
   );
 });
 
-test("simulate clamps infeasible correlation to the Fréchet bound", () => {
+test("simulate clamps infeasible correlation", () => {
   const output = simulate({ totalSize: 100, humanSize: 10, trueMean: 0.6, proxyMean: 0.8, correlation: 1 });
   assert.ok(Number.isFinite(output.ppi.halfWidth));
   assert.ok(!Number.isNaN(output.ppi.halfWidth));
+});
+
+test("getCorrelationBounds for equal accuracies", () => {
+  const bounds = getCorrelationBounds(0.7, 0.7);
+  assert.ok(Math.abs(bounds.minCorrelation - -0.42857142857142866) < 1e-9);
+  assert.equal(bounds.maxCorrelation, 1);
+});
+
+test("getCorrelationBounds for unequal accuracies", () => {
+  const bounds = getCorrelationBounds(0.6, 0.8);
+  assert.ok(Math.abs(bounds.minCorrelation - -0.4082482904638634) < 1e-9);
+  assert.ok(Math.abs(bounds.maxCorrelation - 0.6123724356957946) < 1e-9);
 });
