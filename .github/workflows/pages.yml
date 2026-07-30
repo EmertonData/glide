@@ -37,6 +37,7 @@ jobs:
         run: |
           mkdir -p _site/assets
           cp docs/landing/index.html _site/
+          cp docs/landing/ppi.js _site/
           cp docs/assets/*.png docs/assets/*.jpg _site/assets/
 
       - name: Upload landing page as Pages artifact
