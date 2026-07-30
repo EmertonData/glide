@@ -1,6 +1,6 @@
 # GLIDE Onboarding Checklist
 
-Welcome to GLIDE. This checklist points a new contributor to the right material in order, rather than re-explaining what's already documented. Work through it top to bottom, checking items off as you go. The overall earning time following this roadmap should not exceed two days.
+Welcome to GLIDE. This checklist points a new contributor to the right material in order, rather than re-explaining what's already documented. Work through it top to bottom, checking items off as you go. The overall learning time following this roadmap should not exceed two days.
 
 ---
 
@@ -8,6 +8,7 @@ Welcome to GLIDE. This checklist points a new contributor to the right material 
 
 - [ ] Read GLIDE's [README](https://github.com/EmertonData/glide) — the project's main index page — in particular "What is GLIDE?", "Why GLIDE?", and the "Implemented Algorithms" table.
 - [ ] Open the [online documentation](https://glide-py.readthedocs.io/en/latest/), linked from the README's Documentation section. This is where you will find the User Guide, Tutorials, and Deep Dive material referenced throughout this checklist.
+- [ ] Skim the [Installation guide](https://glide-py.readthedocs.io/en/latest/getting-started/installation/) and read through the [Quickstart notebook](https://glide-py.readthedocs.io/en/latest/getting-started/quickstart/): it estimates a bias-corrected metric with `PPIMeanEstimator` from a small labeled sample and a large proxy-labeled pool, giving you a first concrete example to anchor the theory in the next sections.
 
 ### 1. The core idea: Prediction-Powered Inference (PPI)
 
@@ -52,7 +53,7 @@ Before moving to monitoring, consolidate everything above into one mental pipeli
 
 ### Checkpoint: Quiz 1
 
-Once chapters 1 to 5 are checked off, take the first validation quiz (20 questions, 90% pass threshold): `docs/onboarding_quizz/quizz1.html`. To load it, clone the repository, then run:
+Once chapters 1 to 5 are checked off, take the first validation quiz (30 questions, 90% pass threshold): `docs/onboarding_quizz/quizz1.html`. To load it, clone the repository, then run:
 
 ```bash
 cd docs/onboarding_quizz && python3 -m http.server 8000
@@ -98,16 +99,19 @@ GLIDE's docs are built with MkDocs and organized by `mkdocs.yml`:
 - [ ] **Deep Dive** — scientific validation notebooks (one per estimator/monitor, proving statistical correctness) and case studies (`r_judge`, `spider`, `memerag` — real evaluation workflows).
 - [ ] **API Reference** — auto-generated from docstrings.
 
-Note: `make doc` builds and serves the full site locally, but it executes every tutorial notebook and takes 10+ minutes — don't run it just to check a small doc change.
+Note: `make doc` builds and serves the full site locally, but it executes every tutorial notebook and takes 10+ minutes — don't run it just to check a small doc change. If your change doesn't touch any notebook or code, you can speed this up a lot by temporarily setting `execute: false` on the `mkdocs-jupyter` plugin in `mkdocs.yml` before running `make doc` locally (revert it before committing).
 
 ### Checkpoint: Quiz 2
 
-Once chapters 6 to 9 are checked off, take the second validation quiz (20 questions, 90% pass threshold): `docs/onboarding_quizz/quizz2.html`. Load it the same way as Quiz 1, then open `http://localhost:8000/quizz2.html`.
+Once chapters 6 to 9 are checked off, take the second validation quiz (30 questions, 90% pass threshold): `docs/onboarding_quizz/quizz2.html`. Load it the same way as Quiz 1, then open `http://localhost:8000/quizz2.html`.
 
 ---
 
 ## Further reading (not required to finish the checklist, useful later)
 
-- Other tutorials not covered above: `clustered_ppi.ipynb`, `multi_ppi.ipynb`, `cost_optimal_random.ipynb` (all in `docs/tutorials/`).
-- Other scientific validation notebooks: the PTD family and clustered/multi variants under `docs/deep_dive/scientific_validation/estimators/`.
+- Other tutorials not covered above, both in `docs/tutorials/`:
+    - `clustered_ppi.ipynb` — Clustered PPI++ extends PPI to data where samples are grouped into clusters (e.g. turns within the same conversation) that cannot be treated as independent.
+    - `multi_ppi.ipynb` — Multi-PPI++ combines several proxy sources at once (e.g. two different LLM judges) instead of picking one or averaging them naively.
+- The [Scientific Validation Methodology](https://glide-py.readthedocs.io/en/latest/deep_dive/scientific_validation/estimators/methodology/) page: explains the coverage/confidence-interval-width/effective-sample-size protocol every validation notebook follows, including the ones you already saw for ASI. Once you understand it, the remaining notebooks (the Predict-Then-Debias family and the clustered/multi variants, all under `docs/deep_dive/scientific_validation/estimators/`) read the same way.
+- The Deep Dive **case studies** (`docs/deep_dive/case_studies/`): `r_judge.ipynb` (agentic system evaluation), `spider.ipynb` (text-to-SQL accuracy), and `memerag.ipynb` (RAG answer faithfulness) apply the full simulate → sample → estimate pipeline to real benchmarks rather than synthetic data.
 - The README's `📖 References` list, if you want to go read the original papers behind a specific method.

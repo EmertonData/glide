@@ -2,221 +2,331 @@
   {
     "question": "What is the 'peeking problem' in monitoring?",
     "options": [
-      "Sampling the same observation twice by mistake",
-      "A bug where the estimator reads stale cached data",
-      "A limitation that only affects stratified datasets",
-      "Repeatedly calling an estimator as new data arrives inflates the false alarm rate beyond the nominal confidence level"
+      "Sampling the same observation twice by mistake during data collection",
+      "A caching bug where the estimator reads stale data left over from a previous computation",
+      "Calling an estimator repeatedly as new data arrives inflates the false alarm rate above the nominal level",
+      "A limitation specific to stratified datasets with very small strata"
     ],
-    "answerIndex": 3,
+    "answerIndex": 2,
     "explanation": "Each one-shot confidence interval is only individually valid; looking at many of them over time is not jointly valid, which inflates false alarms."
   },
   {
     "question": "Why is it invalid to call a one-shot estimator repeatedly over time and check its confidence interval every time?",
     "options": [
-      "Because repeated calls always produce the exact same estimate",
-      "Because estimators can only be called once per Python session",
-      "Because each interval is only guaranteed to be valid at that one fixed sample size, not simultaneously across all the times you check it",
-      "Because confidence intervals shrink to zero width after the first call"
+      "Because repeated calls on growing data tend to produce nearly the same point estimate almost every time",
+      "Because estimator objects can only be instantiated once per Python session",
+      "Because each interval's validity guarantee applies at one fixed sample size, not simultaneously across every time you check it",
+      "Because a confidence interval's width shrinks to zero after its first computation"
     ],
     "answerIndex": 2,
     "explanation": "A confidence interval's guarantee applies at a fixed sample size; treating a sequence of them as jointly valid ignores that they weren't built for repeated peeking."
   },
   {
+    "question": "You compute a single classical 95% confidence interval at n=1000 samples, then check it again at n=1200, n=1500 and n=2000 as more data arrives. Compared to the nominal 5%, what happens to your true probability of raising at least one false alarm across those four checks?",
+    "options": [
+      "It stays at exactly 5%, since the four sample sizes were chosen independently of the data",
+      "It drops noticeably below 5%, since more accumulated data always tightens each interval's width",
+      "It exceeds 5%, since each interval is individually valid but checking several together is not",
+      "It becomes exactly 20%, since a fifth of the nominal rate is spent at each of the four checks"
+    ],
+    "answerIndex": 2,
+    "explanation": "This is the peeking problem in practice: each of the four intervals is valid on its own, but checking all four is not, so the true false-alarm rate creeps above the nominal level."
+  },
+  {
     "question": "What guarantee does a confidence sequence provide that a confidence interval does not?",
     "options": [
-      "It is always narrower than a confidence interval",
+      "A width that is always strictly narrower than the corresponding classical confidence interval",
       "It stays valid simultaneously at all times, so it can be checked repeatedly as data accumulates",
-      "It removes the need for a proxy label",
-      "It only works for binary-valued metrics"
+      "Coverage that no longer depends on the confidence level chosen upfront",
+      "Support for metrics with more than two possible outcomes"
     ],
     "answerIndex": 1,
     "explanation": "Confidence sequences are anytime-valid: valid at every time step simultaneously, not just at one fixed sample size."
   },
   {
-    "question": "Which tutorial demonstrates monitoring a deployed system for drift using a confidence sequence?",
+    "question": "A confidence sequence is described as 'anytime-valid'. Concretely, what does that let you do safely that a single confidence interval would not?",
     "options": [
-      "The PPI tutorial",
-      "The Cost-Optimal Sampling tutorial",
-      "The Stratified PPI tutorial",
-      "The Asymptotic PPRM monitor tutorial"
+      "Stop monitoring and check the bound whenever you like, without inflating the false-alarm rate",
+      "Skip computing a point estimate and report only the confidence bound",
+      "Use a labeled sample smaller than any one-shot estimator would need for the same confidence level",
+      "Ignore the proxy's bias and rely on human labels alone for the whole monitoring period"
     ],
-    "answerIndex": 3,
-    "explanation": "The Asymptotic PPRM monitor tutorial walks through monitoring a deployed system with a confidence sequence."
+    "answerIndex": 0,
+    "explanation": "Anytime-validity is precisely what makes stopping or checking at a data-dependent time safe, unlike a one-shot confidence interval."
+  },
+  {
+    "question": "Why would a team watching a deployed system's hallucination rate day after day reach for the Asymptotic PPRM monitor rather than calling PPIMeanEstimator once per day?",
+    "options": [
+      "PPIMeanEstimator's interval is valid only at the sample size it was computed at, unsafe to recheck daily, unlike PPRM's confidence sequence",
+      "PPIMeanEstimator cannot be combined with proxy labels produced by any LLM judge model",
+      "PPRM does not require any human-labeled samples to run at all",
+      "PPIMeanEstimator is defined only for datasets partitioned into strata"
+    ],
+    "answerIndex": 0,
+    "explanation": "This connects chapter 1's one-shot PPI estimator to chapter 6's monitoring problem: repeated daily calls to a one-shot estimator is exactly the invalid peeking pattern a confidence sequence is designed to fix."
+  },
+  {
+    "question": "AsymptoticPPRM watches a quality metric across successive batches of production data. What does it actually raise an alarm on?",
+    "options": [
+      "Any detectable change in the metric between two consecutive batches, however small",
+      "Statistically valid evidence that the metric has drifted past a threshold fixed in advance",
+      "A fixed number of batches having passed, independent of the metric's value",
+      "A drop in the proxy label alone, whether or not the true metric has actually moved"
+    ],
+    "answerIndex": 1,
+    "explanation": "AsymptoticPPRM raises an alarm the moment there is statistically valid evidence that the metric has drifted past a business threshold fixed in advance, not on any incidental fluctuation."
   },
   {
     "question": "Which tool does GLIDE use to manage its virtual environment and dependency groups?",
     "options": [
+      "conda, configured through an environment.yml file",
       "uv",
-      "pip alone",
-      "conda",
+      "Plain pip together with a requirements.txt file",
       "poetry"
     ],
-    "answerIndex": 0,
+    "answerIndex": 1,
     "explanation": "GLIDE uses uv to manage the virtual environment and all dependency groups."
   },
   {
     "question": "Which command creates the virtual environment and installs all dependency groups?",
     "options": [
-      "make venv",
-      "make tests",
+      "make lint",
       "make doc",
-      "make lint"
+      "make venv",
+      "make tests"
     ],
-    "answerIndex": 0,
+    "answerIndex": 2,
     "explanation": "make venv runs uv sync --all-groups, installing everything needed to develop GLIDE."
   },
   {
     "question": "What does `make tests` run?",
     "options": [
-      "Only the unit tests",
-      "Only the coverage report",
+      "Only the coverage report, without executing any test",
+      "Only the notebook tests, skipping unit and functional suites",
       "Both the unit tests and the functional tests",
-      "Only the notebook tests"
+      "Only the unit tests"
     ],
     "answerIndex": 2,
     "explanation": "tests is defined as unit-tests followed by functional-tests."
   },
   {
-    "question": "How are the project's git pre-commit hooks installed after cloning?",
+    "question": "Your new estimator's unit tests all pass and `make coverage` reports 100%, but one functional test fails. Does `make tests` still pass?",
     "options": [
-      "uv run prek install",
-      "pip install pre-commit",
-      "git commit --install-hooks",
-      "make hooks"
+      "No: make tests runs both suites together, so one failing functional test fails the whole target",
+      "Yes: since coverage already confirmed the unit tests are completely correct and sufficient",
+      "Yes: functional tests are informational and cannot fail the build",
+      "It depends on whether the failing functional test also has a doctest"
     ],
     "answerIndex": 0,
-    "explanation": "GLIDE uses prek as its pre-commit hook runner, installed with uv run prek install."
+    "explanation": "make tests is unit-tests followed by functional-tests; both must pass, and 100% unit coverage says nothing about the separate functional-tests target."
   },
   {
-    "question": "Is running `make test-notebooks` locally required before opening a pull request?",
+    "question": "What is the difference in purpose between `tests/unit/` and `tests/functional/` in GLIDE?",
     "options": [
-      "Yes, but only for documentation-only pull requests",
-      "No, it's optional locally since notebooks are also executed and validated in CI",
-      "Yes, CI does not test notebooks at all",
-      "No, notebook testing has been removed from the project entirely"
+      "tests/unit/ covers samplers and monitors only, tests/functional/ covers estimators only, split by module type",
+      "They test the same code paths, kept as two copies so coverage can be measured twice",
+      "tests/functional/ replaces tests/unit/ once a module reaches full coverage",
+      "Unit tests verify function correctness and drive the coverage requirement; functional tests check statistical properties instead"
+    ],
+    "answerIndex": 3,
+    "explanation": "Unit tests target correctness and are what the 100% coverage requirement measures; functional tests separately check statistical properties, and are excluded from that coverage measurement."
+  },
+  {
+    "question": "GLIDE's testing guidance says to keep unit test arrays as small as possible, typically two elements. What is this meant to achieve?",
+    "options": [
+      "Keeping the unit test suite fast, since a bigger array rarely covers more than a small one already does",
+      "Shrinking the size of the git repository by keeping test files short",
+      "Making the 100% coverage target easier to reach, since large arrays are supposedly harder to fully exercise",
+      "Matching the array sizes used in the Getting Started tutorial notebook"
+    ],
+    "answerIndex": 0,
+    "explanation": "Small, minimal arrays keep the unit test suite fast to run, which matters since it executes on every commit and in CI."
+  },
+  {
+    "question": "You just renamed a public method that's used inside several existing tutorial notebooks. `make test-notebooks` is optional to run locally. Is it worth running before opening the pull request in this case?",
+    "options": [
+      "Yes: this touches something existing notebooks rely on, so a local check catches breakage before CI does",
+      "No: whatever changed, CI will always catch it a few minutes later regardless",
+      "Yes: it must be run before absolutely every pull request, whether or not anything user-facing changed",
+      "No: renamed public methods cannot break notebooks, since they only import from private modules"
+    ],
+    "answerIndex": 0,
+    "explanation": "Optional does not mean pointless: when a change touches something existing notebooks depend on, running them locally catches the breakage before CI does, at the cost of a slower local check."
+  },
+  {
+    "question": "According to `.claude/CLAUDE.md`, when should a function raise `RuntimeError` instead of `ValueError`?",
+    "options": [
+      "When the input itself is invalid, e.g. passing a negative value where only positive numbers make sense",
+      "When the object is in an invalid state for the call, e.g. calling sample() before fit() has been run",
+      "Whenever any argument is a NumPy array rather than a plain Python type",
+      "Whenever the function belongs to a private, internal module rather than the public API"
     ],
     "answerIndex": 1,
-    "explanation": "Local notebook testing is optional because CI already executes and validates notebooks for every pull request."
-  },
-  {
-    "question": "Besides the module breakdown, what else does `.claude/CLAUDE.md` cover that's directly relevant to a new contributor?",
-    "options": [
-      "A list of every historical git commit",
-      "The pricing of the GLIDE PyPI package",
-      "Testing organisation, coding conventions, and code hygiene / consistency expectations",
-      "Only the company's HR policies"
-    ],
-    "answerIndex": 2,
-    "explanation": "CLAUDE.md documents how tests are organised, naming/typing/error-handling conventions, and code hygiene and consistency expectations."
+    "explanation": "CLAUDE.md reserves ValueError for invalid inputs and RuntimeError for invalid state, such as calling a method before a required prerequisite has run."
   },
   {
     "question": "What level of test coverage does the project enforce?",
     "options": [
-      "There is no enforced coverage requirement",
       "50%, averaged across the whole repository",
       "100%, including functional tests",
-      "100%, on unit tests (functional tests are excluded from that measurement)"
+      "There is no enforced coverage requirement",
+      "100% on unit tests; functional tests are excluded"
     ],
     "answerIndex": 3,
     "explanation": "Coverage is measured on unit tests only, and 100% is required; functional tests are excluded from that specific measurement."
   },
   {
-    "question": "What is the standard contribution flow in GLIDE?",
+    "question": "Which of these would violate GLIDE's coverage requirement if it occurred inside `glide/estimators/`?",
     "options": [
-      "Email the maintainers a patch file",
-      "Create a new fork for every single commit",
-      "Open an issue, create a branch, open a pull request against main, get it reviewed, then merge",
-      "Push directly to main, then open an issue afterwards to document it"
-    ],
-    "answerIndex": 2,
-    "explanation": "CONTRIBUTING.md spells out the issue -> branch -> pull request -> review -> merge flow."
-  },
-  {
-    "question": "What should you do before writing code for a new estimator or sampler?",
-    "options": [
-      "Open an issue and share the reference paper, so maintainers can frame the ticket",
-      "Implement it directly on the main branch",
-      "Skip the issue only if the change is small",
-      "Submit the pull request first and discuss it afterwards"
+      "An untested branch in a private helper method used by a public estimator",
+      "A functional test that takes a couple of seconds longer than usual to run",
+      "A tutorial notebook cell with no assertions",
+      "A CHANGELOG entry that doesn't link back to an issue"
     ],
     "answerIndex": 0,
-    "explanation": "New estimators and samplers should be backed by a publication; opening an issue with the paper lets maintainers frame the implementation upfront."
+    "explanation": "The 100% unit-test coverage requirement applies to everything under glide/, private helpers included; functional tests and notebooks are outside that specific measurement."
   },
   {
-    "question": "What does the `create-pr` Claude Code skill do?",
+    "question": "You are implementing a brand-new sampler at `glide/samplers/new_sampler.py`. Based on the project's testing conventions, where should its unit test file live?",
     "options": [
-      "Pushes the current branch, fills in the PR template from the diff, updates the CHANGELOG, attaches labels, and opens the PR",
-      "Automatically merges any open pull request",
-      "Rewrites commit history to squash all commits",
-      "Deletes stale branches after a PR is merged"
+      "Inside glide/samplers/, right next to the implementation file",
+      "Anywhere under tests/, as long as the file name contains 'sampler'",
+      "tests/functional/test_new_sampler.py, since samplers are validated statistically",
+      "tests/unit/samplers/test_new_sampler.py"
     ],
-    "answerIndex": 0,
-    "explanation": "create-pr automates preparing and opening the pull request from the current branch's diff."
+    "answerIndex": 3,
+    "explanation": "tests/unit/ mirrors the glide/ folder structure exactly, so a new sampler's unit tests live at the matching path under tests/unit/samplers/."
   },
   {
-    "question": "What is the purpose of the `/code-review` skill?",
+    "question": "Beyond just its file path, what should you actually consult when structuring the unit tests for that brand-new sampler?",
     "options": [
-      "It triages open Dependabot pull requests",
-      "It reviews the pending diff on your branch across multiple dimensions before you request human review",
-      "It automatically fixes every lint error in the codebase",
-      "It generates the CHANGELOG entry for a release"
+      "Only your own judgment, since GLIDE has no convention for internal test structure",
+      "The nearest equivalent existing test file, mirrored in structure, naming, and ordering",
+      "The corresponding section of the User Guide, reproducing its prose as test docstrings",
+      "The CHANGELOG.md entry that will eventually describe the new sampler"
     ],
     "answerIndex": 1,
-    "explanation": "/code-review gives you a multi-dimensional review of your diff before asking a human for review."
+    "explanation": "The project's consistency-and-propagation principle asks you to find the nearest equivalent already in the codebase and mirror it in structure, naming, and block ordering, rather than inventing a new layout."
   },
   {
-    "question": "What does the `dependabot` skill do, and who has the final say on merging?",
+    "question": "For a documentation-only change that doesn't touch any notebook or code, how can you speed up a local `make doc` preview instead of waiting for every notebook to execute?",
     "options": [
-      "It classifies and applies the oldest open Dependabot PR's version bump and resolves conflicts with main, but a maintainer still merges it manually",
-      "It automatically merges every Dependabot PR without human involvement",
-      "It deletes all open Dependabot PRs older than a month",
-      "It only works on GitHub Actions version bumps, not Python dependencies"
+      "Temporarily set `execute: false` on the mkdocs-jupyter plugin in `mkdocs.yml`, then revert it before committing",
+      "Delete the notebooks from docs/tutorials/ before building, then restore them afterward",
+      "Pass a --fast flag to make doc, which skips notebook execution automatically",
+      "Set include_source: false on the mkdocs-jupyter plugin, which disables notebook execution"
     ],
     "answerIndex": 0,
-    "explanation": "dependabot triages and prepares the PR, but merging is intentionally left to a maintainer."
+    "explanation": "The mkdocs-jupyter plugin's execute option controls whether notebooks run during the build; flipping it off locally (and reverting before committing) avoids re-executing every notebook for a change that never touches one. include_source only controls whether source code is shown, not whether it runs, and there is no --fast flag."
   },
   {
-    "question": "What does the `ticket` skill produce?",
+    "question": "As a new GLIDE team member picking up your first piece of work, what does the practical contribution flow typically look like?",
     "options": [
-      "A developer-ready ticket in the tickets/ folder, drafted from a paper, refactor request, or maintenance task",
-      "A new release on PyPI",
-      "A CHANGELOG entry only, without any ticket file",
-      "A finished pull request implementing the feature"
+      "Open a new issue proposing the work yourself and wait for maintainer sign-off before starting anything",
+      "Fork the repository for the change and submit a pull request from that fork, exactly as an external contributor would do it",
+      "Pick up a ticket a maintainer already framed (e.g. from the Projects board), branch off main, implement, then open a pull request",
+      "Implement the change directly on main, then open an issue afterward to document what changed"
     ],
-    "answerIndex": 0,
-    "explanation": "ticket drafts a ticket file under tickets/ describing the work to be done, not the implementation itself."
+    "answerIndex": 2,
+    "explanation": "Team members typically implement tickets maintainers have already framed, branching directly off main rather than forking or originating the issue themselves."
   },
   {
-    "question": "What does the `release` skill automate?",
+    "question": "Before starting implementation on a new estimator or sampler as a GLIDE team member, what should you do first?",
     "options": [
-      "Version bump, CHANGELOG update, release PR, TestPyPI trigger, git tag, and GitHub release creation",
-      "Only bumping the version number in pyproject.toml",
-      "Writing the monthly newsletter",
-      "Running the full test suite before every commit"
+      "Open a brand-new GitHub issue yourself proposing the method, since none exists yet",
+      "Start writing the implementation right away, opening an issue only if a reviewer later asks for one",
+      "Read the corresponding ticket, already framed by a maintainer with the reference paper and scope",
+      "Post in an internal channel asking whether the method is worth implementing at all"
     ],
-    "answerIndex": 0,
-    "explanation": "release automates the end-to-end release process across all of these steps."
+    "answerIndex": 2,
+    "explanation": "For a team member, the framing work (reference paper, expected scope) is typically already done in the ticket a maintainer prepared, rather than something the contributor originates."
+  },
+  {
+    "question": "You've just finished a change and want an automated, multi-dimensional review of your diff before asking a human to review it. Which tool do you reach for?",
+    "options": [
+      "create-pr",
+      "ticket",
+      "dependabot",
+      "/code-review"
+    ],
+    "answerIndex": 3,
+    "explanation": "/code-review reviews the pending diff on your branch across multiple dimensions before you request human review."
+  },
+  {
+    "question": "Which of these inputs can the `ticket` skill turn into a developer-ready ticket in `tickets/`?",
+    "options": [
+      "Only a research paper describing a brand-new estimator or sampler method",
+      "A research paper, a refactor request, a documentation task, or general repository maintenance work",
+      "Only an already-merged pull request, drafted afterward just to document it retroactively",
+      "Only a bug report filed through GitHub Issues by an external user"
+    ],
+    "answerIndex": 1,
+    "explanation": "ticket drafts a developer-ready ticket from any of these inputs, not just papers: refactors, renamings, documentation work, and repository maintenance all qualify."
+  },
+  {
+    "question": "Which Claude Code skill automates the entire version-bump-to-GitHub-release pipeline in one go, including creating the git tag and triggering TestPyPI?",
+    "options": [
+      "create-pr",
+      "/code-review",
+      "release",
+      "ticket"
+    ],
+    "answerIndex": 2,
+    "explanation": "release automates the version bump, CHANGELOG update, release PR, TestPyPI trigger, git tag, and GitHub release creation."
+  },
+  {
+    "question": "Which of GLIDE's Claude Code skills is triggered by outstanding automated dependency-bump pull requests, rather than by something a contributor initiates about their own change?",
+    "options": [
+      "create-pr",
+      "ticket",
+      "/code-review",
+      "dependabot"
+    ],
+    "answerIndex": 3,
+    "explanation": "dependabot triages and prepares the oldest open Dependabot pull request; a maintainer still merges it manually."
+  },
+  {
+    "question": "An estimator's `estimate()` method calls the shared `_preprocess()` validation helper before doing its own computation, and `_preprocess()` already has its own tests covering every invalid-input case. When testing `estimate()`'s input validation, what should the unit test check?",
+    "options": [
+      "That calling estimate() with invalid input raises ValueError directly in its own test, duplicating what _preprocess() already covers",
+      "That _preprocess() was called (a delegation check), without repeating the raise-on-invalid-input test already covered there",
+      "Nothing at all: once a helper is shared across classes, none of its callers need a validation test",
+      "That estimate() defines and raises its own custom exception subclass for invalid input"
+    ],
+    "answerIndex": 1,
+    "explanation": "Validation should only be tested where it lives (in _preprocess()); callers that delegate to it are tested by asserting the delegation happened, not by re-testing the same raise."
   },
   {
     "question": "Which documentation section is auto-generated directly from the codebase's docstrings?",
     "options": [
-      "API Reference",
-      "Deep Dive",
       "Tutorials",
-      "Getting Started"
+      "Deep Dive",
+      "Getting Started",
+      "API Reference"
     ],
-    "answerIndex": 0,
+    "answerIndex": 3,
     "explanation": "API Reference is generated by mkdocstrings from the docstrings in the codebase."
   },
   {
-    "question": "Why shouldn't you run `make doc` just to check a small documentation change?",
+    "question": "A contributor wants to see proof that an estimator gives statistically correct confidence intervals, not just an example of calling it. Which documentation section should they open?",
     "options": [
-      "It requires a paid ReadTheDocs subscription",
-      "It executes every tutorial notebook and takes over 10 minutes to complete",
-      "It permanently deletes the docs/ folder",
-      "It only works on the CI server, never locally"
+      "Tutorials, since they show the estimator being called on a realistic scenario",
+      "Getting Started, since it covers installation and a first example",
+      "Deep Dive, Scientific Validation",
+      "API Reference, since it lists every parameter the estimator accepts"
     ],
-    "answerIndex": 1,
-    "explanation": "make doc builds the full site and executes every notebook, which is slow and overkill for a small change."
+    "answerIndex": 2,
+    "explanation": "Tutorials show how to call the public API on a realistic scenario; Deep Dive's scientific validation notebooks are the ones that prove statistical correctness."
+  },
+  {
+    "question": "Where would you look to see GLIDE applied to estimate text-to-SQL accuracy on a real benchmark, rather than a synthetic example?",
+    "options": [
+      "User Guide, since it lays out the mathematical setting behind each method",
+      "Getting Started, since it covers the first example a new user sees",
+      "The Makefile, since it defines every command available to run",
+      "Deep Dive, Case Studies"
+    ],
+    "answerIndex": 3,
+    "explanation": "Case studies (r_judge, spider, memerag) apply GLIDE's full pipeline to real evaluation workflows, unlike the synthetic data used in tutorials and validation notebooks."
   }
 ]

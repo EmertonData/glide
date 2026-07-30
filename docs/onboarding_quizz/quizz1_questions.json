@@ -2,120 +2,175 @@
   {
     "question": "What are the two types of labels that Prediction-Powered Inference (PPI) combines to estimate a population mean?",
     "options": [
-      "A large set of unbiased proxy labels and a small set of biased human labels",
-      "A large set of cheap, biased proxy labels and a small set of expensive, unbiased human labels",
-      "A single set of proxy labels calibrated using a held-out validation set",
-      "Two independent sets of human labels collected by different annotators"
+      "A single set of proxy labels calibrated against a held-out validation subset before use",
+      "Two independent sets of human labels collected by separate annotator pools working without knowledge of each other",
+      "Cheap, biased proxy labels available for the full dataset, and expensive, unbiased human labels for a small subset",
+      "Unbiased proxy labels covering the full dataset, paired with biased human labels for a small subset"
     ],
-    "answerIndex": 1,
-    "explanation": "PPI is built around combining a large, cheap, biased proxy-labeled dataset with a small, expensive, unbiased human-labeled subset."
+    "answerIndex": 2,
+    "explanation": "PPI combines a large, cheap, biased proxy-labeled dataset with a small, expensive, unbiased human-labeled subset."
   },
   {
     "question": "Why is an estimate computed directly from proxy labels alone generally biased?",
     "options": [
-      "Because proxy labels can only be computed for stratified datasets",
-      "Because proxy labels are always missing for a random subset of the data",
-      "Because the proxy (e.g. an LLM judge) systematically over- or under-estimates relative to the ground truth",
-      "Because proxy labels are numerically larger than human labels"
+      "The proxy (e.g. an LLM judge) systematically over- or under-estimates relative to the ground truth",
+      "Proxy labels are recomputed differently each time the estimator is called, even when the underlying data hasn't changed",
+      "Proxy labels are missing for a subset of samples chosen at random",
+      "Proxy labels are expressed on a different numerical scale than human labels"
     ],
-    "answerIndex": 2,
+    "answerIndex": 0,
     "explanation": "The proxy carries its own systematic error relative to ground truth, which biases a naive mean computed from it directly."
   },
   {
     "question": "What does PPI add to a proxy-only estimate to remove this bias?",
     "options": [
-      "A correction term, estimated from the small human-labeled subset, that captures the proxy's error",
       "A stratification of the dataset by proxy score",
       "A larger sample size requirement for the proxy labels",
-      "A confidence sequence instead of a confidence interval"
+      "A confidence sequence computed from the proxy labels, refreshed every time new data arrives",
+      "A correction term, estimated from the small human-labeled subset, that captures the proxy's error"
     ],
-    "answerIndex": 0,
+    "answerIndex": 3,
     "explanation": "PPI adds a correction term computed from the human-labeled subset, capturing the discrepancy between proxy and ground truth."
   },
   {
     "question": "In PPI++, what does 'power tuning' primarily depend on?",
     "options": [
       "The number of strata in the dataset",
-      "The cost ratio between human and proxy annotation",
       "The correlation between the human labels and the proxy labels",
-      "The total size of the proxy-labeled dataset only"
+      "The cost ratio between human and proxy annotation",
+      "The total size of the proxy-labeled dataset, independent of the human-labeled subset"
     ],
-    "answerIndex": 2,
+    "answerIndex": 1,
     "explanation": "Power tuning sets how much weight to give the proxy-based correction term, and its optimal value depends on how correlated proxy and human labels are."
   },
   {
     "question": "If the proxy labels are highly correlated with the human labels, what should you expect from power tuning?",
     "options": [
-      "Power tuning has no effect regardless of correlation",
-      "The estimator ignores the human labels completely",
-      "The correction term is discarded entirely, since proxy and human labels are treated as identical",
-      "The correction term is weighted more heavily, since the proxy carries a lot of useful signal"
+      "The correction term is dropped in favor of a stratified estimate",
+      "The estimator relies more heavily on the small human-labeled subset instead of the proxy, ignoring the proxy signal",
+      "The correction term is weighted more heavily, since the proxy carries a lot of useful signal",
+      "The confidence interval widens, since more weight is placed on a noisier signal"
+    ],
+    "answerIndex": 2,
+    "explanation": "Higher proxy/human correlation lets the estimator lean more on the proxy signal without inflating variance."
+  },
+  {
+    "question": "In the PPI++ variance formula, the unlabeled-proxy term scales as lambda^2 * proxy_variance / N. If you double N (the size of the full proxy-labeled pool) while holding everything else fixed, what happens to that term?",
+    "options": [
+      "It roughly halves, since N sits in the denominator of that term",
+      "It roughly doubles, tracking the size of the proxy pool",
+      "It is unaffected, since that term only depends on lambda and the proxy variance",
+      "It grows without bound as N increases"
+    ],
+    "answerIndex": 0,
+    "explanation": "N appears in the denominator of that term, so doubling the unlabeled pool size roughly halves its contribution to the variance."
+  },
+  {
+    "question": "If PPI++'s power-tuning weight is forced to 0 instead of using its optimal value, which estimator does the mean formula reduce to?",
+    "options": [
+      "A classical mean estimator computed on the full proxy-labeled pool, ignoring the small labeled subset entirely",
+      "The Stratified PPI estimator restricted to a single stratum",
+      "ASI with every sampling probability set to one",
+      "A classical mean estimator computed on the small human-labeled sample"
     ],
     "answerIndex": 3,
-    "explanation": "Higher proxy/human correlation lets the estimator lean more on the proxy signal without inflating variance."
+    "explanation": "At weight 0 the proxy-based correction term vanishes entirely, leaving only the classical mean of the labeled human sample."
   },
   {
     "question": "How does Stratified PPI extend plain PPI?",
     "options": [
-      "It removes the need for a proxy label entirely",
       "It replaces the human-labeled subset with proxy labels inside each stratum",
-      "It requires every stratum to have the same number of samples",
-      "It computes plain PPI within each stratum and combines the per-stratum estimates with a weighted average"
+      "It computes plain PPI within each stratum and combines the per-stratum estimates with a weighted average",
+      "It requires every stratum to contain the same number of samples",
+      "It removes the need for a proxy label inside strata with strong correlation, relying on human labels alone there"
     ],
-    "answerIndex": 3,
+    "answerIndex": 1,
     "explanation": "Stratified PPI applies the same PPI correction stratum by stratum, then aggregates the results via a weighted average."
   },
   {
     "question": "What does StratifiedPPIMeanEstimator reduce to when the dataset has only one stratum?",
     "options": [
       "The ClassicalMeanEstimator",
+      "An ASI estimator with uniform sampling probabilities",
       "The plain PPIMeanEstimator",
-      "An undefined result, since one stratum is not supported",
-      "An ASI estimator with uniform sampling probabilities"
+      "A result that depends on how the single stratum happened to be defined"
     ],
-    "answerIndex": 1,
+    "answerIndex": 2,
     "explanation": "With a single stratum, stratification adds nothing, so the estimator collapses to plain PPI."
+  },
+  {
+    "question": "A dataset has two strata: one where the proxy is nearly perfect (very low proxy variance) and one where the proxy is very noisy (high proxy variance). Under Neyman allocation with a fixed total annotation budget, which stratum receives more human annotations?",
+    "options": [
+      "The noisy stratum, since annotating there reduces the estimator's overall variance the most",
+      "The near-perfect stratum, since a reliable proxy still benefits from extra scrutiny",
+      "Both strata receive the same share, since Neyman allocation targets stratum size rather than proxy variance",
+      "Whichever stratum happens to be listed first in the dataset"
+    ],
+    "answerIndex": 0,
+    "explanation": "Neyman allocation assigns more of the budget to strata with higher proxy variance, since that is where extra annotation reduces total variance the most."
+  },
+  {
+    "question": "Why must Stratified PPI use a separate power-tuning weight per stratum instead of one single global weight, when strata differ substantially in proxy quality?",
+    "options": [
+      "A single weight becomes mathematically undefined once a dataset has more than one stratum, since the formula assumes exactly one",
+      "Global weighting can only be computed when there are exactly two strata",
+      "Using one weight would require discarding the human labels in every stratum but one, defeating the point of stratifying at all",
+      "A single global weight would blur together strata of very different proxy quality, losing the benefit of tuning each one separately"
+    ],
+    "answerIndex": 3,
+    "explanation": "Per-stratum weighting lets each stratum benefit from its own optimal trade-off; a single global weight would blur that distinction across strata of differing proxy quality."
   },
   {
     "question": "What additional quantity does ASI attach to each sample compared to plain PPI?",
     "options": [
-      "A cluster identifier",
-      "A cost estimate for human annotation",
-      "A second proxy label from a different model",
-      "A sampling probability: the probability that the sample was selected for human annotation"
+      "A cluster identifier grouping correlated samples",
+      "A sampling probability: the probability that the sample was selected for human annotation",
+      "A cost estimate attached to human annotation for that sample, used later by cost-optimal sampling",
+      "A second proxy label produced by a different model"
     ],
-    "answerIndex": 3,
+    "answerIndex": 1,
     "explanation": "ASI is PPI where each sample also carries its sampling probability, enabling Inverse Probability Weighting."
   },
   {
     "question": "Under Inverse Probability Weighting, how is a sample that had a small selection probability but was still selected treated?",
     "options": [
-      "It is discarded from the estimate",
-      "It is down-weighted relative to samples with a large selection probability",
-      "It is treated identically to every other selected sample, regardless of its probability",
-      "It is up-weighted, contributing more to the estimate than a sample with a large selection probability"
+      "It is discarded from the estimate, since its selection was unlikely",
+      "It is treated the same as any other selected sample, since selection already happened and cannot be undone",
+      "It is up-weighted, contributing more to the estimate than a sample with a large selection probability",
+      "It is down-weighted relative to samples with a large selection probability"
     ],
-    "answerIndex": 3,
+    "answerIndex": 2,
     "explanation": "Dividing by a small sampling probability produces a large weight, up-weighting rarely-selected samples."
   },
   {
     "question": "Why does dividing by the sampling probability preserve unbiasedness even though selection is non-uniform?",
     "options": [
-      "Because the sampling probability is always equal to 1 for every sample in practice",
       "In expectation over the random selection, this weighting exactly cancels the effect of non-uniform sampling",
-      "Because the correction only applies to proxy labels, not human labels",
-      "Because non-uniform sampling has no effect on bias in the first place"
+      "The weighting adjusts each sample's proxy contribution, leaving the human label's contribution unchanged",
+      "Non-uniform sampling affects the variance of the estimate, but its expectation was already unbiased beforehand",
+      "The correction changes the estimate's variance, not its expectation, so bias was never actually affected"
     ],
-    "answerIndex": 1,
+    "answerIndex": 0,
     "explanation": "This is the same reasoning behind Horvitz-Thompson estimation: weighting by the inverse probability makes each sample's expected contribution match what it would be under uniform sampling."
+  },
+  {
+    "question": "Suppose every sample's sampling probability happens to be equal (a uniform design). What happens to ASI's Inverse Probability Weighting correction compared to a plain PPI estimate on that same labeled sample?",
+    "options": [
+      "It produces an undefined estimator, since a constant selection probability cannot be inverted",
+      "It amplifies the bias correction well beyond plain PPI",
+      "It removes the effect of power tuning from the estimate, regardless of the chosen weight",
+      "It has no real effect: a constant weight cancels out, so ASI reduces to plain PPI on that sample"
+    ],
+    "answerIndex": 3,
+    "explanation": "A constant sampling probability contributes a constant factor to every term, so the IPW correction degenerates into the same computation as plain PPI on that sample."
   },
   {
     "question": "What role do samplers play in the GLIDE pipeline?",
     "options": [
-      "They compute the final mean estimate from labeled data",
+      "They compute the final mean estimate directly from the labeled and proxy arrays, without any sampling step",
       "They decide which samples get sent for human annotation, and can produce the sampling probability estimators consume",
       "They generate the proxy labels using an LLM judge",
-      "They serialise inference results to JSON"
+      "They serialise inference results for export, e.g. to JSON"
     ],
     "answerIndex": 1,
     "explanation": "Samplers sit upstream of estimators: they choose which samples get annotated and may output a sampling probability per sample."
@@ -123,45 +178,56 @@
   {
     "question": "Which of these samplers is grouped with those producing an informative, per-sample probability meant for IPW-based estimators?",
     "options": [
-      "ActiveSampler",
       "UniformSampler",
-      "None of the samplers produce probabilities used by IPW-based estimators",
-      "StratifiedSampler"
+      "StratifiedSampler",
+      "ActiveSampler",
+      "None of the samplers produce probabilities used by IPW-based estimators"
+    ],
+    "answerIndex": 2,
+    "explanation": "ActiveSampler produces a heterogeneous, informative probability meant to be consumed by IPW-based estimators. StratifiedSampler's design is handled structurally (uniform within each stratum), and UniformSampler needs no such weighting since it samples uniformly to begin with."
+  },
+  {
+    "question": "Why is ActiveSampler a natural fit for ASI's Inverse Probability Weighting, while StratifiedSampler is not?",
+    "options": [
+      "ActiveSampler gives each sample its own probability based on proxy uncertainty, while StratifiedSampler samples uniformly within each stratum, leaving IPW nothing informative to correct for",
+      "StratifiedSampler never selects any samples for human annotation",
+      "ASI can only consume sampling probabilities that are literally named 'pi' in the code",
+      "StratifiedSampler's probabilities depend on the proxy labels' numeric scale, which IPW cannot process without renormalizing them first"
     ],
     "answerIndex": 0,
-    "explanation": "ActiveSampler produces a heterogeneous, informative probability meant to be consumed by IPW-based estimators. StratifiedSampler's design is handled structurally (uniform within each stratum), and UniformSampler needs no such weighting since it samples uniformly to begin with."
+    "explanation": "StratifiedSampler handles its design structurally (uniform selection within each stratum), so there is no informative per-unit heterogeneity for IPW to exploit, unlike ActiveSampler's uncertainty-driven probabilities."
   },
   {
     "question": "What does ActiveSampler use to decide which samples to prioritize for human annotation?",
     "options": [
       "A random coin flip identical for every sample",
-      "A per-sample uncertainty score estimating how unreliable the proxy label is for that sample",
-      "The stratum each sample belongs to",
-      "The order in which samples appear in the dataset"
+      "The stratum each sample happens to belong to",
+      "The order in which samples happen to appear in the input dataset",
+      "A per-sample uncertainty score reflecting how unreliable its proxy label is"
     ],
-    "answerIndex": 1,
+    "answerIndex": 3,
     "explanation": "ActiveSampler concentrates the annotation budget on samples with the highest proxy uncertainty."
   },
   {
     "question": "What does the StratifiedSampler's Neyman allocation do differently from proportional allocation?",
     "options": [
-      "It assigns more of the annotation budget to strata with higher proxy variance, to reduce the estimator's variance",
+      "It assigns an equal number of annotations to every stratum, regardless of its size or proxy variance, unlike Neyman",
+      "It assigns more of the annotation budget to strata with higher proxy variance, to reduce the estimator's overall variance",
       "It ignores strata entirely and samples uniformly across the whole dataset",
-      "It only works when there is exactly one stratum",
-      "It assigns an equal number of annotations to every stratum regardless of size"
+      "It allocates budget in proportion to stratum size alone, without considering proxy variance"
     ],
-    "answerIndex": 0,
+    "answerIndex": 1,
     "explanation": "Neyman allocation gives more of the budget to strata where the proxy is more dispersed, since annotation there reduces total variance the most."
   },
   {
     "question": "What does the ASI scientific validation notebook illustrate?",
     "options": [
       "The GitHub pull request template used by the project",
-      "How the CHANGELOG.md file should be formatted",
       "How to install GLIDE locally using uv",
-      "A sampler and an estimator used together end to end, with estimates checked for correct coverage across many random seeds"
+      "A sampler and estimator combined end to end, with coverage checked across many random seeds",
+      "How the CHANGELOG.md file should be formatted before a new release is tagged"
     ],
-    "answerIndex": 3,
+    "answerIndex": 2,
     "explanation": "It ties a sampler and an estimator into one pipeline and validates it statistically over many seeds."
   },
   {
@@ -169,8 +235,8 @@
     "options": [
       "It gives a tight but wrong estimate, since the proxy's systematic bias is never corrected",
       "It requires stratified data to work at all",
-      "It cannot be computed without a burn-in phase",
-      "It is more expensive than the human-only baseline"
+      "It is more expensive than the human-only baseline for the same total annotation budget",
+      "It cannot be computed without first running a burn-in phase"
     ],
     "answerIndex": 0,
     "explanation": "Proxy-only estimation gives 'false confidence': a tight interval around a biased value."
@@ -178,8 +244,8 @@
   {
     "question": "What is the drawback of the human-only baseline in that same comparison?",
     "options": [
-      "It cannot produce a confidence interval",
-      "It produces a biased estimate",
+      "It cannot produce a confidence interval at all",
+      "It produces a biased estimate, since human labels are treated as if they were proxy labels",
       "It is cheaper than the cost-optimal strategy for the same number of samples",
       "It leaves precision on the table, since the cheap proxy signal is discarded entirely"
     ],
@@ -189,34 +255,78 @@
   {
     "question": "What makes the cost-optimal strategy in that tutorial more efficient than the two baselines, for the same budget?",
     "options": [
-      "It only uses proxy labels, like the proxy-only baseline",
-      "It concentrates human annotations on samples where the proxy is least reliable, using ASI's Inverse Probability Weighting to stay unbiased",
-      "It ignores the annotation budget constraint entirely",
-      "It requires no burn-in phase to calibrate"
+      "It only uses proxy labels, exactly like the proxy-only baseline",
+      "It targets human annotation at the least-reliable proxy samples, using IPW to remain unbiased",
+      "It ignores the annotation budget constraint entirely, annotating as many samples as it possibly can",
+      "It requires no burn-in phase and no proxy labels at all"
     ],
     "answerIndex": 1,
     "explanation": "The cost-optimal sampler concentrates the budget where the proxy struggles most, and ASI corrects for the resulting non-uniform design."
   },
   {
-    "question": "Where should a new contributor start to get an overview of GLIDE and find a link to the full documentation?",
+    "question": "Chapter 4's ActiveSampler and the Cost-Optimal Sampling tutorial's strategy both concentrate the annotation budget in a similar place. Where?",
     "options": [
-      "The project's README on GitHub",
-      "The Makefile",
-      "The CHANGELOG.md file",
-      "The tests/functional/ directory"
+      "On samples chosen completely at random, regardless of the proxy",
+      "On samples with the lowest proxy value, regardless of uncertainty",
+      "On samples where the proxy label is least reliable, or most uncertain",
+      "On whichever stratum happens to be the largest one in the dataset"
+    ],
+    "answerIndex": 2,
+    "explanation": "Both concentrate human annotation where the proxy struggles most, which is exactly the shared principle chapter 5 asks you to recognize across the full pipeline."
+  },
+  {
+    "question": "Put these pipeline stages in the order they actually happen when running a cost-optimal sampling workflow end to end.",
+    "options": [
+      "Generate the data and proxy labels, then decide which samples receive true (human) annotations, then estimate the mean",
+      "Estimate the population mean, then generate the labels, then decide which units get annotated",
+      "Decide which units get annotated, then estimate the population mean, then generate the labels",
+      "Estimate the population mean directly from the sampler's output, without a separate label-generation step"
     ],
     "answerIndex": 0,
+    "explanation": "This is the simulate to sample to estimate pipeline that chapter 5 asks you to consolidate: data first, then the sampling decision, then the final estimate."
+  },
+  {
+    "question": "In the Quickstart notebook, the proxy rate is 10% but the true rate is 15% (the proxy under-reports). After running PPIMeanEstimator on this data, would you expect the corrected point estimate to land near 10%, near 15%, or somewhere else?",
+    "options": [
+      "Near 10%, since the full dataset's proxy labels dominate the small human-labeled subset",
+      "Roughly halfway between 10% and 15%, since PPI averages the proxy and human estimates",
+      "Below 10%, since PPI overcorrects for the proxy's under-reporting",
+      "Near 15%: the correction term uses the labeled subset to cancel the proxy's under-reporting"
+    ],
+    "answerIndex": 3,
+    "explanation": "This is exactly what the correction term is for: it uses the small human-labeled subset to pull the proxy-only estimate back toward the true rate, rather than averaging or ignoring it."
+  },
+  {
+    "question": "The Quickstart notebook reports an 'effective sample size' alongside the point estimate. What does this quantity represent?",
+    "options": [
+      "The total number of proxy labels available in the dataset",
+      "The number of true labels alone needed to match the combined estimate's precision",
+      "The number of strata used by the sampler for that run",
+      "The number of bootstrap resamples used internally to build the confidence interval"
+    ],
+    "answerIndex": 1,
+    "explanation": "Effective sample size expresses how much the proxy signal is 'worth' in terms of equivalent true labels."
+  },
+  {
+    "question": "Where should a new contributor start to get an overview of GLIDE and find a link to the full documentation?",
+    "options": [
+      "The Makefile",
+      "The CHANGELOG.md file",
+      "The project's README on GitHub",
+      "The tests/functional/ directory"
+    ],
+    "answerIndex": 2,
     "explanation": "The README is the project's main index page, including a Documentation section linking to the hosted docs."
   },
   {
     "question": "Which best describes the overall goal that unifies PPI, Stratified PPI, and ASI?",
     "options": [
-      "Replacing human annotation entirely once enough proxy data is available",
-      "Producing an unbiased, lower-variance mean estimate by combining cheap proxy labels with a small set of expensive human labels",
-      "Clustering samples into strata to reduce dataset size",
-      "Detecting drift in a deployed system over time"
+      "Combining cheap proxy labels with a small set of human labels to get an unbiased, lower-variance mean",
+      "Clustering samples into strata purely to shrink the dataset before analysis",
+      "Replacing human annotation entirely once enough proxy-labeled data has been collected over time",
+      "Detecting drift in a deployed system as new data arrives over time"
     ],
-    "answerIndex": 1,
+    "answerIndex": 0,
     "explanation": "All three methods are variations on the same core PPI idea of combining proxy and human labels to debias the estimate."
   }
 ]
