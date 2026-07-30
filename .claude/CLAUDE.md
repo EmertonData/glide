@@ -22,6 +22,8 @@ make coverage      # Coverage report on unit tests only (100% required; function
 make pre-commit    # Run pre-commit hooks via prek (not the standard pre-commit CLI)
 make test-notebooks # Test all Jupyter notebooks
 make doc            # Build and serve documentation locally with MkDocs
+make landing-tests  # Run Node tests for the landing-page PPI widget (requires Node; see .nvmrc)
+make check-landing-fixtures # Regenerate docs/landing/tests/fixtures.json from glide-py and fail if it drifted from the committed version
 ```
 
 Run a single test file: `uv run pytest tests/unit/test_foo.py -vsx`

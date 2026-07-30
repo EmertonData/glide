@@ -39,6 +39,9 @@ jobs:
       - name: Functional tests
         run: make functional-tests
 
+      - name: Check landing fixtures
+        run: make check-landing-fixtures
+
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v7.0.0
         with:

@@ -24,7 +24,11 @@ unit-tests:
 functional-tests:
 	uv run pytest $(FUNCTIONAL_DIRS) -vsx
 
-tests: unit-tests functional-tests
+check-landing-fixtures:
+	uv run python docs/landing/tests/generate_fixtures.py
+	git diff --exit-code docs/landing/tests/fixtures.json
+
+tests: unit-tests functional-tests check-landing-fixtures
 
 coverage:
 	uv run pytest -vsx \
@@ -49,6 +53,9 @@ branch:
 	@test -n "$(name)" || (echo "Usage: make branch name=<branch-name>"; exit 1)
 	git checkout main && git pull && git checkout -b $(name)
   
+landing-tests:
+	node --test docs/landing/tests/*.mjs
+
 test-notebooks:
 	@find docs -name "*.ipynb" ! -path "*/generated/*" | while read notebook; do \
 		echo "Testing $$notebook..."; \
