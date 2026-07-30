@@ -1,0 +1,222 @@
+[
+  {
+    "question": "What is the 'peeking problem' in monitoring?",
+    "options": [
+      "Sampling the same observation twice by mistake",
+      "A bug where the estimator reads stale cached data",
+      "A limitation that only affects stratified datasets",
+      "Repeatedly calling an estimator as new data arrives inflates the false alarm rate beyond the nominal confidence level"
+    ],
+    "answerIndex": 3,
+    "explanation": "Each one-shot confidence interval is only individually valid; looking at many of them over time is not jointly valid, which inflates false alarms."
+  },
+  {
+    "question": "Why is it invalid to call a one-shot estimator repeatedly over time and check its confidence interval every time?",
+    "options": [
+      "Because repeated calls always produce the exact same estimate",
+      "Because estimators can only be called once per Python session",
+      "Because each interval is only guaranteed to be valid at that one fixed sample size, not simultaneously across all the times you check it",
+      "Because confidence intervals shrink to zero width after the first call"
+    ],
+    "answerIndex": 2,
+    "explanation": "A confidence interval's guarantee applies at a fixed sample size; treating a sequence of them as jointly valid ignores that they weren't built for repeated peeking."
+  },
+  {
+    "question": "What guarantee does a confidence sequence provide that a confidence interval does not?",
+    "options": [
+      "It is always narrower than a confidence interval",
+      "It stays valid simultaneously at all times, so it can be checked repeatedly as data accumulates",
+      "It removes the need for a proxy label",
+      "It only works for binary-valued metrics"
+    ],
+    "answerIndex": 1,
+    "explanation": "Confidence sequences are anytime-valid: valid at every time step simultaneously, not just at one fixed sample size."
+  },
+  {
+    "question": "Which tutorial demonstrates monitoring a deployed system for drift using a confidence sequence?",
+    "options": [
+      "The PPI tutorial",
+      "The Cost-Optimal Sampling tutorial",
+      "The Stratified PPI tutorial",
+      "The Asymptotic PPRM monitor tutorial"
+    ],
+    "answerIndex": 3,
+    "explanation": "The Asymptotic PPRM monitor tutorial walks through monitoring a deployed system with a confidence sequence."
+  },
+  {
+    "question": "Which tool does GLIDE use to manage its virtual environment and dependency groups?",
+    "options": [
+      "uv",
+      "pip alone",
+      "conda",
+      "poetry"
+    ],
+    "answerIndex": 0,
+    "explanation": "GLIDE uses uv to manage the virtual environment and all dependency groups."
+  },
+  {
+    "question": "Which command creates the virtual environment and installs all dependency groups?",
+    "options": [
+      "make venv",
+      "make tests",
+      "make doc",
+      "make lint"
+    ],
+    "answerIndex": 0,
+    "explanation": "make venv runs uv sync --all-groups, installing everything needed to develop GLIDE."
+  },
+  {
+    "question": "What does `make tests` run?",
+    "options": [
+      "Only the unit tests",
+      "Only the coverage report",
+      "Both the unit tests and the functional tests",
+      "Only the notebook tests"
+    ],
+    "answerIndex": 2,
+    "explanation": "tests is defined as unit-tests followed by functional-tests."
+  },
+  {
+    "question": "How are the project's git pre-commit hooks installed after cloning?",
+    "options": [
+      "uv run prek install",
+      "pip install pre-commit",
+      "git commit --install-hooks",
+      "make hooks"
+    ],
+    "answerIndex": 0,
+    "explanation": "GLIDE uses prek as its pre-commit hook runner, installed with uv run prek install."
+  },
+  {
+    "question": "Is running `make test-notebooks` locally required before opening a pull request?",
+    "options": [
+      "Yes, but only for documentation-only pull requests",
+      "No, it's optional locally since notebooks are also executed and validated in CI",
+      "Yes, CI does not test notebooks at all",
+      "No, notebook testing has been removed from the project entirely"
+    ],
+    "answerIndex": 1,
+    "explanation": "Local notebook testing is optional because CI already executes and validates notebooks for every pull request."
+  },
+  {
+    "question": "Besides the module breakdown, what else does `.claude/CLAUDE.md` cover that's directly relevant to a new contributor?",
+    "options": [
+      "A list of every historical git commit",
+      "The pricing of the GLIDE PyPI package",
+      "Testing organisation, coding conventions, and code hygiene / consistency expectations",
+      "Only the company's HR policies"
+    ],
+    "answerIndex": 2,
+    "explanation": "CLAUDE.md documents how tests are organised, naming/typing/error-handling conventions, and code hygiene and consistency expectations."
+  },
+  {
+    "question": "What level of test coverage does the project enforce?",
+    "options": [
+      "There is no enforced coverage requirement",
+      "50%, averaged across the whole repository",
+      "100%, including functional tests",
+      "100%, on unit tests (functional tests are excluded from that measurement)"
+    ],
+    "answerIndex": 3,
+    "explanation": "Coverage is measured on unit tests only, and 100% is required; functional tests are excluded from that specific measurement."
+  },
+  {
+    "question": "What is the standard contribution flow in GLIDE?",
+    "options": [
+      "Email the maintainers a patch file",
+      "Create a new fork for every single commit",
+      "Open an issue, create a branch, open a pull request against main, get it reviewed, then merge",
+      "Push directly to main, then open an issue afterwards to document it"
+    ],
+    "answerIndex": 2,
+    "explanation": "CONTRIBUTING.md spells out the issue -> branch -> pull request -> review -> merge flow."
+  },
+  {
+    "question": "What should you do before writing code for a new estimator or sampler?",
+    "options": [
+      "Open an issue and share the reference paper, so maintainers can frame the ticket",
+      "Implement it directly on the main branch",
+      "Skip the issue only if the change is small",
+      "Submit the pull request first and discuss it afterwards"
+    ],
+    "answerIndex": 0,
+    "explanation": "New estimators and samplers should be backed by a publication; opening an issue with the paper lets maintainers frame the implementation upfront."
+  },
+  {
+    "question": "What does the `create-pr` Claude Code skill do?",
+    "options": [
+      "Pushes the current branch, fills in the PR template from the diff, updates the CHANGELOG, attaches labels, and opens the PR",
+      "Automatically merges any open pull request",
+      "Rewrites commit history to squash all commits",
+      "Deletes stale branches after a PR is merged"
+    ],
+    "answerIndex": 0,
+    "explanation": "create-pr automates preparing and opening the pull request from the current branch's diff."
+  },
+  {
+    "question": "What is the purpose of the `/code-review` skill?",
+    "options": [
+      "It triages open Dependabot pull requests",
+      "It reviews the pending diff on your branch across multiple dimensions before you request human review",
+      "It automatically fixes every lint error in the codebase",
+      "It generates the CHANGELOG entry for a release"
+    ],
+    "answerIndex": 1,
+    "explanation": "/code-review gives you a multi-dimensional review of your diff before asking a human for review."
+  },
+  {
+    "question": "What does the `dependabot` skill do, and who has the final say on merging?",
+    "options": [
+      "It classifies and applies the oldest open Dependabot PR's version bump and resolves conflicts with main, but a maintainer still merges it manually",
+      "It automatically merges every Dependabot PR without human involvement",
+      "It deletes all open Dependabot PRs older than a month",
+      "It only works on GitHub Actions version bumps, not Python dependencies"
+    ],
+    "answerIndex": 0,
+    "explanation": "dependabot triages and prepares the PR, but merging is intentionally left to a maintainer."
+  },
+  {
+    "question": "What does the `ticket` skill produce?",
+    "options": [
+      "A developer-ready ticket in the tickets/ folder, drafted from a paper, refactor request, or maintenance task",
+      "A new release on PyPI",
+      "A CHANGELOG entry only, without any ticket file",
+      "A finished pull request implementing the feature"
+    ],
+    "answerIndex": 0,
+    "explanation": "ticket drafts a ticket file under tickets/ describing the work to be done, not the implementation itself."
+  },
+  {
+    "question": "What does the `release` skill automate?",
+    "options": [
+      "Version bump, CHANGELOG update, release PR, TestPyPI trigger, git tag, and GitHub release creation",
+      "Only bumping the version number in pyproject.toml",
+      "Writing the monthly newsletter",
+      "Running the full test suite before every commit"
+    ],
+    "answerIndex": 0,
+    "explanation": "release automates the end-to-end release process across all of these steps."
+  },
+  {
+    "question": "Which documentation section is auto-generated directly from the codebase's docstrings?",
+    "options": [
+      "API Reference",
+      "Deep Dive",
+      "Tutorials",
+      "Getting Started"
+    ],
+    "answerIndex": 0,
+    "explanation": "API Reference is generated by mkdocstrings from the docstrings in the codebase."
+  },
+  {
+    "question": "Why shouldn't you run `make doc` just to check a small documentation change?",
+    "options": [
+      "It requires a paid ReadTheDocs subscription",
+      "It executes every tutorial notebook and takes over 10 minutes to complete",
+      "It permanently deletes the docs/ folder",
+      "It only works on the CI server, never locally"
+    ],
+    "answerIndex": 1,
+    "explanation": "make doc builds the full site and executes every notebook, which is slow and overkill for a small change."
+  }
+]
