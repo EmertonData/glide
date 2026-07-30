@@ -423,7 +423,7 @@
             </div>
             <div class="slider-group">
               <label for="humanSize">
-                Number of Ground Truths
+                Number of Human Annotations
                 <span class="slider-value" id="humanSizeValue"></span>
               </label>
               <input type="range" class="form-range" id="humanSize" min="20" max="1995" step="5" value="500" />
@@ -433,26 +433,26 @@
             </div>
             <div class="slider-group">
               <label for="trueMean">
-                Ground Truth Estimate
+                Human Estimate
                 <span class="slider-value" id="trueMeanValue"></span>
               </label>
               <input type="range" class="form-range" id="trueMean" min="0.01" max="0.99" step="0.01" value="0.65" />
             </div>
             <div class="slider-group">
               <label for="proxyMean">
-                Proxy Estimate
+                LLM-as-Judge Estimate
                 <span class="slider-value" id="proxyMeanValue"></span>
               </label>
               <input type="range" class="form-range" id="proxyMean" min="0.01" max="0.99" step="0.01" value="0.62" />
             </div>
             <div class="slider-group">
               <label for="correlation">
-                Ground Truth/Proxy Correlation
+                Human/LLM-as-Judge Correlation
                 <span class="slider-value" id="correlationValue"></span>
               </label>
               <input type="range" class="form-range" id="correlation" min="0" max="1" step="0.01" value="0.85" />
               <div class="form-text">
-                Note : The range of possible correlations depends on the ground truth estimate and proxy estimate values above.
+                Note : The range of possible correlations depends on the human estimate and LLM-as-Judge estimate values above.
               </div>
             </div>
           </div>
@@ -465,7 +465,7 @@
 
         <div class="readout-block" id="simulatorReadout"></div>
         <p class="text-muted small mt-2 mb-0">
-          Note : the confidence interval can be narrowed further with stratification or multiple proxies.
+          Note : the confidence interval can be narrowed further with stratification or multiple LLM-as-Judge estimates.
         </p>
 
         <!-- INSTALL -->
