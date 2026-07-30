@@ -114,6 +114,7 @@ nav:
     - Case Studies:
       - Agentic System Evaluation: deep_dive/case_studies/r_judge.ipynb
       - Text-to-SQL Accuracy Estimation: deep_dive/case_studies/spider.ipynb
+      - RAG Answer Faithfulness Estimation: deep_dive/case_studies/memerag.ipynb
   - Contributing: contributing.md
   - API Reference:
     - Overview: api/index.md
