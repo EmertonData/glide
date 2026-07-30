@@ -269,6 +269,14 @@
       background: var(--correlation-track, var(--bs-secondary-bg));
     }
 
+    #humanSize.form-range::-webkit-slider-runnable-track {
+      background: var(--human-size-track, var(--bs-secondary-bg));
+    }
+
+    #humanSize.form-range::-moz-range-track {
+      background: var(--human-size-track, var(--bs-secondary-bg));
+    }
+
     .simulator-chart-wrap {
       background-color: rgba(255, 255, 255, 0.7);
       border-radius: 0.4rem;
@@ -419,6 +427,9 @@
                 <span class="slider-value" id="humanSizeValue"></span>
               </label>
               <input type="range" class="form-range" id="humanSize" min="20" max="1995" step="5" value="500" />
+              <div class="form-text">
+                Note : The number of ground truths must remain below the sample size above.
+              </div>
             </div>
             <div class="slider-group">
               <label for="trueMean">
@@ -453,6 +464,9 @@
         </div>
 
         <div class="readout-block" id="simulatorReadout"></div>
+        <p class="text-muted small mt-2 mb-0">
+          Note : the confidence interval can be narrowed further with stratification or multiple proxies.
+        </p>
 
         <!-- INSTALL -->
         <div class="section-heading">Get started</div>
@@ -503,8 +517,8 @@
     };
 
     const readout = document.getElementById('simulatorReadout');
-    const pointColors = ['#103050', '#90caf9', '#ffd43b'];
-    const pointBorderColors = ['#0a2238', '#5aa9e6', '#b8860b'];
+    const pointColors = ['#103050', '#90caf9', '#ffda33'];
+    const pointBorderColors = ['#0a2238', '#5aa9e6', '#ffda33'];
     let chart;
     let trueMeanValue = null;
     let latestPoints = [];
@@ -537,13 +551,21 @@
       };
     }
 
+    function updateHumanSizeTrack(maxHumanSize) {
+      const sliderMin = Number(sliders.humanSize.min);
+      const sliderMax = Number(sliders.humanSize.max);
+      const maxPercent = ((maxHumanSize - sliderMin) / (sliderMax - sliderMin)) * 100;
+      const gradient = `linear-gradient(to right, #90caf9 0%, #90caf9 ${maxPercent}%, #ced4da ${maxPercent}%, #ced4da 100%)`;
+      sliders.humanSize.style.setProperty('--human-size-track', gradient);
+    }
+
     function clampHumanSize(totalSize) {
       const step = Number(sliders.humanSize.step);
       const maxHumanSize = totalSize - step;
-      sliders.humanSize.max = maxHumanSize;
       if (Number(sliders.humanSize.value) > maxHumanSize) {
         sliders.humanSize.value = maxHumanSize;
       }
+      updateHumanSizeTrack(maxHumanSize);
     }
 
     function updateCorrelationTrack(min, max) {
@@ -584,16 +606,19 @@
           y: result.humanOnly.mean,
           yMin: clampUnitInterval(result.humanOnly.mean - result.humanOnly.halfWidth),
           yMax: clampUnitInterval(result.humanOnly.mean + result.humanOnly.halfWidth),
+          halfWidth: result.humanOnly.halfWidth,
         },
         {
           y: result.judgeOnly.mean,
           yMin: clampUnitInterval(result.judgeOnly.mean - result.judgeOnly.halfWidth),
           yMax: clampUnitInterval(result.judgeOnly.mean + result.judgeOnly.halfWidth),
+          halfWidth: result.judgeOnly.halfWidth,
         },
         {
           y: result.ppi.mean,
           yMin: clampUnitInterval(result.ppi.mean - result.ppi.halfWidth),
           yMax: clampUnitInterval(result.ppi.mean + result.ppi.halfWidth),
+          halfWidth: result.ppi.halfWidth,
         },
       ];
     }
@@ -612,25 +637,25 @@
         chart = new Chart(document.getElementById('ppiChart').getContext('2d'), {
           type: 'lineWithErrorBars',
           data: {
-            labels: ['Human only', 'Judge only', 'PPI'],
+            labels: ['Human only', 'Judge only', 'GLIDE'],
             datasets: [
               {
                 label: 'Point estimate',
                 data: pointMarkers,
                 showLine: false,
                 pointStyle: 'circle',
-                pointRadius: 24,
-                pointHoverRadius: 28,
-                pointBackgroundColor: pointColors,
-                pointBorderColor: pointBorderColors,
-                pointBorderWidth: 4,
+                pointWithErrorBarRadius: 5,
+                pointWithErrorBarHoverRadius: 6,
+                pointWithErrorBarBackgroundColor: pointColors,
+                pointWithErrorBarBorderColor: '#ffffff',
+                pointWithErrorBarBorderWidth: 1.5,
               },
               {
                 label: 'Confidence interval (95%)',
                 data: points,
                 showLine: false,
-                pointRadius: 0,
-                pointHoverRadius: 0,
+                pointWithErrorBarRadius: 0,
+                pointWithErrorBarHoverRadius: 0,
                 errorBarColor: pointBorderColors,
                 errorBarLineWidth: 5,
                 errorBarWhiskerColor: pointBorderColors,
@@ -648,6 +673,9 @@
               tooltip: {
                 titleFont: { size: 16, weight: 'bold' },
                 bodyFont: { size: 15 },
+                filter(tooltipItem) {
+                  return tooltipItem.datasetIndex === 0;
+                },
                 callbacks: {
                   labelColor(context) {
                     return {
@@ -657,11 +685,8 @@
                   },
                   label(context) {
                     const point = latestPoints[context.dataIndex];
-                    return [
-                      `Point estimate: ${point.y.toFixed(3)}`,
-                      `Lower bound (95% confidence): ${point.yMin.toFixed(3)}`,
-                      `Upper bound (95% confidence): ${point.yMax.toFixed(3)}`,
-                    ];
+                    const label = `${point.y.toFixed(3)} ± ${point.halfWidth.toFixed(3)} (95% confidence)`;
+                    return label;
                   },
                 },
               },
