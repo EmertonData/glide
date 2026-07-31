@@ -1,15 +1,15 @@
 # Overview
 
-This section collects end-to-end tutorials for each combination of sampler and estimator available in GLIDE. Each tutorial walks through a complete path from sampling to annotation to estimation on a simulated dataset, so you can follow along with the use case that best matches your own.
+This section collects end-to-end tutorials for each combination of sampler, estimator, and monitor available in GLIDE. Each tutorial walks through a complete path from sampling to annotation to estimation (and, once a system is deployed, to monitoring) on a simulated dataset, so you can follow along with the use case that best matches your own.
 
-If you are new to GLIDE, read the [User Guide](../user_guide/index.md) first: it explains the three-stage pipeline and the role of each component. The guidance below helps you pick the right sampler and estimator for each stage of that workflow.
+If you are new to GLIDE, read the [User Guide](../user_guide/index.md) first: it explains the three-stage pipeline and the role of each component. The guidance below helps you pick the right sampler, estimator, and monitor for each stage of that workflow.
 
-## Choosing the right sampler and estimator
+## Choosing the right sampler, estimator, and monitor
 
-The workflow breaks into three sequential phases: **Sampling** (deciding which items to send for human annotation), **Annotation** (collecting human labels), and **Estimation** (computing debiased statistics from the combined human and proxy data). The decision tree below guides you through each phase.
+The workflow breaks into four sequential phases: **Sampling** (deciding which items to send for human annotation), **Annotation** (collecting human labels), **Estimation** (computing debiased statistics from the combined human and proxy data), and **Monitoring** (watching a deployed system's metric over successive batches for drift). The decision tree below guides you through each phase.
 
 <p align="center">
-  <img src="../assets/glide-decision-tree.png" alt="Decision tree for choosing a GLIDE sampler and estimator" width="80%">
+  <img src="../assets/glide-decision-tree.png" alt="Decision tree for choosing a GLIDE sampler, estimator, and monitor" width="80%">
 </p>
 
 ---
@@ -64,6 +64,18 @@ Use the table below to find the tutorial that matches your situation.
 
 If your data contains fewer than 50 human labels: use the PTD variant of the estimators above (`PTDMeanEstimator` for PPI++, `StratifiedPTDMeanEstimator` for Stratified PPI++, `ClusteredPTDMeanEstimator` for Clustered PPI++, `IPWPTDMeanEstimator` for ASI, and `MultiPTDMeanEstimator` for Multi-PPI++). In the stratified case, the `StratifiedPTDMeanEstimator` should be used whenever one of the strata has fewer than 50 labels. The tutorial workflow for the respective estimators is identical; only the estimator class changes.
 
-## Monitoring a deployed system for drift
+## Phase 4: Monitoring
 
-Once a system is deployed, the question shifts from estimating a metric once to watching it over time: has it drifted past an acceptable threshold? This is a different problem from the sampler/estimator selection above, since it is not about a one-off estimate but about re-estimating a metric on successive batches of production data while keeping repeated checks statistically valid. For example, the [Asymptotic PPRM tutorial](asymptotic_pprm_monitor.ipynb) walks through this post-deployment workflow using the `AsymptoticPPRM`.
+Once a system is deployed, the question shifts from estimating a metric once to watching it over time: has it drifted past an acceptable threshold? This is a different problem from the sampler/estimator selection above, since it is not about a one-off estimate but about re-estimating a metric on successive batches of production data while keeping repeated checks statistically valid. The [Monitors user guide](../user_guide/monitors.md) derives the anytime-valid guarantee behind this from first principles.
+
+Each Phase 3 estimator has a monitoring counterpart that re-estimates the same quantity across successive batches instead of a single one-off pull.
+
+| Phase 3 estimator | Monitor | Tutorial |
+|---|---|---|
+| PPI++ | Asymptotic PPRM | [Asymptotic PPRM](asymptotic_pprm.ipynb) |
+| Stratified PPI++ | Asymptotic Stratified PPRM | Coming soon |
+| Clustered PPI++ | Asymptotic Clustered PPRM | Coming soon |
+| Multi-PPI++ | Asymptotic Multi-PPRM | Coming soon |
+| ASI | Asymptotic Active PPRM | Coming soon |
+
+The [Asymptotic PPRM tutorial](asymptotic_pprm.ipynb) walks through the `AsymptoticPPRM` monitor, alongside its label-only counterpart `AsymptoticClassicalMeanMonitor`.
