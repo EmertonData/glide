@@ -8,8 +8,8 @@
         "proxyMean": 0.76,
         "correlation": 0.6
       },
-      "ppi_half_width": 0.010868345138733592,
-      "human_half_width": 0.013033169860161042,
+      "ppi_half_width": 0.01087,
+      "human_half_width": 0.01303,
       "effective_sample_size": 5752
     },
     {
@@ -20,8 +20,8 @@
         "proxyMean": 0.7,
         "correlation": 0.3
       },
-      "ppi_half_width": 0.01626021732479938,
-      "human_half_width": 0.01703959213940063,
+      "ppi_half_width": 0.01626,
+      "human_half_width": 0.01704,
       "effective_sample_size": 2196
     }
   ]
