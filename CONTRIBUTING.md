@@ -9,8 +9,9 @@ Depending on what you want to do, jump to the relevant section:
 - **Fixing docs or adding an example?** → [Documentation](#3-documentation)
 - **Improving CI, tooling, or the Makefile?** → [Repository hygiene](#4-repository-hygiene)
 - **Restructuring code without changing behaviour?** → [Refactoring](#5-refactoring)
+- **New to git, or don't know how to code?** → [A note for non-technical contributors](#a-note-for-non-technical-contributors)
 
-Before writing any code, please [open an issue](https://github.com/EmertonData/glide/issues) to discuss the scope of your change. This is highly recommended and especially important for new estimators and samplers: sharing the reference paper upfront gives maintainers a chance to read it and frame the ticket to guide your implementation. When you are ready to submit, fork the repository, create a branch off `main`, and open a pull request against `main`. The PR template lists all conditions that must be satisfied before requesting a review.
+Before writing any code, please [open an issue](https://github.com/EmertonData/glide/issues) to discuss the scope of your change. This is highly recommended and especially important for new estimators and samplers: sharing the reference paper upfront gives maintainers a chance to read it and frame the ticket to guide your implementation. Once the scope is agreed, follow the [Contribution workflow](#contribution-workflow) below to submit your change. The PR template lists all conditions that must be satisfied before requesting a review.
 
 ---
 
@@ -57,6 +58,58 @@ make test-notebooks
 ```
 
 Note: Notebook testing also runs in CI for all pull requests, so local testing is optional. The CI workflow ensures notebooks are executed and validated before merge.
+
+---
+
+## Contribution workflow
+
+Once an issue is open and its scope agreed, follow these steps to submit your change.
+
+**1. Sync with `main`**
+
+```bash
+git checkout main
+git pull origin main
+make venv
+```
+
+**2. Create a branch**
+
+```bash
+make branch name=<your-branch-name>
+```
+
+This checks out `main`, pulls the latest changes, and creates your branch in one step. Name branches with the same prefixes as commits (see below), e.g. `feat/user-auth`, `fix/bug-fix`, `doc/improve-rendering`.
+
+**3. Make your changes and commit**
+
+Before pushing, run the checks that CI will run:
+
+```bash
+make lint
+make type-check
+make coverage
+```
+
+Write commit messages using [Conventional Commits](https://www.conventionalcommits.org/) prefixes: `feat:`, `fix:`, `doc:`, `ref:`, `test:`, `chore:`, `perf:`, `style:`, `build:`, `ci:`.
+
+**4. Open a pull request**
+
+Push your branch and open a pull request against `main`, linking the related issue and adding the relevant labels. Fill in the PR template: it lists all conditions that must be satisfied before requesting a review.
+
+If you use Claude Code, you don't have to do any of this by hand: it has a `create-pr` skill that pushes the branch, fills in the template from your diff, updates the changelog, and applies labels. Just ask it to open the PR for you.
+
+**5. Code review**
+
+A maintainer reviews the PR for logic, design, and quality. Address every comment, either with a follow-up commit or a reply. The reviewer resolves each conversation once it is addressed.
+
+**6. Squash and merge**
+
+Once approved, the PR is squashed into a single, clean commit on `main`.
+
+### A note for non-technical contributors
+
+You do not need to know how to code to contribute to GLIDE. If you have a notebook, a script, or just an idea for a fix or a new example, open [Claude Code](https://claude.com/product/claude-code) in a clone of this repository and ask it to read this file and open a pull request for you. Claude Code can run every command above (branching, testing, committing, opening the PR) on your behalf, so a working knowledge of Python or git is not a prerequisite. You are still responsible for reviewing what it produces before requesting a review, per the [note on LLM-assisted contributions](#a-note-on-llm-assisted-contributions) below.
 
 ---
 

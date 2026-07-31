@@ -1,332 +1,222 @@
 [
   {
+    "question": "Why is a proxy-only estimate generally biased?",
+    "options": [
+      "The proxy systematically over/under-estimates ground truth",
+      "Proxy labels vary across identical calls",
+      "Proxy labels are missing randomly",
+      "Proxy labels use a different scale"
+    ],
+    "answerIndex": 0,
+    "explanation": "The proxy has its own systematic error relative to ground truth, which biases a naive mean computed from it directly."
+  },
+  {
+    "question": "What does PPI add to a proxy-only estimate to remove this bias?",
+    "options": [
+      "Stratification by proxy score",
+      "A larger proxy sample size",
+      "A continuously refreshed confidence sequence",
+      "A correction term from human labels"
+    ],
+    "answerIndex": 3,
+    "explanation": "PPI adds a correction term computed from the human-labeled subset, capturing the discrepancy between proxy and ground truth."
+  },
+  {
+    "question": "In PPI++, what does 'power tuning' primarily depend on?",
+    "options": [
+      "Number of strata",
+      "Human-proxy label correlation",
+      "Human-vs-proxy annotation cost ratio",
+      "Size of the proxy-labeled dataset"
+    ],
+    "answerIndex": 1,
+    "explanation": "Power tuning sets the weight on the proxy-based correction term, and its optimal value depends on the correlation between proxy and human labels."
+  },
+  {
+    "question": "If PPI++'s power-tuning weight is forced to 0, which estimator does the mean formula reduce to?",
+    "options": [
+      "Classical mean of the proxy pool",
+      "Stratified PPI with one stratum",
+      "ASI with all probabilities equal one",
+      "Classical mean of the human sample"
+    ],
+    "answerIndex": 3,
+    "explanation": "At weight 0 the correction term vanishes entirely, leaving only the classical mean of the human-labeled sample."
+  },
+  {
+    "question": "The Quickstart notebook reports an 'effective sample size' alongside the estimate. What does it represent?",
+    "options": [
+      "Total number of proxy labels",
+      "True labels needed to match precision",
+      "Number of strata used",
+      "Number of bootstrap resamples used"
+    ],
+    "answerIndex": 1,
+    "explanation": "Effective sample size expresses how much the proxy signal is 'worth' in terms of equivalent true labels."
+  },
+  {
+    "question": "How does Stratified PPI extend plain PPI?",
+    "options": [
+      "Replaces human labels with proxy labels",
+      "Computes PPI per stratum, averages",
+      "Requires equal-sized strata",
+      "Drops proxy labels in correlated strata"
+    ],
+    "answerIndex": 1,
+    "explanation": "Stratified PPI applies the same correction stratum by stratum, then aggregates the results via a weighted average."
+  },
+  {
+    "question": "A dataset has two strata: one with a nearly perfect proxy (low variance) and one with a very noisy proxy (high variance). Under Neyman allocation with a fixed budget, which stratum gets more human annotations?",
+    "options": [
+      "The noisy, high-variance stratum",
+      "The near-perfect, low-variance stratum",
+      "Both strata get equal shares",
+      "Whichever stratum is listed first"
+    ],
+    "answerIndex": 0,
+    "explanation": "Neyman allocation gives more budget to strata with higher proxy variance, since annotation there reduces total variance the most."
+  },
+  {
+    "question": "What additional quantity does ASI attach to each sample compared to plain PPI?",
+    "options": [
+      "A cluster identifier",
+      "A per-sample sampling probability",
+      "A per-sample annotation cost estimate",
+      "A second, different proxy label"
+    ],
+    "answerIndex": 1,
+    "explanation": "ASI is PPI where each sample also carries its sampling probability, enabling Inverse Probability Weighting."
+  },
+  {
+    "question": "Under Inverse Probability Weighting, how is a sample with a small selection probability, but selected anyway, treated?",
+    "options": [
+      "Discarded from the estimate",
+      "Treated like any other sample",
+      "Up-weighted, contributing more",
+      "Down-weighted relative to others"
+    ],
+    "answerIndex": 2,
+    "explanation": "Dividing by a small sampling probability produces a large weight, up-weighting rarely-selected samples."
+  },
+  {
+    "question": "Suppose every sample's sampling probability is equal (a uniform design). What happens to ASI's Inverse Probability Weighting correction, compared to a plain PPI estimate on the same labeled sample?",
+    "options": [
+      "Undefined: constant probability can't invert",
+      "Amplifies the bias correction",
+      "Removes the effect of power tuning",
+      "No effect: ASI reduces to PPI"
+    ],
+    "answerIndex": 3,
+    "explanation": "A constant sampling probability contributes the same factor to every term, so the IPW correction degenerates into the same computation as plain PPI."
+  },
+  {
+    "question": "What role do samplers play in the GLIDE pipeline?",
+    "options": [
+      "Compute the final mean directly",
+      "Decide which samples get annotated",
+      "Generate proxy labels via an LLM",
+      "Serialise inference results for export"
+    ],
+    "answerIndex": 1,
+    "explanation": "Samplers sit upstream of estimators: they choose which samples get annotated and may output a per-sample sampling probability."
+  },
+  {
+    "question": "What does ActiveSampler use to decide which samples to prioritize for human annotation?",
+    "options": [
+      "A random coin flip",
+      "The sample's stratum",
+      "Order of appearance in dataset",
+      "A per-sample proxy uncertainty score"
+    ],
+    "answerIndex": 3,
+    "explanation": "ActiveSampler concentrates the annotation budget on samples with the highest proxy uncertainty."
+  },
+  {
+    "question": "What does the StratifiedSampler's Neyman allocation do differently from proportional allocation?",
+    "options": [
+      "Assigns equal annotations to every stratum",
+      "Assigns more budget to high-variance strata",
+      "Ignores strata, samples uniformly overall",
+      "Allocates budget by stratum size alone"
+    ],
+    "answerIndex": 1,
+    "explanation": "Neyman allocation gives more budget to strata where the proxy is more dispersed, since annotation there reduces variance the most."
+  },
+  {
+    "question": "What makes the cost-optimal strategy more efficient than a proxy-only or a human-only baseline, for the same budget?",
+    "options": [
+      "Uses only proxy labels",
+      "Targets annotation at unreliable proxy samples",
+      "Ignores the budget constraint entirely",
+      "Requires no burn-in or proxy"
+    ],
+    "answerIndex": 1,
+    "explanation": "The cost-optimal sampler puts the budget where the proxy struggles most, and ASI corrects for the resulting non-uniform design."
+  },
+  {
+    "question": "Put these pipeline stages in the order they happen when running a cost-optimal sampling workflow.",
+    "options": [
+      "Generate, then sample, then estimate",
+      "Estimate, then generate, then sample",
+      "Sample, then estimate, then generate",
+      "Estimate directly, skip label generation"
+    ],
+    "answerIndex": 0,
+    "explanation": "This is the simulate-sample-estimate pipeline: data first, then the sampling decision, then the final estimate."
+  },
+  {
+    "question": "Which best describes the overall goal that unifies PPI, Stratified PPI, and ASI?",
+    "options": [
+      "Combine proxy and human labels",
+      "Shrink the dataset via clustering",
+      "Eventually replace human annotation entirely",
+      "Detect drift in deployed systems"
+    ],
+    "answerIndex": 0,
+    "explanation": "All three methods are variations on the same core PPI idea of combining proxy and human labels to debias the estimate."
+  },
+  {
     "question": "What is the 'peeking problem' in monitoring?",
     "options": [
-      "Sampling the same observation twice by mistake during data collection",
-      "A caching bug where the estimator reads stale data left over from a previous computation",
-      "Calling an estimator repeatedly as new data arrives inflates the false alarm rate above the nominal level",
-      "A limitation specific to stratified datasets with very small strata"
+      "Sampling the same observation twice",
+      "A stale-data caching bug",
+      "Repeated calls inflate false alarms",
+      "A small-strata specific limitation"
     ],
     "answerIndex": 2,
-    "explanation": "Each one-shot confidence interval is only individually valid; looking at many of them over time is not jointly valid, which inflates false alarms."
+    "explanation": "Each one-shot confidence interval is only individually valid; checking many of them over time is not jointly valid, which inflates false alarms."
   },
   {
-    "question": "Why is it invalid to call a one-shot estimator repeatedly over time and check its confidence interval every time?",
+    "question": "You compute a classical 95% confidence interval at n=1000, then check it again at n=1200, 1500, and 2000 as more data arrives. Compared to the nominal 5%, what happens to your true chance of at least one false alarm across these checks?",
     "options": [
-      "Because repeated calls on growing data tend to produce nearly the same point estimate almost every time",
-      "Because estimator objects can only be instantiated once per Python session",
-      "Because each interval's validity guarantee applies at one fixed sample size, not simultaneously across every time you check it",
-      "Because a confidence interval's width shrinks to zero after its first computation"
+      "Stays exactly at 5%",
+      "Drops noticeably below 5%",
+      "Exceeds 5% across the checks",
+      "Becomes exactly 20%"
     ],
     "answerIndex": 2,
-    "explanation": "A confidence interval's guarantee applies at a fixed sample size; treating a sequence of them as jointly valid ignores that they weren't built for repeated peeking."
-  },
-  {
-    "question": "You compute a single classical 95% confidence interval at n=1000 samples, then check it again at n=1200, n=1500 and n=2000 as more data arrives. Compared to the nominal 5%, what happens to your true probability of raising at least one false alarm across those four checks?",
-    "options": [
-      "It stays at exactly 5%, since the four sample sizes were chosen independently of the data",
-      "It drops noticeably below 5%, since more accumulated data always tightens each interval's width",
-      "It exceeds 5%, since each interval is individually valid but checking several together is not",
-      "It becomes exactly 20%, since a fifth of the nominal rate is spent at each of the four checks"
-    ],
-    "answerIndex": 2,
-    "explanation": "This is the peeking problem in practice: each of the four intervals is valid on its own, but checking all four is not, so the true false-alarm rate creeps above the nominal level."
+    "explanation": "This is the peeking problem in practice: each interval is valid on its own, but checking all of them together is not, so the true false-alarm rate creeps above nominal."
   },
   {
     "question": "What guarantee does a confidence sequence provide that a confidence interval does not?",
     "options": [
-      "A width that is always strictly narrower than the corresponding classical confidence interval",
-      "It stays valid simultaneously at all times, so it can be checked repeatedly as data accumulates",
-      "Coverage that no longer depends on the confidence level chosen upfront",
-      "Support for metrics with more than two possible outcomes"
+      "Always narrower interval width",
+      "Valid at all times simultaneously",
+      "Coverage independent of confidence level",
+      "Support for multi-outcome metrics"
     ],
     "answerIndex": 1,
     "explanation": "Confidence sequences are anytime-valid: valid at every time step simultaneously, not just at one fixed sample size."
   },
   {
-    "question": "A confidence sequence is described as 'anytime-valid'. Concretely, what does that let you do safely that a single confidence interval would not?",
+    "question": "AsymptoticPPRM watches a quality metric across successive batches of production data. What triggers its alarm?",
     "options": [
-      "Stop monitoring and check the bound whenever you like, without inflating the false-alarm rate",
-      "Skip computing a point estimate and report only the confidence bound",
-      "Use a labeled sample smaller than any one-shot estimator would need for the same confidence level",
-      "Ignore the proxy's bias and rely on human labels alone for the whole monitoring period"
-    ],
-    "answerIndex": 0,
-    "explanation": "Anytime-validity is precisely what makes stopping or checking at a data-dependent time safe, unlike a one-shot confidence interval."
-  },
-  {
-    "question": "Why would a team watching a deployed system's hallucination rate day after day reach for the Asymptotic PPRM monitor rather than calling PPIMeanEstimator once per day?",
-    "options": [
-      "PPIMeanEstimator's interval is valid only at the sample size it was computed at, unsafe to recheck daily, unlike PPRM's confidence sequence",
-      "PPIMeanEstimator cannot be combined with proxy labels produced by any LLM judge model",
-      "PPRM does not require any human-labeled samples to run at all",
-      "PPIMeanEstimator is defined only for datasets partitioned into strata"
-    ],
-    "answerIndex": 0,
-    "explanation": "This connects chapter 1's one-shot PPI estimator to chapter 6's monitoring problem: repeated daily calls to a one-shot estimator is exactly the invalid peeking pattern a confidence sequence is designed to fix."
-  },
-  {
-    "question": "AsymptoticPPRM watches a quality metric across successive batches of production data. What does it actually raise an alarm on?",
-    "options": [
-      "Any detectable change in the metric between two consecutive batches, however small",
-      "Statistically valid evidence that the metric has drifted past a threshold fixed in advance",
-      "A fixed number of batches having passed, independent of the metric's value",
-      "A drop in the proxy label alone, whether or not the true metric has actually moved"
+      "Any detectable change between batches",
+      "Valid evidence of drift past threshold",
+      "A fixed number of batches",
+      "A drop in proxy label alone"
     ],
     "answerIndex": 1,
-    "explanation": "AsymptoticPPRM raises an alarm the moment there is statistically valid evidence that the metric has drifted past a business threshold fixed in advance, not on any incidental fluctuation."
-  },
-  {
-    "question": "Which tool does GLIDE use to manage its virtual environment and dependency groups?",
-    "options": [
-      "conda, configured through an environment.yml file",
-      "uv",
-      "Plain pip together with a requirements.txt file",
-      "poetry"
-    ],
-    "answerIndex": 1,
-    "explanation": "GLIDE uses uv to manage the virtual environment and all dependency groups."
-  },
-  {
-    "question": "Which command creates the virtual environment and installs all dependency groups?",
-    "options": [
-      "make lint",
-      "make doc",
-      "make venv",
-      "make tests"
-    ],
-    "answerIndex": 2,
-    "explanation": "make venv runs uv sync --all-groups, installing everything needed to develop GLIDE."
-  },
-  {
-    "question": "What does `make tests` run?",
-    "options": [
-      "Only the coverage report, without executing any test",
-      "Only the notebook tests, skipping unit and functional suites",
-      "Both the unit tests and the functional tests",
-      "Only the unit tests"
-    ],
-    "answerIndex": 2,
-    "explanation": "tests is defined as unit-tests followed by functional-tests."
-  },
-  {
-    "question": "Your new estimator's unit tests all pass and `make coverage` reports 100%, but one functional test fails. Does `make tests` still pass?",
-    "options": [
-      "No: make tests runs both suites together, so one failing functional test fails the whole target",
-      "Yes: since coverage already confirmed the unit tests are completely correct and sufficient",
-      "Yes: functional tests are informational and cannot fail the build",
-      "It depends on whether the failing functional test also has a doctest"
-    ],
-    "answerIndex": 0,
-    "explanation": "make tests is unit-tests followed by functional-tests; both must pass, and 100% unit coverage says nothing about the separate functional-tests target."
-  },
-  {
-    "question": "What is the difference in purpose between `tests/unit/` and `tests/functional/` in GLIDE?",
-    "options": [
-      "tests/unit/ covers samplers and monitors only, tests/functional/ covers estimators only, split by module type",
-      "They test the same code paths, kept as two copies so coverage can be measured twice",
-      "tests/functional/ replaces tests/unit/ once a module reaches full coverage",
-      "Unit tests verify function correctness and drive the coverage requirement; functional tests check statistical properties instead"
-    ],
-    "answerIndex": 3,
-    "explanation": "Unit tests target correctness and are what the 100% coverage requirement measures; functional tests separately check statistical properties, and are excluded from that coverage measurement."
-  },
-  {
-    "question": "GLIDE's testing guidance says to keep unit test arrays as small as possible, typically two elements. What is this meant to achieve?",
-    "options": [
-      "Keeping the unit test suite fast, since a bigger array rarely covers more than a small one already does",
-      "Shrinking the size of the git repository by keeping test files short",
-      "Making the 100% coverage target easier to reach, since large arrays are supposedly harder to fully exercise",
-      "Matching the array sizes used in the Getting Started tutorial notebook"
-    ],
-    "answerIndex": 0,
-    "explanation": "Small, minimal arrays keep the unit test suite fast to run, which matters since it executes on every commit and in CI."
-  },
-  {
-    "question": "You just renamed a public method that's used inside several existing tutorial notebooks. `make test-notebooks` is optional to run locally. Is it worth running before opening the pull request in this case?",
-    "options": [
-      "Yes: this touches something existing notebooks rely on, so a local check catches breakage before CI does",
-      "No: whatever changed, CI will always catch it a few minutes later regardless",
-      "Yes: it must be run before absolutely every pull request, whether or not anything user-facing changed",
-      "No: renamed public methods cannot break notebooks, since they only import from private modules"
-    ],
-    "answerIndex": 0,
-    "explanation": "Optional does not mean pointless: when a change touches something existing notebooks depend on, running them locally catches the breakage before CI does, at the cost of a slower local check."
-  },
-  {
-    "question": "According to `.claude/CLAUDE.md`, when should a function raise `RuntimeError` instead of `ValueError`?",
-    "options": [
-      "When the input itself is invalid, e.g. passing a negative value where only positive numbers make sense",
-      "When the object is in an invalid state for the call, e.g. calling sample() before fit() has been run",
-      "Whenever any argument is a NumPy array rather than a plain Python type",
-      "Whenever the function belongs to a private, internal module rather than the public API"
-    ],
-    "answerIndex": 1,
-    "explanation": "CLAUDE.md reserves ValueError for invalid inputs and RuntimeError for invalid state, such as calling a method before a required prerequisite has run."
-  },
-  {
-    "question": "What level of test coverage does the project enforce?",
-    "options": [
-      "50%, averaged across the whole repository",
-      "100%, including functional tests",
-      "There is no enforced coverage requirement",
-      "100% on unit tests; functional tests are excluded"
-    ],
-    "answerIndex": 3,
-    "explanation": "Coverage is measured on unit tests only, and 100% is required; functional tests are excluded from that specific measurement."
-  },
-  {
-    "question": "Which of these would violate GLIDE's coverage requirement if it occurred inside `glide/estimators/`?",
-    "options": [
-      "An untested branch in a private helper method used by a public estimator",
-      "A functional test that takes a couple of seconds longer than usual to run",
-      "A tutorial notebook cell with no assertions",
-      "A CHANGELOG entry that doesn't link back to an issue"
-    ],
-    "answerIndex": 0,
-    "explanation": "The 100% unit-test coverage requirement applies to everything under glide/, private helpers included; functional tests and notebooks are outside that specific measurement."
-  },
-  {
-    "question": "You are implementing a brand-new sampler at `glide/samplers/new_sampler.py`. Based on the project's testing conventions, where should its unit test file live?",
-    "options": [
-      "Inside glide/samplers/, right next to the implementation file",
-      "Anywhere under tests/, as long as the file name contains 'sampler'",
-      "tests/functional/test_new_sampler.py, since samplers are validated statistically",
-      "tests/unit/samplers/test_new_sampler.py"
-    ],
-    "answerIndex": 3,
-    "explanation": "tests/unit/ mirrors the glide/ folder structure exactly, so a new sampler's unit tests live at the matching path under tests/unit/samplers/."
-  },
-  {
-    "question": "Beyond just its file path, what should you actually consult when structuring the unit tests for that brand-new sampler?",
-    "options": [
-      "Only your own judgment, since GLIDE has no convention for internal test structure",
-      "The nearest equivalent existing test file, mirrored in structure, naming, and ordering",
-      "The corresponding section of the User Guide, reproducing its prose as test docstrings",
-      "The CHANGELOG.md entry that will eventually describe the new sampler"
-    ],
-    "answerIndex": 1,
-    "explanation": "The project's consistency-and-propagation principle asks you to find the nearest equivalent already in the codebase and mirror it in structure, naming, and block ordering, rather than inventing a new layout."
-  },
-  {
-    "question": "For a documentation-only change that doesn't touch any notebook or code, how can you speed up a local `make doc` preview instead of waiting for every notebook to execute?",
-    "options": [
-      "Temporarily set `execute: false` on the mkdocs-jupyter plugin in `mkdocs.yml`, then revert it before committing",
-      "Delete the notebooks from docs/tutorials/ before building, then restore them afterward",
-      "Pass a --fast flag to make doc, which skips notebook execution automatically",
-      "Set include_source: false on the mkdocs-jupyter plugin, which disables notebook execution"
-    ],
-    "answerIndex": 0,
-    "explanation": "The mkdocs-jupyter plugin's execute option controls whether notebooks run during the build; flipping it off locally (and reverting before committing) avoids re-executing every notebook for a change that never touches one. include_source only controls whether source code is shown, not whether it runs, and there is no --fast flag."
-  },
-  {
-    "question": "As a new GLIDE team member picking up your first piece of work, what does the practical contribution flow typically look like?",
-    "options": [
-      "Open a new issue proposing the work yourself and wait for maintainer sign-off before starting anything",
-      "Fork the repository for the change and submit a pull request from that fork, exactly as an external contributor would do it",
-      "Pick up a ticket a maintainer already framed (e.g. from the Projects board), branch off main, implement, then open a pull request",
-      "Implement the change directly on main, then open an issue afterward to document what changed"
-    ],
-    "answerIndex": 2,
-    "explanation": "Team members typically implement tickets maintainers have already framed, branching directly off main rather than forking or originating the issue themselves."
-  },
-  {
-    "question": "Before starting implementation on a new estimator or sampler as a GLIDE team member, what should you do first?",
-    "options": [
-      "Open a brand-new GitHub issue yourself proposing the method, since none exists yet",
-      "Start writing the implementation right away, opening an issue only if a reviewer later asks for one",
-      "Read the corresponding ticket, already framed by a maintainer with the reference paper and scope",
-      "Post in an internal channel asking whether the method is worth implementing at all"
-    ],
-    "answerIndex": 2,
-    "explanation": "For a team member, the framing work (reference paper, expected scope) is typically already done in the ticket a maintainer prepared, rather than something the contributor originates."
-  },
-  {
-    "question": "You've just finished a change and want an automated, multi-dimensional review of your diff before asking a human to review it. Which tool do you reach for?",
-    "options": [
-      "create-pr",
-      "ticket",
-      "dependabot",
-      "/code-review"
-    ],
-    "answerIndex": 3,
-    "explanation": "/code-review reviews the pending diff on your branch across multiple dimensions before you request human review."
-  },
-  {
-    "question": "Which of these inputs can the `ticket` skill turn into a developer-ready ticket in `tickets/`?",
-    "options": [
-      "Only a research paper describing a brand-new estimator or sampler method",
-      "A research paper, a refactor request, a documentation task, or general repository maintenance work",
-      "Only an already-merged pull request, drafted afterward just to document it retroactively",
-      "Only a bug report filed through GitHub Issues by an external user"
-    ],
-    "answerIndex": 1,
-    "explanation": "ticket drafts a developer-ready ticket from any of these inputs, not just papers: refactors, renamings, documentation work, and repository maintenance all qualify."
-  },
-  {
-    "question": "Which Claude Code skill automates the entire version-bump-to-GitHub-release pipeline in one go, including creating the git tag and triggering TestPyPI?",
-    "options": [
-      "create-pr",
-      "/code-review",
-      "release",
-      "ticket"
-    ],
-    "answerIndex": 2,
-    "explanation": "release automates the version bump, CHANGELOG update, release PR, TestPyPI trigger, git tag, and GitHub release creation."
-  },
-  {
-    "question": "Which of GLIDE's Claude Code skills is triggered by outstanding automated dependency-bump pull requests, rather than by something a contributor initiates about their own change?",
-    "options": [
-      "create-pr",
-      "ticket",
-      "/code-review",
-      "dependabot"
-    ],
-    "answerIndex": 3,
-    "explanation": "dependabot triages and prepares the oldest open Dependabot pull request; a maintainer still merges it manually."
-  },
-  {
-    "question": "An estimator's `estimate()` method calls the shared `_preprocess()` validation helper before doing its own computation, and `_preprocess()` already has its own tests covering every invalid-input case. When testing `estimate()`'s input validation, what should the unit test check?",
-    "options": [
-      "That calling estimate() with invalid input raises ValueError directly in its own test, duplicating what _preprocess() already covers",
-      "That _preprocess() was called (a delegation check), without repeating the raise-on-invalid-input test already covered there",
-      "Nothing at all: once a helper is shared across classes, none of its callers need a validation test",
-      "That estimate() defines and raises its own custom exception subclass for invalid input"
-    ],
-    "answerIndex": 1,
-    "explanation": "Validation should only be tested where it lives (in _preprocess()); callers that delegate to it are tested by asserting the delegation happened, not by re-testing the same raise."
-  },
-  {
-    "question": "Which documentation section is auto-generated directly from the codebase's docstrings?",
-    "options": [
-      "Tutorials",
-      "Deep Dive",
-      "Getting Started",
-      "API Reference"
-    ],
-    "answerIndex": 3,
-    "explanation": "API Reference is generated by mkdocstrings from the docstrings in the codebase."
-  },
-  {
-    "question": "A contributor wants to see proof that an estimator gives statistically correct confidence intervals, not just an example of calling it. Which documentation section should they open?",
-    "options": [
-      "Tutorials, since they show the estimator being called on a realistic scenario",
-      "Getting Started, since it covers installation and a first example",
-      "Deep Dive, Scientific Validation",
-      "API Reference, since it lists every parameter the estimator accepts"
-    ],
-    "answerIndex": 2,
-    "explanation": "Tutorials show how to call the public API on a realistic scenario; Deep Dive's scientific validation notebooks are the ones that prove statistical correctness."
-  },
-  {
-    "question": "Where would you look to see GLIDE applied to estimate text-to-SQL accuracy on a real benchmark, rather than a synthetic example?",
-    "options": [
-      "User Guide, since it lays out the mathematical setting behind each method",
-      "Getting Started, since it covers the first example a new user sees",
-      "The Makefile, since it defines every command available to run",
-      "Deep Dive, Case Studies"
-    ],
-    "answerIndex": 3,
-    "explanation": "Case studies (r_judge, spider, memerag) apply GLIDE's full pipeline to real evaluation workflows, unlike the synthetic data used in tutorials and validation notebooks."
+    "explanation": "AsymptoticPPRM alarms only once there is statistically valid evidence the metric drifted past a threshold fixed in advance, not on incidental fluctuation."
   }
 ]
