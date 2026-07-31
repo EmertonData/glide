@@ -43,7 +43,10 @@
       padding: 2.5rem 1.75rem 2rem;
       display: flex;
       flex-direction: column;
-      justify-content: space-between;
+    }
+
+    .sidebar-footer {
+      margin-top: auto;
     }
 
     .main-panel {
@@ -56,6 +59,7 @@
       grid-template-columns: repeat(3, 1fr);
       gap: 1rem 0.5rem;
       justify-items: center;
+      margin-top: 2rem;
       margin-bottom: 0.5rem;
     }
 
@@ -348,7 +352,7 @@
           </a>
         </div>
 
-        <div>
+        <div class="sidebar-footer">
           <hr class="mb-4 mt-0" />
           <p class="sidebar-footer-label mb-2">
             A Python library by
@@ -426,31 +430,28 @@
                 Number of Human Annotations
                 <span class="slider-value" id="humanSizeValue"></span>
               </label>
-              <input type="range" class="form-range" id="humanSize" min="20" max="1995" step="5" value="500" />
-              <div class="form-text">
-                Note : The number of ground truths must remain below the sample size above.
-              </div>
+              <input type="range" class="form-range" id="humanSize" min="20" max="1995" step="5" value="100" />
             </div>
             <div class="slider-group">
               <label for="trueMean">
                 Human Estimate
                 <span class="slider-value" id="trueMeanValue"></span>
               </label>
-              <input type="range" class="form-range" id="trueMean" min="0.01" max="0.99" step="0.01" value="0.65" />
+              <input type="range" class="form-range" id="trueMean" min="0.01" max="0.99" step="0.01" value="0.50" />
             </div>
             <div class="slider-group">
               <label for="proxyMean">
                 LLM-as-Judge Estimate
                 <span class="slider-value" id="proxyMeanValue"></span>
               </label>
-              <input type="range" class="form-range" id="proxyMean" min="0.01" max="0.99" step="0.01" value="0.62" />
+              <input type="range" class="form-range" id="proxyMean" min="0.01" max="0.99" step="0.01" value="0.60" />
             </div>
             <div class="slider-group">
               <label for="correlation">
                 Human/LLM-as-Judge Correlation
                 <span class="slider-value" id="correlationValue"></span>
               </label>
-              <input type="range" class="form-range" id="correlation" min="0" max="1" step="0.01" value="0.85" />
+              <input type="range" class="form-range" id="correlation" min="0" max="1" step="0.01" value="0.77" />
               <div class="form-text">
                 Note : The range of possible correlations depends on the human estimate and LLM-as-Judge estimate values above.
               </div>
@@ -715,7 +716,7 @@
     function updateReadout(result, params) {
       readout.innerHTML = `
         Effective sample size: <span class="readout-highlight">${result.effectiveSampleSize}</span><br />
-        GLIDE's estimate is as precise as if you had <span class="readout-highlight">${result.effectiveSampleSize}</span> ground truth annotations, instead of the provided <span class="readout-highlight">${params.humanSize}</span>
+        <span class="readout-highlight">${params.humanSize}</span> annotations. The statistical power of <span class="readout-highlight">${result.effectiveSampleSize}</span>
       `;
     }
 
