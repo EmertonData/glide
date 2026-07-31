@@ -6,10 +6,11 @@ pass threshold and gives immediate per-question feedback (correct answer plus ex
 
 ## Setup
 
-Questions are loaded via `fetch()`, which browsers block on `file://`. Serve the folder over HTTP instead:
+To load the quizz, serve the folder over HTTP via:
 
 ```bash
-cd docs/onboarding_quizz && python3 -m http.server 8000
+cd docs/onboarding_quizz
+python3 -m http.server 8000
 ```
 
 Then open `http://localhost:8000/quizz1.html` (or `quizz2.html`).

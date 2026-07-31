@@ -12,8 +12,7 @@ Welcome to GLIDE. This checklist points a new contributor to the right material 
 
 ### 1. Local setup and software engineering practices
 
-This is the point where you start actually running things yourself.
-
+- [ ] Clone the GLIDE GitHub repository locally.
 - [ ] Follow the "Setup" section of the online [Contributing guide](https://glide-py.readthedocs.io/en/latest/contributing/): install `uv`, run `make venv`, verify with `make tests`, install the pre-commit hooks with `uv run prek install`, and optionally run `make test-notebooks`.
 - [ ] Read `.claude/CLAUDE.md` which details the module breakdown, how `tests/unit/` and `tests/functional/` mirror it, the coverage/mocking/naming/typing conventions, and the code hygiene and consistency/propagation expectations.
 - [ ] Confirm you can run `make lint`, `make type-check`, and `make tests` locally without errors on a clean checkout.
@@ -34,7 +33,7 @@ GLIDE also uses a set of Claude Code skills to automate repetitive parts of this
 
 ### Checkpoint: Quiz 1
 
-Once chapters 1 and 2 are checked off, take the first validation quiz (90% pass threshold): `docs/onboarding_quizz/quizz1.html`. To load it, clone the repository, then run:
+Once chapters 1 and 2 are checked off, take the first validation quiz (90% pass threshold): `docs/onboarding_quizz/quizz1.html`. To load it, run:
 
 ```bash
 cd docs/onboarding_quizz && python3 -m http.server 8000
@@ -46,10 +45,10 @@ and open `http://localhost:8000/quizz1.html`.
 
 ### 3. The core idea: Prediction-Powered Inference (PPI)
 
-Every method in GLIDE is a variation on one idea: you have **cheap, biased proxy labels** for an entire dataset (e.g. an LLM judge) and a **small, expensive, unbiased set of human labels**. PPI combines both to produce an estimate of the true mean that is unbiased and lower-variance than using human labels alone.
+Every method in GLIDE is a variation on one idea: you have **cheap, biased proxy labels** for an entire dataset (e.g. an LLM judge) and a **small, expensive, unbiased set of human labels**. PPI combines both to produce an estimate of the true mean that is unbiased and has lower variance than an estimate using human labels alone.
 
 - [ ] Go through the [PPI tutorial](https://glide-py.readthedocs.io/en/latest/tutorials/ppi/) and make sure you understand how it works.
-- [ ] Read the [Estimators user guide](https://glide-py.readthedocs.io/en/latest/user_guide/estimators/) until the end of the "Prediction-Powered Inference (PPI++)" section, including its "Mean estimation" and "Variance and CIs" subsections.
+- [ ] Read the [Estimators user guide](https://glide-py.readthedocs.io/en/latest/user_guide/estimators/) until the end of the "Prediction-Powered Inference (PPI++)" section, including its "Mean estimation" and "Variance and confidence intervals" subsections.
 - [ ] Skim `glide/estimators/ppi.py` (the `PPIMeanEstimator` class) to see where the quantities from the user guide live in code; some of the heavy lifting is delegated to internal helpers imported from elsewhere in the package, no need to chase those down at this stage.
 
 Make sure you understand the role of power tuning and how it depends on the correlation between human and proxy (LLM judge) labels.
@@ -66,7 +65,7 @@ In summary, PPI can be applied to stratified data by computing plain PPI within 
 
 ### 5. Active Statistical Inference (ASI) and Inverse Probability Weighting
 
-The goal of this section is to leave with a clear, intuitive understanding of the IPW mechanism, since it is an important foundation to understand samplers.
+The goal of this section is to leave with a clear, intuitive understanding of the IPW mechanism, since it is an important foundation for understanding samplers.
 
 ASI is PPI where each sample also carries a **sampling probability** $\pi_i$: the probability that sample $i$ was selected for human annotation. Samples that were unlikely to be picked ($\pi_i$ small) but were picked anyway are up-weighted by $1/\pi_i$; samples that were very likely to be picked are barely up-weighted at all. In expectation over the random selection, this correction exactly cancels the bias introduced by non-uniform sampling — a commonly used principle in survey statistics.
 
@@ -89,7 +88,7 @@ Before moving to monitoring, consolidate everything above into one mental pipeli
 
 - [ ] Read the "Summary: what each strategy contributes" section of the [Cost-Optimal Sampling tutorial](https://glide-py.readthedocs.io/en/latest/tutorials/cost_optimal/#summary-what-each-strategy-contributes): it runs the full simulate → sample → estimate pipeline end to end and compares a proxy-only, a human-only, and a cost-optimal strategy on cost and bias.
 
-Note: you do not need to understand the inner workings of the Cost Optimal Sampler.
+Note: you do not need to understand the inner workings of the Cost-Optimal Sampler.
 
 ### 8. Monitoring and the peeking problem
 
@@ -110,4 +109,4 @@ Once chapters 3 to 8 are checked off, take the second validation quiz (90% pass 
 - The Deep Dive section (`docs/deep_dive/`) has further scientific validation notebooks and real-world case studies applying the full simulate → sample → estimate pipeline to concrete benchmarks.
 - The README's `📖 References` list, if you want to go read the original papers behind a specific method.
 
-If you have the time, it's worth exploring this material at your own pace, there's no expectation to cover all of it right away.
+If you have the time, it's worth exploring this material at your own pace; there's no expectation to cover all of it right away.

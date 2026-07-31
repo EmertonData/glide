@@ -47,7 +47,7 @@
     "question": "The Quickstart notebook reports an 'effective sample size' alongside the estimate. What does it represent?",
     "options": [
       "Total number of proxy labels",
-      "True labels needed to match precision",
+      "Number of true labels needed to match PPI's precision",
       "Number of strata used",
       "Number of bootstrap resamples used"
     ],
