@@ -1,6 +1,6 @@
 (function () {
   const container = document.getElementById("quizz-app");
-  const PASS_RATIO = 0.9;
+  const PASS_RATIO = 0.8;
 
   function renderIntro(total) {
     const intro = document.createElement("p");

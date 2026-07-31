@@ -1,7 +1,7 @@
 # Onboarding Quizzes
 
 Validation quizzes for the [onboarding checklist](../doc-onboarding-checklist.md), used to check that a
-checkpoint's chapters were properly understood. Each quiz is multiple-choice with a 90%
+checkpoint's chapters were properly understood. Each quiz is multiple-choice with a 80%
 pass threshold and gives immediate per-question feedback (correct answer plus explanation) on submit.
 
 ## Setup

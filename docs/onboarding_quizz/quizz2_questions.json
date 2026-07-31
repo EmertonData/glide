@@ -156,10 +156,10 @@
   {
     "question": "Put these pipeline stages in the order they happen when running a cost-optimal sampling workflow.",
     "options": [
-      "Generate, then sample, then estimate",
-      "Estimate, then generate, then sample",
-      "Sample, then estimate, then generate",
-      "Estimate directly, skip label generation"
+      "Simulate data, sample for annotation, estimate the mean",
+      "Sample for annotation, simulate data, estimate the mean",
+      "Estimate the mean, simulate data, sample for annotation",
+      "Simulate data, estimate the mean, sample for annotation"
     ],
     "answerIndex": 0,
     "explanation": "This is the simulate-sample-estimate pipeline: data first, then the sampling decision, then the final estimate."
