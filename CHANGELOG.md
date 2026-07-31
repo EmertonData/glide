@@ -9,6 +9,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 ## [Next release]
 
 ### ✨ Added
+- Interactive PPI simulator on the landing page.
 - RAG answer faithfulness (MEMERAG) case study in the documentation.
 
 ### 🔄 Changed

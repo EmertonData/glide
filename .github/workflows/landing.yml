@@ -1,0 +1,34 @@
+name: Landing widget tests
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "docs/landing/**"
+  pull_request:
+    branches: [main]
+    paths:
+      - "docs/landing/**"
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  landing-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: ".nvmrc"
+
+      - name: Run landing tests
+        run: make landing-tests
