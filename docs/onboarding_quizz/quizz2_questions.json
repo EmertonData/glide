@@ -154,15 +154,15 @@
     "explanation": "The cost-optimal sampler puts the budget where the proxy struggles most, and ASI corrects for the resulting non-uniform design."
   },
   {
-    "question": "Put these pipeline stages in the order they happen when running a cost-optimal sampling workflow.",
+    "question": "Put these stages in the order they happen in the cost-optimal sampling tutorial.",
     "options": [
-      "Simulate data, sample for annotation, estimate the mean",
-      "Estimate the mean, simulate data, sample for annotation",
-      "Simulate data, estimate the mean, sample for annotation",
-      "Sample for annotation, simulate data, estimate the mean"
+      "Generate data, sample for annotation, estimate the mean",
+      "Estimate the mean, generate data, sample for annotation",
+      "Generate data, estimate the mean, sample for annotation",
+      "Sample for annotation, generate data, estimate the mean"
     ],
     "answerIndex": 0,
-    "explanation": "This is the simulate-sample-estimate pipeline: data first, then the sampling decision, then the final estimate."
+    "explanation": "This is the generate-sample-estimate pipeline: data first, then the sampling decision, then the final estimate."
   },
   {
     "question": "Which best describes the overall goal that unifies PPI, Stratified PPI, and ASI?",

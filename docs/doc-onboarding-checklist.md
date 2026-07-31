@@ -6,7 +6,7 @@ Welcome to GLIDE. This checklist points a new contributor to the right material 
 
 ### Orientation
 
-- [ ] Read GLIDE's [README](https://github.com/EmertonData/glide) — the project's main index page — in particular "What is GLIDE?", "Why GLIDE?", and the "Implemented Algorithms" table.
+- [ ] Read GLIDE's README — the repository's main index page — in particular "What is GLIDE?", "Why GLIDE?", and the "Implemented Algorithms" table.
 - [ ] Open the online documentation, linked from the README's Documentation section. This is where you will find the User Guide, Tutorials, and Deep Dive material referenced throughout this checklist. You do not need to read all these assets now, simply know where to find them.
 - [ ] In the Getting Started section of the documentation, skim the Installation guide and read through the Quickstart notebook: it estimates a bias-corrected metric with `PPIMeanEstimator` from a small labeled sample and a large proxy-labeled pool, giving you a first concrete example to anchor the theory in the next sections.
 
