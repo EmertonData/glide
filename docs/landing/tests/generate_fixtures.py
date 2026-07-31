@@ -35,8 +35,8 @@ def build_fixtures() -> Dict:
         simulate_fixtures.append(
             {
                 "params": case,
-                "ppi_half_width": ppi_result.confidence_interval.width / 2,
-                "human_half_width": human_result.confidence_interval.width / 2,
+                "ppi_half_width": round(ppi_result.confidence_interval.width / 2, 5),
+                "human_half_width": round(human_result.confidence_interval.width / 2, 5),
                 "effective_sample_size": ppi_result.effective_sample_size,
             }
         )
