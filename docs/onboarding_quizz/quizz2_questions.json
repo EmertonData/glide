@@ -2,65 +2,65 @@
   {
     "question": "Why is a proxy-only estimate generally biased?",
     "options": [
-      "The proxy systematically over/under-estimates ground truth",
+      "Proxy labels use a different scale",
       "Proxy labels vary across identical calls",
       "Proxy labels are missing randomly",
-      "Proxy labels use a different scale"
+      "The proxy systematically over/under-estimates ground truth"
     ],
-    "answerIndex": 0,
+    "answerIndex": 3,
     "explanation": "The proxy has its own systematic error relative to ground truth, which biases a naive mean computed from it directly."
   },
   {
     "question": "What does PPI add to a proxy-only estimate to remove this bias?",
     "options": [
-      "Stratification by proxy score",
+      "A correction term from human labels",
       "A larger proxy sample size",
-      "A continuously refreshed confidence sequence",
-      "A correction term from human labels"
+      "Stratification by proxy score",
+      "A continuously refreshed confidence sequence"
     ],
-    "answerIndex": 3,
+    "answerIndex": 0,
     "explanation": "PPI adds a correction term computed from the human-labeled subset, capturing the discrepancy between proxy and ground truth."
   },
   {
     "question": "In PPI++, what does 'power tuning' primarily depend on?",
     "options": [
+      "Human-vs-proxy annotation cost ratio",
       "Number of strata",
       "Human-proxy label correlation",
-      "Human-vs-proxy annotation cost ratio",
       "Size of the proxy-labeled dataset"
     ],
-    "answerIndex": 1,
+    "answerIndex": 2,
     "explanation": "Power tuning sets the weight on the proxy-based correction term, and its optimal value depends on the correlation between proxy and human labels."
   },
   {
     "question": "If PPI++'s power-tuning weight is forced to 0, which estimator does the mean formula reduce to?",
     "options": [
-      "Classical mean of the proxy pool",
       "Stratified PPI with one stratum",
-      "ASI with all probabilities equal one",
-      "Classical mean of the human sample"
+      "Classical mean of the human sample",
+      "Classical mean of the proxy pool",
+      "ASI with all probabilities equal one"
     ],
-    "answerIndex": 3,
+    "answerIndex": 1,
     "explanation": "At weight 0 the correction term vanishes entirely, leaving only the classical mean of the human-labeled sample."
   },
   {
     "question": "The Quickstart notebook reports an 'effective sample size' alongside the estimate. What does it represent?",
     "options": [
-      "Total number of proxy labels",
-      "Number of true labels needed to match PPI's precision",
       "Number of strata used",
-      "Number of bootstrap resamples used"
+      "Number of bootstrap resamples used",
+      "Total number of proxy labels",
+      "Number of true labels needed to match PPI's precision"
     ],
-    "answerIndex": 1,
+    "answerIndex": 3,
     "explanation": "Effective sample size expresses how much the proxy signal is 'worth' in terms of equivalent true labels."
   },
   {
     "question": "How does Stratified PPI extend plain PPI?",
     "options": [
-      "Replaces human labels with proxy labels",
+      "Drops proxy labels in correlated strata",
       "Computes PPI per stratum, averages",
-      "Requires equal-sized strata",
-      "Drops proxy labels in correlated strata"
+      "Replaces human labels with proxy labels",
+      "Requires equal-sized strata"
     ],
     "answerIndex": 1,
     "explanation": "Stratified PPI applies the same correction stratum by stratum, then aggregates the results via a weighted average."
@@ -69,9 +69,9 @@
     "question": "A dataset has two strata: one with a nearly perfect proxy (low variance) and one with a very noisy proxy (high variance). Under Neyman allocation with a fixed budget, which stratum gets more human annotations?",
     "options": [
       "The noisy, high-variance stratum",
-      "The near-perfect, low-variance stratum",
+      "Whichever stratum is listed first",
       "Both strata get equal shares",
-      "Whichever stratum is listed first"
+      "The near-perfect, low-variance stratum"
     ],
     "answerIndex": 0,
     "explanation": "Neyman allocation gives more budget to strata with higher proxy variance, since annotation there reduces total variance the most."
@@ -79,9 +79,9 @@
   {
     "question": "What additional quantity does ASI attach to each sample compared to plain PPI?",
     "options": [
-      "A cluster identifier",
-      "A per-sample sampling probability",
       "A per-sample annotation cost estimate",
+      "A per-sample sampling probability",
+      "A cluster identifier",
       "A second, different proxy label"
     ],
     "answerIndex": 1,
@@ -90,45 +90,45 @@
   {
     "question": "Under Inverse Probability Weighting, how is a sample with a small selection probability, but selected anyway, treated?",
     "options": [
-      "Discarded from the estimate",
       "Treated like any other sample",
-      "Up-weighted, contributing more",
-      "Down-weighted relative to others"
+      "Discarded from the estimate",
+      "Down-weighted relative to others",
+      "Up-weighted, contributing more"
     ],
-    "answerIndex": 2,
+    "answerIndex": 3,
     "explanation": "Dividing by a small sampling probability produces a large weight, up-weighting rarely-selected samples."
   },
   {
     "question": "Suppose every sample's sampling probability is equal (a uniform design). What happens to ASI's Inverse Probability Weighting correction, compared to a plain PPI estimate on the same labeled sample?",
     "options": [
-      "Undefined: constant probability can't invert",
+      "No effect: ASI reduces to PPI",
       "Amplifies the bias correction",
       "Removes the effect of power tuning",
-      "No effect: ASI reduces to PPI"
+      "Undefined: constant probability can't invert"
     ],
-    "answerIndex": 3,
+    "answerIndex": 0,
     "explanation": "A constant sampling probability contributes the same factor to every term, so the IPW correction degenerates into the same computation as plain PPI."
   },
   {
     "question": "What role do samplers play in the GLIDE pipeline?",
     "options": [
+      "Generate proxy labels via an LLM",
       "Compute the final mean directly",
       "Decide which samples get annotated",
-      "Generate proxy labels via an LLM",
       "Serialise inference results for export"
     ],
-    "answerIndex": 1,
+    "answerIndex": 2,
     "explanation": "Samplers sit upstream of estimators: they choose which samples get annotated and may output a per-sample sampling probability."
   },
   {
     "question": "What does ActiveSampler use to decide which samples to prioritize for human annotation?",
     "options": [
-      "A random coin flip",
-      "The sample's stratum",
+      "A per-sample proxy uncertainty score",
       "Order of appearance in dataset",
-      "A per-sample proxy uncertainty score"
+      "A random coin flip",
+      "The sample's stratum"
     ],
-    "answerIndex": 3,
+    "answerIndex": 0,
     "explanation": "ActiveSampler concentrates the annotation budget on samples with the highest proxy uncertainty."
   },
   {
@@ -145,21 +145,21 @@
   {
     "question": "What makes the cost-optimal strategy more efficient than a proxy-only or a human-only baseline, for the same budget?",
     "options": [
-      "Uses only proxy labels",
-      "Targets annotation at unreliable proxy samples",
       "Ignores the budget constraint entirely",
-      "Requires no burn-in or proxy"
+      "Requires no burn-in or proxy",
+      "Targets annotation at unreliable proxy samples",
+      "Uses only proxy labels"
     ],
-    "answerIndex": 1,
+    "answerIndex": 2,
     "explanation": "The cost-optimal sampler puts the budget where the proxy struggles most, and ASI corrects for the resulting non-uniform design."
   },
   {
     "question": "Put these pipeline stages in the order they happen when running a cost-optimal sampling workflow.",
     "options": [
       "Simulate data, sample for annotation, estimate the mean",
-      "Sample for annotation, simulate data, estimate the mean",
       "Estimate the mean, simulate data, sample for annotation",
-      "Simulate data, estimate the mean, sample for annotation"
+      "Simulate data, estimate the mean, sample for annotation",
+      "Sample for annotation, simulate data, estimate the mean"
     ],
     "answerIndex": 0,
     "explanation": "This is the simulate-sample-estimate pipeline: data first, then the sampling decision, then the final estimate."
@@ -167,12 +167,12 @@
   {
     "question": "Which best describes the overall goal that unifies PPI, Stratified PPI, and ASI?",
     "options": [
-      "Combine proxy and human labels",
-      "Shrink the dataset via clustering",
       "Eventually replace human annotation entirely",
-      "Detect drift in deployed systems"
+      "Shrink the dataset via clustering",
+      "Detect drift in deployed systems",
+      "Combine proxy and human labels"
     ],
-    "answerIndex": 0,
+    "answerIndex": 3,
     "explanation": "All three methods are variations on the same core PPI idea of combining proxy and human labels to debias the estimate."
   },
   {
@@ -190,9 +190,9 @@
     "question": "You compute a classical 95% confidence interval at n=1000, then check it again at n=1200, 1500, and 2000 as more data arrives. Compared to the nominal 5%, what happens to your true chance of at least one false alarm across these checks?",
     "options": [
       "Stays exactly at 5%",
-      "Drops noticeably below 5%",
+      "Becomes exactly 20%",
       "Exceeds 5% across the checks",
-      "Becomes exactly 20%"
+      "Drops noticeably below 5%"
     ],
     "answerIndex": 2,
     "explanation": "This is the peeking problem in practice: each interval is valid on its own, but checking all of them together is not, so the true false-alarm rate creeps above nominal."
@@ -200,10 +200,10 @@
   {
     "question": "What guarantee does a confidence sequence provide that a confidence interval does not?",
     "options": [
-      "Always narrower interval width",
+      "Support for multi-outcome metrics",
       "Valid at all times simultaneously",
-      "Coverage independent of confidence level",
-      "Support for multi-outcome metrics"
+      "Always narrower interval width",
+      "Coverage independent of confidence level"
     ],
     "answerIndex": 1,
     "explanation": "Confidence sequences are anytime-valid: valid at every time step simultaneously, not just at one fixed sample size."
@@ -211,12 +211,12 @@
   {
     "question": "AsymptoticPPRM watches a quality metric across successive batches of production data. What triggers its alarm?",
     "options": [
-      "Any detectable change between batches",
       "Valid evidence of drift past threshold",
       "A fixed number of batches",
+      "Any detectable change between batches",
       "A drop in proxy label alone"
     ],
-    "answerIndex": 1,
+    "answerIndex": 0,
     "explanation": "AsymptoticPPRM alarms only once there is statistically valid evidence the metric drifted past a threshold fixed in advance, not on incidental fluctuation."
   }
 ]
