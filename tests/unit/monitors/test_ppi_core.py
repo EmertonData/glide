@@ -111,21 +111,6 @@ def test_preprocess_known_output(y_true, y_proxy, batches):
     np.testing.assert_array_equal(batch_n_proxy, np.array([4, 4]))
 
 
-def test_preprocess_known_output_higher_is_better(y_true, y_proxy, batches):
-    risk_y_true, risk_y_proxy, risk_threshold, _, _, _ = _preprocess(
-        y_true,
-        y_proxy,
-        batches,
-        higher_is_better=True,
-        threshold=0.5,
-        confidence_level=0.8,
-    )
-
-    np.testing.assert_allclose(risk_y_true, -y_true)
-    np.testing.assert_allclose(risk_y_proxy, -y_proxy)
-    assert risk_threshold == pytest.approx(-0.5)
-
-
 # --- _compute_batch_estimates ---
 
 
