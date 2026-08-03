@@ -4,7 +4,7 @@ import numpy as np
 import pytest
 
 import glide.mean_monitoring_results.base as base_module
-from glide.confidence_sequences import EmpiricalBernsteinConfidenceSequence
+from glide.confidence_sequences import AsymptoticConfidenceSequence
 from glide.mean_monitoring_results import MeanMonitoringResult
 
 # --- MeanMonitoringResult (common attributes and properties) ---
@@ -12,7 +12,7 @@ from glide.mean_monitoring_results import MeanMonitoringResult
 
 @pytest.fixture
 def sequence():
-    return EmpiricalBernsteinConfidenceSequence(
+    return AsymptoticConfidenceSequence(
         running_mean_estimates=np.array([0.4, 0.6]),
         confidence_bounds=np.array([0.1, 0.55]),
     )

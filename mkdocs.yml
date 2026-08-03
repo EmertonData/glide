@@ -60,7 +60,6 @@ plugins:
       execute_ignore:
         - "*/scientific_validation/estimators/ipwptd.ipynb"
         - "*/scientific_validation/estimators/clustered_ptd.ipynb"
-        - "*/scientific_validation/monitors/empirical_pprm.ipynb"
 
 markdown_extensions:
   - attr_list
@@ -91,7 +90,6 @@ nav:
     - Multiple Proxies (Multi-PPI++): tutorials/multi_ppi.ipynb
     - Cost estimates available (Cost-Optimal Random Sampling): tutorials/cost_optimal_random.ipynb
     - Cost and uncertainty scores available (Cost-Optimal Sampling): tutorials/cost_optimal.ipynb
-    - Monitoring a deployed system for drift (Empirical PPRM): tutorials/empirical_pprm.ipynb
     - Monitoring a deployed system for drift (Asymptotic PPRM): tutorials/asymptotic_pprm.ipynb
   - Deep Dive:
     - Overview: deep_dive/index.md
@@ -109,7 +107,6 @@ nav:
         - Clustered PTD Validation: deep_dive/scientific_validation/estimators/clustered_ptd.ipynb
         - Multi-PTD Validation: deep_dive/scientific_validation/estimators/multi_ptd.ipynb
       - Monitors:
-        - Empirical PPRM validation: deep_dive/scientific_validation/monitors/empirical_pprm.ipynb
         - Asymptotic PPRM validation: deep_dive/scientific_validation/monitors/asymptotic_pprm.ipynb
     - Case Studies:
       - Agentic System Evaluation: deep_dive/case_studies/r_judge.ipynb

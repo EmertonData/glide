@@ -55,14 +55,12 @@
 
 | Class | Description |
 |-------|-------------|
-| [`EmpiricalClassicalMeanMonitor`](monitors.md#glide.monitors.empirical_classical.EmpiricalClassicalMeanMonitor) | Anytime-valid drift monitor over batched labels, without proxy predictions |
 | [`AsymptoticClassicalMeanMonitor`](monitors.md#glide.monitors.asymptotic_classical.AsymptoticClassicalMeanMonitor) | Anytime-valid drift monitor over batched labels via an asymptotic confidence sequence, without proxy predictions |
 
 ### Prediction-Powered
 
 | Class | Description |
 |-------|-------------|
-| [`EmpiricalPPRM`](monitors.md#glide.monitors.empirical_pprm.EmpiricalPPRM) | Anytime-valid drift monitor combining true and proxy labels |
 | [`AsymptoticPPRM`](monitors.md#glide.monitors.asymptotic_pprm.AsymptoticPPRM) | Anytime-valid drift monitor combining true and proxy labels via an asymptotic confidence sequence |
 
 ## Confidence Intervals
@@ -76,7 +74,6 @@
 
 | Class | Description |
 |-------|-------------|
-| [`EmpiricalBernsteinConfidenceSequence`](confidence_sequences.md#glide.confidence_sequences.empirical_bernstein.EmpiricalBernsteinConfidenceSequence) | Anytime-valid empirical-Bernstein confidence sequence |
 | [`AsymptoticConfidenceSequence`](confidence_sequences.md#glide.confidence_sequences.asymptotic.AsymptoticConfidenceSequence) | Anytime-valid asymptotic confidence sequence |
 
 ## Inference Results

@@ -32,6 +32,14 @@ class AsymptoticPPRM:
     risk monitoring of deployed models for detecting harmful distribution shifts."
     arXiv preprint arXiv:2602.02229 (2026).
 
+    Podkopaev, Aleksandr, and Aaditya Ramdas. "Tracking the risk of a deployed model
+    and detecting harmful distribution shifts." International Conference on Learning
+    Representations (ICLR), 2022.
+
+    Waudby-Smith, Ian, and Aaditya Ramdas. "Estimating means of bounded random
+    variables by betting." Journal of the Royal Statistical Society Series B:
+    Statistical Methodology 86, no. 1 (2024): 1-27.
+
     Examples
     --------
     >>> import numpy as np

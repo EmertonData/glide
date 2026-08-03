@@ -13,6 +13,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - RAG answer faithfulness (MEMERAG) case study in the documentation.
 
 ### 🔄 Changed
+- Removed `EmpiricalPPRM`, `EmpiricalClassicalMeanMonitor`, and `glide.confidence_sequences.EmpiricalBernsteinConfidenceSequence`.
 - Renamed `n_total` to `n_samples` in `glide.simulators` dataset generators.
 - Enriched the tutorials overview with a Phase 4: Monitoring section mirroring the sampler/estimator decision guide.
 
