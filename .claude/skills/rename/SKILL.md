@@ -31,6 +31,7 @@ description: Executes a full renaming task in the GLIDE codebase — renaming a 
     - any acronym/abbreviation the concept has (e.g. `PPI` vs `PPRM`)
     - plural/derived forms sharing the same root — renaming a `Cluster*` class can also touch unrelated prose like "cluster classical estimator"; audit the whole word family, not just the exact old identifier
   - Whether the rename is a **pure rename** (same behavior, new name) or bundled with other changes, so the CHANGELOG entry doesn't conflate them.
+- A rename of a public symbol is a straight rename, not a deprecation: GLIDE's CLAUDE.md rejects backwards-compatibility shims, so don't leave the old name behind as an alias with a deprecation warning — remove it outright and let the CHANGELOG's `Changed` entry record the break.
 
 ## Step 2 — Rename the core implementation first
 
@@ -61,6 +62,7 @@ description: Executes a full renaming task in the GLIDE codebase — renaming a 
   - **Tutorial and deep-dive/scientific-validation notebooks** — check headers, bold prose, table cells, imports, variable names, plot labels, f-strings, `print()` statements, dict keys used as legend labels, and color constant names *and* their inline comments. Notebook titles in particular lag behind code renames easily since the first cell is easy to skim past.
   - **`docs/api/*.md`** — mkdocstrings `:::` directives and summary tables, both the link anchor and the display text.
   - **`docs/tutorials/index.md`**.
+  - **`docs/landing/`** — `tests/generate_fixtures.py` imports directly from `glide.estimators` and `glide.simulators`; a stale import here fails `make check-landing-fixtures` (chained into `make tests`) rather than showing up as a stray in prose, so don't skip this directory because it looks like a marketing page.
   - **`mkdocs.yml`** — nav display titles *and* file paths/slugs, which must change if a notebook was renamed.
   - **`README.md`** — the "Implemented Algorithms" table, citation links.
   - **`CONTRIBUTING.md`** — the ASCII architecture directory tree lists module filenames like `├── ppi.py`, easy to miss since it reads as prose, not code.
@@ -73,6 +75,7 @@ description: Executes a full renaming task in the GLIDE codebase — renaming a 
   - Give each subagent: the full old → new mapping and the surface-forms list from Step 1, the specific file path to work on, and the guidance above (read the whole file first, use NotebookEdit for `.ipynb` files rather than raw JSON edits, watch for derived words in prose).
   - Since each file's task is a bounded, well-specified rename once the mapping is fixed, a cheaper/faster model (`haiku`) is a good fit for most of these dispatches — reserve a stronger model for any file where the rename is entangled with genuinely ambiguous prose.
   - Have each subagent report back a short summary of what it changed so the changes can be spot-checked.
+  - Before moving to Step 4, skim the subagents' changes together for phrasing consistency (e.g., one file settling on "Clustered PPI" while another says "Cluster-level PPI") — Step 4's grep only catches leftover old names, not inconsistent new-name phrasing across files.
 
 ## Step 4 — Mandatory second-pass verification
 
@@ -89,10 +92,12 @@ description: Executes a full renaming task in the GLIDE codebase — renaming a 
 make lint
 make type-check
 make tests
+make coverage
 make test-notebooks
 ```
 
-- `make tests` runs with `--doctest-modules`, so a stale doctest import or example will fail here — a second independent safety net on top of Step 4's grep.
+- `make tests` runs with `--doctest-modules`, so a stale doctest import or example will fail here — a second independent safety net on top of Step 4's grep. It also chains `check-landing-fixtures`, so a stale import in `docs/landing/tests/generate_fixtures.py` fails here too.
+- `make coverage` requires 100%: a rename that leaves an old alias or an unreachable branch behind will show up as a coverage drop even if `make tests` passes.
 
 ## Step 6 — Done, and close the loop for next time
 
