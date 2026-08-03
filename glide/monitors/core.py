@@ -4,6 +4,18 @@ import numpy as np
 from numpy.typing import NDArray
 
 
+@overload
+def _reorient(value: float, higher_is_better: bool) -> float: ...
+@overload
+def _reorient(value: NDArray, higher_is_better: bool) -> NDArray: ...
+def _reorient(value: Union[float, NDArray], higher_is_better: bool) -> Union[float, NDArray]:
+    if higher_is_better:
+        reoriented_value = -value
+    else:
+        reoriented_value = value
+    return reoriented_value
+
+
 def _unique_ordered_batches(batches: NDArray) -> Tuple[NDArray, NDArray]:
     block_starts = np.ones(len(batches), dtype=bool)
     block_starts[1:] = batches[1:] != batches[:-1]
@@ -18,59 +30,13 @@ def _unique_ordered_batches(batches: NDArray) -> Tuple[NDArray, NDArray]:
     return batch_identifiers, batch_codes
 
 
-@overload
-def _scale_to_unit_risk(
-    values: float, metric_lower_bound: float, metric_upper_bound: float, higher_is_better: bool
-) -> float: ...
-@overload
-def _scale_to_unit_risk(
-    values: NDArray, metric_lower_bound: float, metric_upper_bound: float, higher_is_better: bool
-) -> NDArray: ...
-def _scale_to_unit_risk(
-    values: Union[float, NDArray],
-    metric_lower_bound: float,
-    metric_upper_bound: float,
-    higher_is_better: bool,
-) -> Union[float, NDArray]:
-    scaled = (values - metric_lower_bound) / (metric_upper_bound - metric_lower_bound)
-    if higher_is_better:
-        scaled = 1.0 - scaled
-    return scaled
-
-
-@overload
-def _scale_from_unit_risk(
-    values: float, metric_lower_bound: float, metric_upper_bound: float, higher_is_better: bool
-) -> float: ...
-@overload
-def _scale_from_unit_risk(
-    values: NDArray, metric_lower_bound: float, metric_upper_bound: float, higher_is_better: bool
-) -> NDArray: ...
-def _scale_from_unit_risk(
-    values: Union[float, NDArray],
-    metric_lower_bound: float,
-    metric_upper_bound: float,
-    higher_is_better: bool,
-) -> Union[float, NDArray]:
-    if higher_is_better:
-        values = 1.0 - values
-    original = metric_lower_bound + values * (metric_upper_bound - metric_lower_bound)
-    return original
-
-
 def _postprocess(
     risk_running_means: NDArray,
     risk_confidence_bounds: NDArray,
     risk_batch_mean_estimates: NDArray,
     higher_is_better: bool,
-    metric_lower_bound: float,
-    metric_upper_bound: float,
 ) -> Tuple[NDArray, NDArray, NDArray]:
-    running_means = _scale_from_unit_risk(risk_running_means, metric_lower_bound, metric_upper_bound, higher_is_better)
-    confidence_bounds = _scale_from_unit_risk(
-        risk_confidence_bounds, metric_lower_bound, metric_upper_bound, higher_is_better
-    )
-    batch_mean_estimates = _scale_from_unit_risk(
-        risk_batch_mean_estimates, metric_lower_bound, metric_upper_bound, higher_is_better
-    )
+    running_means = _reorient(risk_running_means, higher_is_better)
+    confidence_bounds = _reorient(risk_confidence_bounds, higher_is_better)
+    batch_mean_estimates = _reorient(risk_batch_mean_estimates, higher_is_better)
     return running_means, confidence_bounds, batch_mean_estimates

@@ -4,17 +4,37 @@ import numpy as np
 import pytest
 
 import glide.monitors.core as core_module
-from glide.monitors.core import _postprocess, _scale_from_unit_risk, _scale_to_unit_risk, _unique_ordered_batches
+from glide.monitors.core import _postprocess, _reorient, _unique_ordered_batches
 
 
 @pytest.fixture
-def values_unscaled():
-    return np.array([0.0, 5.0, 10.0])
+def risk_running_means():
+    return np.array([0.2, 0.25])
 
 
 @pytest.fixture
-def values_scaled():
-    return np.array([0.0, 0.5, 1.0])
+def risk_confidence_bounds():
+    return np.array([0.1, 0.2])
+
+
+@pytest.fixture
+def risk_batch_mean_estimates():
+    return np.array([0.2, 0.3])
+
+
+# --- _reorient ---
+
+
+def test_reorient_lower_is_better(risk_running_means):
+    reoriented_value = _reorient(risk_running_means, higher_is_better=False)
+
+    np.testing.assert_array_equal(reoriented_value, risk_running_means)
+
+
+def test_reorient_higher_is_better(risk_running_means):
+    reoriented_value = _reorient(risk_running_means, higher_is_better=True)
+
+    np.testing.assert_array_equal(reoriented_value, -risk_running_means)
 
 
 # --- _unique_ordered_batches ---
@@ -37,63 +57,22 @@ def test_unique_ordered_batches_interleaved_raises():
         _unique_ordered_batches(batches)
 
 
-# --- _scale_to_unit_risk ---
-
-
-def test_scale_to_unit_risk_lower_is_better(values_unscaled):
-    expected = np.array([0.0, 0.5, 1.0])
-    result = _scale_to_unit_risk(
-        values_unscaled, metric_lower_bound=0.0, metric_upper_bound=10.0, higher_is_better=False
-    )
-    np.testing.assert_allclose(result, expected)
-
-
-def test_scale_to_unit_risk_higher_is_better(values_unscaled):
-    expected = np.array([1.0, 0.5, 0.0])
-    result = _scale_to_unit_risk(
-        values_unscaled, metric_lower_bound=0.0, metric_upper_bound=10.0, higher_is_better=True
-    )
-    np.testing.assert_allclose(result, expected)
-
-
-# --- _scale_from_unit_risk ---
-
-
-def test_scale_from_unit_risk_lower_is_better(values_scaled):
-    expected = np.array([0.0, 5.0, 10.0])
-    result = _scale_from_unit_risk(
-        values_scaled, metric_lower_bound=0.0, metric_upper_bound=10.0, higher_is_better=False
-    )
-    np.testing.assert_allclose(result, expected)
-
-
-def test_scale_from_unit_risk_higher_is_better(values_scaled):
-    expected = np.array([10.0, 5.0, 0.0])
-    result = _scale_from_unit_risk(
-        values_scaled, metric_lower_bound=0.0, metric_upper_bound=10.0, higher_is_better=True
-    )
-    np.testing.assert_allclose(result, expected)
-
-
 # --- _postprocess ---
 
 
-def test_postprocess_delegates_to_scaling():
-    risk_running_means = np.array([0.2, 0.25])
-    risk_confidence_bounds = np.array([0.1, 0.2])
-    risk_batch_mean_estimates = np.array([0.2, 0.3])
-
-    with patch.object(core_module, "_scale_from_unit_risk") as mock_scale_from_unit_risk:
+def test_postprocess_delegates_to_reorient(risk_running_means, risk_confidence_bounds, risk_batch_mean_estimates):
+    with patch.object(core_module, "_reorient") as mock_reorient:
         _postprocess(
             risk_running_means,
             risk_confidence_bounds,
             risk_batch_mean_estimates,
             higher_is_better=True,
-            metric_lower_bound=0.0,
-            metric_upper_bound=1.0,
         )
 
-    assert mock_scale_from_unit_risk.call_count == 3
-    np.testing.assert_array_equal(mock_scale_from_unit_risk.call_args_list[0][0][0], risk_running_means)
-    np.testing.assert_array_equal(mock_scale_from_unit_risk.call_args_list[1][0][0], risk_confidence_bounds)
-    np.testing.assert_array_equal(mock_scale_from_unit_risk.call_args_list[2][0][0], risk_batch_mean_estimates)
+    assert mock_reorient.call_count == 3
+    np.testing.assert_array_equal(mock_reorient.call_args_list[0][0][0], risk_running_means)
+    assert mock_reorient.call_args_list[0][0][1] is True
+    np.testing.assert_array_equal(mock_reorient.call_args_list[1][0][0], risk_confidence_bounds)
+    assert mock_reorient.call_args_list[1][0][1] is True
+    np.testing.assert_array_equal(mock_reorient.call_args_list[2][0][0], risk_batch_mean_estimates)
+    assert mock_reorient.call_args_list[2][0][1] is True

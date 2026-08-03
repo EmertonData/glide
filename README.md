@@ -103,8 +103,7 @@ If you use GLIDE in your work, please cite us using the "Cite this repository" b
 
 | Name | Class | Reference Paper(s) | Original Implementation |
 |------|-------|-----------------|------------------------|
-| Prediction-Powered Risk Monitoring (PPRM) | `monitors.EmpiricalPPRM` | [[10]](#ref-10), [[11]](#ref-11), [[12]](#ref-12) | — |
-| Asymptotic Prediction-Powered Risk Monitoring | `monitors.AsymptoticPPRM` | [[10]](#ref-10), [[13]](#ref-13) | — |
+| Asymptotic Prediction-Powered Risk Monitoring | `monitors.AsymptoticPPRM` | [[10]](#ref-10), [[11]](#ref-11), [[12]](#ref-12) | — |
 
 ### 📖 References
 
@@ -130,9 +129,7 @@ If you use GLIDE in your work, please cite us using the "Cite this repository" b
 
 <a id="ref-11"></a>[11] <a href="https://arxiv.org/abs/2110.06177">Podkopaev, Aleksandr, and Aaditya Ramdas. "Tracking the risk of a deployed model and detecting harmful distribution shifts." International Conference on Learning Representations (ICLR), 2022.</a>
 
-<a id="ref-12"></a>[12] <a href="https://doi.org/10.1093/jrsssb/qkad009">Waudby-Smith, Ian, and Aaditya Ramdas. "Estimating means of bounded random variables by betting." Journal of the Royal Statistical Society Series B: Statistical Methodology 86, no. 1 (2024): 1-27.</a>
-
-<a id="ref-13"></a>[13] <a href="https://doi.org/10.1214/24-AOS2408">Waudby-Smith, Ian, David Arbour, Ritwik Sinha, Edward H. Kennedy, and Aaditya Ramdas. "Time-uniform central limit theory and asymptotic confidence sequences." The Annals of Statistics 52, no. 6 (2024): 2613-2640.</a>
+<a id="ref-12"></a>[12] <a href="https://doi.org/10.1214/24-AOS2408">Waudby-Smith, Ian, David Arbour, Ritwik Sinha, Edward H. Kennedy, and Aaditya Ramdas. "Time-uniform central limit theory and asymptotic confidence sequences." The Annals of Statistics 52, no. 6 (2024): 2613-2640.</a>
 
 ## 📬 Stay Updated
 

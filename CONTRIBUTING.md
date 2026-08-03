@@ -124,7 +124,7 @@ glide/
 │   ├── ...
 │
 ├── monitors/               # Public API — drift monitors over batched data
-│   ├── empirical_pprm.py
+│   ├── asymptotic_pprm.py
 │   ├── ...
 │
 ├── samplers/               # Public API — sampling strategies
@@ -160,7 +160,7 @@ glide/
     └── export.py
 ```
 
-**How the pieces fit together.** Estimators accept raw NumPy arrays and return a `MeanInferenceResult` subclass: prediction-powered estimators return a `PredictionPoweredMeanInferenceResult`, classical ones a `ClassicalMeanInferenceResult`. Every result embeds a `ConfidenceInterval` (e.g. `CLTConfidenceInterval`). Samplers produce the labeled arrays that estimators consume. Monitors follow the same shape for batched, accumulating data: they return a `MeanMonitoringResult` subclass embedding a `ConfidenceSequence` (e.g. `EmpiricalBernsteinConfidenceSequence`). The `io` module serialises result objects.
+**How the pieces fit together.** Estimators accept raw NumPy arrays and return a `MeanInferenceResult` subclass: prediction-powered estimators return a `PredictionPoweredMeanInferenceResult`, classical ones a `ClassicalMeanInferenceResult`. Every result embeds a `ConfidenceInterval` (e.g. `CLTConfidenceInterval`). Samplers produce the labeled arrays that estimators consume. Monitors follow the same shape for batched, accumulating data: they return a `MeanMonitoringResult` subclass embedding a `ConfidenceSequence` (e.g. `AsymptoticConfidenceSequence`). The `io` module serialises result objects.
 
 ---
 
@@ -216,7 +216,7 @@ New estimators and samplers should be backed by a scientific publication. Please
 2. **Implement** the monitor class:
    - Create a properly named file `glide/monitors/<name>.py` for your monitor.
    - `detect(y, batches, ...)` runs the method and returns a monitoring result object. Reuse one from `glide/mean_monitoring_results` (e.g. a `MeanMonitoringResult` subclass) or add a new one there.
-   - The result embeds a `ConfidenceSequence`: reuse one from `glide/confidence_sequences` (e.g. `EmpiricalBernsteinConfidenceSequence`) or add a new one there.
+   - The result embeds a `ConfidenceSequence`: reuse one from `glide/confidence_sequences` (e.g. `AsymptoticConfidenceSequence`) or add a new one there.
    - If your monitor has hyperparameters, these should be optional parameters of `detect()` with default values.
 3. **Export** the new class from `glide/monitors/__init__.py`.
 4. **Write unit tests** in `tests/unit/monitors/test_<name>.py`. Cover at minimum:

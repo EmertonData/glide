@@ -32,6 +32,10 @@ class AsymptoticPPRM:
     risk monitoring of deployed models for detecting harmful distribution shifts."
     arXiv preprint arXiv:2602.02229 (2026).
 
+    Podkopaev, Aleksandr, and Aaditya Ramdas. "Tracking the risk of a deployed model
+    and detecting harmful distribution shifts." International Conference on Learning
+    Representations (ICLR), 2022.
+
     Examples
     --------
     >>> import numpy as np
@@ -61,8 +65,6 @@ class AsymptoticPPRM:
         metric_name: str = "Metric",
         confidence_level: float = 0.8,
         power_tuning: bool = True,
-        metric_lower_bound: float = 0.0,
-        metric_upper_bound: float = 1.0,
         tightest_at_batch: int = 10,
     ) -> PredictionPoweredMeanMonitoringResult:
         """Detect a drift of the running mean across a batched dataset.
@@ -105,7 +107,7 @@ class AsymptoticPPRM:
             the worst level the user is willing to tolerate. An alarm fires once the
             anytime-valid bound proves the running metric has crossed it (the running
             risk exceeds it for a risk, the running performance falls below it for a
-            performance). Must lie within ``[metric_lower_bound, metric_upper_bound]``.
+            performance).
         metric_name : str, optional
             Human-readable label for the metric. Defaults to ``"Metric"``.
         confidence_level : float, optional
@@ -118,10 +120,6 @@ class AsymptoticPPRM:
             If ``True`` (default), compute the power-tuning parameter of each batch on
             all previous batches (the first batch, having no predecessor, uses
             ``1.0``). If ``False``, use ``1.0`` everywhere (classic PPI).
-        metric_lower_bound : float, optional
-            Known lower bound of the metric. Defaults to ``0.0``.
-        metric_upper_bound : float, optional
-            Known upper bound of the metric. Defaults to ``1.0``.
         tightest_at_batch : int, optional
             The batch index (1-indexed) at which the confidence sequence is tuned to
             be tightest. Defaults to ``10``, which is safe to leave alone: this
@@ -142,11 +140,8 @@ class AsymptoticPPRM:
             - If ``y_true``, ``y_proxy`` and ``batches`` have different lengths.
             - If ``batches`` contains NaN values (numeric dtype) or None values (non-numeric dtype).
             - If ``confidence_level`` is not in ``(0.5, 1)``.
-            - If ``metric_lower_bound >= metric_upper_bound``.
-            - If ``threshold`` falls outside ``[metric_lower_bound, metric_upper_bound]``.
             - If any proxy value is NaN or all proxy values are identical.
             - If labeled ``y_true`` values are constant.
-            - If any value falls outside ``[metric_lower_bound, metric_upper_bound]``.
             - If batches are interleaved rather than grouped into contiguous blocks.
             - If any batch has fewer than 2 labeled or fewer than 2 unlabeled samples.
             - If proxy values are constant across the prior batches (with ``power_tuning=True``).
@@ -170,8 +165,6 @@ class AsymptoticPPRM:
             higher_is_better,
             threshold,
             confidence_level,
-            metric_lower_bound,
-            metric_upper_bound,
         )
         batch_mean_estimates, batch_std_estimates = _compute_batch_estimates(
             risk_y_true, risk_y_proxy, batch_codes, power_tuning
@@ -185,8 +178,6 @@ class AsymptoticPPRM:
             risk_lower_bounds,
             batch_mean_estimates,
             higher_is_better,
-            metric_lower_bound,
-            metric_upper_bound,
         )
         confidence_sequence = AsymptoticConfidenceSequence(
             running_mean_estimates=running_means,

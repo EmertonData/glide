@@ -38,7 +38,7 @@ The package has multiple layers:
 
 **`glide/confidence_intervals/`** — Confidence interval implementations depending on statistical methods.
 
-**`glide/confidence_sequences/`** — Anytime-valid confidence sequences (time-uniform analogue of confidence intervals, multiple successive bounds). `base.py` defines the `ConfidenceSequence` protocol; `empirical_bernstein.py` implements the empirical-Bernstein sequence and its computation.
+**`glide/confidence_sequences/`** — Anytime-valid confidence sequences (time-uniform analogue of confidence intervals, multiple successive bounds). `base.py` defines the `ConfidenceSequence` protocol; `asymptotic.py` implements the asymptotic sequence and its computation.
 
 **`glide/samplers/`** — Sampler object implementations (uniform, stratified, cost-optimal, cost-optimal-random, active).
 
@@ -150,7 +150,7 @@ Only add a comment when the *why* is non-obvious: a hidden constraint, a subtle 
 - Update `CHANGELOG.md` for any user-facing changes (Keep a Changelog format, SemVer)
 - Always add elements to the "Added" or "Changed" sections of `CHANGELOG.md` at the top of the existing list
 - Keep the `CHANGELOG.md` user-friendly and concise
-- Whenever a new public estimator, sampler, or monitor class is added, update the "Implemented Algorithms" table in `README.md` in the same PR, but only for classes implementing a published method, e.g. PPI (`estimators.PPIMeanEstimator`) or PPRM (`monitors.EmpiricalPPRM`) get an entry, a classical baseline (e.g. `estimators.ClassicalMeanEstimator`) does not. Add a row to the table and append any newly cited papers to the numbered References list, reusing existing reference numbers if applicable. A row's reference numbers should correspond to the papers cited in that class's own docstring.
+- Whenever a new public estimator, sampler, or monitor class is added, update the "Implemented Algorithms" table in `README.md` in the same PR, but only for classes implementing a published method, e.g. PPI (`estimators.PPIMeanEstimator`) or PPRM (`monitors.AsymptoticPPRM`) get an entry, a classical baseline (e.g. `estimators.ClassicalMeanEstimator`) does not. Add a row to the table and append any newly cited papers to the numbered References list, reusing existing reference numbers if applicable. A row's reference numbers should correspond to the papers cited in that class's own docstring.
 - Avoid using and escaping underscores in math mode in jupyter notebooks.
 - Avoid making excessive use of dashes like this — when writing documentation and notebooks. Prefer commas, colons and parentheses where possible.
 - In documentation and tutorials, always spell out "confidence interval" instead of using "CI", which is easily confused with "continuous integration".

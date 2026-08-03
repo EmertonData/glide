@@ -50,8 +50,6 @@ class AsymptoticClassicalMeanMonitor:
         threshold: float,
         metric_name: str = "Metric",
         confidence_level: float = 0.8,
-        metric_lower_bound: float = 0.0,
-        metric_upper_bound: float = 1.0,
         tightest_at_batch: int = 10,
     ) -> ClassicalMeanMonitoringResult:
         """Detect a drift of the running mean across a batched dataset.
@@ -93,7 +91,7 @@ class AsymptoticClassicalMeanMonitor:
             the worst level the user is willing to tolerate. An alarm fires once the
             anytime-valid bound proves the running metric has crossed it (the running
             risk exceeds it for a risk, the running performance falls below it for a
-            performance). Must lie within ``[metric_lower_bound, metric_upper_bound]``.
+            performance).
         metric_name : str, optional
             Human-readable label for the metric. Defaults to ``"Metric"``.
         confidence_level : float, optional
@@ -102,10 +100,6 @@ class AsymptoticClassicalMeanMonitor:
             of raising a false alarm. Raising this value demands more evidence before
             alarming, so alarms become more trustworthy but arrive later; lowering it
             detects sooner at the cost of more false alarms. Must be in ``(0.5, 1)``.
-        metric_lower_bound : float, optional
-            Known lower bound of the metric. Defaults to ``0.0``.
-        metric_upper_bound : float, optional
-            Known upper bound of the metric. Defaults to ``1.0``.
         tightest_at_batch : int, optional
             The batch index (1-indexed) at which the confidence sequence is tuned to
             be tightest. Defaults to ``10``. Only affects tightness, not validity:
@@ -125,9 +119,6 @@ class AsymptoticClassicalMeanMonitor:
             - If ``y`` and ``batches`` have different lengths.
             - If ``batches`` contains NaN values (numeric dtype) or None values (non-numeric dtype).
             - If ``confidence_level`` is not in ``(0.5, 1)``.
-            - If ``metric_lower_bound >= metric_upper_bound``.
-            - If ``threshold`` falls outside ``[metric_lower_bound, metric_upper_bound]``.
-            - If any labeled value falls outside ``[metric_lower_bound, metric_upper_bound]``.
             - If batches are interleaved rather than grouped into contiguous blocks.
             - If any batch has fewer than 2 labeled (non-NaN) samples.
             - If the accumulated variance of the batch estimates up to ``tightest_at_batch`` is zero.
@@ -143,9 +134,7 @@ class AsymptoticClassicalMeanMonitor:
                 f"'confidence_level' must be in (0.5, 1) for the asymptotic monitor; got {confidence_level!r}."
             ),
         )
-        risk_y, _, batch_codes, batch_n = _preprocess(
-            y, batches, higher_is_better, threshold, confidence_level, metric_lower_bound, metric_upper_bound
-        )
+        risk_y, _, batch_codes, batch_n = _preprocess(y, batches, higher_is_better, threshold, confidence_level)
         batch_mean_estimates, batch_std_estimates = _compute_batch_estimates(risk_y, batch_codes)
         miscoverage = 1.0 - confidence_level
         risk_running_means, risk_lower_bounds = _compute_asymptotic_bounds(
@@ -156,8 +145,6 @@ class AsymptoticClassicalMeanMonitor:
             risk_lower_bounds,
             batch_mean_estimates,
             higher_is_better,
-            metric_lower_bound,
-            metric_upper_bound,
         )
         confidence_sequence = AsymptoticConfidenceSequence(
             running_mean_estimates=running_means,
