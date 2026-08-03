@@ -1,4 +1,4 @@
-from typing import Tuple, Union, overload
+from typing import Tuple
 
 import numpy as np
 from numpy.typing import NDArray
@@ -18,59 +18,17 @@ def _unique_ordered_batches(batches: NDArray) -> Tuple[NDArray, NDArray]:
     return batch_identifiers, batch_codes
 
 
-@overload
-def _scale_to_unit_risk(
-    values: float, metric_lower_bound: float, metric_upper_bound: float, higher_is_better: bool
-) -> float: ...
-@overload
-def _scale_to_unit_risk(
-    values: NDArray, metric_lower_bound: float, metric_upper_bound: float, higher_is_better: bool
-) -> NDArray: ...
-def _scale_to_unit_risk(
-    values: Union[float, NDArray],
-    metric_lower_bound: float,
-    metric_upper_bound: float,
-    higher_is_better: bool,
-) -> Union[float, NDArray]:
-    scaled = (values - metric_lower_bound) / (metric_upper_bound - metric_lower_bound)
-    if higher_is_better:
-        scaled = 1.0 - scaled
-    return scaled
-
-
-@overload
-def _scale_from_unit_risk(
-    values: float, metric_lower_bound: float, metric_upper_bound: float, higher_is_better: bool
-) -> float: ...
-@overload
-def _scale_from_unit_risk(
-    values: NDArray, metric_lower_bound: float, metric_upper_bound: float, higher_is_better: bool
-) -> NDArray: ...
-def _scale_from_unit_risk(
-    values: Union[float, NDArray],
-    metric_lower_bound: float,
-    metric_upper_bound: float,
-    higher_is_better: bool,
-) -> Union[float, NDArray]:
-    if higher_is_better:
-        values = 1.0 - values
-    original = metric_lower_bound + values * (metric_upper_bound - metric_lower_bound)
-    return original
-
-
 def _postprocess(
     risk_running_means: NDArray,
     risk_confidence_bounds: NDArray,
     risk_batch_mean_estimates: NDArray,
     higher_is_better: bool,
-    metric_lower_bound: float,
-    metric_upper_bound: float,
 ) -> Tuple[NDArray, NDArray, NDArray]:
-    running_means = _scale_from_unit_risk(risk_running_means, metric_lower_bound, metric_upper_bound, higher_is_better)
-    confidence_bounds = _scale_from_unit_risk(
-        risk_confidence_bounds, metric_lower_bound, metric_upper_bound, higher_is_better
-    )
-    batch_mean_estimates = _scale_from_unit_risk(
-        risk_batch_mean_estimates, metric_lower_bound, metric_upper_bound, higher_is_better
-    )
+    if higher_is_better:
+        sign = -1.0
+    else:
+        sign = 1.0
+    running_means = sign * risk_running_means
+    confidence_bounds = sign * risk_confidence_bounds
+    batch_mean_estimates = sign * risk_batch_mean_estimates
     return running_means, confidence_bounds, batch_mean_estimates
