@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 
-from glide.monitors.core import _postprocess, _unique_ordered_batches
+from glide.monitors.core import _postprocess, _reorient, _unique_ordered_batches
 
 
 @pytest.fixture
@@ -17,6 +17,21 @@ def risk_confidence_bounds():
 @pytest.fixture
 def risk_batch_mean_estimates():
     return np.array([0.2, 0.3])
+
+
+# --- _reorient ---
+
+
+def test_reorient_lower_is_better(risk_running_means):
+    reoriented_value = _reorient(risk_running_means, higher_is_better=False)
+
+    np.testing.assert_array_equal(reoriented_value, risk_running_means)
+
+
+def test_reorient_higher_is_better(risk_running_means):
+    reoriented_value = _reorient(risk_running_means, higher_is_better=True)
+
+    np.testing.assert_array_equal(reoriented_value, -risk_running_means)
 
 
 # --- _unique_ordered_batches ---

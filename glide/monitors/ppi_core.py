@@ -13,7 +13,7 @@ from glide.core.validation import (
 )
 from glide.estimators.core import _split_labeled_unlabeled
 from glide.estimators.ppi_core import _compute_mean_estimate, _compute_std_estimate, _compute_tuning_parameter
-from glide.monitors.core import _unique_ordered_batches
+from glide.monitors.core import _reorient, _unique_ordered_batches
 
 
 def _preprocess(
@@ -61,13 +61,9 @@ def _preprocess(
         ),
     )
 
-    if higher_is_better:
-        sign = -1.0
-    else:
-        sign = 1.0
-    risk_y_true = sign * y_true
-    risk_y_proxy = sign * y_proxy
-    risk_threshold = sign * threshold
+    risk_y_true = _reorient(y_true, higher_is_better)
+    risk_y_proxy = _reorient(y_proxy, higher_is_better)
+    risk_threshold = _reorient(threshold, higher_is_better)
     return risk_y_true, risk_y_proxy, risk_threshold, batch_codes, batch_n_true, batch_n_proxy
 
 

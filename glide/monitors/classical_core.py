@@ -10,7 +10,7 @@ from glide.core.validation import (
     _validate_min_samples,
     _validate_non_empty,
 )
-from glide.monitors.core import _unique_ordered_batches
+from glide.monitors.core import _reorient, _unique_ordered_batches
 
 
 def _preprocess(
@@ -43,12 +43,8 @@ def _preprocess(
             f"in batch '{batch_identifiers[worst_batch_position]}'."
         ),
     )
-    if higher_is_better:
-        sign = -1.0
-    else:
-        sign = 1.0
-    risk_y = sign * labeled_values
-    risk_threshold = sign * threshold
+    risk_y = _reorient(labeled_values, higher_is_better)
+    risk_threshold = _reorient(threshold, higher_is_better)
     return risk_y, risk_threshold, batch_codes, batch_n
 
 

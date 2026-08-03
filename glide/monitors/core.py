@@ -1,7 +1,19 @@
-from typing import Tuple
+from typing import Tuple, Union, overload
 
 import numpy as np
 from numpy.typing import NDArray
+
+
+@overload
+def _reorient(value: float, higher_is_better: bool) -> float: ...
+@overload
+def _reorient(value: NDArray, higher_is_better: bool) -> NDArray: ...
+def _reorient(value: Union[float, NDArray], higher_is_better: bool) -> Union[float, NDArray]:
+    if higher_is_better:
+        reoriented_value = -value
+    else:
+        reoriented_value = value
+    return reoriented_value
 
 
 def _unique_ordered_batches(batches: NDArray) -> Tuple[NDArray, NDArray]:
@@ -24,11 +36,7 @@ def _postprocess(
     risk_batch_mean_estimates: NDArray,
     higher_is_better: bool,
 ) -> Tuple[NDArray, NDArray, NDArray]:
-    if higher_is_better:
-        sign = -1.0
-    else:
-        sign = 1.0
-    running_means = sign * risk_running_means
-    confidence_bounds = sign * risk_confidence_bounds
-    batch_mean_estimates = sign * risk_batch_mean_estimates
+    running_means = _reorient(risk_running_means, higher_is_better)
+    confidence_bounds = _reorient(risk_confidence_bounds, higher_is_better)
+    batch_mean_estimates = _reorient(risk_batch_mean_estimates, higher_is_better)
     return running_means, confidence_bounds, batch_mean_estimates
