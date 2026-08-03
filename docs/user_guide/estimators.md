@@ -1,6 +1,6 @@
 # Estimators
 
-GLIDE provides classical estimators, which use only human-annotated labels, and prediction-powered estimators, which combine those same labels with a large set of cheap proxy labels to reduce variance without introducing bias. Each prediction-powered method reduces to its classical counterpart when the proxy carries no usable signal. The right choice depends on how the labeled subset was collected and whether proxy labels are available.
+GLIDE provides prediction-powered estimators, which combine human-annotated labels with a large set of cheap proxy labels to reduce variance without introducing bias. Each prediction-powered method reduces to a classical counterpart when the proxy carries no usable signal. The right choice depends on how the labeled subset was collected and whether proxy labels are available.
 
 ---
 
@@ -22,7 +22,7 @@ Moreover, $C_\alpha$ should be as small as possible.
 
 ### Input data
 
-All estimators in GLIDE rely on two complementary sources of labels. Proxy labels $\tilde{Y}_i$ are available for $N$ samples at low cost but are biased ($E[\tilde{Y}] \neq \theta^*$). Human labels $Y_j$ are unbiased ($E[Y] = \theta^*$) but expensive, and only available for a small labeled set of $n \ll N$ samples. The key insight: even though human labels are scarce, they can be used to **correct** the bias in the cheap proxy labels.
+All estimators in GLIDE rely on two complementary sources of labels. Proxy labels $\tilde{Y}_i$ are available for $N$ samples at low cost but are biased ($E[\tilde{Y}] \neq \theta^*$). Human labels $Y_j$ are unbiased ($E[Y] = \theta^*$) but expensive, and only available for a small labeled set of $n \ll N$ samples in general. The key insight: even though human labels are scarce, they can be used to **correct** the bias in the cheap proxy labels.
 
 ---
 
@@ -30,9 +30,18 @@ All estimators in GLIDE rely on two complementary sources of labels. Proxy label
 
 This family applies when the labeled subset is drawn **uniformly at random** from the population. No knowledge of sampling probabilities or dataset partitions is required. When a proxy is available, it corrects the bias in the cheap proxy labels at minimal cost.
 
+### Input data
+
+Each sample has up to two associated values: a proxy label $\tilde{Y}_i$, available for all $n+N$ samples, and a ground-truth label $Y_j$, available only for the labeled subset of $n \ll N$ samples.
+
+| Value | Present for | Description |
+|---|---|---|
+| $\tilde{Y}_i$ | All $n+N$ samples | Proxy label |
+| $Y_j$ | Labeled samples only ($n \ll N$) | Ground-truth label |
+
 ### Classical Mean
 
-The **classical mean estimator** is the standard sample mean. It relies solely on the $n$ human-annotated labels $Y_j$, requires no proxy model, and serves as the baseline that the prediction-powered methods below extend.
+The **classical mean estimator** is the standard sample mean. It uses only the ground-truth labels $Y_j$ from the table above, requires no proxy model, and serves as the baseline that the prediction-powered methods below extend.
 
 #### Mean estimation
 
@@ -54,14 +63,7 @@ The classical mean is the special case of PPI++ at $\lambda = 0$, recovered when
 
 ### Prediction-Powered Inference (PPI++)
 
-PPI assumes that the labeled subset is drawn **uniformly at random** from the population. Under this assumption, it constructs an unbiased estimator by combining all available proxy labels with a small set of ground-truth annotations, correcting for the bias of the proxy at minimal cost.
-
-In PPI, each sample has two associated values:
-
-| Value | Present for | Description |
-|---|---|---|
-| $\tilde{Y}_i$ | All $n+N$ samples | Proxy label |
-| $Y_j$ | Labeled samples only ($n \ll N$) | Ground-truth label |
+PPI assumes that the labeled subset is drawn **uniformly at random** from the population. Under this assumption, it constructs an unbiased estimator by combining all available proxy labels with a small set of ground-truth annotations, correcting for the bias of the proxy at minimal cost. It uses both values from the table above: the proxy label $\tilde{Y}_i$ and the ground-truth label $Y_j$.
 
 #### Mean estimation
 
@@ -114,14 +116,7 @@ When the proxy is informative (high covariance with human labels), $\hat{\lambda
 
 ### Predict-Then-Debias (PTD)
 
-**Predict-Then-Debias (PTD)** [[7](#ref-7)] constructs a confidence interval from the **empirical distribution of bootstrap estimates** rather than a normal approximation, making it reliable when $n$ is small or residuals are non-Gaussian. GLIDE implements Algorithm 3 from [[7](#ref-7)], which works on a uniformly drawn labeled sample and includes a speedup that avoids resampling the unlabeled data during the bootstrap.
-
-In PTD, each sample has two associated values:
-
-| Value | Present for | Description |
-|---|---|---|
-| $\tilde{Y}_i$ | All $n+N$ samples | Proxy label |
-| $Y_j$ | Labeled samples only ($n \ll N$) | Ground-truth label |
+**Predict-Then-Debias (PTD)** [[7](#ref-7)] constructs a confidence interval from the **empirical distribution of bootstrap estimates** rather than a normal approximation, making it reliable when $n$ is small or residuals are non-Gaussian. GLIDE implements Algorithm 3 from [[7](#ref-7)], which works on a uniformly drawn labeled sample and includes a speedup that avoids resampling the unlabeled data during the bootstrap. Like PPI++, it uses both the proxy label $\tilde{Y}_i$ and the ground-truth label $Y_j$ from the table above.
 
 Denote $(\tilde{Y}^\circ_i)_{i=1}^N$ the unlabeled proxies and $(\tilde{Y}^\bullet_j)_{j=1}^n$ the labeled ones.
 
@@ -171,11 +166,25 @@ When the proxy is informative (high bootstrap covariance with ground-truth means
 
 This family applies when the dataset is partitioned into **strata** (for example, by language, domain, or data source) and labels were collected with stratum-proportional allocation. Estimating per-stratum means independently and combining them with stratum weights reduces variance when proxy quality varies across strata. The CLT approximation underlying the confidence interval assumes a small number of large strata; many small strata make per-stratum estimates unreliable, so prefer coarser stratifications when in doubt.
 
+### Input data
+
+The dataset is partitioned into $K$ strata (for example, by language, domain, or question type). Stratum $k$ contains $n_k+N_k$ total samples (labeled + unlabeled), of which $n_k$ are labeled. Let $n = \sum_k n_k$ and $N = \sum_k N_k$ denote the total numbers of labeled and unlabeled samples respectively. Assuming $n_k/n \approx N_k/N$ for all $k$, the population weight of stratum $k$ is:
+
+$$w_k = \frac{n_k+N_k}{n+N}$$
+
+Each sample has the following associated values:
+
+| Value | Present for | Description |
+|---|---|---|
+| $\tilde{Y}_i$ | All $n+N$ samples | Proxy label |
+| $Y_j$ | Labeled samples only ($n \ll N$) | Ground-truth label |
+| $g_j$ | All $n+N$ samples | Stratum identifier |
+
+The stratum identifiers allow partitioning samples and their labels according to the stratum they belong to.
+
 ### Stratified Classical Mean
 
-The **stratified classical mean estimator** extends the classical mean to a dataset partitioned into strata. It computes a classical mean and standard error independently within each stratum, then combines them with population-proportional weights, without requiring any proxy model.
-
-Let $K$ denote the number of strata, with stratum $k$ containing $n_k$ human-annotated labels and total population weight $w_k$, computed exactly as in Stratified PPI++.
+The **stratified classical mean estimator** extends the classical mean to a dataset partitioned into strata. It uses only the ground-truth labels $Y_j$ from the table above, grouped by stratum identifier $g_j$ and combined using the population weights $w_k$ defined above, without requiring any proxy model.
 
 #### Mean estimation
 
@@ -193,21 +202,7 @@ The stratified classical mean is the special case of Stratified PPI++ with $\lam
 
 ### Stratified PPI++
 
-Standard PPI++ assumes that labeled and unlabeled samples are drawn uniformly from a single population. In practice, the dataset is often naturally partitioned into **strata** (for example, by language, domain, or question type), and the proxy model may behave very differently across these strata. **Stratified PPI++** [[5](#ref-5), [6](#ref-6)] exploits this structure: rather than applying one global estimate, it runs PPI++ independently within each stratum and combines the results with weights proportional to stratum size.
-
-Let $K$ denote the number of strata. Stratum $k$ contains $n_k+N_k$ total samples (labeled + unlabeled), of which $n_k$ are labeled. We let $n = \sum_k n_k$ and $N = \sum_k N_k$ be the total numbers of labeled and unlabeled samples respectively. We assume that $n_k/n \approx N_k/N$ for all $k$ and compute the **population weight** of stratum $k$ as:
-
-$$w_k = \frac{n_k+N_k}{n+N}$$
-
-In Stratified PPI++, each sample has the same values as in PPI++ (a proxy label $\tilde{Y}_i$ and optionally a ground-truth label $Y_j$), plus a **stratum identifier** indicating which stratum the sample belongs to.
-
-| Value | Present for | Description |
-|---|---|---|
-| $\tilde{Y}_i$ | All $n+N$ samples | Proxy label |
-| $Y_j$ | Labeled samples only ($n \ll N$) | Ground-truth label |
-| $g_j$ | All $n+N$ samples | Stratum identifier |
-
-The stratum identifiers allow to partition samples and their labels according to the stratum they belong to.
+Standard PPI++ assumes that labeled and unlabeled samples are drawn uniformly from a single population. In practice, the dataset is often naturally partitioned into **strata** (for example, by language, domain, or question type), and the proxy model may behave very differently across these strata. **Stratified PPI++** [[5](#ref-5), [6](#ref-6)] exploits this structure: rather than applying one global estimate, it runs PPI++ independently within each stratum and combines the results with weights proportional to stratum size. It uses all three values from the table above: the proxy label $\tilde{Y}_i$, the ground-truth label $Y_j$, and the stratum identifier $g_j$.
 
 #### Mean estimation
 
@@ -239,23 +234,7 @@ where $Y^k$ is the vector of ground-truths in stratum $k$ (i.e. available $Y_j$ 
 
 **Stratified PTD** [[7](#ref-7)] extends PTD to datasets naturally partitioned into **strata** (for example, by language, domain, or data source). The PTD bootstrap is run independently within each stratum, each with its own tuning parameter, and the per-stratum results are combined with weights proportional to stratum size into a single estimate. When strata differ in proxy quality, this yields narrower confidence intervals than a single PTD run on the pooled data.
 
-GLIDE implements a stratified extension of Algorithm 3 from [[7](#ref-7)], applying the CLT speedup for the unlabeled mean independently within each stratum.
-
-Let $K$ denote the number of strata. Stratum $k$ contains $n_k + N_k$ total samples, of which $n_k$ are labeled and $N_k$ are unlabeled, with population weight:
-
-$$w_k = \frac{n_k + N_k}{n + N}$$
-
-where $n = \sum_k n_k$ and $N = \sum_k N_k$.
-
-In Stratified PTD, each sample has the same values as in PTD, plus a stratum identifier:
-
-| Value | Present for | Description |
-|---|---|---|
-| $\tilde{Y}_i$ | All $n+N$ samples | Proxy label |
-| $Y_j$ | Labeled samples only ($n \ll N$) | Ground-truth label |
-| $g_j$ | All $n+N$ samples | Stratum identifier |
-
-The stratum identifiers allow to partition samples and their labels according to the stratum they belong to.
+GLIDE implements a stratified extension of Algorithm 3 from [[7](#ref-7)], applying the CLT speedup for the unlabeled mean independently within each stratum. Like Stratified PPI++, it uses all three values from the table above: the proxy label $\tilde{Y}_i$, the ground-truth label $Y_j$, and the stratum identifier $g_j$.
 
 #### Mean estimation
 
@@ -305,17 +284,20 @@ This is the same formula as PTD power-tuning, applied stratum by stratum. In str
 
 This family applies when each record has a distinct, pre-determined probability $\pi_i$ of being selected for labeling (for example, active or uncertainty-based sampling). Inverse Probability Weighting up-weights underrepresented records to restore unbiasedness.
 
-### IPW Classical Mean (Horvitz–Thompson)
+### Input data
 
-The **IPW classical mean estimator**, also known as the **Horvitz–Thompson estimator**, corrects for non-uniform selection of the labeled subset using known sampling probabilities $\pi_i$. It requires no proxy model.
-
-In this section, we assume we have a total of $n$ samples, labeled and unlabeled. Each sample has the following associated values:
+In this family, we denote by $n$ the total number of samples, labeled and unlabeled. Each record has a known, pre-determined sampling probability $\pi_i \in (0, 1]$ of being selected for human annotation, together with a sampling indicator $\xi_i$ such that $\Pr(\xi_i = 1) = \pi_i$.
 
 | Value | Present for | Description |
 |---|---|---|
 | $\pi_i$ | All $n$ samples | Known, pre-determined sampling probability |
 | $\xi_i$ | All $n$ samples | Sampling indicator such that $\Pr(\xi_i = 1) = \pi_i$ |
+| $\tilde{Y}_i$ | All $n$ samples | Proxy label |
 | $Y_i$ | Labeled samples only ($\xi_i = 1$) | Ground-truth label |
+
+### IPW Classical Mean (Horvitz–Thompson)
+
+The **IPW classical mean estimator**, also known as the **Horvitz–Thompson estimator**, corrects for non-uniform selection of the labeled subset using known sampling probabilities $\pi_i$. It uses only the sampling probability $\pi_i$, sampling indicator $\xi_i$, and ground-truth label $Y_i$ from the table above, and requires no proxy model.
 
 #### Mean estimation
 
@@ -331,18 +313,9 @@ The IPW classical mean is the special case of ASI at $\lambda = 0$.
 
 ### Active Statistical Inference (ASI)
 
-Standard approaches to combining proxy and human labels assume that the labeled subset is drawn **uniformly at random** from the population. In practice, annotation resources are often allocated strategically, for instance, prioritizing uncertain or difficult examples. **Active Statistical Inference (ASI)** [[3](#ref-3), [4](#ref-4)] handles this general case: each sample $X_i$ may have a distinct, pre-determined probability $\pi_i \in (0, 1]$ of being selected for human annotation. Inverse-Probability Weighting (IPW) corrects for this non-uniform selection, yielding valid confidence intervals under any fixed sampling rule.
+Standard approaches to combining proxy and human labels assume that the labeled subset is drawn **uniformly at random** from the population. In practice, annotation resources are often allocated strategically, for instance, prioritizing uncertain or difficult examples. **Active Statistical Inference (ASI)** [[3](#ref-3), [4](#ref-4)] handles this general case: each sample $X_i$ may have a distinct, pre-determined probability $\pi_i \in (0, 1]$ of being selected for human annotation. Inverse-Probability Weighting (IPW) corrects for this non-uniform selection, yielding valid confidence intervals under any fixed sampling rule. ASI uses all four values from the table above: the proxy label $\tilde{Y}_i$, sampling probability $\pi_i$, sampling indicator $\xi_i$, and ground-truth label $Y_i$.
 
-In this section, we assume we have a total of $n$ samples, labeled and unlabeled. In ASI, each sample has three associated values:
-
-| Value | Present for | Description |
-|---|---|---|
-| $\tilde{Y}_i$ | All $n$ samples | Proxy label |
-| $\pi_i$ | All $n$ samples | Known, pre-determined sampling probability |
-| $\xi_i$ | All $n$ samples | Sampling indicator such that $\Pr(\xi_i = 1) = \pi_i = 1 - \Pr(\xi_i = 0)$ |
-| $Y_i$ | Labeled samples only ($\xi_i = 1$) | Ground-truth label |
-
-We define $\xi_i \in \{0, 1\}$ as the **sampling indicator**: $\xi_i = 1$ if a ground-truth label is present for sample $i$, and $\xi_i = 0$ otherwise. Crucially, $\pi_i$ must be known for every sample. It is a property of the sampling design, not derived from the data.
+Recall that $\xi_i \in \{0, 1\}$ is the **sampling indicator**: $\xi_i = 1$ if a ground-truth label is present for sample $i$, and $\xi_i = 0$ otherwise. Crucially, $\pi_i$ must be known for every sample. It is a property of the sampling design, not derived from the data.
 
 #### Mean estimation
 
@@ -401,18 +374,7 @@ When the proxy is informative, $\hat{\lambda}$ is large and the IPW-corrected la
 
 **Inverse Probability Weighted Predict-Then-Debias (IPW-PTD)** [[7](#ref-7)] combines the robustness of PTD's bootstrap confidence intervals with **Inverse Probability Weighting** to handle non-uniform ground-truth labeling probabilities. In practice, labeled data is often collected through a cost-optimal sampling process where samples are selected for human annotation based on the proxy model's uncertainty. For example, when using an LLM-as-Judge, samples on which the model has high uncertainty receive higher labeling probability, while confident predictions receive lower probability. IPW-PTD corrects for this non-uniform selection while maintaining the empirical distribution advantage of bootstrap inference.
 
-Standard PTD assumes that samples are drawn **uniformly at random** for ground-truth labeling. IPW-PTD relaxes this: each sample $i$ has a known, pre-determined probability $\pi_i \in (0, 1)$ of being selected for human annotation. IPW reweights labeled samples inversely to their selection probability, ensuring that samples with low labeling probability ($\pi_i$) are upweighted appropriately.
-
-In IPW-PTD, each sample has four associated values:
-
-| Value | Present for | Description |
-|---|---|---|
-| $\tilde{Y}_i$ | All $n+N$ samples | Proxy label |
-| $\pi_i$ | All $n+N$ samples | Known, pre-determined labeling probability |
-| $\xi_i$ | All $n+N$ samples | Sampling indicator such that $\Pr(\xi_i = 1) = \pi_i = 1 - \Pr(\xi_i = 0)$ |
-| $Y_i$ | Labeled samples only ($n \ll N$) | Ground-truth label |
-
-The binary indicator is $\xi_i = 1$ if sample $i$ is labeled and $\xi_i = 0$ otherwise; by design, $\Pr(\xi_i = 1) = \pi_i$.
+Standard PTD assumes that samples are drawn **uniformly at random** for ground-truth labeling. IPW-PTD relaxes this: each sample $i$ has a known, pre-determined probability $\pi_i \in (0, 1)$ of being selected for human annotation. IPW reweights labeled samples inversely to their selection probability, ensuring that samples with low labeling probability ($\pi_i$) are upweighted appropriately. Like ASI, it uses all four values from the table above (the proxy label $\tilde{Y}_i$, sampling probability $\pi_i$, sampling indicator $\xi_i$, and ground-truth label $Y_i$), but splits the $n$ total samples into $n$ labeled and $N$ unlabeled, for a total of $n + N$ samples, matching the bootstrap notation used elsewhere in this guide.
 
 #### Mean estimation
 
@@ -469,11 +431,23 @@ When the proxy is informative (high covariance with ground-truth), $\hat{\lambda
 
 This family applies when observations are grouped into clusters (for example, phrases from the same paragraph, or turns from the same conversation) and each cluster is either fully labeled or fully unlabeled. Observations within a cluster may be correlated, while different clusters are assumed independent. Reducing each cluster to its mean and treating cluster means as the sampling units restores the independence assumption needed for the estimators above.
 
+### Input data
+
+The data is partitioned into $L$ disjoint clusters $C_1, \dots, C_L$, with $\bigcup_{l=1}^{L} C_l = \{1, \dots, n+N\}$ and $C_i \cap C_j = \emptyset$ for $i \neq j$. Observations within a cluster may be correlated; observations from distinct clusters are independent. When a proxy model is used, each cluster is **either fully labeled or fully unlabeled**: no cluster contains a mix of labeled and unlabeled observations. We denote $L^{\bullet}$ the number of labeled clusters and $L^{\circ}$ the number of unlabeled clusters, with $L = L^{\bullet} + L^{\circ}$.
+
+| Value | Present for | Description |
+|---|---|---|
+| $\tilde{Y}_i$ | All $n+N$ samples | Proxy label |
+| $Y_j$ | Labeled samples only ($n \ll N$) | Ground-truth label |
+| $c_i$ | All $n+N$ samples | Cluster identifier |
+
+The cluster identifiers allow partitioning the data into cluster-level means, which replace individual observations as the sampling units used for inference.
+
 ### Clustered Classical Mean
 
-The **clustered classical mean estimator** extends the classical mean to a dataset partitioned into clusters, where observations within a cluster may be correlated but clusters are independent of one another. It reduces each cluster to its mean and treats the resulting cluster means as the sampling units, without requiring any proxy model.
+The **clustered classical mean estimator** extends the classical mean to a dataset partitioned into clusters, where observations within a cluster may be correlated but clusters are independent of one another. It uses only the ground-truth labels $Y_j$ from the table above, aggregated by cluster identifier $c_i$, without requiring any proxy model.
 
-The data is partitioned into $L$ disjoint clusters $C_1, \dots, C_L$. For each cluster $l$, the cluster mean is:
+For each cluster $l$, the cluster mean is:
 
 $$\bar{Y}^{(l)} = \frac{1}{|C_l|}\sum_{i \in C_l} Y_i$$
 
@@ -491,19 +465,7 @@ The clustered classical mean is the special case of Clustered PPI at $\lambda = 
 
 ### Clustered Prediction-Powered Inference
 
-Standard PPI++ assumes that observations are independent draws from the population. In practice, data often exhibits a **cluster structure**: samples are grouped into natural units (for example, phrases from the same paragraph), and observations within a cluster may be correlated. **Clustered PPI++** handles this case by reducing each cluster to its mean and treating the resulting cluster means as independent observations, so that PPI++ can be applied directly to them. This yields valid confidence intervals even when within-cluster dependence is strong.
-
-The data is partitioned into $L$ disjoint clusters $C_1, \dots, C_L$, with $\bigcup_{l=1}^{L} C_l = \{1, \dots, n + N\}$ and $C_i \cap C_j = \emptyset$ for $i \neq j$. Each cluster is **either fully labeled or fully unlabeled**: no cluster contains a mix of labeled and unlabeled observations. Observations from distinct clusters are independent, but no independence is assumed among observations within the same cluster. Let $L^{\bullet}$ denote the number of labeled clusters and $L^{\circ}$ the number of unlabeled clusters.
-
-In Clustered PPI++, each sample has the same values as in PPI++, plus a cluster identifier:
-
-| Value | Present for | Description |
-|---|---|---|
-| $\tilde{Y}_i$ | All $n+N$ samples | Proxy label |
-| $Y_j$ | Labeled samples only ($n \ll N$) | Ground-truth label |
-| $c_i$ | All $n+N$ samples | Cluster identifier |
-
-The cluster identifiers allow partitioning the data into cluster-level means, which replace individual observations as the sampling units used for inference.
+Standard PPI++ assumes that observations are independent draws from the population. In practice, data often exhibits a **cluster structure**: samples are grouped into natural units (for example, phrases from the same paragraph), and observations within a cluster may be correlated. **Clustered PPI++** handles this case by reducing each cluster to its mean and treating the resulting cluster means as independent observations, so that PPI++ can be applied directly to them. This yields valid confidence intervals even when within-cluster dependence is strong. It uses both the proxy label $\tilde{Y}_i$ and the ground-truth label $Y_j$ from the table above, aggregated by cluster identifier $c_i$.
 
 #### Mean estimation
 
@@ -559,19 +521,7 @@ When every cluster is a singleton, $L^{\bullet} = n$ and $L^{\circ} = N$, and al
 
 ### Clustered Predict-Then-Debias (Clustered PTD)
 
-**Clustered Predict-Then-Debias (Clustered PTD)** [[7](#ref-7)] extends PTD to datasets where observations are grouped into clusters and each cluster is either entirely labeled or entirely unlabeled. The bootstrap resamples whole clusters rather than individual observations, accounting for within-cluster correlation and producing valid confidence intervals under cluster sampling designs. Like PTD, it builds a confidence interval from the empirical distribution of bootstrap estimates rather than a normal approximation, making it reliable when the number of labeled clusters is small.
-
-The data is partitioned into $L$ disjoint clusters $C_1, \dots, C_L$, with $\bigcup_{l=1}^{L} C_l = \{1, \dots, n + N\}$ and $C_i \cap C_j = \emptyset$ for $i \neq j$. Each cluster is **either fully labeled or fully unlabeled**: no cluster contains a mix of labeled and unlabeled observations. Observations from distinct clusters are independent, but no independence is assumed among observations within the same cluster. We denote $L^\bullet$ the number of labeled clusters and $L^\circ$ the number of unlabeled clusters.
-
-In Clustered PTD, each sample has two associated values plus a cluster identifier:
-
-| Value | Present for | Description |
-|---|---|---|
-| $\tilde{Y}_i$ | All $n+N$ samples | Proxy label |
-| $Y_j$ | Labeled samples only ($n \ll N$) | Ground-truth label |
-| $c_i$ | All $n+N$ samples | Cluster identifier |
-
-The cluster identifiers allow partitioning the data into cluster-level means, which replace individual observations as the sampling units for the bootstrap.
+**Clustered Predict-Then-Debias (Clustered PTD)** [[7](#ref-7)] extends PTD to datasets where observations are grouped into clusters and each cluster is either entirely labeled or entirely unlabeled. The bootstrap resamples whole clusters rather than individual observations, accounting for within-cluster correlation and producing valid confidence intervals under cluster sampling designs. Like PTD, it builds a confidence interval from the empirical distribution of bootstrap estimates rather than a normal approximation, making it reliable when the number of labeled clusters is small. Like Clustered PPI++, it uses both the proxy label $\tilde{Y}_i$ and the ground-truth label $Y_j$ from the table above, aggregated by cluster identifier $c_i$.
 
 #### Mean estimation
 
@@ -637,16 +587,18 @@ When every cluster is a singleton ($L^\bullet = n$ and $L^\circ = N$), all formu
 
 This family applies when more than one proxy model is available for the same samples, for example several LLM judges scoring the same responses. Rather than committing to a single proxy, it estimates the optimal linear combination of all available proxies before applying the usual bias-correction machinery to that combination.
 
-### Multi-Proxy Prediction-Powered Inference (Multi-PPI)
+### Input data
 
-Standard PPI++ assumes a single proxy model. **Multi-Proxy Prediction-Powered Inference (Multi-PPI)** [[8](#ref-8)] generalises this to $M \geq 1$ proxy models simultaneously. It finds the optimal linear combination of all $M$ proxies before applying the PPI correction. As in PPI++, labeled samples are drawn uniformly at random from the population.
-
-In Multi-PPI, each sample has two associated values:
+Each sample has $M \geq 1$ proxy predictions, one from each proxy model, together with a ground-truth label for the labeled subset.
 
 | Value | Present for | Description |
 |---|---|---|
 | $\tilde{Y}^{(m)}_i$, for $m = 1, \ldots, M$ | All $n+N$ samples | Proxy prediction from proxy $m$ |
 | $Y_j$ | Labeled samples only ($n \ll N$) | Ground-truth label |
+
+### Multi-Proxy Prediction-Powered Inference (Multi-PPI)
+
+Standard PPI++ assumes a single proxy model. **Multi-Proxy Prediction-Powered Inference (Multi-PPI)** [[8](#ref-8)] generalises this to $M \geq 1$ proxy models simultaneously. It finds the optimal linear combination of all $M$ proxies before applying the PPI correction. As in PPI++, labeled samples are drawn uniformly at random from the population. It uses both values from the table above: the proxy predictions $\tilde{Y}^{(m)}_i$ from all $M$ proxies and the ground-truth label $Y_j$.
 
 #### Mean estimation
 
@@ -697,14 +649,7 @@ When a proxy is informative (high covariance with the true label), the correspon
 
 ### Multi-Proxy Predict-Then-Debias (Multi-PTD)
 
-Standard PTD assumes a single proxy model. **Multi-Proxy Predict-Then-Debias (Multi-PTD)** [[7](#ref-7), [8](#ref-8)] generalises PTD to $M \geq 1$ proxy models simultaneously, in the same way that Multi-PPI generalises PPI++. It estimates the optimal linear combination of all $M$ proxies from the bootstrap and applies the PTD rectifier to the combined proxy, retaining the empirical bootstrap distribution for the confidence interval rather than a normal approximation.
-
-In Multi-PTD, each sample has two associated values:
-
-| Value | Present for | Description |
-|---|---|---|
-| $\tilde{\mathbf{Y}}^{(m)}_i$, for $m = 1, \ldots, M$ | All $n+N$ samples | Proxy prediction from proxy $m$ |
-| $Y_j$ | Labeled samples only ($n \ll N$) | Ground-truth label |
+Standard PTD assumes a single proxy model. **Multi-Proxy Predict-Then-Debias (Multi-PTD)** [[7](#ref-7), [8](#ref-8)] generalises PTD to $M \geq 1$ proxy models simultaneously, in the same way that Multi-PPI generalises PPI++. It estimates the optimal linear combination of all $M$ proxies from the bootstrap and applies the PTD rectifier to the combined proxy, retaining the empirical bootstrap distribution for the confidence interval rather than a normal approximation. Like Multi-PPI, it uses both the proxy predictions $\tilde{Y}^{(m)}_i$ from all $M$ proxies and the ground-truth label $Y_j$ from the table above.
 
 Denote $\tilde{\mathbf{Y}}^\bullet_j = (\tilde{Y}^{(1),\bullet}_j, \ldots, \tilde{Y}^{(M),\bullet}_j)^\top \in \mathbb{R}^M$ and $\tilde{\mathbf{Y}}^\circ_i = (\tilde{Y}^{(1),\circ}_i, \ldots, \tilde{Y}^{(M),\circ}_i)^\top \in \mathbb{R}^M$ the labeled and unlabeled proxy vectors respectively.
 
