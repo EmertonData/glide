@@ -70,7 +70,7 @@ A mixture of nonnegative supermartingales, each starting at $1$, is itself a non
 
 $$L_t = \bar{R}_t - \sqrt{ \frac{2(\nu_t \rho^2 + 1)}{t^2 \rho^2} \log\!\left(1 + \frac{\sqrt{\nu_t \rho^2 + 1}}{2\delta}\right) }.$$
 
-This bound is exact if the per-batch deviations are truly Gaussian. In practice they are only approximately so that a further argument with a strong approximation is needed (see [[2](#ref-2)] for details). It shows that the partial sums of per-batch estimates stay close to those of a genuinely Gaussian process so that the same boundary remains valid for a sufficient number of batches. This makes the guarantee asymptotic rather than exact.
+This bound is exact if the per-batch deviations are truly Gaussian. In practice, this is approximately the case so that a further argument with a strong approximation is needed (see [[2](#ref-2)] for details). It shows that the partial sums of per-batch estimates stay close to those of a genuinely Gaussian process so that the same boundary remains valid for a sufficient number of batches. This makes the guarantee asymptotic rather than exact.
 
 #### Tuning and Interpreting the Boundary
 
@@ -108,7 +108,7 @@ Each batch $t$ contributes a set of human labels.
 |---|---|---|
 | $Y_{t,j}$ | All labeled samples in batch $t$ | Ground-truth label |
 
-Every batch is monitored relative to a user-fixed threshold $\tau$ and the metric is treated as a **risk** $R$, where lower is better (for example an error rate); a performance metric, where higher is better (for example accuracy), is monitored by applying the same methodology to $1 - R$ instead of $R$.
+Every batch is monitored relative to a user-fixed threshold $\tau$ and the metric is treated as a **risk** $R$, where lower is better (for example an error rate); a performance metric, where higher is better (for example accuracy), is monitored by applying the same methodology to $-R$ instead of $R$.
 
 The per-batch risk estimate is the classical sample mean of the $n_s$ labels in batch $s$,
 
