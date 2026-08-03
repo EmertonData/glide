@@ -5,16 +5,15 @@ description: Executes a full renaming task in the GLIDE codebase — renaming a 
 
 ## Overview
 
-- GLIDE has done this exact kind of rename many times, and the pattern is consistent: a rename that looks like a single find-and-replace almost always needs a follow-up cleanup pass.
-- The old name resurfaces in places a mechanical search over `.py` files doesn't reach:
+- A rename spans more than the source code: the old name resurfaces in places a mechanical search over `.py` files doesn't reach:
   - Local variable names in notebooks.
   - Plot color constants.
   - f-string labels.
   - Markdown headers.
   - Words derived from the same root that aren't the literal renamed token.
-- `CLAUDE.md`'s "Consistency and Propagation" section already says to grep for all sites using the old name before considering a rename done. That principle, stated generically, keeps missing things in practice. It needs:
+- Grepping for the old name is necessary but not sufficient on its own. Full coverage additionally requires:
   - A concrete, ordered checklist.
-  - A policy of actually reading each affected file rather than trusting grep snippets.
+  - Actually reading each affected file in full rather than trusting grep snippets.
   - A mandatory second pass.
 - Follow the steps below in order.
 
@@ -31,14 +30,15 @@ description: Executes a full renaming task in the GLIDE codebase — renaming a 
     - any acronym/abbreviation the concept has (e.g. `PPI` vs `PPRM`)
     - plural/derived forms sharing the same root — renaming a `Cluster*` class can also touch unrelated prose like "cluster classical estimator"; audit the whole word family, not just the exact old identifier
   - Whether the rename is a **pure rename** (same behavior, new name) or bundled with other changes, so the CHANGELOG entry doesn't conflate them.
-- A rename of a public symbol is a straight rename, not a deprecation: GLIDE's CLAUDE.md rejects backwards-compatibility shims, so don't leave the old name behind as an alias with a deprecation warning — remove it outright and let the CHANGELOG's `Changed` entry record the break.
+- A rename of a public symbol is a straight rename, not a deprecation: remove the old name outright rather than keeping it as an alias with a deprecation warning. Record the change via the CHANGELOG's `Changed` entry instead.
 
 ## Step 2 — Rename the core implementation first
 
 - Rename in this order, since everything else propagates from here:
   1. The class/function/parameter/module itself in `glide/`.
   2. Its export in the relevant `glide/*/__init__.py` (estimators, samplers, monitors, simulators, etc.).
-  3. If a module or test file's name is derived from the symbol, rename the file with `git mv` (not delete+recreate) so blame/history survives.
+  3. Its docstring's natural-language prose (summary, parameter descriptions, `Notes`/`References` sections) — these describe the symbol in words, not just in the signature, so update them alongside the code.
+  4. If a module or test file's name is derived from the symbol, rename the file with `git mv` (not delete+recreate) so blame/history survives.
 - Grep before moving on, restricted to `glide/`:
 
   ```bash
@@ -62,11 +62,11 @@ description: Executes a full renaming task in the GLIDE codebase — renaming a 
   - **Tutorial and deep-dive/scientific-validation notebooks** — check headers, bold prose, table cells, imports, variable names, plot labels, f-strings, `print()` statements, dict keys used as legend labels, and color constant names *and* their inline comments. Notebook titles in particular lag behind code renames easily since the first cell is easy to skim past.
   - **`docs/api/*.md`** — mkdocstrings `:::` directives and summary tables, both the link anchor and the display text.
   - **`docs/tutorials/index.md`**.
-  - **`docs/landing/`** — `tests/generate_fixtures.py` imports directly from `glide.estimators` and `glide.simulators`; a stale import here fails `make check-landing-fixtures` (chained into `make tests`) rather than showing up as a stray in prose, so don't skip this directory because it looks like a marketing page.
+  - **`docs/landing/`** — `tests/generate_fixtures.py` imports directly from `glide.estimators` and `glide.simulators`; a stale import fails `make check-landing-fixtures` (chained into `make tests`).
   - **`mkdocs.yml`** — nav display titles *and* file paths/slugs, which must change if a notebook was renamed.
   - **`README.md`** — the "Implemented Algorithms" table, citation links.
   - **`CONTRIBUTING.md`** — the ASCII architecture directory tree lists module filenames like `├── ppi.py`, easy to miss since it reads as prose, not code.
-  - **`CHANGELOG.md`** — add a bullet under `### Changed` in `## [Next release]` at the top of that section's list, per project convention; don't touch the Contributors line. If the symbol was introduced in an already-released version whose changelog entry still names it, ask the user whether to correct that historical entry too — editing released history is unusual, but has been this project's practice for a symbol renamed shortly after its own release.
+  - **`CHANGELOG.md`** — add a bullet under `### Changed` in `## [Next release]`, at the top of that section's list; don't touch the Contributors line. If the symbol was introduced by an entry still under `## [Next release]`, rename it in place within that entry instead of adding a second bullet. If the symbol was introduced in an already-released version, leave that historical entry untouched and record the rename as a new bullet under `## [Next release]` instead.
 - For every candidate file, actually **read the whole file** before editing it:
   - Never rely on grep's context lines alone — a snippet can hide additional occurrences elsewhere in the file.
   - Some hits need judgment (is this word derived from the renamed root, or a coincidental unrelated use of the same English word?) that only reading the surrounding content resolves.
@@ -96,8 +96,8 @@ make coverage
 make test-notebooks
 ```
 
-- `make tests` runs with `--doctest-modules`, so a stale doctest import or example will fail here — a second independent safety net on top of Step 4's grep. It also chains `check-landing-fixtures`, so a stale import in `docs/landing/tests/generate_fixtures.py` fails here too.
-- `make coverage` requires 100%: a rename that leaves an old alias or an unreachable branch behind will show up as a coverage drop even if `make tests` passes.
+- `make tests` runs with `--doctest-modules` (catches stale doctest imports/examples) and chains `check-landing-fixtures` (catches a stale import in `docs/landing/tests/generate_fixtures.py`).
+- `make coverage` requires 100%: an old alias or unreachable branch left behind shows up as a coverage drop even when `make tests` passes.
 
 ## Step 6 — Done, and close the loop for next time
 

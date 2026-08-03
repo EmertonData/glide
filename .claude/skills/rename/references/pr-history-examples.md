@@ -16,7 +16,7 @@ pprm_result_no_drift = AsymptoticPPRM().detect(...)
 print(f"PPRM drift detected: {pprm_result_no_drift.drift_detected}")
 ```
 
-Lesson: renaming the class does nothing to the variable a human (or a previous LLM pass) happened to name after the *old* class. Grep for the old name as a variable-name substring too, not just as a class reference.
+Lesson: a rename only touches direct references to the symbol, not variables a human (or a previous LLM pass) independently named after it. Grep for the old name as a substring of variable names too, not only as an exact symbol reference.
 
 ## 2. Plot color constants and their own inline comments
 
@@ -30,7 +30,7 @@ C_PPRM = "#27AE60"  # PPRM running mean/bound              — green
 C_ALARM_PPRM = "#8E44AD"  # PPRM alarm                     — purple
 ```
 
-Lesson: the comment text itself needs the rename too, and comment alignment (the trailing `—` column) often needs re-padding once the label text length changes.
+Lesson: a comment describing a renamed symbol needs the same rename applied to its text, and any manual alignment tied to the old text's length (here, the trailing `—` column) needs to be re-padded once the length changes.
 
 ## 3. Dict keys used as legend labels
 
@@ -46,7 +46,7 @@ colors = {"True only": "steelblue", "Clustered PPI++": "darkorange", "Proxy only
 ax.plot(correlations, ess_mean, marker="o", color="darkorange", label="Clustered PPI++ ESS (mean)")
 ```
 
-These dict keys are also used later as dictionary lookups (`raw_stats[correlation]["Cluster PPI++"]`) — every lookup site has to change in lockstep or the notebook throws a `KeyError` at run time. This is a case where `make test-notebooks` catches what grep might miss if you only search for the class name and not the display string.
+Lesson: a display string used as a dict key must be renamed at every definition and lookup site in lockstep (here, later lookups like `raw_stats[correlation]["Cluster PPI++"]`), or the mismatch surfaces at runtime as a `KeyError` instead of at diff time. `make test-notebooks` catches this class of stray even when a grep pass scoped to the class name alone misses the separate display-string variant.
 
 ## 4. Words derived from the same root, not the literal old identifier
 
@@ -72,7 +72,7 @@ Lesson: decide the "root word" for the whole rename (`cluster` → `clustered`) 
 # Scientific Validity of Asymptotic PPRM
 ```
 
-This needed a dedicated follow-up commit after the main rename — the H1 title of the notebook doesn't get touched by a code-level rename and is easy to forget because it's the very first cell, often skipped when skimming a diff top-down.
+Lesson: a notebook's title is prose in its first cell, not code, so a code-level rename never touches it automatically. It requires its own explicit edit, and a diff review that starts from the code cells downward will skip over it.
 
 ## 6. Stale references in CONTRIBUTING.md's architecture tree
 
@@ -83,18 +83,4 @@ This needed a dedicated follow-up commit after the main rename — the H1 title 
  │   ├── ...
 ```
 
-This is prose-shaped (an ASCII tree inside a markdown file), so it's easy to miss when searching only for code references. `CONTRIBUTING.md` and `README.md` are always worth a dedicated grep pass.
-
-## 7. Historical CHANGELOG entries corrected retroactively
-
-`Cluster*` was renamed to `Clustered*` shortly after being introduced. The already-released `## [0.7.0]` entry (not just the new unreleased entry) named the old symbols, so it was corrected too:
-
-```diff
- ## [0.7.0] – 2026-06-12
-
- ### ✨ Added
--- Cluster-level inference support: `ClusterPPIMeanEstimator`, `ClusterClassicalMeanEstimator`, `UniformClusterSampler`, ...
-+- Cluster-level inference support: `ClusteredPPIMeanEstimator`, `ClusteredClassicalMeanEstimator`, `UniformClusteredSampler`, ...
-```
-
-This is unusual (changelog entries normally describe history as it happened) and was only done because the symbol hadn't been out in a release for long. Ask the user before doing this on a rename of something that's been stable for a while.
+Lesson: an ASCII directory tree inside a markdown file is prose-shaped but encodes real file paths; a grep pass scoped to code references alone will miss it. `CONTRIBUTING.md` and `README.md` need their own dedicated grep pass for this reason.
