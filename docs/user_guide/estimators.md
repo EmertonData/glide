@@ -1,6 +1,6 @@
 # Estimators
 
-GLIDE provides three estimators that each combine proxy labels and a small human-annotated subset to produce an unbiased mean estimate and a confidence interval. The right choice depends on how the labeled subset was collected.
+GLIDE provides prediction-powered estimators that combine proxy labels and a small human-annotated subset to produce an unbiased mean estimate and a confidence interval. The right choice depends on how the labeled subset was collected. Prediction-powered estimators are paired with the classical baseline they reduce to when the proxy carries no usable signal.
 
 ---
 
@@ -22,7 +22,7 @@ Moreover, $C_\alpha$ should be as small as possible.
 
 ### Input data
 
-All estimators in GLIDE rely on two complementary sources of labels. Proxy labels $\tilde{Y}_i$ are available for $N$ samples at low cost but are biased ($E[\tilde{Y}] \neq \theta^*$). Human labels $Y_j$ are unbiased ($E[Y] = \theta^*$) but expensive, and only available for a small labeled set of $n \ll N$ samples. The key insight: even though human labels are scarce, they can be used to **correct** the bias in the cheap proxy labels.
+All prediction-powered estimators in GLIDE rely on two complementary sources of labels. Proxy labels $\tilde{Y}_i$ are available for $N$ samples at low cost but are biased ($E[\tilde{Y}] \neq \theta^*$). Human labels $Y_j$ are unbiased ($E[Y] = \theta^*$) but expensive, and only available for a small labeled set of $n \ll N$ samples. The key insight: even though human labels are scarce, they can be used to **correct** the bias in the cheap proxy labels.
 
 ---
 
@@ -88,6 +88,32 @@ When the proxy is informative (high covariance with human labels), $\hat{\lambda
 
 ---
 
+## Classical Mean
+
+The **classical mean** is the standard sample mean. It uses only ground-truth labels $Y_j$ (see table in previous section) and is the baseline extended by PPI++.
+
+### Mean estimation
+
+The classical mean estimate is the average of the ground-truth labels:
+
+$$\hat{\theta} = \frac{1}{n}\sum_{j=1}^{n} Y_j$$
+
+### Variance and confidence intervals
+
+The variance is estimated as:
+
+$$\hat{\sigma}^2_{\text{SE}} = \frac{\widehat{\text{Var}}(Y)}{n}$$
+
+where $\widehat{\text{Var}}$ denotes the sample variance, computed with $n-1$ degrees of freedom over the $n$ labeled samples. For large enough $n$ (typically $n \geq 50$), the Central Limit Theorem gives a confidence interval at level $1-\alpha$:
+
+$$\Pr\!\left(\theta^* \in \left[\hat{\theta} - z_{1-\alpha/2}\,\hat{\sigma}_{\text{SE}},\; \hat{\theta} + z_{1-\alpha/2}\,\hat{\sigma}_{\text{SE}}\right]\right) \geq 1 - \alpha$$
+
+where $z_{1-\alpha/2}$ is the standard normal quantile (e.g. $z_{0.975} = 1.96$ for a 95% two-sided confidence interval).
+
+The classical mean is the special case of PPI++ for $\lambda = 0$, recovered whenever the proxy carries no usable signal.
+
+---
+
 ## Stratified PPI++
 
 Standard PPI++ assumes that labeled and unlabeled samples are drawn uniformly from a single population. In practice, the dataset is often naturally partitioned into **strata** (for example, by language, domain, or question type), and the proxy model may behave very differently across these strata. **Stratified PPI++** [[5](#ref-5), [6](#ref-6)] exploits this structure: rather than applying one global estimate, it runs PPI++ independently within each stratum and combines the results with weights proportional to stratum size.
@@ -136,6 +162,30 @@ where $Y^k$ is the vector of ground-truths in stratum $k$ (i.e. available $Y_j$ 
 
 ---
 
+## Stratified Classical Mean
+
+The **stratified classical mean** extends the classical mean to a dataset partitioned into strata. It uses only ground-truth labels $Y_j$, grouped by stratum identifier $g_j$ (see table in previous section) and combined using the population weights $w_k$ defined above.
+
+### Mean estimation
+
+The stratified classical mean estimate is a weighted average of the per-stratum classical means:
+
+$$\hat{\theta}_{\text{strat}} = \sum_{k=1}^{K} w_k\,\hat{\theta}_k$$
+
+where $\hat{\theta}_k$ is the classical mean within stratum $k$.
+
+### Variance and confidence intervals
+
+The variance of $\hat{\theta}_{\text{strat}}$ is the sum of the per-stratum classical variances, each scaled by its squared population weight:
+
+$$\sigma^2_{\text{strat}} = \sum_{k=1}^{K} w_k^2\,\sigma^2_k$$
+
+where $\sigma^2_k = \widehat{\text{Var}}(Y^k) / n_k$ is the classical variance of stratum $k$. The resulting standard deviation $\sigma_{\text{strat}}$ gives a confidence interval at level $1-\alpha$ via the Central Limit Theorem, exactly as in the classical mean.
+
+The stratified classical mean is the special case of Stratified PPI++ with $\lambda_k = 0$ for every stratum $k$.
+
+---
+
 ## Active Statistical Inference (ASI)
 
 Standard approaches to combining proxy and human labels assume that the labeled subset is drawn **uniformly at random** from the population. In practice, annotation resources are often allocated strategically, for instance, prioritizing uncertain or difficult examples. **Active Statistical Inference (ASI)** [[3](#ref-3), [4](#ref-4)] handles this general case: each sample $X_i$ may have a distinct, pre-determined probability $\pi_i \in (0, 1]$ of being selected for human annotation. Inverse-Probability Weighting (IPW) corrects for this non-uniform selection, yielding valid confidence intervals under any fixed sampling rule.
@@ -171,7 +221,7 @@ $$\hat{\theta}_{\lambda} = \frac{1}{n}\sum_{i=1}^{n} z_i(\lambda)$$
 
 This estimator is **unbiased** for the population mean under any fixed sampling design, provided $\pi_i > 0$ for all samples.
 
-At $\lambda = 0$, this reduces to the classical Horvitz–Thompson estimator, which uses only the labeled samples (each weighted by $1/\pi_i$). As $\lambda$ increases, the proxy labels contribute progressively more to the estimate.
+For $\lambda = 0$, this reduces to the classical Horvitz–Thompson estimator, which uses only the labeled samples (each weighted by $1/\pi_i$). As $\lambda$ increases, the proxy labels contribute progressively more to the estimate.
 
 
 ### Variance and confidence intervals
@@ -203,6 +253,28 @@ The variance-minimising $\lambda$ is:
 $$\hat{\lambda} = \frac{\widehat{\text{Cov}}(a,\, b)}{\widehat{\text{Var}}(a)}$$
 
 When the proxy is informative, $\hat{\lambda}$ is large and the IPW-corrected labels benefit from the proxy signal, narrowing the confidence interval. When the proxy is uninformative, $\hat{\lambda}$ shrinks toward 0, down-weighting it. Fixing $\lambda = 1$, recover the plain IPW estimator. It is standard to use optimal power-tuning with the $\hat{\lambda}$ value above.
+
+---
+
+## IPW Classical Mean (Horvitz–Thompson)
+
+The **IPW classical mean**, also known as the **Horvitz–Thompson estimator**, corrects for non-uniform selection of the labeled subset using known sampling probabilities $\pi_i$. It uses only sampling probabilities $\pi_i$, sampling indicators $\xi_i$, and ground-truth labels $Y_i$ (see table in previous section).
+
+### Mean estimation
+
+The IPW classical mean estimate reweights each labeled observation by the inverse of its sampling probability:
+
+$$\hat{\theta}_{\text{HT}} = \frac{1}{n}\sum_{i=1}^{n} \frac{\xi_i\,Y_i}{\pi_i}$$
+
+### Variance and confidence intervals
+
+The variance is estimated as:
+
+$$\hat{\sigma}^2_{\text{SE}} = \frac{\widehat{\text{Var}}\!\left(\xi\,Y / \pi\right)}{n}$$
+
+where $\widehat{\text{Var}}$ denotes the sample variance of the per-record IPW-corrected values. As in the classical mean, this yields a confidence interval at level $1-\alpha$ via the Central Limit Theorem. $\pi_i$ must be strictly positive for every labeled sample.
+
+The IPW classical mean is the special case of ASI for $\lambda = 0$.
 
 ---
 
@@ -273,6 +345,32 @@ where:
 When the proxy is informative, $\hat{\lambda}$ is close to 1 and the variance reduction narrows the confidence interval. When the proxy is uninformative, $\hat{\lambda}$ shrinks toward 0, falling back to the classical cluster mean. It is standard to use the optimal $\hat{\lambda}$ in practice.
 
 When every cluster is a singleton, $L^{\bullet} = n$ and $L^{\circ} = N$, and all formulas reduce exactly to their PPI++ counterparts, recovering the full PPI++ procedure.
+
+---
+
+## Clustered Classical Mean
+
+The **clustered classical mean** extends the classical mean to a dataset partitioned into clusters, where observations within a cluster may be correlated but clusters are independent of one another. It uses only ground-truth labels $Y_j$, aggregated by cluster identifier $c_i$ (see table in previous section).
+
+For each of the $L^{\bullet}$ labeled clusters $l$, the cluster mean is:
+
+$$\bar{Y}^{(l)} = \frac{1}{|C_l|}\sum_{i \in C_l} Y_i$$
+
+### Mean estimation
+
+The clustered classical mean estimate is the average of the labeled cluster means:
+
+$$\hat{\theta} = \frac{1}{L^{\bullet}}\sum_{l=1}^{L^{\bullet}} \bar{Y}^{(l)}$$
+
+### Variance and confidence intervals
+
+The variance is estimated as:
+
+$$\hat{\sigma}^2 = \frac{\widehat{\text{Var}}\big(\bar{Y}^{(l)}\big)}{L^{\bullet}}$$
+
+where $\widehat{\text{Var}}$ denotes the sample variance computed across the $L^{\bullet}$ labeled cluster means. As in the Clustered Prediction-Powered Inference section above, using the mean of cluster means rather than a size-weighted mean is the minimum-variance choice when no independence is assumed within clusters. This yields a confidence interval at level $1-\alpha$ via the Central Limit Theorem applied to the cluster means.
+
+The clustered classical mean is the special case of Clustered PPI++ for $\lambda = 0$.
 
 ---
 
