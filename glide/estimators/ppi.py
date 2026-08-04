@@ -112,7 +112,7 @@ class PPIMeanEstimator:
             std=std,
             confidence_level=confidence_level,
         )
-        classical_dataset = self._classical_engine.preprocess(y_true_labeled)
+        classical_dataset = self._classical_engine.preprocess(y_true)
         _, classical_std = self._classical_engine.compute_mean_and_std(classical_dataset, None)
         effective_sample_size = floor(n_labeled * classical_std**2 / std**2)
         result = PredictionPoweredMeanInferenceResult(

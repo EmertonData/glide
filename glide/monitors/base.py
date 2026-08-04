@@ -3,7 +3,7 @@ from typing import Generic, List, Tuple
 import numpy as np
 from numpy.typing import NDArray
 
-from glide.confidence_sequences import AsymptoticConfidenceSequence, ConfidenceSequence
+from glide.confidence_sequences import AsymptoticConfidenceSequence
 from glide.confidence_sequences.asymptotic import _compute_asymptotic_bounds
 from glide.core.validation import _validate_bounds, _validate_equal_lengths, _validate_has_no_nan, _validate_non_empty
 from glide.engines.base import DatasetT, MeanEstimationEngine
@@ -27,7 +27,7 @@ class AsymptoticRM(Generic[DatasetT]):
         confidence_level: float,
         tightest_at_batch: int,
         power_tuning: bool,
-    ) -> Tuple[NDArray, NDArray, ConfidenceSequence]:
+    ) -> Tuple[NDArray, NDArray, AsymptoticConfidenceSequence]:
         _validate_bounds(
             confidence_level,
             "confidence_level",
