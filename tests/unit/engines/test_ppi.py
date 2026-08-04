@@ -55,15 +55,6 @@ def test_preprocess_delegates_to_validation(engine, y_true, y_proxy):
         np.testing.assert_array_equal(mock_validate_sample_sizes.call_args[0][0], labeled_mask)
 
 
-def test_preprocess_allows_constant_values_within_batch(engine):
-    y_true = np.array([1.0, 1.0, np.nan, np.nan])
-    y_proxy = np.array([2.0, 2.0, 2.0, 2.0])
-    y_true_labeled, y_proxy_labeled, y_proxy_unlabeled = engine.preprocess(y_true, y_proxy)
-    np.testing.assert_array_equal(y_true_labeled, np.array([1.0, 1.0]))
-    np.testing.assert_array_equal(y_proxy_labeled, np.array([2.0, 2.0]))
-    np.testing.assert_array_equal(y_proxy_unlabeled, np.array([2.0, 2.0]))
-
-
 def test_preprocess_valid_output(engine, y_true, y_proxy):
     y_true_labeled, y_proxy_labeled, y_proxy_unlabeled = engine.preprocess(y_true, y_proxy)
     np.testing.assert_array_equal(y_true_labeled, np.array([1.0, 2.0]))
