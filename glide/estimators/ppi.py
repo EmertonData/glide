@@ -100,8 +100,10 @@ class PPIMeanEstimator:
             - If ``y_true`` and ``y_proxy`` have different lengths.
             - If any proxy value is NaN.
             - If all proxy values are identical.
+            - If ``y_true`` contains only NaN values.
             - If labeled ``y_true`` values are constant.
             - If there are fewer than 2 labeled or fewer than 2 unlabeled samples.
+            - If ``confidence_level`` is not in ``(0, 1)``.
         """
         _validate_y_proxy(y_proxy)
         _validate_y_true(y_true)

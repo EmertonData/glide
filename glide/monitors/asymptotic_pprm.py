@@ -144,6 +144,7 @@ class AsymptoticPPRM(AsymptoticRM[PPIDataset]):
             - If batches are interleaved rather than grouped into contiguous blocks.
             - If any batch has fewer than 2 labeled or fewer than 2 unlabeled samples.
             - If proxy values are constant across a prefix set of batches (with ``power_tuning=True``).
+            - If ``tightest_at_batch`` is not a positive integer.
             - If the accumulated variance of the batch estimates up to ``tightest_at_batch`` is zero.
         """
         batch_codes, batch_mean_estimates, confidence_sequence = self._detect(

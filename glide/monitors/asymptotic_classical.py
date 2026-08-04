@@ -115,12 +115,13 @@ class AsymptoticClassicalRM(AsymptoticRM[NDArray]):
         Raises
         ------
         ValueError
-            - If ``y`` has fewer than 2 labeled (non-NaN) values.
+            - If ``batches`` is empty.
             - If ``y`` and ``batches`` have different lengths.
             - If ``batches`` contains NaN values (numeric dtype) or None values (non-numeric dtype).
             - If ``confidence_level`` is not in ``(0.5, 1)``.
             - If batches are interleaved rather than grouped into contiguous blocks.
             - If any batch has fewer than 2 labeled (non-NaN) samples.
+            - If ``tightest_at_batch`` is not a positive integer.
             - If the accumulated variance of the batch estimates up to ``tightest_at_batch`` is zero.
         """
         batch_codes, batch_mean_estimates, confidence_sequence = self._detect(

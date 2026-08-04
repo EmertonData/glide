@@ -58,7 +58,8 @@ class ClassicalMeanEstimator:
         Raises
         ------
         ValueError
-            If ``y`` contains fewer than 2 non-NaN values.
+            - If ``y`` contains fewer than 2 non-NaN values.
+            - If ``confidence_level`` is not in ``(0, 1)``.
         """
         dataset = self._engine.preprocess(y)
         n_samples = len(dataset)
