@@ -1,9 +1,8 @@
-from unittest.mock import patch
-
 import numpy as np
 import pytest
 from numpy.typing import NDArray
 
+from glide.engines.classical import ClassicalMeanEngine
 from glide.estimators import ClassicalMeanEstimator
 from glide.mean_inference_results import ClassicalMeanInferenceResult
 
@@ -20,22 +19,11 @@ def estimator() -> ClassicalMeanEstimator:
     return ClassicalMeanEstimator()
 
 
-# --- _preprocess ---
+# --- __init__ ---
 
 
-def test_preprocess_removes_nan(estimator):
-    y = np.array([2.0, np.nan, 4.0])
-    result = estimator._preprocess(y)
-    np.testing.assert_array_equal(result, np.array([2.0, 4.0]))
-
-
-def test_preprocess_delegate_to_validation(estimator):
-    y_valid = np.array([1.0])
-    with patch("glide.estimators.classical._validate_min_samples") as mock_validate_min_samples:
-        estimator._preprocess(y_valid)
-    mock_validate_min_samples.assert_called_once()
-    np.testing.assert_array_equal(mock_validate_min_samples.call_args[0][0], y_valid)
-    assert mock_validate_min_samples.call_args[0][1] == "y"
+def test_init_sets_engine(estimator):
+    assert isinstance(estimator._engine, ClassicalMeanEngine)
 
 
 # --- estimate ---

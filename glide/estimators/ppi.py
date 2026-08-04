@@ -1,22 +1,8 @@
 from math import floor
-from typing import Tuple
 
 from numpy.typing import NDArray
 
 from glide.confidence_intervals import CLTConfidenceInterval
-from glide.core.validation import (
-    _validate_equal_lengths,
-    _validate_sample_sizes,
-    _validate_y_proxy,
-    _validate_y_true,
-)
-from glide.estimators.classical import ClassicalMeanEstimator
-from glide.estimators.core import _split_labeled_unlabeled
-from glide.estimators.ppi_core import (
-    _compute_mean_estimate,
-    _compute_std_estimate,
-    _compute_tuning_parameter,
-)
 from glide.mean_inference_results import PredictionPoweredMeanInferenceResult
 
 
@@ -55,13 +41,14 @@ class PPIMeanEstimator:
     Effective Sample Size: 3
     """
 
-    def _preprocess(self, y_true_all: NDArray, y_proxy_all: NDArray) -> Tuple[NDArray, NDArray, NDArray]:
-        _validate_equal_lengths(y_true_all, y_proxy_all, names=["y_true", "y_proxy"])
-        _validate_y_proxy(y_proxy_all)
-        _validate_y_true(y_true_all)
-        y_true, y_proxy_labeled, y_proxy_unlabeled, labeled_mask = _split_labeled_unlabeled(y_true_all, y_proxy_all)
-        _validate_sample_sizes(labeled_mask)
-        return y_true, y_proxy_labeled, y_proxy_unlabeled
+    def __init__(self) -> None:
+        # Deferred: glide.engines.ppi imports glide.estimators.ppi_core, which would otherwise
+        # cycle back into this module while glide.estimators is still initializing.
+        from glide.engines.classical import ClassicalMeanEngine
+        from glide.engines.ppi import PPIMeanEngine
+
+        self._engine = PPIMeanEngine()
+        self._classical_engine = ClassicalMeanEngine()
 
     def estimate(
         self,
@@ -118,18 +105,19 @@ class PPIMeanEstimator:
             - If labeled ``y_true`` values are constant.
             - If there are fewer than 2 labeled or fewer than 2 unlabeled samples.
         """
-        y_true_filtered, y_proxy_labeled, y_proxy_unlabeled = self._preprocess(y_true, y_proxy)
-        n_labeled, n_unlabeled = len(y_true_filtered), len(y_proxy_unlabeled)
-        lambda_ = _compute_tuning_parameter(y_true_filtered, y_proxy_labeled, y_proxy_unlabeled, power_tuning)
-        mean = _compute_mean_estimate(y_true_filtered, y_proxy_labeled, y_proxy_unlabeled, lambda_)
-        std = _compute_std_estimate(y_true_filtered, y_proxy_labeled, y_proxy_unlabeled, lambda_)
+        dataset = self._engine.prepare(y_true, y_proxy)
+        y_true_labeled, _, y_proxy_unlabeled = dataset
+        n_labeled, n_unlabeled = len(y_true_labeled), len(y_proxy_unlabeled)
+        tuning_parameter = self._engine.fit_tuning_parameter(dataset, power_tuning)
+        mean, std = self._engine.compute_mean_and_std(dataset, tuning_parameter)
         confidence_interval = CLTConfidenceInterval(
             mean=mean,
             std=std,
             confidence_level=confidence_level,
         )
-        classical_confidence_interval = ClassicalMeanEstimator().estimate(y_true_filtered).confidence_interval
-        effective_sample_size = floor(n_labeled * classical_confidence_interval.var / confidence_interval.var)
+        classical_dataset = self._classical_engine.prepare(y_true_labeled)
+        _, classical_std = self._classical_engine.compute_mean_and_std(classical_dataset, None)
+        effective_sample_size = floor(n_labeled * classical_std**2 / std**2)
         result = PredictionPoweredMeanInferenceResult(
             confidence_interval=confidence_interval,
             metric_name=metric_name,

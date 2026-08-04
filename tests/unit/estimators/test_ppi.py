@@ -1,12 +1,12 @@
 from typing import Tuple
-from unittest.mock import patch
 
 import numpy as np
 import pytest
 from numpy.typing import NDArray
 
-import glide.estimators.ppi as ppi_module
 from glide.confidence_intervals import CLTConfidenceInterval
+from glide.engines.classical import ClassicalMeanEngine
+from glide.engines.ppi import PPIMeanEngine
 from glide.estimators import PPIMeanEstimator
 from glide.mean_inference_results import PredictionPoweredMeanInferenceResult
 
@@ -25,43 +25,12 @@ def estimator() -> PPIMeanEstimator:
     return PPIMeanEstimator()
 
 
-# --- _preprocess ---
+# --- __init__ ---
 
 
-def test_preprocess_delegates(estimator, y_arrays):
-    y_true, y_proxy = y_arrays
-    labeled_mask = np.array([True, True, False, False])
-    with (
-        patch.object(ppi_module, "_validate_equal_lengths") as mock_validate_equal_lengths,
-        patch.object(ppi_module, "_validate_y_proxy") as mock_validate_y_proxy,
-        patch.object(ppi_module, "_validate_y_true") as mock_validate_y_true,
-        patch.object(ppi_module, "_split_labeled_unlabeled") as mock_split_labeled_unlabeled,
-        patch.object(ppi_module, "_validate_sample_sizes") as mock_validate_sample_sizes,
-    ):
-        mock_split_labeled_unlabeled.return_value = (
-            np.array([1.0, 2.0]),
-            np.array([1.0, 2.0]),
-            np.array([3.0, 4.0]),
-            labeled_mask,
-        )
-        estimator._preprocess(y_true, y_proxy)
-
-        mock_validate_equal_lengths.assert_called_once_with(y_true, y_proxy, names=["y_true", "y_proxy"])
-        mock_validate_y_proxy.assert_called_once_with(y_proxy)
-        mock_validate_y_true.assert_called_once_with(y_true)
-        mock_split_labeled_unlabeled.assert_called_once()
-        np.testing.assert_array_equal(mock_split_labeled_unlabeled.call_args[0][0], y_true)
-        np.testing.assert_array_equal(mock_split_labeled_unlabeled.call_args[0][1], y_proxy)
-        mock_validate_sample_sizes.assert_called_once()
-        np.testing.assert_array_equal(mock_validate_sample_sizes.call_args[0][0], labeled_mask)
-
-
-def test_preprocess_valid_output(estimator, y_arrays):
-    y_true_all, y_proxy_all = y_arrays
-    y_true, y_proxy_labeled, y_proxy_unlabeled = estimator._preprocess(y_true_all, y_proxy_all)
-    np.testing.assert_array_equal(y_true, np.array([1.0, 2.0]))
-    np.testing.assert_array_equal(y_proxy_labeled, np.array([1.0, 2.0]))
-    np.testing.assert_array_equal(y_proxy_unlabeled, np.array([3.0, 4.0]))
+def test_init_sets_engines(estimator):
+    assert isinstance(estimator._engine, PPIMeanEngine)
+    assert isinstance(estimator._classical_engine, ClassicalMeanEngine)
 
 
 # --- estimate ---

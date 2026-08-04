@@ -1,14 +1,12 @@
+import numpy as np
 from numpy.typing import NDArray
 
-from glide.confidence_sequences import AsymptoticConfidenceSequence
-from glide.confidence_sequences.asymptotic import _compute_asymptotic_bounds
-from glide.core.validation import _validate_bounds
+from glide.engines.ppi import PPIDataset, PPIMeanEngine
 from glide.mean_monitoring_results import PredictionPoweredMeanMonitoringResult
-from glide.monitors.core import _postprocess
-from glide.monitors.ppi_core import _compute_batch_estimates, _preprocess
+from glide.monitors.base import AsymptoticRM
 
 
-class AsymptoticPPRM:
+class AsymptoticPPRM(AsymptoticRM[PPIDataset]):
     """Anytime-valid drift monitor leveraging the variance of each batch estimate.
 
     It computes a per-batch Prediction-Powered Inference (PPI) estimate: a small set
@@ -54,6 +52,8 @@ class AsymptoticPPRM:
     >>> result.first_alarm_index
     2
     """
+
+    engine = PPIMeanEngine()
 
     def detect(
         self,
@@ -136,7 +136,7 @@ class AsymptoticPPRM:
         Raises
         ------
         ValueError
-            - If ``y_true`` is empty.
+            - If ``batches`` is empty.
             - If ``y_true``, ``y_proxy`` and ``batches`` have different lengths.
             - If ``batches`` contains NaN values (numeric dtype) or None values (non-numeric dtype).
             - If ``confidence_level`` is not in ``(0.5, 1)``.
@@ -147,49 +147,25 @@ class AsymptoticPPRM:
             - If proxy values are constant across the prior batches (with ``power_tuning=True``).
             - If the accumulated variance of the batch estimates up to ``tightest_at_batch`` is zero.
         """
-        _validate_bounds(
-            confidence_level,
-            "confidence_level",
-            lower=0.5,
-            upper=1,
-            left_inclusive=False,
-            right_inclusive=False,
-            error_message=(
-                f"'confidence_level' must be in (0.5, 1) for the asymptotic monitor; got {confidence_level!r}."
-            ),
+        batch_codes, batch_mean_estimates, confidence_sequence = self._detect(
+            fields=[y_true, y_proxy],
+            field_names=["y_true", "y_proxy"],
+            batches=batches,
+            higher_is_better=higher_is_better,
+            confidence_level=confidence_level,
+            tightest_at_batch=tightest_at_batch,
+            power_tuning=power_tuning,
         )
-        risk_y_true, risk_y_proxy, risk_threshold, batch_codes, batch_n_true, batch_n_proxy = _preprocess(
-            y_true,
-            y_proxy,
-            batches,
-            higher_is_better,
-            threshold,
-            confidence_level,
-        )
-        batch_mean_estimates, batch_std_estimates = _compute_batch_estimates(
-            risk_y_true, risk_y_proxy, batch_codes, power_tuning
-        )
-        miscoverage = 1.0 - confidence_level
-        risk_running_means, risk_lower_bounds = _compute_asymptotic_bounds(
-            batch_mean_estimates, batch_std_estimates, miscoverage, tightest_at_batch
-        )
-        running_means, confidence_bounds, metric_batch_estimates = _postprocess(
-            risk_running_means,
-            risk_lower_bounds,
-            batch_mean_estimates,
-            higher_is_better,
-        )
-        confidence_sequence = AsymptoticConfidenceSequence(
-            running_mean_estimates=running_means,
-            confidence_bounds=confidence_bounds,
-        )
+        labeled_mask = ~np.isnan(y_true)
+        batch_n_true = np.bincount(batch_codes[labeled_mask], minlength=len(batch_mean_estimates))
+        batch_n_proxy = np.bincount(batch_codes, minlength=len(batch_mean_estimates))
         result = PredictionPoweredMeanMonitoringResult(
             metric_name=metric_name,
             monitor_name=self.__class__.__name__,
             higher_is_better=higher_is_better,
             alarm_threshold=threshold,
             confidence_level=confidence_level,
-            batch_mean_estimates=metric_batch_estimates,
+            batch_mean_estimates=batch_mean_estimates,
             confidence_sequence=confidence_sequence,
             batch_n_true=batch_n_true,
             batch_n_proxy=batch_n_proxy,
