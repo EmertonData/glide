@@ -127,7 +127,7 @@ glide/
 │   ├── asymptotic_pprm.py
 │   ├── ...
 │
-├── engines/                # Internal — per-unit body shared by estimators and monitors
+├── engines/                # Internal — per-unit body optionally shared between an estimator and its monitor
 │   ├── ppi.py
 │   ├── ...
 │
@@ -164,7 +164,7 @@ glide/
     └── export.py
 ```
 
-**How the pieces fit together.** Estimators accept raw NumPy arrays and return a `MeanInferenceResult` subclass: prediction-powered estimators return a `PredictionPoweredMeanInferenceResult`, classical ones a `ClassicalMeanInferenceResult`. Every result embeds a `ConfidenceInterval` (e.g. `CLTConfidenceInterval`). Samplers produce the labeled arrays that estimators consume. Monitors follow the same shape for batched, accumulating data: they return a `MeanMonitoringResult` subclass embedding a `ConfidenceSequence` (e.g. `AsymptoticConfidenceSequence`). The `io` module serialises result objects. Both estimator and monitor shells delegate their per-unit body (validate, transform, tune, then compute mean and std) to a shared `Engine` from `glide/engines/`: the estimator shell wraps one call over the whole dataset, the monitor shell loops it once per batch, and each shell only packages the result.
+**How the pieces fit together.** Estimators accept raw NumPy arrays and return a `MeanInferenceResult` subclass: prediction-powered estimators return a `PredictionPoweredMeanInferenceResult`, classical ones a `ClassicalMeanInferenceResult`. Every result embeds a `ConfidenceInterval` (e.g. `CLTConfidenceInterval`). Samplers produce the labeled arrays that estimators consume. Monitors follow the same shape for batched, accumulating data: they return a `MeanMonitoringResult` subclass embedding a `ConfidenceSequence` (e.g. `AsymptoticConfidenceSequence`). The `io` module serialises result objects. When a family has both an estimator and a monitor, they can share their per-unit body (validate, transform, tune, then compute mean and std) through a common `Engine` in `glide/engines/`, so the two don't duplicate the same math.
 
 ---
 
@@ -183,24 +183,21 @@ New estimators and samplers should be backed by a scientific publication. Please
 **Adding a new estimator — step by step**
 
 1. **Identify** the inputs, outputs, and any tunable hyperparameters.
-2. **Implement the engine** that owns the per-unit body (validate, transform, tune, then compute mean and std):
-   - Create `glide/engines/<name>.py` with a class exposing `preprocess(...)`, `fit_tuning_parameter(dataset, power_tuning)`, and `compute_mean_and_std(dataset, tuning_parameter)`. `preprocess` takes the family's explicit named inputs and returns the validated, transformed dataset (a plain tuple of arrays, or a single array, whichever fits the family — no bespoke dataclass needed).
-   - This engine will be reused unchanged by a monitor over the same family later on; keep it free of anything estimator-specific (confidence intervals, result packaging).
-3. **Implement the estimator shell**:
-   - Create `glide/estimators/<name>.py`. In `__init__`, instantiate the engine (and, if you need an effective-sample-size baseline, the paired classical engine) as instance attributes.
-   - `estimate(array1, array2, ...)` calls `preprocess` → `fit_tuning_parameter` → `compute_mean_and_std` on the engine, builds a `ConfidenceInterval`, and packages an inference result. Reuse a result type from `glide/mean_inference_results` (e.g. a `MeanInferenceResult` subclass) or add a new one there.
+2. **Implement** the estimator class:
+   - Create a properly named file `glide/estimators/<name>.py` for your estimator.
+   - `estimate(array1, array2, ...)` runs the method and returns an inference result object. Reuse one from `glide/mean_inference_results` (e.g. a `MeanInferenceResult` subclass) or add a new one there.
    - If your estimator has hyperparameters, these should be optional parameters of `estimate()` with default values.
-4. **Export** the new class from `glide/estimators/__init__.py`.
-5. **Write unit tests**: engine-level tests in `tests/unit/engines/test_<name>.py` covering validation, tuning, and mean/std against hardcoded expected values; shell-level tests in `tests/unit/estimators/test_<name>.py` covering:
+3. **Export** the new class from `glide/estimators/__init__.py`.
+4. **Write unit tests** in `tests/unit/estimators/test_<name>.py`. Cover at minimum:
    - Correct output type and shape.
    - Known outputs for fixed inputs.
    - Doctests in the class docstring.
-6. **Write functional tests** in `tests/functional/estimators/test_<name>.py`. If applicable, test expected behaviors and properties of your estimator in specific situations (e.g., the estimator reduces to the classical mean in special cases), see existing files in `tests/functional/estimators` for examples
-7. **Write a numpy-style docstring** that includes the reference paper, parameter descriptions, and a small `Examples` section with a minimalistic runnable doctest. See existing estimators for inspiration.
-8. **Add an example script** in `docs/examples/plot_<name>.py` demonstrating the estimator on some synthetic data.
-9. **Update `CHANGELOG.md`** under the `[Next release]` section.
+5. **Write functional tests** in `tests/functional/estimators/test_<name>.py`. If applicable, test expected behaviors and properties of your estimator in specific situations (e.g., the estimator reduces to the classical mean in special cases), see existing files in `tests/functional/estimators` for examples
+6. **Write a numpy-style docstring** that includes the reference paper, parameter descriptions, and a small `Examples` section with a minimalistic runnable doctest. See existing estimators for inspiration.
+7. **Add an example script** in `docs/examples/plot_<name>.py` demonstrating the estimator on some synthetic data.
+8. **Update `CHANGELOG.md`** under the `[Next release]` section.
 
-Exact numerics matter here: the estimator doctest's printed values are the primary guard that the engine reproduces today's math unchanged.
+If this family is likely to get a monitor counterpart too, consider factoring the per-unit computation (validate, transform, tune, then compute mean and std) into a shared `Engine` in `glide/engines/` (see `ppi.py` or `classical.py` for examples), so the estimator and monitor don't duplicate the same math.
 
 **Adding a new sampler — step by step**
 
@@ -221,24 +218,22 @@ Exact numerics matter here: the estimator doctest's printed values are the prima
 
 **Adding a new monitor — step by step**
 
-1. **Identify** the inputs (e.g. batched labels, the alarm threshold), outputs, and any tunable hyperparameters.
-2. **Reuse the family's engine.** If an estimator for this family already exists, its engine in `glide/engines/` already implements the per-batch body (validate, transform, tune, then compute mean and std); a monitor never re-derives this math, it only loops the engine once per batch. If no estimator exists yet for this family, implement the engine first (see "Adding a new estimator" above).
-3. **Implement a thin façade**:
-   - Create a properly named file `glide/monitors/<name>.py` for your monitor, as a class inheriting `AsymptoticRM` (from `glide/monitors/base.py`), parameterized by the engine's dataset type, with an `engine` class attribute set to an instance of the family's engine.
-   - `detect(y, batches, ...)` is the family's explicit public signature: it assembles the per-sample arrays into `fields`, calls the shared `_detect`, and packages the result inline from what `_detect` returns (no separate result-builder method). Reuse a result type from `glide/mean_monitoring_results` (e.g. a `MeanMonitoringResult` subclass) or add a new one there.
+1. **Identify** the inputs (e.g. batched labels, the alarm threshold, metric bounds), outputs, and any tunable hyperparameters.
+2. **Implement** the monitor class:
+   - Create a properly named file `glide/monitors/<name>.py` for your monitor.
+   - `detect(y, batches, ...)` runs the method and returns a monitoring result object. Reuse one from `glide/mean_monitoring_results` (e.g. a `MeanMonitoringResult` subclass) or add a new one there.
    - The result embeds a `ConfidenceSequence`: reuse one from `glide/confidence_sequences` (e.g. `AsymptoticConfidenceSequence`) or add a new one there.
    - If your monitor has hyperparameters, these should be optional parameters of `detect()` with default values.
-   - The monitor is selected by which class you instantiate, never inferred from the shape of the input arrays.
-4. **Export** the new class from `glide/monitors/__init__.py`.
-5. **Write unit tests** in `tests/unit/monitors/test_<name>.py`. Cover at minimum:
+3. **Export** the new class from `glide/monitors/__init__.py`.
+4. **Write unit tests** in `tests/unit/monitors/test_<name>.py`. Cover at minimum:
    - Correct output type and shape.
    - Known outputs for fixed inputs.
    - Doctests in the class docstring.
-6. **Write functional tests** in `tests/functional/monitors/test_<name>.py`. If applicable, test expected behaviors and properties of your monitor in specific situations (e.g., the monitor's per-batch estimates match the corresponding one-shot estimator), see existing files in `tests/functional/monitors` for examples.
-7. **Write a numpy-style docstring** that includes the reference paper, parameter descriptions, and a small `Examples` section with a minimalistic runnable doctest. See existing monitors for inspiration.
-8. **Update `CHANGELOG.md`** under the `[Next release]` section.
+5. **Write functional tests** in `tests/functional/monitors/test_<name>.py`. If applicable, test expected behaviors and properties of your monitor in specific situations (e.g., the monitor's per-batch estimates match the corresponding one-shot estimator), see existing files in `tests/functional/monitors` for examples.
+6. **Write a numpy-style docstring** that includes the reference paper, parameter descriptions, and a small `Examples` section with a minimalistic runnable doctest. See existing monitors for inspiration.
+7. **Update `CHANGELOG.md`** under the `[Next release]` section.
 
-**Adding a new estimator family end-to-end.** A family's three pieces share one engine: the `Engine` in `glide/engines/` owns the per-unit body once; the estimator shell calls it a single time over the whole dataset; the monitor façade calls it once per batch (tuning fitted on the batches preceding each one). Write the engine first, then the estimator shell, then the monitor façade on top of it, in that order — none of the three re-derives the others' math. The engine is always selected by which estimator or monitor class you instantiate, never inferred from the input arrays' shape.
+If an estimator already exists for this family, check whether its per-unit computation lives in a shared `Engine` in `glide/engines/` — reusing it saves you from re-deriving the same math for the monitor.
 
 ### 3. Documentation
 
