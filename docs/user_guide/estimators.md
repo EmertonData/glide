@@ -90,7 +90,7 @@ When the proxy is informative (high covariance with human labels), $\hat{\lambda
 
 ## Classical Mean
 
-The **classical mean estimator** is the standard sample mean. It uses only the ground-truth labels $Y_j$ from the table above, requires no proxy model, and serves as the baseline that PPI++ extends.
+The **classical mean** is the standard sample mean. It uses only the ground-truth labels $Y_j$ from the previous table, uses no proxy model, and serves as the baseline that PPI++ extends.
 
 ### Mean estimation
 
@@ -164,7 +164,7 @@ where $Y^k$ is the vector of ground-truths in stratum $k$ (i.e. available $Y_j$ 
 
 ## Stratified Classical Mean
 
-The **stratified classical mean estimator** extends the classical mean to a dataset partitioned into strata. It uses only the ground-truth labels $Y_j$ from the table above, grouped by stratum identifier $g_j$ and combined using the population weights $w_k$ defined above, without requiring any proxy model.
+The **stratified classical mean** extends the classical mean to a dataset partitioned into strata. It uses only the ground-truth labels $Y_j$ from the previous table, grouped by stratum identifier $g_j$ and combined using the population weights $w_k$ defined above, without using a proxy model.
 
 ### Mean estimation
 
@@ -180,7 +180,7 @@ The variance of $\hat{\theta}_{\text{strat}}$ is the sum of the per-stratum clas
 
 $$\sigma^2_{\text{strat}} = \sum_{k=1}^{K} w_k^2\,\sigma^2_k$$
 
-where $\sigma^2_k = \widehat{\text{Var}}(Y^k) / n_k$ is the classical variance of stratum $k$. The resulting standard deviation $\sigma_{\text{strat}} = \sqrt{\sigma^2_{\text{strat}}}$ gives a confidence interval at level $1-\alpha$ via the Central Limit Theorem, exactly as in the classical mean.
+where $\sigma^2_k = \widehat{\text{Var}}(Y^k) / n_k$ is the classical variance of stratum $k$. The resulting standard deviation $\sigma_{\text{strat}}$ gives a confidence interval at level $1-\alpha$ via the Central Limit Theorem, exactly as in the classical mean.
 
 The stratified classical mean is the special case of Stratified PPI++ with $\lambda_k = 0$ for every stratum $k$.
 
@@ -258,7 +258,7 @@ When the proxy is informative, $\hat{\lambda}$ is large and the IPW-corrected la
 
 ## IPW Classical Mean (Horvitz–Thompson)
 
-The **IPW classical mean estimator**, also known as the **Horvitz–Thompson estimator**, corrects for non-uniform selection of the labeled subset using known sampling probabilities $\pi_i$. It uses only the sampling probability $\pi_i$, sampling indicator $\xi_i$, and ground-truth label $Y_i$ from the table above, and requires no proxy model.
+The **IPW classical mean**, also known as the **Horvitz–Thompson estimator**, corrects for non-uniform selection of the labeled subset using known sampling probabilities $\pi_i$. It uses only the sampling probability $\pi_i$, sampling indicator $\xi_i$, and ground-truth label $Y_i$ from the previous table, and uses no proxy model.
 
 ### Mean estimation
 
@@ -272,7 +272,7 @@ The variance is estimated as:
 
 $$\hat{\sigma}^2_{\text{SE}} = \frac{\widehat{\text{Var}}\!\left(\xi_i\,Y_i / \pi_i\right)}{n}$$
 
-where $\widehat{\text{Var}}$ denotes the sample variance of the per-record IPW-corrected values. As in the classical mean, this yields a confidence interval at level $1-\alpha$ via the Central Limit Theorem. $\pi_i$ must be strictly positive for every labeled sample; see the discussion above for why this requirement matters.
+where $\widehat{\text{Var}}$ denotes the sample variance of the per-record IPW-corrected values. As in the classical mean, this yields a confidence interval at level $1-\alpha$ via the Central Limit Theorem. $\pi_i$ must be strictly positive for every labeled sample.
 
 The IPW classical mean is the special case of ASI at $\lambda = 0$.
 
@@ -350,7 +350,7 @@ When every cluster is a singleton, $L^{\bullet} = n$ and $L^{\circ} = N$, and al
 
 ## Clustered Classical Mean
 
-The **clustered classical mean estimator** extends the classical mean to a dataset partitioned into clusters, where observations within a cluster may be correlated but clusters are independent of one another. It uses only the ground-truth labels $Y_j$ from the table above, aggregated by cluster identifier $c_i$, without requiring any proxy model.
+The **clustered classical mean** extends the classical mean to a dataset partitioned into clusters, where observations within a cluster may be correlated but clusters are independent of one another. It uses only the ground-truth labels $Y_j$ from the previous table, aggregated by cluster identifier $c_i$, without using a proxy model.
 
 For each cluster $l$, the cluster mean is:
 
