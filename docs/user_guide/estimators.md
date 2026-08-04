@@ -90,7 +90,7 @@ When the proxy is informative (high covariance with human labels), $\hat{\lambda
 
 ## Classical Mean
 
-The **classical mean** is the standard sample mean. It uses only the ground-truth labels $Y_j$ from the previous table and is the baseline extended by PPI++.
+The **classical mean** is the standard sample mean. It uses only ground-truth labels $Y_j$ (see table in previous section) and is the baseline extended by PPI++.
 
 ### Mean estimation
 
@@ -164,7 +164,7 @@ where $Y^k$ is the vector of ground-truths in stratum $k$ (i.e. available $Y_j$ 
 
 ## Stratified Classical Mean
 
-The **stratified classical mean** extends the classical mean to a dataset partitioned into strata. It uses only the ground-truth labels $Y_j$ from the previous table, grouped by stratum identifier $g_j$ and combined using the population weights $w_k$ defined above.
+The **stratified classical mean** extends the classical mean to a dataset partitioned into strata. It uses only ground-truth labels $Y_j$, grouped by stratum identifier $g_j$ (see table in previous section) and combined using the population weights $w_k$ defined above.
 
 ### Mean estimation
 
@@ -258,7 +258,7 @@ When the proxy is informative, $\hat{\lambda}$ is large and the IPW-corrected la
 
 ## IPW Classical Mean (Horvitz–Thompson)
 
-The **IPW classical mean**, also known as the **Horvitz–Thompson estimator**, corrects for non-uniform selection of the labeled subset using known sampling probabilities $\pi_i$. It uses only the sampling probability $\pi_i$, sampling indicator $\xi_i$, and ground-truth label $Y_i$ from the previous table.
+The **IPW classical mean**, also known as the **Horvitz–Thompson estimator**, corrects for non-uniform selection of the labeled subset using known sampling probabilities $\pi_i$. It uses only sampling probabilities $\pi_i$, sampling indicators $\xi_i$, and ground-truth labels $Y_i$ (see table in previous section).
 
 ### Mean estimation
 
@@ -350,7 +350,7 @@ When every cluster is a singleton, $L^{\bullet} = n$ and $L^{\circ} = N$, and al
 
 ## Clustered Classical Mean
 
-The **clustered classical mean** extends the classical mean to a dataset partitioned into clusters, where observations within a cluster may be correlated but clusters are independent of one another. It uses only the ground-truth labels $Y_j$ from the previous table, aggregated by cluster identifier $c_i$.
+The **clustered classical mean** extends the classical mean to a dataset partitioned into clusters, where observations within a cluster may be correlated but clusters are independent of one another. It uses only ground-truth labels $Y_j$, aggregated by cluster identifier $c_i$ (see table in previous section).
 
 For each of the $L^{\bullet}$ labeled clusters $l$, the cluster mean is:
 
