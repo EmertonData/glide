@@ -1,6 +1,6 @@
 # Estimators
 
-GLIDE provides prediction-powered estimators, which combine human-annotated labels with a large set of cheap proxy labels to reduce variance without introducing bias. Each prediction-powered method reduces to a classical counterpart when the proxy carries no usable signal. The right choice depends on how the labeled subset was collected and whether proxy labels are available.
+GLIDE provides prediction-powered estimators that combine proxy labels and a small human-annotated subset to produce an unbiased mean estimate and a confidence interval. The right choice depends on how the labeled subset was collected. Prediction-powered estimators are paired with the classical baseline they reduce to when the proxy carries no usable signal.
 
 ---
 
@@ -22,50 +22,22 @@ Moreover, $C_\alpha$ should be as small as possible.
 
 ### Input data
 
-All estimators in GLIDE rely on two complementary sources of labels. Proxy labels $\tilde{Y}_i$ are available for $N$ samples at low cost but are biased ($E[\tilde{Y}] \neq \theta^*$). Human labels $Y_j$ are unbiased ($E[Y] = \theta^*$) but expensive, and only available for a small labeled set of $n \ll N$ samples in general. The key insight: even though human labels are scarce, they can be used to **correct** the bias in the cheap proxy labels.
+All estimators in GLIDE rely on two complementary sources of labels. Proxy labels $\tilde{Y}_i$ are available for $N$ samples at low cost but are biased ($E[\tilde{Y}] \neq \theta^*$). Human labels $Y_j$ are unbiased ($E[Y] = \theta^*$) but expensive, and only available for a small labeled set of $n \ll N$ samples. The key insight: even though human labels are scarce, they can be used to **correct** the bias in the cheap proxy labels.
 
 ---
 
-## Uniform sampling
+## Prediction-Powered Inference (PPI++)
 
-This family applies when the labeled subset is drawn **uniformly at random** from the population. No knowledge of sampling probabilities or dataset partitions is required. When a proxy is available, it corrects the bias in the cheap proxy labels at minimal cost.
+PPI assumes that the labeled subset is drawn **uniformly at random** from the population. Under this assumption, it constructs an unbiased estimator by combining all available proxy labels with a small set of ground-truth annotations, correcting for the bias of the proxy at minimal cost.
 
-### Input data
-
-Each sample has up to two associated values: a proxy label $\tilde{Y}_i$, available for all $n+N$ samples, and a ground-truth label $Y_j$, available only for the labeled subset of $n \ll N$ samples.
+In PPI, each sample has two associated values:
 
 | Value | Present for | Description |
 |---|---|---|
 | $\tilde{Y}_i$ | All $n+N$ samples | Proxy label |
 | $Y_j$ | Labeled samples only ($n \ll N$) | Ground-truth label |
 
-### Classical Mean
-
-The **classical mean estimator** is the standard sample mean. It uses only the ground-truth labels $Y_j$ from the table above, requires no proxy model, and serves as the baseline that the prediction-powered methods below extend.
-
-#### Mean estimation
-
-$$\hat{\theta} = \frac{1}{n}\sum_{j=1}^{n} Y_j$$
-
-#### Variance and confidence intervals
-
-The standard error is:
-
-$$\hat{\sigma}_{\text{SE}} = \frac{s}{\sqrt{n}}$$
-
-where $s$ is the sample standard deviation of $Y_j$, computed with $n-1$ degrees of freedom. For large enough $n$ (typically $n \geq 50$), the Central Limit Theorem gives a confidence interval at level $1-\alpha$:
-
-$$\Pr\!\left(\theta^* \in \left[\hat{\theta} - z_{1-\alpha/2}\,\hat{\sigma}_{\text{SE}},\; \hat{\theta} + z_{1-\alpha/2}\,\hat{\sigma}_{\text{SE}}\right]\right) \geq 1 - \alpha$$
-
-where $z_{1-\alpha/2}$ is the standard normal quantile (e.g. $z_{0.975} = 1.96$ for a 95% two-sided confidence interval).
-
-The classical mean is the special case of PPI++ at $\lambda = 0$, recovered whenever the proxy carries no usable signal.
-
-### Prediction-Powered Inference (PPI++)
-
-PPI assumes that the labeled subset is drawn **uniformly at random** from the population. Under this assumption, it constructs an unbiased estimator by combining all available proxy labels with a small set of ground-truth annotations, correcting for the bias of the proxy at minimal cost. It uses both values from the table above: the proxy label $\tilde{Y}_i$ and the ground-truth label $Y_j$.
-
-#### Mean estimation
+### Mean estimation
 
 **PPI++** [[2](#ref-2)] is an extension of the original PPI [[1](#ref-1)] that introduces a weight $\lambda \in [0, 1]$ on the proxy labels. Denoting $\tilde{Y}^{\bullet}$ and $\tilde{Y}^{\circ}$ the labeled and unlabeled proxies respectively, the mean estimate is:
 
@@ -83,7 +55,7 @@ $$\hat{\theta} = \underbrace{\frac{1}{N} \sum_{i=1}^{N} \tilde{Y}_i^{\circ}}_{\t
 The parameter $\lambda$ allows modulating the contribution of the proxy labels based on how informative they are. We will see that it can be set to an optimal value below.
 
 
-#### Variance and confidence intervals
+### Variance and confidence intervals
 
 For large enough sample sizes (typically $n \geq 50$), the **Central Limit Theorem** applies and the variance of the PPI++ estimator decomposes as:
 
@@ -98,7 +70,7 @@ $$\Pr\!\left(\theta^* \in \left[\hat{\theta}_{\lambda} - z_{1-\alpha/2}\, \sigma
 
 where $z_{1-\alpha/2}$ is the standard normal quantile (e.g. $z_{0.975} = 1.96$ for a $95\%$ two-sided confidence interval).
 
-#### Power-tuning
+### Power-tuning
 
 The $\lambda$ parameter needs to be chosen wisely. If left at $\lambda = 1,$ low-quality proxy labels with weak or negative covariance to human labels could *degrade* the estimation by inducing larger confidence intervals compared to using human labels only ($\lambda = 0$). PPI++ derives a closed-form plug-in estimator for the $\lambda$ that minimises the CI width:
 
@@ -114,65 +86,41 @@ where:
 
 When the proxy is informative (high covariance with human labels), $\hat{\lambda}$ is close to 1 and the CI is narrower than standard PPI; when the proxy is uninformative, $\hat{\lambda}$ shrinks toward 0, down-weighting it and falling back to the classical human-only mean estimate. It is standard to use optimal $\hat{\lambda}$. This ensures the resulting estimate always has smaller variance than the classical estimate.
 
-### Predict-Then-Debias (PTD)
+---
 
-**Predict-Then-Debias (PTD)** [[7](#ref-7)] constructs a confidence interval from the **empirical distribution of bootstrap estimates** rather than a normal approximation, making it reliable when $n$ is small or residuals are non-Gaussian. GLIDE implements Algorithm 3 from [[7](#ref-7)], which works on a uniformly drawn labeled sample and includes a speedup that avoids resampling the unlabeled data during the bootstrap. Like PPI++, it uses both the proxy label $\tilde{Y}_i$ and the ground-truth label $Y_j$ from the table above.
+## Classical Mean
 
-Denote $(\tilde{Y}^\circ_i)_{i=1}^N$ the unlabeled proxies and $(\tilde{Y}^\bullet_j)_{j=1}^n$ the labeled ones.
+The **classical mean estimator** is the standard sample mean. It uses only the ground-truth labels $Y_j$ from the table above, requires no proxy model, and serves as the baseline that PPI++ extends.
 
-#### Mean estimation
+### Mean estimation
 
-The PTD mean estimate is the average of $B$ bootstrap estimates:
+$$\hat{\theta} = \frac{1}{n}\sum_{j=1}^{n} Y_j$$
 
-$$\hat{\theta}_{\text{PTD}} = \frac{1}{B}\sum_{b=1}^{B}\hat{\theta}^{(b)}_{\text{PTD}}$$
+### Variance and confidence intervals
 
-where each $\hat{\theta}^{(b)}_{\text{PTD}}$ is computed during the bootstrap procedure described below.
+The standard error is:
 
-#### Bootstrap procedure
+$$\hat{\sigma}_{\text{SE}} = \frac{s}{\sqrt{n}}$$
 
-For $b = 1, \dots, B$, sample a set of indices $\mathcal{I}^{(b)}$ of size $n$ uniformly with replacement from $\{1, \dots, n\}$ and compute the bootstrap means of the labeled ground-truth and proxy labels:
+where $s$ is the sample standard deviation of $Y_j$, computed with $n-1$ degrees of freedom. For large enough $n$ (typically $n \geq 50$), the Central Limit Theorem gives a confidence interval at level $1-\alpha$:
 
-$$\hat{\mu}^{(b)}_{\text{true}} = \frac{1}{n}\sum_{j\in \mathcal{I}^{(b)}} Y_j, \qquad \hat{\mu}^{(b)}_{\text{proxy}} = \frac{1}{n}\sum_{j\in \mathcal{I}^{(b)}} \tilde{Y}^\bullet_j$$
+$$\Pr\!\left(\theta^* \in \left[\hat{\theta} - z_{1-\alpha/2}\,\hat{\sigma}_{\text{SE}},\; \hat{\theta} + z_{1-\alpha/2}\,\hat{\sigma}_{\text{SE}}\right]\right) \geq 1 - \alpha$$
 
-The third ingredient needed is a perturbed draw of the unlabeled proxy mean, $\tilde{\gamma}^{(b)}$. Naively, this would require resampling all $N$ proxy labels on the unlabeled samples at each iteration. Algorithm 3 in [[7](#ref-7)] avoids this cost: by the CLT, the mean of $N$ i.i.d. proxy scores is approximately Gaussian with mean $\hat{\gamma}^\circ = \frac{1}{N}\sum_{i=1}^{N}\tilde{Y}^\circ_i$ and variance $\hat{S}_{\gamma}^\circ = \widehat{\text{Var}}(\tilde{Y}^\circ) / N$, so instead of resampling all $N$ unlabeled proxy scores at each iteration, we replace that expensive resample with a single standard gaussian draw, mimicking bootstrap randomness at a far lower computational cost:
+where $z_{1-\alpha/2}$ is the standard normal quantile (e.g. $z_{0.975} = 1.96$ for a 95% two-sided confidence interval).
 
-$$\tilde{\gamma}^{(b)} = \hat{\gamma}^\circ + Z^{(b)} \cdot \sqrt{\hat{S}_{\gamma}^\circ}, \qquad Z^{(b)} \sim \mathcal{N}(0,\, 1)$$
-
-The quantities $\hat{\gamma}^\circ$ and $\hat{S}_{\gamma}^\circ$ are computed once before the loop, reducing the per-iteration cost to $O(n)$ instead of $O(n+N)$. This approximation is reliable for large $N$ which is typically the case in practical scenarios where proxy labels are far cheaper than expensive human annotations.
-
-Combining the labeled bootstrap means with this unlabeled draw gives:
-
-$$\hat{\theta}^{(b)}_{\text{PTD}} = \lambda \cdot \tilde{\gamma}^{(b)} + \left(\hat{\mu}^{(b)}_{\text{true}} - \lambda \cdot \hat{\mu}^{(b)}_{\text{proxy}}\right)$$
-
-where $\lambda$ is a power-tuning factor that controls the proxy labels' influence similarly to previous sections. The term $\hat{\mu}^{(b)}_{\text{true}} - \lambda \cdot \hat{\mu}^{(b)}_{\text{proxy}}$ captures the proxy bias measured on the labeled set, while $\lambda \cdot \tilde{\gamma}^{(b)}$ contributes the proxy signal on the full unlabeled population. Together they form a bias-corrected estimate of $\theta^*$ for each bootstrap replicate.
-
-#### Confidence intervals
-
-The confidence interval at level $1 - \alpha$ is the interval between the $\alpha/2$ and $1 - \alpha/2$ empirical quantiles of $\bigl\{\hat{\theta}^{(1)}_{\text{PTD}},\, \ldots,\, \hat{\theta}^{(B)}_{\text{PTD}}\bigr\}$. This bootstrap percentile approach adapts to the actual shape of the residual distribution, making it reliable even when $n$ is small.
-
-#### Power-tuning
-
-The optimal $\lambda$ is estimated from the **bootstrap covariances**. Let $\hat{\mu}_{\text{true}}$ and $\hat{\mu}_{\text{proxy}}$ be the vectors of values $\hat{\mu}^{(b)}_{\text{true}}$ and $\hat{\mu}^{(b)}_{\text{proxy}}$ for $b=1,\dots,B$ respectively. After running the bootstrap loop, it is computed as:
-
-$$\hat{\lambda} = \frac{\widehat{\text{Cov}}_B\!\left(\hat{\mu}_{\text{true}},\; \hat{\mu}_{\text{proxy}}\right)}{\widehat{\text{Var}}_B\!\left(\hat{\mu}_{\text{proxy}}\right) + \hat{S}_{\gamma}^\circ}$$
-
-where $\widehat{\text{Cov}}_B$ and $\widehat{\text{Var}}_B$ are computed across the $B$ bootstrap replicates of the labeled means, and $\hat{S}_{\gamma}^\circ$ is the estimated sampling variance of the unlabeled proxy mean. The denominator adds $\hat{S}_{\gamma}^\circ$ to account for the variance of the unlabeled proxies. This value can be readily used since a Gaussian approximation is made for the unlabeled mean.
-
-When the proxy is informative (high bootstrap covariance with ground-truth means), $\hat{\lambda}$ is large and the estimate borrows heavily from the proxy signal, narrowing the interval. When the proxy is uninformative, $\hat{\lambda}$ shrinks toward 0, down-weighting it. Fixing $\lambda = 1$, recovers the unweighted PTD estimator. It is standard to use the optimal value $\hat{\lambda}$ in practice.
+The classical mean is the special case of PPI++ at $\lambda = 0$, recovered whenever the proxy carries no usable signal.
 
 ---
 
-## Stratified sampling
+## Stratified PPI++
 
-This family applies when the dataset is partitioned into **strata** (for example, by language, domain, or data source) and labels were collected with stratum-proportional allocation. Estimating per-stratum means independently and combining them with stratum weights reduces variance when proxy quality varies across strata. The CLT approximation underlying the confidence interval assumes a small number of large strata; many small strata make per-stratum estimates unreliable, so prefer coarser stratifications when in doubt.
+Standard PPI++ assumes that labeled and unlabeled samples are drawn uniformly from a single population. In practice, the dataset is often naturally partitioned into **strata** (for example, by language, domain, or question type), and the proxy model may behave very differently across these strata. **Stratified PPI++** [[5](#ref-5), [6](#ref-6)] exploits this structure: rather than applying one global estimate, it runs PPI++ independently within each stratum and combines the results with weights proportional to stratum size.
 
-### Input data
-
-The dataset is partitioned into $K$ strata (for example, by language, domain, or question type). Stratum $k$ contains $n_k+N_k$ total samples (labeled + unlabeled), of which $n_k$ are labeled. Let $n = \sum_k n_k$ and $N = \sum_k N_k$ denote the total numbers of labeled and unlabeled samples respectively. Assuming $n_k/n \approx N_k/N$ for all $k$, the population weight of stratum $k$ is:
+Let $K$ denote the number of strata. Stratum $k$ contains $n_k+N_k$ total samples (labeled + unlabeled), of which $n_k$ are labeled. We let $n = \sum_k n_k$ and $N = \sum_k N_k$ be the total numbers of labeled and unlabeled samples respectively. We assume that $n_k/n \approx N_k/N$ for all $k$ and compute the **population weight** of stratum $k$ as:
 
 $$w_k = \frac{n_k+N_k}{n+N}$$
 
-Each sample has the following associated values:
+In Stratified PPI++, each sample has the same values as in PPI++ (a proxy label $\tilde{Y}_i$ and optionally a ground-truth label $Y_j$), plus a **stratum identifier** indicating which stratum the sample belongs to.
 
 | Value | Present for | Description |
 |---|---|---|
@@ -180,31 +128,9 @@ Each sample has the following associated values:
 | $Y_j$ | Labeled samples only ($n \ll N$) | Ground-truth label |
 | $g_j$ | All $n+N$ samples | Stratum identifier |
 
-The stratum identifiers allow partitioning samples and their labels according to the stratum they belong to.
+The stratum identifiers allow to partition samples and their labels according to the stratum they belong to.
 
-### Stratified Classical Mean
-
-The **stratified classical mean estimator** extends the classical mean to a dataset partitioned into strata. It uses only the ground-truth labels $Y_j$ from the table above, grouped by stratum identifier $g_j$ and combined using the population weights $w_k$ defined above, without requiring any proxy model.
-
-#### Mean estimation
-
-$$\hat{\theta}_{\text{strat}} = \sum_{k=1}^{K} w_k\,\hat{\theta}_k$$
-
-where $\hat{\theta}_k$ is the classical mean within stratum $k$.
-
-#### Variance and confidence intervals
-
-$$\sigma^2_{\text{strat}} = \sum_{k=1}^{K} w_k^2\,\sigma^2_k$$
-
-where $\sigma^2_k = s_k^2 / n_k$ is the classical variance of stratum $k$. The resulting standard deviation $\sigma_{\text{strat}} = \sqrt{\sigma^2_{\text{strat}}}$ gives a confidence interval at level $1-\alpha$ via the Central Limit Theorem, exactly as in the classical mean above.
-
-The stratified classical mean is the special case of Stratified PPI++ with $\lambda_k = 0$ for every stratum $k$.
-
-### Stratified PPI++
-
-Standard PPI++ assumes that labeled and unlabeled samples are drawn uniformly from a single population. In practice, the dataset is often naturally partitioned into **strata** (for example, by language, domain, or question type), and the proxy model may behave very differently across these strata. **Stratified PPI++** [[5](#ref-5), [6](#ref-6)] exploits this structure: rather than applying one global estimate, it runs PPI++ independently within each stratum and combines the results with weights proportional to stratum size. It uses all three values from the table above: the proxy label $\tilde{Y}_i$, the ground-truth label $Y_j$, and the stratum identifier $g_j$.
-
-#### Mean estimation
+### Mean estimation
 
 The Stratified PPI++ point estimate is a weighted average of the per-stratum PPI++ estimates:
 
@@ -212,7 +138,9 @@ $$\hat{\theta}_{\text{strat}} = \sum_{k=1}^{K} w_k \cdot \hat{\theta}_k(\lambda_
 
 where $\hat{\theta}_k(\lambda_k)$ is exactly the PPI++ mean estimator applied to the data in stratum $k$ with its own weight $\lambda_k$. The weights $w_k$ are proportional to stratum size, so larger strata contribute more to the final estimate. Since each $\hat{\theta}_k(\lambda_k)$ is an unbiased estimator for the stratum-$k$ mean and the weights sum to one, $\hat{\theta}_{\text{strat}}$ is an unbiased estimator for the population mean $\theta^*$.
 
-#### Variance and confidence intervals
+### Variance and confidence intervals
+
+Keep in mind that Stratified PPI++ is designed for a small number of large strata. The theoretical guarantees assume that the number of strata $K$ stays fixed as sample size grows and that each stratum contains a non-vanishing share of the data. In practice, many small strata mean that per-stratum statistical estimates become unreliable, and the CLT approximation underlying the confidence interval may break down. When in doubt, prefer a coarser stratification with fewer, larger strata.
 
 The asymptotic variance of $\hat{\theta}_{\text{strat}}$ is the sum of the per-stratum PPI++ variances, each scaled by its squared population weight:
 
@@ -222,7 +150,7 @@ where $\sigma^2_k(\lambda_k)$ is the PPI++ variance for stratum $k$. The reporte
 
 The key benefit over global PPI++ becomes apparent when strata differ substantially in proxy quality. Strata where the proxy is accurate contribute a small $\sigma^2_k(\lambda_k)$, while strata where it is poor contribute a larger one, but each contribution is isolated to its own stratum instead of polluting the global estimate.
 
-#### Power-tuning
+### Power-tuning
 
 Each stratum $k$ receives its **own optimal weight** $\hat{\lambda}_k$, computed with the same closed-form formula as PPI++, restricted to the $n_k$ labeled and $N_k$ unlabeled samples within that stratum:
 
@@ -230,94 +158,44 @@ $$\hat{\lambda}_k = \frac{\widehat{\text{Cov}}_{n_k}(Y^k,\, \tilde{Y}^{k, \bulle
 
 where $Y^k$ is the vector of ground-truths in stratum $k$ (i.e. available $Y_j$ values with $j$ such that $g_j = k$), $\tilde{Y}^{k, \bullet}$ is the vector of proxy labels on the labeled portion of stratum $k$ and $\tilde{Y}^{k}$ contains all proxy labels in stratum $k$. This is the same formula as PPI++ power-tuning, applied stratum by stratum. In strata where the proxy is informative, $\hat{\lambda}_k$ is close to 1 and the stratum estimate benefits from the proxy signal. In strata where the proxy is weak or unreliable, $\hat{\lambda}_k$ shrinks toward 0, falling back to the classical human-only mean for that stratum, without affecting any other stratum. It is standard to use optimal power-tuning with the previous $\hat{\lambda}_k$ values.
 
-### Stratified PTD
+---
 
-**Stratified PTD** [[7](#ref-7)] extends PTD to datasets naturally partitioned into **strata** (for example, by language, domain, or data source). The PTD bootstrap is run independently within each stratum, each with its own tuning parameter, and the per-stratum results are combined with weights proportional to stratum size into a single estimate. When strata differ in proxy quality, this yields narrower confidence intervals than a single PTD run on the pooled data.
+## Stratified Classical Mean
 
-GLIDE implements a stratified extension of Algorithm 3 from [[7](#ref-7)], applying the CLT speedup for the unlabeled mean independently within each stratum. Like Stratified PPI++, it uses all three values from the table above: the proxy label $\tilde{Y}_i$, the ground-truth label $Y_j$, and the stratum identifier $g_j$.
+The **stratified classical mean estimator** extends the classical mean to a dataset partitioned into strata. It uses only the ground-truth labels $Y_j$ from the table above, grouped by stratum identifier $g_j$ and combined using the population weights $w_k$ defined above, without requiring any proxy model.
 
-#### Mean estimation
+### Mean estimation
 
-The Stratified PTD point estimate is the mean of $B$ combined bootstrap estimates:
+$$\hat{\theta}_{\text{strat}} = \sum_{k=1}^{K} w_k\,\hat{\theta}_k$$
 
-$$\hat{\theta}_{\text{SPTD}} = \frac{1}{B}\sum_{b=1}^{B}\hat{\theta}^{(b)}_{\text{SPTD}}$$
+where $\hat{\theta}_k$ is the classical mean within stratum $k$.
 
-where each $\hat{\theta}^{(b)}_{\text{SPTD}}$ is produced during the stratified bootstrap procedure described below.
+### Variance and confidence intervals
 
-#### Bootstrap procedure
+$$\sigma^2_{\text{strat}} = \sum_{k=1}^{K} w_k^2\,\sigma^2_k$$
 
-Denote $(\tilde{Y}^{k, \circ}_{i})_{i=1}^{N_k}$ the unlabeled proxies in stratum $k$ and $(\tilde{Y}^{k, \bullet}_{j})_{j=1}^{n_k}$ the labeled ones. Before the bootstrap loop, compute for each stratum $k$ the mean and sampling variance of the unlabeled proxy scores:
+where $\sigma^2_k = s_k^2 / n_k$ is the classical variance of stratum $k$. The resulting standard deviation $\sigma_{\text{strat}} = \sqrt{\sigma^2_{\text{strat}}}$ gives a confidence interval at level $1-\alpha$ via the Central Limit Theorem, exactly as in the classical mean.
 
-$$\hat{\gamma}^\circ_k = \frac{1}{N_k}\sum_{i=1}^{N_k}\tilde{Y}^{k, \circ}_{i}, \qquad \hat{S}^{\circ}_{\gamma,k} = \frac{\widehat{\text{Var}}(\tilde{Y}^{k, \circ})}{N_k}$$
-
-These quantities are computed once and reused across all $B$ iterations, applying the CLT speedup to each stratum independently.
-
-For $b = 1, \dots, B$ and for each stratum $k$, sample $n_k$ indices $\mathcal{I}^{(b)}_k$ with replacement from $\{1, \dots, n_k\}$ and compute the bootstrap means of the labeled ground-truth and proxy labels:
-
-$$\hat{\mu}^{(b)}_{\text{true},k} = \frac{1}{n_k}\sum_{j \in \mathcal{I}^{(b)}_k} Y^k_{j}, \qquad \hat{\mu}^{(b)}_{\text{proxy},k} = \frac{1}{n_k}\sum_{j \in \mathcal{I}^{(b)}_k} \tilde{Y}^{k, \bullet}_{j}$$
-
-A perturbed draw of the unlabeled proxy mean for stratum $k$ is formed as:
-
-$$\tilde{\gamma}^{(b)}_k = \hat{\gamma}^\circ_k + Z^{(b)}_k \cdot \sqrt{\hat{S}^{\circ}_{\gamma,k}}, \qquad Z^{(b)}_k \sim \mathcal{N}(0, 1)$$
-
-where each $Z^{(b)}_k$ is drawn independently across strata and iterations. The per-stratum bootstrap estimates are then combined with weights proportional to stratum size:
-
-$$\hat{\theta}^{(b)}_{\text{SPTD}} = \sum_{k=1}^{K} w_k \left[\lambda_k \cdot \tilde{\gamma}^{(b)}_k + \left(\hat{\mu}^{(b)}_{\text{true},k} - \lambda_k \cdot \hat{\mu}^{(b)}_{\text{proxy},k}\right)\right]$$
-
-where each $\lambda_k$ is a power-tuning factor that controls the proxy labels' influence within stratum $k.$ The term $\hat{\mu}^{(b)}_{\text{true},k} - \lambda_k \cdot \hat{\mu}^{(b)}_{\text{proxy},k}$ measures the proxy bias in stratum $k$ on the labeled set, while $\lambda_k \cdot \tilde{\gamma}^{(b)}_k$ computes the proxy signal on the stratum's unlabeled population.
-
-#### Confidence intervals
-
-The confidence interval at level $1 - \alpha$ is the interval between the $\alpha/2$ and $1 - \alpha/2$ empirical quantiles of $\bigl\{\hat{\theta}^{(b)}_{\text{SPTD}}\bigr\}_{b=1}^B$. This quantile-based approach adapts to any arbitrary shape of the residual distribution and remains reliable for small sample sizes.
-
-#### Power-tuning
-
-Each stratum $k$ receives its own optimal tuning parameter $\hat{\lambda}_k$, estimated after the bootstrap loop from the bootstrap covariances within that stratum. For each $k=1, \dots, K$, let $\hat{\mu}_{\text{true},k}$ and $\hat{\mu}_{\text{proxy},k}$ be the vectors of values $\hat{\mu}^{(b)}_{\text{true},k}$ and $\hat{\mu}^{(b)}_{\text{proxy},k}$ for $b=1,\dots,B$ respectively. The per-stratum optimal tuning parameter is computed as:
-
-$$\hat{\lambda}_k = \frac{\widehat{\text{Cov}}_B\!\left(\hat{\mu}_{\text{true},k},\; \hat{\mu}_{\text{proxy},k}\right)}{\widehat{\text{Var}}_B\!\left(\hat{\mu}_{\text{proxy},k}\right) + \hat{S}^{\circ}_{\gamma,k}}$$
-
-This is the same formula as PTD power-tuning, applied stratum by stratum. In strata where the proxy is informative, $\hat{\lambda}_k$ is close to 1 and the estimate benefits from the proxy signal. In strata where the proxy is weak, $\hat{\lambda}_k$ shrinks toward 0, falling back to the classical bootstrap mean for that stratum, without affecting the others. It is standard to use optimal power-tuning with the $\hat{\lambda}_k$ values above.
+The stratified classical mean is the special case of Stratified PPI++ with $\lambda_k = 0$ for every stratum $k$.
 
 ---
 
-## Non-uniform sampling (IPW)
+## Active Statistical Inference (ASI)
 
-This family applies when each record has a distinct, pre-determined probability $\pi_i$ of being selected for labeling (for example, active or uncertainty-based sampling). Inverse Probability Weighting up-weights underrepresented records to restore unbiasedness.
+Standard approaches to combining proxy and human labels assume that the labeled subset is drawn **uniformly at random** from the population. In practice, annotation resources are often allocated strategically, for instance, prioritizing uncertain or difficult examples. **Active Statistical Inference (ASI)** [[3](#ref-3), [4](#ref-4)] handles this general case: each sample $X_i$ may have a distinct, pre-determined probability $\pi_i \in (0, 1]$ of being selected for human annotation. Inverse-Probability Weighting (IPW) corrects for this non-uniform selection, yielding valid confidence intervals under any fixed sampling rule.
 
-### Input data
-
-In this family, we denote by $n$ the total number of samples, labeled and unlabeled. Each record has a known, pre-determined sampling probability $\pi_i \in (0, 1]$ of being selected for human annotation, together with a sampling indicator $\xi_i$ such that $\Pr(\xi_i = 1) = \pi_i$.
+In this section, we assume we have a total of $n$ samples, labeled and unlabeled. In ASI, each sample has three associated values:
 
 | Value | Present for | Description |
 |---|---|---|
-| $\pi_i$ | All $n$ samples | Known, pre-determined sampling probability |
-| $\xi_i$ | All $n$ samples | Sampling indicator such that $\Pr(\xi_i = 1) = \pi_i$ |
 | $\tilde{Y}_i$ | All $n$ samples | Proxy label |
+| $\pi_i$ | All $n$ samples | Known, pre-determined sampling probability |
+| $\xi_i$ | All $n$ samples | Sampling indicator such that $\Pr(\xi_i = 1) = \pi_i = 1 - \Pr(\xi_i = 0)$ |
 | $Y_i$ | Labeled samples only ($\xi_i = 1$) | Ground-truth label |
 
-### IPW Classical Mean (Horvitz–Thompson)
+We define $\xi_i \in \{0, 1\}$ as the **sampling indicator**: $\xi_i = 1$ if a ground-truth label is present for sample $i$, and $\xi_i = 0$ otherwise. Crucially, $\pi_i$ must be known for every sample. It is a property of the sampling design, not derived from the data.
 
-The **IPW classical mean estimator**, also known as the **Horvitz–Thompson estimator**, corrects for non-uniform selection of the labeled subset using known sampling probabilities $\pi_i$. It uses only the sampling probability $\pi_i$, sampling indicator $\xi_i$, and ground-truth label $Y_i$ from the table above, and requires no proxy model.
-
-#### Mean estimation
-
-$$\hat{\theta}_{\text{HT}} = \frac{1}{n}\sum_{i=1}^{n} \frac{\xi_i\,Y_i}{\pi_i}$$
-
-#### Variance and confidence intervals
-
-The standard error is the sample standard deviation of the per-record IPW-corrected values $\xi_i Y_i / \pi_i$, divided by $\sqrt{n}$. As in the classical mean above, this yields a confidence interval at level $1-\alpha$ via the Central Limit Theorem.
-
-$\pi_i$ must be strictly positive for every labeled sample; see the discussion in ASI for why this requirement matters.
-
-The IPW classical mean is the special case of ASI at $\lambda = 0$.
-
-### Active Statistical Inference (ASI)
-
-Standard approaches to combining proxy and human labels assume that the labeled subset is drawn **uniformly at random** from the population. In practice, annotation resources are often allocated strategically, for instance, prioritizing uncertain or difficult examples. **Active Statistical Inference (ASI)** [[3](#ref-3), [4](#ref-4)] handles this general case: each sample $X_i$ may have a distinct, pre-determined probability $\pi_i \in (0, 1]$ of being selected for human annotation. Inverse-Probability Weighting (IPW) corrects for this non-uniform selection, yielding valid confidence intervals under any fixed sampling rule. ASI uses all four values from the table above: the proxy label $\tilde{Y}_i$, sampling probability $\pi_i$, sampling indicator $\xi_i$, and ground-truth label $Y_i$.
-
-Recall that $\xi_i \in \{0, 1\}$ is the **sampling indicator**: $\xi_i = 1$ if a ground-truth label is present for sample $i$, and $\xi_i = 0$ otherwise. Crucially, $\pi_i$ must be known for every sample. It is a property of the sampling design, not derived from the data.
-
-#### Mean estimation
+### Mean estimation
 
 The core of ASI is a per-sample **IPW-corrected effective label**:
 
@@ -340,7 +218,7 @@ This estimator is **unbiased** for the population mean under any fixed sampling 
 At $\lambda = 0$, this reduces to the classical Horvitz–Thompson estimator, which uses only the labeled samples (each weighted by $1/\pi_i$). As $\lambda$ increases, the proxy labels contribute progressively more to the estimate.
 
 
-#### Variance and confidence intervals
+### Variance and confidence intervals
 
 The asymptotic variance is the sample variance of the corrected labels divided by $n$:
 
@@ -353,7 +231,7 @@ $$\Pr\!\left(\theta^* \in \left[\hat{\theta}_{\lambda} - z_{1-\alpha/2}\,\hat{\s
 where $z_{1-\alpha/2}$ is the standard normal quantile (e.g. $z_{0.975} = 1.96$ for a $95\%$ two-sided confidence interval).
 
 
-#### Power-tuning
+### Power-tuning
 
 The choice of $\lambda$ directly controls the width of the confidence interval. A poor value can increase variance relative to a human-only estimate. ASI derives a closed-form optimal $\lambda$ by minimising $\hat{\sigma}^2_{\text{SE}}(\lambda)$ analytically.
 
@@ -370,13 +248,318 @@ $$\hat{\lambda} = \frac{\widehat{\text{Cov}}(a,\, b)}{\widehat{\text{Var}}(a)}$$
 
 When the proxy is informative, $\hat{\lambda}$ is large and the IPW-corrected labels benefit from the proxy signal, narrowing the confidence interval. When the proxy is uninformative, $\hat{\lambda}$ shrinks toward 0, down-weighting it. Fixing $\lambda = 1$, recover the plain IPW estimator. It is standard to use optimal power-tuning with the $\hat{\lambda}$ value above.
 
-### Inverse Probability Weighted Predict-Then-Debias (IPW-PTD)
+---
+
+## IPW Classical Mean (Horvitz–Thompson)
+
+The **IPW classical mean estimator**, also known as the **Horvitz–Thompson estimator**, corrects for non-uniform selection of the labeled subset using known sampling probabilities $\pi_i$. It uses only the sampling probability $\pi_i$, sampling indicator $\xi_i$, and ground-truth label $Y_i$ from the table above, and requires no proxy model.
+
+### Mean estimation
+
+$$\hat{\theta}_{\text{HT}} = \frac{1}{n}\sum_{i=1}^{n} \frac{\xi_i\,Y_i}{\pi_i}$$
+
+### Variance and confidence intervals
+
+The standard error is the sample standard deviation of the per-record IPW-corrected values $\xi_i Y_i / \pi_i$, divided by $\sqrt{n}$. As in the classical mean, this yields a confidence interval at level $1-\alpha$ via the Central Limit Theorem. $\pi_i$ must be strictly positive for every labeled sample; see the discussion above for why this requirement matters.
+
+The IPW classical mean is the special case of ASI at $\lambda = 0$.
+
+---
+
+## Clustered Prediction-Powered Inference
+
+Standard PPI++ assumes that observations are independent draws from the population. In practice, data often exhibits a **cluster structure**: samples are grouped into natural units (for example, phrases from the same paragraph), and observations within a cluster may be correlated. **Clustered PPI++** handles this case by reducing each cluster to its mean and treating the resulting cluster means as independent observations, so that PPI++ can be applied directly to them. This yields valid confidence intervals even when within-cluster dependence is strong.
+
+The data is partitioned into $L$ disjoint clusters $C_1, \dots, C_L$, with $\bigcup_{l=1}^{L} C_l = \{1, \dots, n + N\}$ and $C_i \cap C_j = \emptyset$ for $i \neq j$. Each cluster is **either fully labeled or fully unlabeled**: no cluster contains a mix of labeled and unlabeled observations. Observations from distinct clusters are independent, but no independence is assumed among observations within the same cluster. Let $L^{\bullet}$ denote the number of labeled clusters and $L^{\circ}$ the number of unlabeled clusters.
+
+In Clustered PPI++, each sample has the same values as in PPI++, plus a cluster identifier:
+
+| Value | Present for | Description |
+|---|---|---|
+| $\tilde{Y}_i$ | All $n+N$ samples | Proxy label |
+| $Y_j$ | Labeled samples only ($n \ll N$) | Ground-truth label |
+| $c_i$ | All $n+N$ samples | Cluster identifier |
+
+The cluster identifiers allow partitioning the data into cluster-level means, which replace individual observations as the sampling units used for inference.
+
+### Mean estimation
+
+The first step is computing **cluster means**. For each labeled cluster $l$, the true-label mean and proxy mean are:
+
+$$\bar{Y}^{(l)} = \frac{1}{|C_l|}\sum_{i \in C_l} Y_i, \qquad \bar{\tilde{Y}}^{(l),\bullet} = \frac{1}{|C_l|}\sum_{i \in C_l} \tilde{Y}_i$$
+
+For each unlabeled cluster $m$, the proxy mean is:
+
+$$\bar{\tilde{Y}}^{(m),\circ} = \frac{1}{|C_m|}\sum_{i \in C_m} \tilde{Y}_i$$
+
+We denote $\bar{\tilde{Y}}^{(l)}$ the vector containing all $L^{\bullet} + L^{\circ}$ labeled and unlabeled proxy cluster means.
+
+The Clustered PPI++ mean estimate is exactly the PPI++ mean estimator applied to the cluster means, with $L^{\bullet}$ labeled and $L^{\circ}$ unlabeled observations:
+
+$$\hat{\theta} = \frac{1}{L^{\bullet}}\sum_{l=1}^{L^{\bullet}} \bar{Y}^{(l)} + \lambda \left[\frac{1}{L^{\circ}}\sum_{m=1}^{L^{\circ}} \bar{\tilde{Y}}^{(m),\circ} - \frac{1}{L^{\bullet}}\sum_{l=1}^{L^{\bullet}} \bar{\tilde{Y}}^{(l),\bullet}\right]$$
+
+This combines two components:
+
+- The **human-label cluster mean** $\frac{1}{L^{\bullet}}\sum_l \bar{Y}^{(l)}$, unbiased but high-variance due to the small number of labeled clusters.
+- A **variance reduction term** scaled by $\lambda$, using all proxy cluster means to reduce variance.
+
+**Note.** Each term in the formula above uses the **mean of cluster means** rather than a size-weighted mean, for instance, $\frac{1}{L^{\bullet}}\sum_l \bar{Y}^{(l)}$ rather than $\sum_l \frac{|C_l|}{n} \bar{Y}^{(l)}$. Both are unbiased for $\theta^*$, but their variances differ based on within-cluster dependence. Because no independence is assumed among observations within the same cluster, the conservative assumption treats them as perfectly correlated, which gives $\mathrm{Var}(\bar{Y}^{(l)}) = \mathrm{Var}(Y) = \sigma^2$ for every cluster, regardless of its size. Under this assumption, the variance of any estimator of the form $\sum_l \alpha_l \bar{Y}^{(l)}$ with $\sum_l \alpha_l = 1$ equals $\sigma^2 \sum_l \alpha_l^2$. Applying the Cauchy-Schwarz inequality to the vectors $(\alpha_1, \ldots, \alpha_{L^{\bullet}})$ and $(1, \ldots, 1)$ gives $\left(\sum_l \alpha_l \cdot 1\right)^2 \leq \left(\sum_l \alpha_l^2\right)\cdot L^\bullet$ so that $\sum_l \alpha_l^2 \geq \frac{1}{L^{\bullet}}$, with equality if and only if all $\alpha_l$ are equal to $\frac{1}{L^{\bullet}}$. The conclusion is that the mean of cluster means is the minimum-variance unbiased estimator of this form, and is therefore preferred over the size-weighted mean, which sets $\alpha_l = \frac{|C_l|}{n}$ and yields a strictly larger variance whenever cluster sizes are unequal.
+
+### Variance and confidence intervals
+
+Because observations within a cluster are not assumed independent, the variance cannot be computed at the individual sample level. Instead, the cluster means are treated as the independent units, and the variance formula is exactly the PPI++ variance applied to them:
+
+$$\hat{\sigma}^2(\lambda) = \frac{1}{L^{\bullet}}\widehat{\text{Var}}\Big(\bar{Y}^{(l)} - \lambda \bar{\tilde{Y}}^{(l),\bullet}\Big) + \frac{\lambda^2}{L^{\circ}}\widehat{\text{Var}}\Big(\bar{\tilde{Y}}^{(m),\circ}\Big)$$
+
+where $\widehat{\text{Var}}$ denotes the sample variance computed across the $L^{\bullet}$ labeled cluster means in the first term and the $L^{\circ}$ unlabeled cluster means in the second.
+
+By the Central Limit Theorem applied to the cluster means, this yields a confidence interval at level $1 - \alpha$:
+
+$$\Pr\!\left(\theta^* \in \left[\hat{\theta} - z_{1-\alpha/2}\,\hat{\sigma}(\lambda),\; \hat{\theta} + z_{1-\alpha/2}\,\hat{\sigma}(\lambda)\right]\right) \geq 1 - \alpha$$
+
+where $z_{1-\alpha/2}$ is the standard normal quantile (e.g. $z_{0.975} = 1.96$ for a 95% two-sided confidence interval).
+
+### Power-tuning
+
+As in PPI++, the optimal $\lambda$ minimizes $\hat{\sigma}^2(\lambda)$. The same closed-form formula applies, with cluster means as observations:
+
+$$\hat{\lambda} = \frac{\widehat{\text{Cov}}_{L^{\bullet}}(\bar{Y}^{(l)},\, \bar{\tilde{Y}}^{(l),\bullet})}{\left(1 + \dfrac{L^{\bullet}}{L^{\circ}}\right) \widehat{\text{Var}}_{L^{\bullet} + L^{\circ}}(\bar{\tilde{Y}}^{(l)})}$$
+
+where:
+
+- $\widehat{\text{Cov}}_{L^{\bullet}}(\bar{Y}^{(l)}, \bar{\tilde{Y}}^{(l),\bullet})$ is the sample covariance between true and proxy cluster means, computed on the $L^{\bullet}$ labeled clusters,
+- $\widehat{\text{Var}}_{L^{\bullet} + L^{\circ}}(\bar{\tilde{Y}}^{(l)})$ is the sample variance over all $L^{\bullet} + L^{\circ}$ proxy cluster means.
+
+When the proxy is informative, $\hat{\lambda}$ is close to 1 and the variance reduction narrows the confidence interval. When the proxy is uninformative, $\hat{\lambda}$ shrinks toward 0, falling back to the classical cluster mean. It is standard to use the optimal $\hat{\lambda}$ in practice.
+
+When every cluster is a singleton, $L^{\bullet} = n$ and $L^{\circ} = N$, and all formulas reduce exactly to their PPI++ counterparts, recovering the full PPI++ procedure.
+
+---
+
+## Clustered Classical Mean
+
+The **clustered classical mean estimator** extends the classical mean to a dataset partitioned into clusters, where observations within a cluster may be correlated but clusters are independent of one another. It uses only the ground-truth labels $Y_j$ from the table above, aggregated by cluster identifier $c_i$, without requiring any proxy model.
+
+For each cluster $l$, the cluster mean is:
+
+$$\bar{Y}^{(l)} = \frac{1}{|C_l|}\sum_{i \in C_l} Y_i$$
+
+### Mean estimation
+
+$$\hat{\theta} = \frac{1}{L}\sum_{l=1}^{L} \bar{Y}^{(l)}$$
+
+### Variance and confidence intervals
+
+$$\hat{\sigma}^2 = \frac{\widehat{\text{Var}}\big(\bar{Y}^{(l)}\big)}{L}$$
+
+where $\widehat{\text{Var}}$ denotes the sample variance computed across the $L$ cluster means. As in the Clustered Prediction-Powered Inference section above, using the mean of cluster means rather than a size-weighted mean is the minimum-variance choice when no independence is assumed within clusters. This yields a confidence interval at level $1-\alpha$ via the Central Limit Theorem applied to the cluster means.
+
+The clustered classical mean is the special case of Clustered PPI++ at $\lambda = 0$.
+
+---
+
+## Multi-Proxy Prediction-Powered Inference (Multi-PPI)
+
+Standard PPI++ assumes a single proxy model. **Multi-Proxy Prediction-Powered Inference (Multi-PPI)** [[8](#ref-8)] generalises this to $M \geq 1$ proxy models simultaneously. It finds the optimal linear combination of all $M$ proxies before applying the PPI correction. As in PPI++, labeled samples are drawn uniformly at random from the population.
+
+In Multi-PPI, each sample has two associated values:
+
+| Value | Present for | Description |
+|---|---|---|
+| $\tilde{Y}^{(m)}_i$, for $m = 1, \ldots, M$ | All $n+N$ samples | Proxy prediction from proxy $m$ |
+| $Y_j$ | Labeled samples only ($n \ll N$) | Ground-truth label |
+
+### Mean estimation
+
+Let $\tilde{\mathbf{Y}}^\bullet_j = (\tilde{Y}^{(1),\bullet}_j, \ldots, \tilde{Y}^{(M),\bullet}_j)^\top \in \mathbb{R}^M$ and $\tilde{\mathbf{Y}}^\circ_i = (\tilde{Y}^{(1),\circ}_i, \ldots, \tilde{Y}^{(M),\circ}_i)^\top \in \mathbb{R}^M$ denote the proxy prediction vectors for labeled and unlabeled samples respectively. The Multi-PPI mean estimate is parameterised by a tuning vector $\mathbf{\lambda} = (\lambda_1, \ldots, \lambda_M)^\top \in \mathbb{R}^M$ and defined as:
+
+$$\hat{\theta}_{\mathbf{\lambda}} = \frac{1}{n}\sum_{j=1}^{n} Y_j + \mathbf{\lambda}^\top \left[\frac{1}{N}\sum_{i=1}^{N} \tilde{\mathbf{Y}}^\circ_i - \frac{1}{n}\sum_{j=1}^{n} \tilde{\mathbf{Y}}^\bullet_j\right]$$
+
+This combines two components:
+
+- The **human-label mean** $\frac{1}{n}\sum_j Y_j$, unbiased but high-variance due to the small labeled set.
+- A **variance reduction term** using all proxy predictions across $M$ proxies. The tuning parameter $\lambda_m$ scales the correction from proxy $m$: the difference between the unlabeled and labeled means of that proxy.
+
+When $\mathbf{\lambda} = \mathbf{0}$, the estimator reduces to the naive sample mean. When $M = 1$ and $\lambda_1 = 1$, it recovers standard PPI.
+
+### Variance and confidence intervals
+
+By the Central Limit Theorem (for large enough $n$, typically $n \geq 50$), the asymptotic variance of the Multi-PPI estimator decomposes as:
+
+$$\sigma^2_{\hat{\theta}}(\mathbf{\lambda}) = \underbrace{\frac{\text{Var}(Y - \mathbf{\lambda}^\top \tilde{\mathbf{Y}})}{n}}_{\text{Labeled residual variance}} + \underbrace{\frac{\text{Var}(\mathbf{\lambda}^\top \tilde{\mathbf{Y}})}{N}}_{\text{Unlabeled proxy variance}}$$
+
+- The first term is the variance of the residuals $Y - \mathbf{\lambda}^\top \tilde{\mathbf{Y}}$ on the labeled samples, scaled by $1/n$. It shrinks when the proxy combination is well correlated with the true labels.
+- The second term is the variance of the projected proxy scores $\mathbf{\lambda}^\top \tilde{\mathbf{Y}}$ on the unlabeled samples, scaled by $1/N$. It is typically negligible since $N \gg n$.
+
+This gives a confidence interval at level $1 - \alpha$:
+
+$$\Pr\!\left(\theta^* \in \left[\hat{\theta}_{\mathbf{\lambda}} - z_{1-\alpha/2}\, \sigma_{\hat{\theta}}(\mathbf{\lambda}),\; \hat{\theta}_{\mathbf{\lambda}} + z_{1-\alpha/2}\, \sigma_{\hat{\theta}}(\mathbf{\lambda})\right]\right) \geq 1 - \alpha$$
+
+where $z_{1-\alpha/2}$ is the standard normal quantile (e.g. $z_{0.975} = 1.96$ for a 95% two-sided confidence interval).
+
+### Power-tuning
+
+In Multi-PPI, the tuning parameter $\mathbf{\lambda} \in \mathbb{R}^M$ is a vector rather than a scalar, since each of the $M$ proxies receives its own weight. The mean squared error of $\hat{\theta}_{\mathbf{\lambda}}$ is a quadratic function of $\mathbf{\lambda}$ with a unique minimiser:
+
+$$\mathbf{\lambda}^* = \frac{N}{n+N} \cdot \text{Var}(\tilde{\mathbf{Y}})^{-1} \cdot \text{Cov}(\tilde{\mathbf{Y}}, Y)$$
+
+where $\text{Var}(\tilde{\mathbf{Y}})$ is the $M \times M$ covariance matrix of the proxy predictions and $\text{Cov}(\tilde{\mathbf{Y}}, Y)$ is the $M$-dimensional cross-covariance vector between proxy predictions and the true label. For $M = 1$, this reduces to the same scalar formula as in PPI++.
+
+In practice, $\mathbf{\lambda}^*$ is unknown and replaced by the plug-in estimator:
+
+$$\hat{\mathbf{\lambda}} = \frac{N}{n+N} \cdot \widehat{\text{Var}}_{n+N}(\tilde{\mathbf{Y}})^{-1} \cdot \widehat{\text{Cov}}_n(\tilde{\mathbf{Y}}^\bullet, Y)$$
+
+where:
+
+- $\widehat{\text{Var}}_{n+N}(\tilde{\mathbf{Y}})$ is the $M \times M$ sample covariance matrix of the proxy predictions, computed over **all $n + N$ samples**,
+- $\widehat{\text{Cov}}_n(\tilde{\mathbf{Y}}^\bullet, Y)$ is the $M$-dimensional sample cross-covariance vector between labeled proxy predictions and true labels, computed over the **$n$ labeled samples only**.
+
+When a proxy is informative (high covariance with the true label), the corresponding component $\lambda_m^*$ is large and the estimator benefits from that proxy's signal, narrowing the confidence interval. When a proxy is uninformative, its component shrinks toward 0, down-weighting it without affecting the other components. This guarantees that the variance of $\hat{\theta}_{\hat{\mathbf{\lambda}}}$ is always no greater than $\text{Var}(Y)/n$, the variance of the naive sample mean: using Multi-PPI with optimal tuning can only reduce the confidence interval width relative to the classical estimator, regardless of the number or quality of the proxies. It is standard to use the empirical estimate $\hat{\mathbf{\lambda}}$ in practice.
+
+---
+
+## Predict-Then-Debias (PTD)
+
+**Predict-Then-Debias (PTD)** [[7](#ref-7)] constructs a confidence interval from the **empirical distribution of bootstrap estimates** rather than a normal approximation, making it reliable when $n$ is small or residuals are non-Gaussian. GLIDE implements Algorithm 3 from [[7](#ref-7)], which works on a uniformly drawn labeled sample and includes a speedup that avoids resampling the unlabeled data during the bootstrap.
+
+In PTD, each sample has two associated values:
+
+| Value | Present for | Description |
+|---|---|---|
+| $\tilde{Y}_i$ | All $n+N$ samples | Proxy label |
+| $Y_j$ | Labeled samples only ($n \ll N$) | Ground-truth label |
+
+Denote $(\tilde{Y}^\circ_i)_{i=1}^N$ the unlabeled proxies and $(\tilde{Y}^\bullet_j)_{j=1}^n$ the labeled ones.
+
+### Mean estimation
+
+The PTD mean estimate is the average of $B$ bootstrap estimates:
+
+$$\hat{\theta}_{\text{PTD}} = \frac{1}{B}\sum_{b=1}^{B}\hat{\theta}^{(b)}_{\text{PTD}}$$
+
+where each $\hat{\theta}^{(b)}_{\text{PTD}}$ is computed during the bootstrap procedure described below.
+
+### Bootstrap procedure
+
+For $b = 1, \dots, B$, sample a set of indices $\mathcal{I}^{(b)}$ of size $n$ uniformly with replacement from $\{1, \dots, n\}$ and compute the bootstrap means of the labeled ground-truth and proxy labels:
+
+$$\hat{\mu}^{(b)}_{\text{true}} = \frac{1}{n}\sum_{j\in \mathcal{I}^{(b)}} Y_j, \qquad \hat{\mu}^{(b)}_{\text{proxy}} = \frac{1}{n}\sum_{j\in \mathcal{I}^{(b)}} \tilde{Y}^\bullet_j$$
+
+The third ingredient needed is a perturbed draw of the unlabeled proxy mean, $\tilde{\gamma}^{(b)}$. Naively, this would require resampling all $N$ proxy labels on the unlabeled samples at each iteration. Algorithm 3 in [[7](#ref-7)] avoids this cost: by the CLT, the mean of $N$ i.i.d. proxy scores is approximately Gaussian with mean $\hat{\gamma}^\circ = \frac{1}{N}\sum_{i=1}^{N}\tilde{Y}^\circ_i$ and variance $\hat{S}_{\gamma}^\circ = \widehat{\text{Var}}(\tilde{Y}^\circ) / N$, so instead of resampling all $N$ unlabeled proxy scores at each iteration, we replace that expensive resample with a single standard gaussian draw, mimicking bootstrap randomness at a far lower computational cost:
+
+$$\tilde{\gamma}^{(b)} = \hat{\gamma}^\circ + Z^{(b)} \cdot \sqrt{\hat{S}_{\gamma}^\circ}, \qquad Z^{(b)} \sim \mathcal{N}(0,\, 1)$$
+
+The quantities $\hat{\gamma}^\circ$ and $\hat{S}_{\gamma}^\circ$ are computed once before the loop, reducing the per-iteration cost to $O(n)$ instead of $O(n+N)$. This approximation is reliable for large $N$ which is typically the case in practical scenarios where proxy labels are far cheaper than expensive human annotations.
+
+Combining the labeled bootstrap means with this unlabeled draw gives:
+
+$$\hat{\theta}^{(b)}_{\text{PTD}} = \lambda \cdot \tilde{\gamma}^{(b)} + \left(\hat{\mu}^{(b)}_{\text{true}} - \lambda \cdot \hat{\mu}^{(b)}_{\text{proxy}}\right)$$
+
+where $\lambda$ is a power-tuning factor that controls the proxy labels' influence similarly to previous sections. The term $\hat{\mu}^{(b)}_{\text{true}} - \lambda \cdot \hat{\mu}^{(b)}_{\text{proxy}}$ captures the proxy bias measured on the labeled set, while $\lambda \cdot \tilde{\gamma}^{(b)}$ contributes the proxy signal on the full unlabeled population. Together they form a bias-corrected estimate of $\theta^*$ for each bootstrap replicate.
+
+### Confidence intervals
+
+The confidence interval at level $1 - \alpha$ is the interval between the $\alpha/2$ and $1 - \alpha/2$ empirical quantiles of $\bigl\{\hat{\theta}^{(1)}_{\text{PTD}},\, \ldots,\, \hat{\theta}^{(B)}_{\text{PTD}}\bigr\}$. This bootstrap percentile approach adapts to the actual shape of the residual distribution, making it reliable even when $n$ is small.
+
+### Power-tuning
+
+The optimal $\lambda$ is estimated from the **bootstrap covariances**. Let $\hat{\mu}_{\text{true}}$ and $\hat{\mu}_{\text{proxy}}$ be the vectors of values $\hat{\mu}^{(b)}_{\text{true}}$ and $\hat{\mu}^{(b)}_{\text{proxy}}$ for $b=1,\dots,B$ respectively. After running the bootstrap loop, it is computed as:
+
+$$\hat{\lambda} = \frac{\widehat{\text{Cov}}_B\!\left(\hat{\mu}_{\text{true}},\; \hat{\mu}_{\text{proxy}}\right)}{\widehat{\text{Var}}_B\!\left(\hat{\mu}_{\text{proxy}}\right) + \hat{S}_{\gamma}^\circ}$$
+
+where $\widehat{\text{Cov}}_B$ and $\widehat{\text{Var}}_B$ are computed across the $B$ bootstrap replicates of the labeled means, and $\hat{S}_{\gamma}^\circ$ is the estimated sampling variance of the unlabeled proxy mean. The denominator adds $\hat{S}_{\gamma}^\circ$ to account for the variance of the unlabeled proxies. This value can be readily used since a Gaussian approximation is made for the unlabeled mean.
+
+When the proxy is informative (high bootstrap covariance with ground-truth means), $\hat{\lambda}$ is large and the estimate borrows heavily from the proxy signal, narrowing the interval. When the proxy is uninformative, $\hat{\lambda}$ shrinks toward 0, down-weighting it. Fixing $\lambda = 1$, recovers the unweighted PTD estimator. It is standard to use the optimal value $\hat{\lambda}$ in practice.
+
+---
+
+## Stratified PTD
+
+**Stratified PTD** [[7](#ref-7)] extends PTD to datasets naturally partitioned into **strata** (for example, by language, domain, or data source). The PTD bootstrap is run independently within each stratum, each with its own tuning parameter, and the per-stratum results are combined with weights proportional to stratum size into a single estimate. When strata differ in proxy quality, this yields narrower confidence intervals than a single PTD run on the pooled data.
+
+GLIDE implements a stratified extension of Algorithm 3 from [[7](#ref-7)], applying the CLT speedup for the unlabeled mean independently within each stratum.
+
+Let $K$ denote the number of strata. Stratum $k$ contains $n_k + N_k$ total samples, of which $n_k$ are labeled and $N_k$ are unlabeled, with population weight:
+
+$$w_k = \frac{n_k + N_k}{n + N}$$
+
+where $n = \sum_k n_k$ and $N = \sum_k N_k$.
+
+In Stratified PTD, each sample has the same values as in PTD, plus a stratum identifier:
+
+| Value | Present for | Description |
+|---|---|---|
+| $\tilde{Y}_i$ | All $n+N$ samples | Proxy label |
+| $Y_j$ | Labeled samples only ($n \ll N$) | Ground-truth label |
+| $g_j$ | All $n+N$ samples | Stratum identifier |
+
+The stratum identifiers allow to partition samples and their labels according to the stratum they belong to.
+
+### Mean estimation
+
+The Stratified PTD point estimate is the mean of $B$ combined bootstrap estimates:
+
+$$\hat{\theta}_{\text{SPTD}} = \frac{1}{B}\sum_{b=1}^{B}\hat{\theta}^{(b)}_{\text{SPTD}}$$
+
+where each $\hat{\theta}^{(b)}_{\text{SPTD}}$ is produced during the stratified bootstrap procedure described below.
+
+### Bootstrap procedure
+
+Denote $(\tilde{Y}^{k, \circ}_{i})_{i=1}^{N_k}$ the unlabeled proxies in stratum $k$ and $(\tilde{Y}^{k, \bullet}_{j})_{j=1}^{n_k}$ the labeled ones. Before the bootstrap loop, compute for each stratum $k$ the mean and sampling variance of the unlabeled proxy scores:
+
+$$\hat{\gamma}^\circ_k = \frac{1}{N_k}\sum_{i=1}^{N_k}\tilde{Y}^{k, \circ}_{i}, \qquad \hat{S}^{\circ}_{\gamma,k} = \frac{\widehat{\text{Var}}(\tilde{Y}^{k, \circ})}{N_k}$$
+
+These quantities are computed once and reused across all $B$ iterations, applying the CLT speedup to each stratum independently.
+
+For $b = 1, \dots, B$ and for each stratum $k$, sample $n_k$ indices $\mathcal{I}^{(b)}_k$ with replacement from $\{1, \dots, n_k\}$ and compute the bootstrap means of the labeled ground-truth and proxy labels:
+
+$$\hat{\mu}^{(b)}_{\text{true},k} = \frac{1}{n_k}\sum_{j \in \mathcal{I}^{(b)}_k} Y^k_{j}, \qquad \hat{\mu}^{(b)}_{\text{proxy},k} = \frac{1}{n_k}\sum_{j \in \mathcal{I}^{(b)}_k} \tilde{Y}^{k, \bullet}_{j}$$
+
+A perturbed draw of the unlabeled proxy mean for stratum $k$ is formed as:
+
+$$\tilde{\gamma}^{(b)}_k = \hat{\gamma}^\circ_k + Z^{(b)}_k \cdot \sqrt{\hat{S}^{\circ}_{\gamma,k}}, \qquad Z^{(b)}_k \sim \mathcal{N}(0, 1)$$
+
+where each $Z^{(b)}_k$ is drawn independently across strata and iterations. The per-stratum bootstrap estimates are then combined with weights proportional to stratum size:
+
+$$\hat{\theta}^{(b)}_{\text{SPTD}} = \sum_{k=1}^{K} w_k \left[\lambda_k \cdot \tilde{\gamma}^{(b)}_k + \left(\hat{\mu}^{(b)}_{\text{true},k} - \lambda_k \cdot \hat{\mu}^{(b)}_{\text{proxy},k}\right)\right]$$
+
+where each $\lambda_k$ is a power-tuning factor that controls the proxy labels' influence within stratum $k.$ The term $\hat{\mu}^{(b)}_{\text{true},k} - \lambda_k \cdot \hat{\mu}^{(b)}_{\text{proxy},k}$ measures the proxy bias in stratum $k$ on the labeled set, while $\lambda_k \cdot \tilde{\gamma}^{(b)}_k$ computes the proxy signal on the stratum's unlabeled population.
+
+### Confidence intervals
+
+The confidence interval at level $1 - \alpha$ is the interval between the $\alpha/2$ and $1 - \alpha/2$ empirical quantiles of $\bigl\{\hat{\theta}^{(b)}_{\text{SPTD}}\bigr\}_{b=1}^B$. This quantile-based approach adapts to any arbitrary shape of the residual distribution and remains reliable for small sample sizes.
+
+Keep in mind that Stratified PTD is designed for a small number of large strata. The theoretical guarantees assume that the number of strata $K$ stays fixed as sample size grows and that each stratum contains a non-vanishing share of the data. In practice, many small strata mean that per-stratum statistical estimates become unreliable. When in doubt, prefer a coarser stratification with fewer, larger strata.
+
+
+### Power-tuning
+
+Each stratum $k$ receives its own optimal tuning parameter $\hat{\lambda}_k$, estimated after the bootstrap loop from the bootstrap covariances within that stratum. For each $k=1, \dots, K$, let $\hat{\mu}_{\text{true},k}$ and $\hat{\mu}_{\text{proxy},k}$ be the vectors of values $\hat{\mu}^{(b)}_{\text{true},k}$ and $\hat{\mu}^{(b)}_{\text{proxy},k}$ for $b=1,\dots,B$ respectively. The per-stratum optimal tuning parameter is computed as:
+
+$$\hat{\lambda}_k = \frac{\widehat{\text{Cov}}_B\!\left(\hat{\mu}_{\text{true},k},\; \hat{\mu}_{\text{proxy},k}\right)}{\widehat{\text{Var}}_B\!\left(\hat{\mu}_{\text{proxy},k}\right) + \hat{S}^{\circ}_{\gamma,k}}$$
+
+This is the same formula as PTD power-tuning, applied stratum by stratum. In strata where the proxy is informative, $\hat{\lambda}_k$ is close to 1 and the estimate benefits from the proxy signal. In strata where the proxy is weak, $\hat{\lambda}_k$ shrinks toward 0, falling back to the classical bootstrap mean for that stratum, without affecting the others. It is standard to use optimal power-tuning with the $\hat{\lambda}_k$ values above.
+
+---
+
+## Inverse Probability Weighted Predict-Then-Debias (IPW-PTD)
 
 **Inverse Probability Weighted Predict-Then-Debias (IPW-PTD)** [[7](#ref-7)] combines the robustness of PTD's bootstrap confidence intervals with **Inverse Probability Weighting** to handle non-uniform ground-truth labeling probabilities. In practice, labeled data is often collected through a cost-optimal sampling process where samples are selected for human annotation based on the proxy model's uncertainty. For example, when using an LLM-as-Judge, samples on which the model has high uncertainty receive higher labeling probability, while confident predictions receive lower probability. IPW-PTD corrects for this non-uniform selection while maintaining the empirical distribution advantage of bootstrap inference.
 
-Standard PTD assumes that samples are drawn **uniformly at random** for ground-truth labeling. IPW-PTD relaxes this: each sample $i$ has a known, pre-determined probability $\pi_i \in (0, 1)$ of being selected for human annotation. IPW reweights labeled samples inversely to their selection probability, ensuring that samples with low labeling probability ($\pi_i$) are upweighted appropriately. Like ASI, it uses all four values from the table above (the proxy label $\tilde{Y}_i$, sampling probability $\pi_i$, sampling indicator $\xi_i$, and ground-truth label $Y_i$), but splits the $n$ total samples into $n$ labeled and $N$ unlabeled, for a total of $n + N$ samples, matching the bootstrap notation used elsewhere in this guide.
+Standard PTD assumes that samples are drawn **uniformly at random** for ground-truth labeling. IPW-PTD relaxes this: each sample $i$ has a known, pre-determined probability $\pi_i \in (0, 1)$ of being selected for human annotation. IPW reweights labeled samples inversely to their selection probability, ensuring that samples with low labeling probability ($\pi_i$) are upweighted appropriately.
 
-#### Mean estimation
+In IPW-PTD, each sample has four associated values:
+
+| Value | Present for | Description |
+|---|---|---|
+| $\tilde{Y}_i$ | All $n+N$ samples | Proxy label |
+| $\pi_i$ | All $n+N$ samples | Known, pre-determined labeling probability |
+| $\xi_i$ | All $n+N$ samples | Sampling indicator such that $\Pr(\xi_i = 1) = \pi_i = 1 - \Pr(\xi_i = 0)$ |
+| $Y_i$ | Labeled samples only ($n \ll N$) | Ground-truth label |
+
+The binary indicator is $\xi_i = 1$ if sample $i$ is labeled and $\xi_i = 0$ otherwise; by design, $\Pr(\xi_i = 1) = \pi_i$.
+
+### Mean estimation
 
 IPW-PTD applies inverse probability weighting to correct for non-uniform labeling probabilities. The IPW-corrected weights are:
 
@@ -387,7 +570,7 @@ The superscripts $\bullet$ (labeled) and $\circ$ (unlabeled) indicate which subs
 
 The IPW-PTD point estimate is computed as the mean of $B$ bootstrap estimates (see bootstrap procedure below).
 
-#### Bootstrap procedure
+### Bootstrap procedure
 
 The IPW-PTD bootstrap reweights samples by their inverse selection probability, then resamples from the weighted data.
 
@@ -411,11 +594,11 @@ $$\hat{\theta}^{(b)}_{\text{IPW-PTD}} = \lambda \cdot \tilde{\gamma}^{(b)} + \le
 
 where $\lambda$ is a power-tuning factor (see power-tuning below). The term $\hat{\mu}^{(b)}_{\text{true}} - \lambda \cdot \hat{\mu}^{(b)}_{\text{proxy}}$ captures the IPW-corrected proxy bias measured on the labeled set, while $\lambda \cdot \tilde{\gamma}^{(b)}$ contributes the weighted proxy signal on the unlabeled population.
 
-#### Confidence intervals
+### Confidence intervals
 
 The confidence interval at level $1 - \alpha$ is the interval between the $\alpha/2$ and $1 - \alpha/2$ empirical quantiles of $\bigl\{\hat{\theta}^{(1)}_{\text{IPW-PTD}},\, \ldots,\, \hat{\theta}^{(B)}_{\text{IPW-PTD}}\bigr\}$. The bootstrap percentile approach makes no distributional assumptions and adapts to the actual shape of the residuals, remaining reliable even for small sample count or non-Gaussian errors.
 
-#### Power-tuning
+### Power-tuning
 
 The optimal $\lambda$ is estimated from bootstrap covariances of the weighted labeled means. Let $\hat{\mu}_{\text{true}}$ and $\hat{\mu}_{\text{proxy}}$ be the vectors of bootstrap replicates $\hat{\mu}^{(b)}_{\text{true}}$ and $\hat{\mu}^{(b)}_{\text{proxy}}$ for $b=1,\dots,B$. After running the bootstrap loop, it is computed as:
 
@@ -427,13 +610,13 @@ When the proxy is informative (high covariance with ground-truth), $\hat{\lambda
 
 ---
 
-## Cluster structure
+## Clustered Predict-Then-Debias (Clustered PTD)
 
-This family applies when observations are grouped into clusters (for example, phrases from the same paragraph, or turns from the same conversation) and each cluster is either fully labeled or fully unlabeled. Observations within a cluster may be correlated, while different clusters are assumed independent. Reducing each cluster to its mean and treating cluster means as the sampling units restores the independence assumption needed for the estimators above.
+**Clustered Predict-Then-Debias (Clustered PTD)** [[7](#ref-7)] extends PTD to datasets where observations are grouped into clusters and each cluster is either entirely labeled or entirely unlabeled. The bootstrap resamples whole clusters rather than individual observations, accounting for within-cluster correlation and producing valid confidence intervals under cluster sampling designs. Like PTD, it builds a confidence interval from the empirical distribution of bootstrap estimates rather than a normal approximation, making it reliable when the number of labeled clusters is small.
 
-### Input data
+The data is partitioned into $L$ disjoint clusters $C_1, \dots, C_L$, with $\bigcup_{l=1}^{L} C_l = \{1, \dots, n + N\}$ and $C_i \cap C_j = \emptyset$ for $i \neq j$. Each cluster is **either fully labeled or fully unlabeled**: no cluster contains a mix of labeled and unlabeled observations. Observations from distinct clusters are independent, but no independence is assumed among observations within the same cluster. We denote $L^\bullet$ the number of labeled clusters and $L^\circ$ the number of unlabeled clusters.
 
-The data is partitioned into $L$ disjoint clusters $C_1, \dots, C_L$, with $\bigcup_{l=1}^{L} C_l = \{1, \dots, n+N\}$ and $C_i \cap C_j = \emptyset$ for $i \neq j$. Observations within a cluster may be correlated; observations from distinct clusters are independent. When a proxy model is used, each cluster is **either fully labeled or fully unlabeled**: no cluster contains a mix of labeled and unlabeled observations. We denote $L^{\bullet}$ the number of labeled clusters and $L^{\circ}$ the number of unlabeled clusters, with $L = L^{\bullet} + L^{\circ}$.
+In Clustered PTD, each sample has two associated values plus a cluster identifier:
 
 | Value | Present for | Description |
 |---|---|---|
@@ -441,89 +624,9 @@ The data is partitioned into $L$ disjoint clusters $C_1, \dots, C_L$, with $\big
 | $Y_j$ | Labeled samples only ($n \ll N$) | Ground-truth label |
 | $c_i$ | All $n+N$ samples | Cluster identifier |
 
-The cluster identifiers allow partitioning the data into cluster-level means, which replace individual observations as the sampling units used for inference.
+The cluster identifiers allow partitioning the data into cluster-level means, which replace individual observations as the sampling units for the bootstrap.
 
-### Clustered Classical Mean
-
-The **clustered classical mean estimator** extends the classical mean to a dataset partitioned into clusters, where observations within a cluster may be correlated but clusters are independent of one another. It uses only the ground-truth labels $Y_j$ from the table above, aggregated by cluster identifier $c_i$, without requiring any proxy model.
-
-For each cluster $l$, the cluster mean is:
-
-$$\bar{Y}^{(l)} = \frac{1}{|C_l|}\sum_{i \in C_l} Y_i$$
-
-#### Mean estimation
-
-$$\hat{\theta} = \frac{1}{L}\sum_{l=1}^{L} \bar{Y}^{(l)}$$
-
-#### Variance and confidence intervals
-
-$$\hat{\sigma}^2 = \frac{\widehat{\text{Var}}\big(\bar{Y}^{(l)}\big)}{L}$$
-
-where $\widehat{\text{Var}}$ denotes the sample variance computed across the $L$ cluster means. As in the Clustered Prediction-Powered Inference section below, using the mean of cluster means rather than a size-weighted mean is the minimum-variance choice when no independence is assumed within clusters. This yields a confidence interval at level $1-\alpha$ via the Central Limit Theorem applied to the cluster means.
-
-The clustered classical mean is the special case of Clustered PPI at $\lambda = 0$.
-
-### Clustered Prediction-Powered Inference
-
-Standard PPI++ assumes that observations are independent draws from the population. In practice, data often exhibits a **cluster structure**: samples are grouped into natural units (for example, phrases from the same paragraph), and observations within a cluster may be correlated. **Clustered PPI++** handles this case by reducing each cluster to its mean and treating the resulting cluster means as independent observations, so that PPI++ can be applied directly to them. This yields valid confidence intervals even when within-cluster dependence is strong. It uses both the proxy label $\tilde{Y}_i$ and the ground-truth label $Y_j$ from the table above, aggregated by cluster identifier $c_i$.
-
-#### Mean estimation
-
-The first step is computing **cluster means**. For each labeled cluster $l$, the true-label mean and proxy mean are:
-
-$$\bar{Y}^{(l)} = \frac{1}{|C_l|}\sum_{i \in C_l} Y_i, \qquad \bar{\tilde{Y}}^{(l),\bullet} = \frac{1}{|C_l|}\sum_{i \in C_l} \tilde{Y}_i$$
-
-For each unlabeled cluster $m$, the proxy mean is:
-
-$$\bar{\tilde{Y}}^{(m),\circ} = \frac{1}{|C_m|}\sum_{i \in C_m} \tilde{Y}_i$$
-
-We denote $\bar{\tilde{Y}}^{(l)}$ the vector containing all $L^{\bullet} + L^{\circ}$ labeled and unlabeled proxy cluster means.
-
-The Clustered PPI++ mean estimate is exactly the PPI++ mean estimator applied to the cluster means, with $L^{\bullet}$ labeled and $L^{\circ}$ unlabeled observations:
-
-$$\hat{\theta} = \frac{1}{L^{\bullet}}\sum_{l=1}^{L^{\bullet}} \bar{Y}^{(l)} + \lambda \left[\frac{1}{L^{\circ}}\sum_{m=1}^{L^{\circ}} \bar{\tilde{Y}}^{(m),\circ} - \frac{1}{L^{\bullet}}\sum_{l=1}^{L^{\bullet}} \bar{\tilde{Y}}^{(l),\bullet}\right]$$
-
-This combines two components:
-
-- The **human-label cluster mean** $\frac{1}{L^{\bullet}}\sum_l \bar{Y}^{(l)}$, unbiased but high-variance due to the small number of labeled clusters.
-- A **variance reduction term** scaled by $\lambda$, using all proxy cluster means to reduce variance.
-
-**Note.** Each term in the formula above uses the **mean of cluster means** rather than a size-weighted mean, for instance, $\frac{1}{L^{\bullet}}\sum_l \bar{Y}^{(l)}$ rather than $\sum_l \frac{|C_l|}{n} \bar{Y}^{(l)}$. Both are unbiased for $\theta^*$, but their variances differ based on within-cluster dependence. Because no independence is assumed among observations within the same cluster, the conservative assumption treats them as perfectly correlated, which gives $\mathrm{Var}(\bar{Y}^{(l)}) = \mathrm{Var}(Y) = \sigma^2$ for every cluster, regardless of its size. Under this assumption, the variance of any estimator of the form $\sum_l \alpha_l \bar{Y}^{(l)}$ with $\sum_l \alpha_l = 1$ equals $\sigma^2 \sum_l \alpha_l^2$. Applying the Cauchy-Schwarz inequality to the vectors $(\alpha_1, \ldots, \alpha_{L^{\bullet}})$ and $(1, \ldots, 1)$ gives $\left(\sum_l \alpha_l \cdot 1\right)^2 \leq \left(\sum_l \alpha_l^2\right)\cdot L^\bullet$ so that $\sum_l \alpha_l^2 \geq \frac{1}{L^{\bullet}}$, with equality if and only if all $\alpha_l$ are equal to $\frac{1}{L^{\bullet}}$. The conclusion is that the mean of cluster means is the minimum-variance unbiased estimator of this form, and is therefore preferred over the size-weighted mean, which sets $\alpha_l = \frac{|C_l|}{n}$ and yields a strictly larger variance whenever cluster sizes are unequal.
-
-#### Variance and confidence intervals
-
-Because observations within a cluster are not assumed independent, the variance cannot be computed at the individual sample level. Instead, the cluster means are treated as the independent units, and the variance formula is exactly the PPI++ variance applied to them:
-
-$$\hat{\sigma}^2(\lambda) = \frac{1}{L^{\bullet}}\widehat{\text{Var}}\Big(\bar{Y}^{(l)} - \lambda \bar{\tilde{Y}}^{(l),\bullet}\Big) + \frac{\lambda^2}{L^{\circ}}\widehat{\text{Var}}\Big(\bar{\tilde{Y}}^{(m),\circ}\Big)$$
-
-where $\widehat{\text{Var}}$ denotes the sample variance computed across the $L^{\bullet}$ labeled cluster means in the first term and the $L^{\circ}$ unlabeled cluster means in the second.
-
-By the Central Limit Theorem applied to the cluster means, this yields a confidence interval at level $1 - \alpha$:
-
-$$\Pr\!\left(\theta^* \in \left[\hat{\theta} - z_{1-\alpha/2}\,\hat{\sigma}(\lambda),\; \hat{\theta} + z_{1-\alpha/2}\,\hat{\sigma}(\lambda)\right]\right) \geq 1 - \alpha$$
-
-where $z_{1-\alpha/2}$ is the standard normal quantile (e.g. $z_{0.975} = 1.96$ for a 95% two-sided confidence interval).
-
-#### Power-tuning
-
-As in PPI++, the optimal $\lambda$ minimizes $\hat{\sigma}^2(\lambda)$. The same closed-form formula applies, with cluster means as observations:
-
-$$\hat{\lambda} = \frac{\widehat{\text{Cov}}_{L^{\bullet}}(\bar{Y}^{(l)},\, \bar{\tilde{Y}}^{(l),\bullet})}{\left(1 + \dfrac{L^{\bullet}}{L^{\circ}}\right) \widehat{\text{Var}}_{L^{\bullet} + L^{\circ}}(\bar{\tilde{Y}}^{(l)})}$$
-
-where:
-
-- $\widehat{\text{Cov}}_{L^{\bullet}}(\bar{Y}^{(l)}, \bar{\tilde{Y}}^{(l),\bullet})$ is the sample covariance between true and proxy cluster means, computed on the $L^{\bullet}$ labeled clusters,
-- $\widehat{\text{Var}}_{L^{\bullet} + L^{\circ}}(\bar{\tilde{Y}}^{(l)})$ is the sample variance over all $L^{\bullet} + L^{\circ}$ proxy cluster means.
-
-When the proxy is informative, $\hat{\lambda}$ is close to 1 and the variance reduction narrows the confidence interval. When the proxy is uninformative, $\hat{\lambda}$ shrinks toward 0, falling back to the classical cluster mean. It is standard to use the optimal $\hat{\lambda}$ in practice.
-
-When every cluster is a singleton, $L^{\bullet} = n$ and $L^{\circ} = N$, and all formulas reduce exactly to their PPI++ counterparts, recovering the full PPI++ procedure.
-
-### Clustered Predict-Then-Debias (Clustered PTD)
-
-**Clustered Predict-Then-Debias (Clustered PTD)** [[7](#ref-7)] extends PTD to datasets where observations are grouped into clusters and each cluster is either entirely labeled or entirely unlabeled. The bootstrap resamples whole clusters rather than individual observations, accounting for within-cluster correlation and producing valid confidence intervals under cluster sampling designs. Like PTD, it builds a confidence interval from the empirical distribution of bootstrap estimates rather than a normal approximation, making it reliable when the number of labeled clusters is small. Like Clustered PPI++, it uses both the proxy label $\tilde{Y}_i$ and the ground-truth label $Y_j$ from the table above, aggregated by cluster identifier $c_i$.
-
-#### Mean estimation
+### Mean estimation
 
 The Clustered PTD mean estimate is the average of $B$ bootstrap estimates:
 
@@ -531,7 +634,7 @@ $$\hat{\theta}_{\text{CPTD}} = \frac{1}{B}\sum_{b=1}^{B}\hat{\theta}^{(b)}_{\tex
 
 where each $\hat{\theta}^{(b)}_{\text{CPTD}}$ is produced during the bootstrap procedure described below.
 
-#### Bootstrap procedure
+### Bootstrap procedure
 
 The first step is computing **cluster means**. For each labeled cluster $l$:
 
@@ -563,13 +666,13 @@ $$\hat{\theta}^{(b)}_{\text{CPTD}} = \lambda \cdot \tilde{\gamma}^{(b)} + \left(
 
 where $\lambda$ is a power-tuning factor controlling the proxy labels' influence. The term $\hat{\mu}^{(b)}_{\text{true}} - \lambda \cdot \hat{\mu}^{(b)}_{\text{proxy}}$ captures the proxy bias measured on the labeled clusters, while $\lambda \cdot \tilde{\gamma}^{(b)}$ contributes the proxy signal on the unlabeled clusters.
 
-**Note.** Each bootstrap mean $\hat{\mu}^{(b)}_{\text{true}}$, $\hat{\mu}^{(b)}_{\text{proxy}}$ and $\tilde{\gamma}^{(b)}$ uses the **mean of cluster means** rather than a size-weighted combination. As argued in the Clustered Prediction-Powered Inference section above, this is the minimum-variance choice when no independence is assumed among observations within the same cluster: treating all within-cluster observations as perfectly correlated, the optimal weights are uniform across clusters regardless of cluster size.
+**Note.** Each bootstrap mean $\hat{\mu}^{(b)}_{\text{true}}$, $\hat{\mu}^{(b)}_{\text{proxy}}$ and $\tilde{\gamma}^{(b)}$ uses the **mean of cluster means** rather than a size-weighted combination. As argued in the Clustered PPI section, this is the minimum-variance choice when no independence is assumed among observations within the same cluster: treating all within-cluster observations as perfectly correlated, the optimal weights are uniform across clusters regardless of cluster size.
 
-#### Confidence intervals
+### Confidence intervals
 
 The confidence interval at level $1 - \alpha$ is the interval between the $\alpha/2$ and $1 - \alpha/2$ empirical quantiles of $\bigl\{\hat{\theta}^{(1)}_{\text{CPTD}},\, \ldots,\, \hat{\theta}^{(B)}_{\text{CPTD}}\bigr\}$. The bootstrap percentile approach makes no distributional assumptions and adapts to the actual shape of the residual distribution, remaining reliable even when the number of labeled clusters is small.
 
-#### Power-tuning
+### Power-tuning
 
 The optimal $\lambda$ is estimated from the **bootstrap covariances** of the labeled cluster means. Let $\hat{\mu}_{\text{true}}$ and $\hat{\mu}_{\text{proxy}}$ be the vectors of values $\hat{\mu}^{(b)}_{\text{true}}$ and $\hat{\mu}^{(b)}_{\text{proxy}}$ for $b=1,\dots,B$ respectively. After running the bootstrap loop, it is computed as:
 
@@ -583,77 +686,20 @@ When every cluster is a singleton ($L^\bullet = n$ and $L^\circ = N$), all formu
 
 ---
 
-## Multiple proxy models
+## Multi-Proxy Predict-Then-Debias (Multi-PTD)
 
-This family applies when more than one proxy model is available for the same samples, for example several LLM judges scoring the same responses. Rather than committing to a single proxy, it estimates the optimal linear combination of all available proxies before applying the usual bias-correction machinery to that combination.
+Standard PTD assumes a single proxy model. **Multi-Proxy Predict-Then-Debias (Multi-PTD)** [[7](#ref-7), [8](#ref-8)] generalises PTD to $M \geq 1$ proxy models simultaneously, in the same way that Multi-PPI generalises PPI++. It estimates the optimal linear combination of all $M$ proxies from the bootstrap and applies the PTD rectifier to the combined proxy, retaining the empirical bootstrap distribution for the confidence interval rather than a normal approximation.
 
-### Input data
-
-Each sample has $M \geq 1$ proxy predictions, one from each proxy model, together with a ground-truth label for the labeled subset.
+In Multi-PTD, each sample has two associated values:
 
 | Value | Present for | Description |
 |---|---|---|
-| $\tilde{Y}^{(m)}_i$, for $m = 1, \ldots, M$ | All $n+N$ samples | Proxy prediction from proxy $m$ |
+| $\tilde{\mathbf{Y}}^{(m)}_i$, for $m = 1, \ldots, M$ | All $n+N$ samples | Proxy prediction from proxy $m$ |
 | $Y_j$ | Labeled samples only ($n \ll N$) | Ground-truth label |
-
-### Multi-Proxy Prediction-Powered Inference (Multi-PPI)
-
-Standard PPI++ assumes a single proxy model. **Multi-Proxy Prediction-Powered Inference (Multi-PPI)** [[8](#ref-8)] generalises this to $M \geq 1$ proxy models simultaneously. It finds the optimal linear combination of all $M$ proxies before applying the PPI correction. As in PPI++, labeled samples are drawn uniformly at random from the population. It uses both values from the table above: the proxy predictions $\tilde{Y}^{(m)}_i$ from all $M$ proxies and the ground-truth label $Y_j$.
-
-#### Mean estimation
-
-Let $\tilde{\mathbf{Y}}^\bullet_j = (\tilde{Y}^{(1),\bullet}_j, \ldots, \tilde{Y}^{(M),\bullet}_j)^\top \in \mathbb{R}^M$ and $\tilde{\mathbf{Y}}^\circ_i = (\tilde{Y}^{(1),\circ}_i, \ldots, \tilde{Y}^{(M),\circ}_i)^\top \in \mathbb{R}^M$ denote the proxy prediction vectors for labeled and unlabeled samples respectively. The Multi-PPI mean estimate is parameterised by a tuning vector $\mathbf{\lambda} = (\lambda_1, \ldots, \lambda_M)^\top \in \mathbb{R}^M$ and defined as:
-
-$$\hat{\theta}_{\mathbf{\lambda}} = \frac{1}{n}\sum_{j=1}^{n} Y_j + \mathbf{\lambda}^\top \left[\frac{1}{N}\sum_{i=1}^{N} \tilde{\mathbf{Y}}^\circ_i - \frac{1}{n}\sum_{j=1}^{n} \tilde{\mathbf{Y}}^\bullet_j\right]$$
-
-This combines two components:
-
-- The **human-label mean** $\frac{1}{n}\sum_j Y_j$, unbiased but high-variance due to the small labeled set.
-- A **variance reduction term** using all proxy predictions across $M$ proxies. The tuning parameter $\lambda_m$ scales the correction from proxy $m$: the difference between the unlabeled and labeled means of that proxy.
-
-When $\mathbf{\lambda} = \mathbf{0}$, the estimator reduces to the naive sample mean. When $M = 1$ and $\lambda_1 = 1$, it recovers standard PPI.
-
-#### Variance and confidence intervals
-
-By the Central Limit Theorem (for large enough $n$, typically $n \geq 50$), the asymptotic variance of the Multi-PPI estimator decomposes as:
-
-$$\sigma^2_{\hat{\theta}}(\mathbf{\lambda}) = \underbrace{\frac{\text{Var}(Y - \mathbf{\lambda}^\top \tilde{\mathbf{Y}})}{n}}_{\text{Labeled residual variance}} + \underbrace{\frac{\text{Var}(\mathbf{\lambda}^\top \tilde{\mathbf{Y}})}{N}}_{\text{Unlabeled proxy variance}}$$
-
-- The first term is the variance of the residuals $Y - \mathbf{\lambda}^\top \tilde{\mathbf{Y}}$ on the labeled samples, scaled by $1/n$. It shrinks when the proxy combination is well correlated with the true labels.
-- The second term is the variance of the projected proxy scores $\mathbf{\lambda}^\top \tilde{\mathbf{Y}}$ on the unlabeled samples, scaled by $1/N$. It is typically negligible since $N \gg n$.
-
-This gives a confidence interval at level $1 - \alpha$:
-
-$$\Pr\!\left(\theta^* \in \left[\hat{\theta}_{\mathbf{\lambda}} - z_{1-\alpha/2}\, \sigma_{\hat{\theta}}(\mathbf{\lambda}),\; \hat{\theta}_{\mathbf{\lambda}} + z_{1-\alpha/2}\, \sigma_{\hat{\theta}}(\mathbf{\lambda})\right]\right) \geq 1 - \alpha$$
-
-where $z_{1-\alpha/2}$ is the standard normal quantile (e.g. $z_{0.975} = 1.96$ for a 95% two-sided confidence interval).
-
-#### Power-tuning
-
-In Multi-PPI, the tuning parameter $\mathbf{\lambda} \in \mathbb{R}^M$ is a vector rather than a scalar, since each of the $M$ proxies receives its own weight. The mean squared error of $\hat{\theta}_{\mathbf{\lambda}}$ is a quadratic function of $\mathbf{\lambda}$ with a unique minimiser:
-
-$$\mathbf{\lambda}^* = \frac{N}{n+N} \cdot \text{Var}(\tilde{\mathbf{Y}})^{-1} \cdot \text{Cov}(\tilde{\mathbf{Y}}, Y)$$
-
-where $\text{Var}(\tilde{\mathbf{Y}})$ is the $M \times M$ covariance matrix of the proxy predictions and $\text{Cov}(\tilde{\mathbf{Y}}, Y)$ is the $M$-dimensional cross-covariance vector between proxy predictions and the true label. For $M = 1$, this reduces to the same scalar formula as in PPI++.
-
-In practice, $\mathbf{\lambda}^*$ is unknown and replaced by the plug-in estimator:
-
-$$\hat{\mathbf{\lambda}} = \frac{N}{n+N} \cdot \widehat{\text{Var}}_{n+N}(\tilde{\mathbf{Y}})^{-1} \cdot \widehat{\text{Cov}}_n(\tilde{\mathbf{Y}}^\bullet, Y)$$
-
-where:
-
-- $\widehat{\text{Var}}_{n+N}(\tilde{\mathbf{Y}})$ is the $M \times M$ sample covariance matrix of the proxy predictions, computed over **all $n + N$ samples**,
-- $\widehat{\text{Cov}}_n(\tilde{\mathbf{Y}}^\bullet, Y)$ is the $M$-dimensional sample cross-covariance vector between labeled proxy predictions and true labels, computed over the **$n$ labeled samples only**.
-
-When a proxy is informative (high covariance with the true label), the corresponding component $\lambda_m^*$ is large and the estimator benefits from that proxy's signal, narrowing the confidence interval. When a proxy is uninformative, its component shrinks toward 0, down-weighting it without affecting the other components. This guarantees that the variance of $\hat{\theta}_{\hat{\mathbf{\lambda}}}$ is always no greater than $\text{Var}(Y)/n$, the variance of the naive sample mean: using Multi-PPI with optimal tuning can only reduce the confidence interval width relative to the classical estimator, regardless of the number or quality of the proxies. It is standard to use the empirical estimate $\hat{\mathbf{\lambda}}$ in practice.
-
-### Multi-Proxy Predict-Then-Debias (Multi-PTD)
-
-Standard PTD assumes a single proxy model. **Multi-Proxy Predict-Then-Debias (Multi-PTD)** [[7](#ref-7), [8](#ref-8)] generalises PTD to $M \geq 1$ proxy models simultaneously, in the same way that Multi-PPI generalises PPI++. It estimates the optimal linear combination of all $M$ proxies from the bootstrap and applies the PTD rectifier to the combined proxy, retaining the empirical bootstrap distribution for the confidence interval rather than a normal approximation. Like Multi-PPI, it uses both the proxy predictions $\tilde{Y}^{(m)}_i$ from all $M$ proxies and the ground-truth label $Y_j$ from the table above.
 
 Denote $\tilde{\mathbf{Y}}^\bullet_j = (\tilde{Y}^{(1),\bullet}_j, \ldots, \tilde{Y}^{(M),\bullet}_j)^\top \in \mathbb{R}^M$ and $\tilde{\mathbf{Y}}^\circ_i = (\tilde{Y}^{(1),\circ}_i, \ldots, \tilde{Y}^{(M),\circ}_i)^\top \in \mathbb{R}^M$ the labeled and unlabeled proxy vectors respectively.
 
-#### Mean estimation
+### Mean estimation
 
 The Multi-PTD mean estimate is the average of $B$ bootstrap estimates:
 
@@ -661,7 +707,7 @@ $$\hat{\theta}_{\text{Multi-PTD}} = \frac{1}{B}\sum_{b=1}^{B}\hat{\theta}^{(b)}_
 
 where each $\hat{\theta}^{(b)}_{\text{Multi-PTD}}$ is computed during the bootstrap procedure described below, using a tuning vector $\lambda \in \mathbb{R}^M$ shared across all $B$ iterations.
 
-#### Bootstrap procedure
+### Bootstrap procedure
 
 Before the bootstrap loop, compute the mean and covariance of the unlabeled proxy vectors:
 
@@ -685,11 +731,11 @@ $$\hat{\theta}^{(b)}_{\text{Multi-PTD}} = \bar{\gamma}^{(b)}_{\lambda} + \left(\
 
 The term $\hat{\mu}^{(b)}_{\text{true}} - \lambda^\top \hat{\mu}^{(b)}_{\text{proxy}}$ captures the combined proxy bias measured on the labeled set, while $\bar{\gamma}^{(b)}_{\lambda}$ contributes the combined proxy signal on the unlabeled population.
 
-#### Confidence intervals
+### Confidence intervals
 
 The confidence interval at level $1 - \alpha$ is the interval between the $\alpha/2$ and $1 - \alpha/2$ empirical quantiles of $\bigl\{\hat{\theta}^{(1)}_{\text{Multi-PTD}},\, \ldots,\, \hat{\theta}^{(B)}_{\text{Multi-PTD}}\bigr\}$. As in PTD, this bootstrap percentile approach adapts to the actual shape of the residual distribution, making it reliable even when $n$ is small.
 
-#### Power-tuning
+### Power-tuning
 
 The tuning vector $\lambda \in \mathbb{R}^M$ generalises the scalar PTD tuning parameter to $M$ proxies, one weight per proxy, in the same way Multi-PPI generalises PPI++ power-tuning. It is estimated from the bootstrap covariances by solving the linear system:
 
@@ -697,7 +743,7 @@ $$\left(\widehat{\text{Cov}}_B\!\left(\hat{\mu}_{\text{proxy}}\right) + \hat{\Si
 
 where $\widehat{\text{Cov}}_B\!\left(\hat{\mu}_{\text{proxy}}\right)$ is the $M \times M$ sample covariance matrix of the labeled bootstrap proxy means across the $B$ replicates, and $\widehat{\text{Cov}}_B\!\left(\hat{\mu}_{\text{true}},\, \hat{\mu}_{\text{proxy}}\right)$ is the $M$-dimensional sample cross-covariance vector between the bootstrap true means and each proxy's bootstrap means. This is the same formula as PTD power-tuning, with the scalar variance and covariance replaced by an $M \times M$ matrix and an $M$-dimensional vector respectively. For $M = 1$, it reduces to the scalar PTD formula.
 
-When a proxy is informative (high bootstrap covariance with the ground-truth means), its corresponding component of $\lambda$ is large and the estimate benefits from that proxy's signal. When a proxy is uninformative, its component shrinks toward 0, down-weighting it without affecting the other components. The combined covariance matrix on the left-hand side may be singular, for example, if two or more proxies are perfectly correlated. In this case, redundant proxies should be discarded.
+When a proxy is informative (high bootstrap covariance with the ground-truth means), its corresponding component of $\lambda$ is large and the estimate benefits from that proxy's signal. When a proxy is uninformative, its component shrinks toward 0, down-weighting it without affecting the other components. The combined covariance matrix on the left-hand side may be singular, for example, if two or more proxies are perfectly correlated. In this case, redundant proxies should be discarded. 
 
 Setting $\lambda$ to $\left(1/\sqrt{M}, \ldots, 1/\sqrt{M}\right)^\top$ recovers the unweighted, equally-combined variant. When $M = 1$, Multi-PTD is equivalent to PTD with the same power-tuning setting.
 
