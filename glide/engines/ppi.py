@@ -6,7 +6,7 @@ from glide.core.utils import _split_labeled_unlabeled
 from glide.core.validation import _validate_equal_lengths, _validate_sample_sizes, _validate_y_proxy, _validate_y_true
 from glide.engines.ppi_core import _compute_mean_estimate, _compute_std_estimate, _compute_tuning_parameter
 
-PPIDataset = Tuple[NDArray, NDArray, NDArray]  # (y_true_labeled, y_proxy_labeled, y_proxy_unlabeled)
+PPIDataset = Tuple[NDArray, NDArray, NDArray]
 
 
 class PPIMeanEngine:
