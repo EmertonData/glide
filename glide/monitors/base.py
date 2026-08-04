@@ -5,9 +5,8 @@ from numpy.typing import NDArray
 
 from glide.confidence_sequences import AsymptoticConfidenceSequence
 from glide.confidence_sequences.asymptotic import _compute_asymptotic_bounds
-from glide.core.validation import _validate_bounds, _validate_equal_lengths, _validate_has_no_nan, _validate_non_empty
 from glide.engines.base import DatasetT, MeanEstimationEngine
-from glide.monitors.core import _postprocess, _reorient, _unique_ordered_batches
+from glide.monitors.core import _postprocess, _preprocess
 
 
 class AsymptoticRM(Generic[DatasetT]):
@@ -28,23 +27,9 @@ class AsymptoticRM(Generic[DatasetT]):
         tightest_at_batch: int,
         power_tuning: bool,
     ) -> Tuple[NDArray, NDArray, AsymptoticConfidenceSequence]:
-        _validate_bounds(
-            confidence_level,
-            "confidence_level",
-            lower=0.5,
-            upper=1,
-            left_inclusive=False,
-            right_inclusive=False,
-            error_message=(
-                f"'confidence_level' must be in (0.5, 1) for the asymptotic monitor; got {confidence_level!r}."
-            ),
+        risk_fields, batch_identifiers, batch_codes = _preprocess(
+            fields, field_names, batches, higher_is_better, confidence_level
         )
-        _validate_non_empty(batches, "batches")
-        _validate_equal_lengths(*fields, batches, names=[*field_names, "batches"])
-        _validate_has_no_nan(batches, "batches")
-
-        risk_fields = [_reorient(field, higher_is_better) for field in fields]
-        batch_identifiers, batch_codes = _unique_ordered_batches(batches)
         n_batches = len(batch_identifiers)
         batch_mean_estimates = np.empty(n_batches)
         batch_std_estimates = np.empty(n_batches)
