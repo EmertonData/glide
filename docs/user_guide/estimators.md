@@ -22,7 +22,7 @@ Moreover, $C_\alpha$ should be as small as possible.
 
 ### Input data
 
-All estimators in GLIDE rely on two complementary sources of labels. Proxy labels $\tilde{Y}_i$ are available for $N$ samples at low cost but are biased ($E[\tilde{Y}] \neq \theta^*$). Human labels $Y_j$ are unbiased ($E[Y] = \theta^*$) but expensive, and only available for a small labeled set of $n \ll N$ samples. The key insight: even though human labels are scarce, they can be used to **correct** the bias in the cheap proxy labels.
+All prediction-powered estimators in GLIDE rely on two complementary sources of labels. Proxy labels $\tilde{Y}_i$ are available for $N$ samples at low cost but are biased ($E[\tilde{Y}] \neq \theta^*$). Human labels $Y_j$ are unbiased ($E[Y] = \theta^*$) but expensive, and only available for a small labeled set of $n \ll N$ samples. The key insight: even though human labels are scarce, they can be used to **correct** the bias in the cheap proxy labels.
 
 ---
 
@@ -94,15 +94,17 @@ The **classical mean estimator** is the standard sample mean. It uses only the g
 
 ### Mean estimation
 
+The classical mean estimate is the average of the ground-truth labels:
+
 $$\hat{\theta} = \frac{1}{n}\sum_{j=1}^{n} Y_j$$
 
 ### Variance and confidence intervals
 
-The standard error is:
+The variance is estimated as:
 
-$$\hat{\sigma}_{\text{SE}} = \frac{s}{\sqrt{n}}$$
+$$\hat{\sigma}^2_{\text{SE}} = \frac{\widehat{\text{Var}}(Y)}{n}$$
 
-where $s$ is the sample standard deviation of $Y_j$, computed with $n-1$ degrees of freedom. For large enough $n$ (typically $n \geq 50$), the Central Limit Theorem gives a confidence interval at level $1-\alpha$:
+where $\widehat{\text{Var}}$ denotes the sample variance, computed with $n-1$ degrees of freedom over the $n$ labeled samples. For large enough $n$ (typically $n \geq 50$), the Central Limit Theorem gives a confidence interval at level $1-\alpha$:
 
 $$\Pr\!\left(\theta^* \in \left[\hat{\theta} - z_{1-\alpha/2}\,\hat{\sigma}_{\text{SE}},\; \hat{\theta} + z_{1-\alpha/2}\,\hat{\sigma}_{\text{SE}}\right]\right) \geq 1 - \alpha$$
 
@@ -166,15 +168,19 @@ The **stratified classical mean estimator** extends the classical mean to a data
 
 ### Mean estimation
 
+The stratified classical mean estimate is a weighted average of the per-stratum classical means:
+
 $$\hat{\theta}_{\text{strat}} = \sum_{k=1}^{K} w_k\,\hat{\theta}_k$$
 
 where $\hat{\theta}_k$ is the classical mean within stratum $k$.
 
 ### Variance and confidence intervals
 
+The variance of $\hat{\theta}_{\text{strat}}$ is the sum of the per-stratum classical variances, each scaled by its squared population weight:
+
 $$\sigma^2_{\text{strat}} = \sum_{k=1}^{K} w_k^2\,\sigma^2_k$$
 
-where $\sigma^2_k = s_k^2 / n_k$ is the classical variance of stratum $k$. The resulting standard deviation $\sigma_{\text{strat}} = \sqrt{\sigma^2_{\text{strat}}}$ gives a confidence interval at level $1-\alpha$ via the Central Limit Theorem, exactly as in the classical mean.
+where $\sigma^2_k = \widehat{\text{Var}}(Y^k) / n_k$ is the classical variance of stratum $k$. The resulting standard deviation $\sigma_{\text{strat}} = \sqrt{\sigma^2_{\text{strat}}}$ gives a confidence interval at level $1-\alpha$ via the Central Limit Theorem, exactly as in the classical mean.
 
 The stratified classical mean is the special case of Stratified PPI++ with $\lambda_k = 0$ for every stratum $k$.
 
@@ -256,11 +262,17 @@ The **IPW classical mean estimator**, also known as the **Horvitz–Thompson est
 
 ### Mean estimation
 
+The IPW classical mean estimate reweights each labeled observation by the inverse of its sampling probability:
+
 $$\hat{\theta}_{\text{HT}} = \frac{1}{n}\sum_{i=1}^{n} \frac{\xi_i\,Y_i}{\pi_i}$$
 
 ### Variance and confidence intervals
 
-The standard error is the sample standard deviation of the per-record IPW-corrected values $\xi_i Y_i / \pi_i$, divided by $\sqrt{n}$. As in the classical mean, this yields a confidence interval at level $1-\alpha$ via the Central Limit Theorem. $\pi_i$ must be strictly positive for every labeled sample; see the discussion above for why this requirement matters.
+The variance is estimated as:
+
+$$\hat{\sigma}^2_{\text{SE}} = \frac{\widehat{\text{Var}}\!\left(\xi_i\,Y_i / \pi_i\right)}{n}$$
+
+where $\widehat{\text{Var}}$ denotes the sample variance of the per-record IPW-corrected values. As in the classical mean, this yields a confidence interval at level $1-\alpha$ via the Central Limit Theorem. $\pi_i$ must be strictly positive for every labeled sample; see the discussion above for why this requirement matters.
 
 The IPW classical mean is the special case of ASI at $\lambda = 0$.
 
@@ -346,9 +358,13 @@ $$\bar{Y}^{(l)} = \frac{1}{|C_l|}\sum_{i \in C_l} Y_i$$
 
 ### Mean estimation
 
+The clustered classical mean estimate is the average of the cluster means:
+
 $$\hat{\theta} = \frac{1}{L}\sum_{l=1}^{L} \bar{Y}^{(l)}$$
 
 ### Variance and confidence intervals
+
+The variance is estimated as:
 
 $$\hat{\sigma}^2 = \frac{\widehat{\text{Var}}\big(\bar{Y}^{(l)}\big)}{L}$$
 
