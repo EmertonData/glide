@@ -3,6 +3,7 @@ from typing import Tuple
 import numpy as np
 from numpy.typing import NDArray
 
+from glide.core.utils import _split_labeled_unlabeled
 from glide.core.validation import (
     _validate_bounds,
     _validate_equal_lengths,
@@ -10,7 +11,6 @@ from glide.core.validation import (
     _validate_unique_clusters,
     _validate_y_true,
 )
-from glide.estimators.core import _split_labeled_unlabeled
 
 
 def _preprocess(

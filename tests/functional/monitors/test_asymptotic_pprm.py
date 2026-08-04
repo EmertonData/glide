@@ -86,7 +86,7 @@ def test_detect_higher_is_better_symmetry(dataset):
     """Monitoring a performance is the mirror image of monitoring its negation as a risk."""
     y_true, y_proxy, batches = dataset
     risk = AsymptoticPPRM().detect(y_true, y_proxy, batches, higher_is_better=False, threshold=0.3)
-    performance = AsymptoticPPRM().detect(1 - y_true, 1 - y_proxy, batches, higher_is_better=True, threshold=0.7)
+    performance = AsymptoticPPRM().detect(-y_true, -y_proxy, batches, higher_is_better=True, threshold=-0.3)
 
     np.testing.assert_array_equal(performance.alarms, risk.alarms)
-    np.testing.assert_allclose(performance.confidence_bounds, 1 - risk.confidence_bounds)
+    np.testing.assert_allclose(performance.confidence_bounds, -risk.confidence_bounds)

@@ -60,7 +60,7 @@ class ClassicalMeanEstimator:
         ValueError
             If ``y`` contains fewer than 2 non-NaN values.
         """
-        dataset = self._engine.prepare(y)
+        dataset = self._engine.preprocess(y)
         n_samples = len(dataset)
         mean, std = self._engine.compute_mean_and_std(dataset, None)
         ci = CLTConfidenceInterval(

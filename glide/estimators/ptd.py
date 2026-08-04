@@ -5,6 +5,7 @@ import numpy as np
 from numpy.typing import NDArray
 
 from glide.confidence_intervals import BootstrapConfidenceInterval
+from glide.core.utils import _split_labeled_unlabeled
 from glide.core.validation import (
     _validate_equal_lengths,
     _validate_sample_sizes,
@@ -12,7 +13,6 @@ from glide.core.validation import (
     _validate_y_true,
 )
 from glide.estimators.classical import ClassicalMeanEstimator
-from glide.estimators.core import _split_labeled_unlabeled
 from glide.estimators.ptd_core import (
     _compute_bootstrap_labeled_means,
     _compute_bootstrap_mean_estimates,

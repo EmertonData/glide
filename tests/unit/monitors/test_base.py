@@ -28,13 +28,13 @@ def monitor():
     return AsymptoticPPRM()
 
 
-# --- _prepare_subset ---
+# --- _preprocess_subset ---
 
 
-def test_prepare_subset(monitor, y_true, y_proxy):
+def test_preprocess_subset(monitor, y_true, y_proxy):
     mask = np.array([True, True, True, True, False, False, False, False])
 
-    y_true_labeled, y_proxy_labeled, y_proxy_unlabeled = monitor._prepare_subset([y_true, y_proxy], mask)
+    y_true_labeled, y_proxy_labeled, y_proxy_unlabeled = monitor._preprocess_subset([y_true, y_proxy], mask)
 
     np.testing.assert_array_equal(y_true_labeled, np.array([0.49, 0.51]))
     np.testing.assert_array_equal(y_proxy_labeled, np.array([0.5, 0.5]))

@@ -184,11 +184,11 @@ New estimators and samplers should be backed by a scientific publication. Please
 
 1. **Identify** the inputs, outputs, and any tunable hyperparameters.
 2. **Implement the engine** that owns the per-unit body (validate, transform, tune, then compute mean and std):
-   - Create `glide/engines/<name>.py` with a class exposing `prepare(...)`, `fit_tuning_parameter(dataset, power_tuning)`, and `compute_mean_and_std(dataset, tuning_parameter)`. `prepare` takes the family's explicit named inputs and returns the validated, transformed dataset (a plain tuple of arrays, or a single array, whichever fits the family — no bespoke dataclass needed).
+   - Create `glide/engines/<name>.py` with a class exposing `preprocess(...)`, `fit_tuning_parameter(dataset, power_tuning)`, and `compute_mean_and_std(dataset, tuning_parameter)`. `preprocess` takes the family's explicit named inputs and returns the validated, transformed dataset (a plain tuple of arrays, or a single array, whichever fits the family — no bespoke dataclass needed).
    - This engine will be reused unchanged by a monitor over the same family later on; keep it free of anything estimator-specific (confidence intervals, result packaging).
 3. **Implement the estimator shell**:
    - Create `glide/estimators/<name>.py`. In `__init__`, instantiate the engine (and, if you need an effective-sample-size baseline, the paired classical engine) as instance attributes.
-   - `estimate(array1, array2, ...)` calls `prepare` → `fit_tuning_parameter` → `compute_mean_and_std` on the engine, builds a `ConfidenceInterval`, and packages an inference result. Reuse a result type from `glide/mean_inference_results` (e.g. a `MeanInferenceResult` subclass) or add a new one there.
+   - `estimate(array1, array2, ...)` calls `preprocess` → `fit_tuning_parameter` → `compute_mean_and_std` on the engine, builds a `ConfidenceInterval`, and packages an inference result. Reuse a result type from `glide/mean_inference_results` (e.g. a `MeanInferenceResult` subclass) or add a new one there.
    - If your estimator has hyperparameters, these should be optional parameters of `estimate()` with default values.
 4. **Export** the new class from `glide/estimators/__init__.py`.
 5. **Write unit tests**: engine-level tests in `tests/unit/engines/test_<name>.py` covering validation, tuning, and mean/std against hardcoded expected values; shell-level tests in `tests/unit/estimators/test_<name>.py` covering:

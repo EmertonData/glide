@@ -22,10 +22,10 @@ def engine():
     return PPIMeanEngine()
 
 
-# --- prepare ---
+# --- preprocess ---
 
 
-def test_prepare_delegates_to_validation(engine, y_true, y_proxy):
+def test_preprocess_delegates_to_validation(engine, y_true, y_proxy):
     labeled_mask = np.array([True, True, False, False])
     with (
         patch.object(ppi_engine_module, "_validate_equal_lengths") as mock_validate_equal_lengths,
@@ -40,7 +40,7 @@ def test_prepare_delegates_to_validation(engine, y_true, y_proxy):
             np.array([3.0, 4.0]),
             labeled_mask,
         )
-        engine.prepare(y_true, y_proxy)
+        engine.preprocess(y_true, y_proxy)
 
         mock_validate_equal_lengths.assert_called_once_with(y_true, y_proxy, names=["y_true", "y_proxy"])
         mock_validate_y_proxy.assert_called_once_with(y_proxy)
@@ -52,8 +52,8 @@ def test_prepare_delegates_to_validation(engine, y_true, y_proxy):
         np.testing.assert_array_equal(mock_validate_sample_sizes.call_args[0][0], labeled_mask)
 
 
-def test_prepare_valid_output(engine, y_true, y_proxy):
-    y_true_labeled, y_proxy_labeled, y_proxy_unlabeled = engine.prepare(y_true, y_proxy)
+def test_preprocess_valid_output(engine, y_true, y_proxy):
+    y_true_labeled, y_proxy_labeled, y_proxy_unlabeled = engine.preprocess(y_true, y_proxy)
     np.testing.assert_array_equal(y_true_labeled, np.array([1.0, 2.0]))
     np.testing.assert_array_equal(y_proxy_labeled, np.array([1.0, 2.0]))
     np.testing.assert_array_equal(y_proxy_unlabeled, np.array([3.0, 4.0]))
@@ -63,13 +63,13 @@ def test_prepare_valid_output(engine, y_true, y_proxy):
 
 
 def test_fit_tuning_parameter_power_tuning_true(engine, y_true, y_proxy):
-    dataset = engine.prepare(y_true, y_proxy)
+    dataset = engine.preprocess(y_true, y_proxy)
     tuning_parameter = engine.fit_tuning_parameter(dataset, power_tuning=True)
     assert tuning_parameter == pytest.approx(0.15)
 
 
 def test_fit_tuning_parameter_power_tuning_false(engine, y_true, y_proxy):
-    dataset = engine.prepare(y_true, y_proxy)
+    dataset = engine.preprocess(y_true, y_proxy)
     tuning_parameter = engine.fit_tuning_parameter(dataset, power_tuning=False)
     assert tuning_parameter == pytest.approx(1.0)
 
@@ -78,7 +78,7 @@ def test_fit_tuning_parameter_power_tuning_false(engine, y_true, y_proxy):
 
 
 def test_compute_mean_and_std(engine, y_true, y_proxy):
-    dataset = engine.prepare(y_true, y_proxy)
+    dataset = engine.preprocess(y_true, y_proxy)
     mean, std = engine.compute_mean_and_std(dataset, tuning_parameter=0.15)
     assert mean == pytest.approx(1.8)
     assert std == pytest.approx(0.4316, abs=1e-4)

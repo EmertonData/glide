@@ -57,7 +57,7 @@ def test_detect_prefix_consistency(y, batches):
 def test_detect_higher_is_better_symmetry(y, batches):
     """Monitoring a performance is the mirror image of monitoring its complement as a risk."""
     risk = AsymptoticClassicalRM().detect(y, batches, higher_is_better=False, threshold=0.3)
-    performance = AsymptoticClassicalRM().detect(1.0 - y, batches, higher_is_better=True, threshold=0.7)
+    performance = AsymptoticClassicalRM().detect(-y, batches, higher_is_better=True, threshold=-0.3)
 
     np.testing.assert_array_equal(performance.alarms, risk.alarms)
-    np.testing.assert_allclose(performance.confidence_bounds, 1.0 - risk.confidence_bounds)
+    np.testing.assert_allclose(performance.confidence_bounds, -risk.confidence_bounds)

@@ -2,15 +2,15 @@ from typing import Tuple
 
 from numpy.typing import NDArray
 
+from glide.core.utils import _split_labeled_unlabeled
 from glide.core.validation import _validate_equal_lengths, _validate_sample_sizes, _validate_y_proxy, _validate_y_true
-from glide.estimators.core import _split_labeled_unlabeled
-from glide.estimators.ppi_core import _compute_mean_estimate, _compute_std_estimate, _compute_tuning_parameter
+from glide.engines.ppi_core import _compute_mean_estimate, _compute_std_estimate, _compute_tuning_parameter
 
 PPIDataset = Tuple[NDArray, NDArray, NDArray]  # (y_true_labeled, y_proxy_labeled, y_proxy_unlabeled)
 
 
 class PPIMeanEngine:
-    def prepare(self, y_true: NDArray, y_proxy: NDArray) -> PPIDataset:
+    def preprocess(self, y_true: NDArray, y_proxy: NDArray) -> PPIDataset:
         _validate_equal_lengths(y_true, y_proxy, names=["y_true", "y_proxy"])
         _validate_y_proxy(y_proxy)
         _validate_y_true(y_true)

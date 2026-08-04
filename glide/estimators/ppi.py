@@ -3,6 +3,8 @@ from math import floor
 from numpy.typing import NDArray
 
 from glide.confidence_intervals import CLTConfidenceInterval
+from glide.engines.classical import ClassicalMeanEngine
+from glide.engines.ppi import PPIMeanEngine
 from glide.mean_inference_results import PredictionPoweredMeanInferenceResult
 
 
@@ -42,11 +44,6 @@ class PPIMeanEstimator:
     """
 
     def __init__(self) -> None:
-        # Deferred: glide.engines.ppi imports glide.estimators.ppi_core, which would otherwise
-        # cycle back into this module while glide.estimators is still initializing.
-        from glide.engines.classical import ClassicalMeanEngine
-        from glide.engines.ppi import PPIMeanEngine
-
         self._engine = PPIMeanEngine()
         self._classical_engine = ClassicalMeanEngine()
 
@@ -105,7 +102,7 @@ class PPIMeanEstimator:
             - If labeled ``y_true`` values are constant.
             - If there are fewer than 2 labeled or fewer than 2 unlabeled samples.
         """
-        dataset = self._engine.prepare(y_true, y_proxy)
+        dataset = self._engine.preprocess(y_true, y_proxy)
         y_true_labeled, _, y_proxy_unlabeled = dataset
         n_labeled, n_unlabeled = len(y_true_labeled), len(y_proxy_unlabeled)
         tuning_parameter = self._engine.fit_tuning_parameter(dataset, power_tuning)
@@ -115,7 +112,7 @@ class PPIMeanEstimator:
             std=std,
             confidence_level=confidence_level,
         )
-        classical_dataset = self._classical_engine.prepare(y_true_labeled)
+        classical_dataset = self._classical_engine.preprocess(y_true_labeled)
         _, classical_std = self._classical_engine.compute_mean_and_std(classical_dataset, None)
         effective_sample_size = floor(n_labeled * classical_std**2 / std**2)
         result = PredictionPoweredMeanInferenceResult(

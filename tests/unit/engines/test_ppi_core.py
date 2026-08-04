@@ -4,7 +4,7 @@ import numpy as np
 import pytest
 from numpy.typing import NDArray
 
-from glide.estimators.ppi_core import (
+from glide.engines.ppi_core import (
     _compute_mean_estimate,
     _compute_std_estimate,
     _compute_tuning_parameter,
@@ -30,7 +30,7 @@ def y_proxy_unlabeled() -> NDArray:
 
 
 def test_compute_tuning_parameter_delegates_to_validation(y_true, y_proxy_labeled, y_proxy_unlabeled):
-    with patch("glide.estimators.ppi_core._validate_non_constant") as mock_validate_non_constant:
+    with patch("glide.engines.ppi_core._validate_non_constant") as mock_validate_non_constant:
         _compute_tuning_parameter(y_true, y_proxy_labeled, y_proxy_unlabeled, power_tuning=True)
     mock_validate_non_constant.assert_called_once()
     expected_y_proxy_all = np.hstack([y_proxy_labeled, y_proxy_unlabeled])

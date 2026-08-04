@@ -6,8 +6,8 @@ DatasetT = TypeVar("DatasetT")
 TuningParameter = Union[float, NDArray, None]
 
 
-class MeanEstimateEngine(Protocol[DatasetT]):
-    def prepare(self, *fields: NDArray) -> DatasetT: ...
+class MeanEstimationEngine(Protocol[DatasetT]):
+    def preprocess(self, *fields: NDArray) -> DatasetT: ...
 
     def fit_tuning_parameter(self, dataset: DatasetT, power_tuning: bool) -> TuningParameter: ...
 

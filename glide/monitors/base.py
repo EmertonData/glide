@@ -6,16 +6,16 @@ from numpy.typing import NDArray
 from glide.confidence_sequences import AsymptoticConfidenceSequence, ConfidenceSequence
 from glide.confidence_sequences.asymptotic import _compute_asymptotic_bounds
 from glide.core.validation import _validate_bounds, _validate_equal_lengths, _validate_has_no_nan, _validate_non_empty
-from glide.engines.base import DatasetT, MeanEstimateEngine
+from glide.engines.base import DatasetT, MeanEstimationEngine
 from glide.monitors.core import _postprocess, _reorient, _unique_ordered_batches
 
 
 class AsymptoticRM(Generic[DatasetT]):
-    engine: MeanEstimateEngine[DatasetT]
+    engine: MeanEstimationEngine[DatasetT]
 
-    def _prepare_subset(self, fields: List[NDArray], mask: NDArray) -> DatasetT:
+    def _preprocess_subset(self, fields: List[NDArray], mask: NDArray) -> DatasetT:
         sliced_fields = [field[mask] for field in fields]
-        dataset = self.engine.prepare(*sliced_fields)
+        dataset = self.engine.preprocess(*sliced_fields)
         return dataset
 
     def _detect(
@@ -50,14 +50,14 @@ class AsymptoticRM(Generic[DatasetT]):
         batch_std_estimates = np.empty(n_batches)
         for position in range(n_batches):
             try:
-                batch_dataset = self._prepare_subset(risk_fields, batch_codes == position)
+                batch_dataset = self._preprocess_subset(risk_fields, batch_codes == position)
             except ValueError as error:
                 raise ValueError(f"{error} (batch '{batch_identifiers[position]}')") from error
 
             if position == 0 or not power_tuning:
                 tuning_parameter = self.engine.fit_tuning_parameter(batch_dataset, power_tuning=False)
             else:
-                prefix_dataset = self._prepare_subset(risk_fields, batch_codes < position)
+                prefix_dataset = self._preprocess_subset(risk_fields, batch_codes < position)
                 tuning_parameter = self.engine.fit_tuning_parameter(prefix_dataset, power_tuning=True)
 
             batch_mean_estimates[position], batch_std_estimates[position] = self.engine.compute_mean_and_std(

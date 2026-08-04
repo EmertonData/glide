@@ -4,6 +4,7 @@ from typing import Tuple
 from numpy.typing import NDArray
 
 from glide.confidence_intervals import CLTConfidenceInterval
+from glide.core.utils import _split_labeled_unlabeled
 from glide.core.validation import (
     _validate_equal_lengths,
     _validate_sample_sizes,
@@ -11,7 +12,6 @@ from glide.core.validation import (
     _validate_y_true,
 )
 from glide.estimators.classical import ClassicalMeanEstimator
-from glide.estimators.core import _split_labeled_unlabeled
 from glide.estimators.multi_ppi_core import (
     _compute_mean_estimate,
     _compute_std_estimate,
