@@ -110,7 +110,7 @@ $$\Pr\!\left(\theta^* \in \left[\hat{\theta} - z_{1-\alpha/2}\,\hat{\sigma}_{\te
 
 where $z_{1-\alpha/2}$ is the standard normal quantile (e.g. $z_{0.975} = 1.96$ for a 95% two-sided confidence interval).
 
-The classical mean is the special case of PPI++ at $\lambda = 0$, recovered whenever the proxy carries no usable signal.
+The classical mean is the special case of PPI++ for $\lambda = 0$, recovered whenever the proxy carries no usable signal.
 
 ---
 
@@ -221,7 +221,7 @@ $$\hat{\theta}_{\lambda} = \frac{1}{n}\sum_{i=1}^{n} z_i(\lambda)$$
 
 This estimator is **unbiased** for the population mean under any fixed sampling design, provided $\pi_i > 0$ for all samples.
 
-At $\lambda = 0$, this reduces to the classical Horvitz–Thompson estimator, which uses only the labeled samples (each weighted by $1/\pi_i$). As $\lambda$ increases, the proxy labels contribute progressively more to the estimate.
+For $\lambda = 0$, this reduces to the classical Horvitz–Thompson estimator, which uses only the labeled samples (each weighted by $1/\pi_i$). As $\lambda$ increases, the proxy labels contribute progressively more to the estimate.
 
 
 ### Variance and confidence intervals
@@ -274,7 +274,7 @@ $$\hat{\sigma}^2_{\text{SE}} = \frac{\widehat{\text{Var}}\!\left(\xi\,Y / \pi\ri
 
 where $\widehat{\text{Var}}$ denotes the sample variance of the per-record IPW-corrected values. As in the classical mean, this yields a confidence interval at level $1-\alpha$ via the Central Limit Theorem. $\pi_i$ must be strictly positive for every labeled sample.
 
-The IPW classical mean is the special case of ASI at $\lambda = 0$.
+The IPW classical mean is the special case of ASI for $\lambda = 0$.
 
 ---
 
@@ -370,7 +370,7 @@ $$\hat{\sigma}^2 = \frac{\widehat{\text{Var}}\big(\bar{Y}^{(l)}\big)}{L^{\bullet
 
 where $\widehat{\text{Var}}$ denotes the sample variance computed across the $L^{\bullet}$ labeled cluster means. As in the Clustered Prediction-Powered Inference section above, using the mean of cluster means rather than a size-weighted mean is the minimum-variance choice when no independence is assumed within clusters. This yields a confidence interval at level $1-\alpha$ via the Central Limit Theorem applied to the cluster means.
 
-The clustered classical mean is the special case of Clustered PPI++ at $\lambda = 0$.
+The clustered classical mean is the special case of Clustered PPI++ for $\lambda = 0$.
 
 ---
 
