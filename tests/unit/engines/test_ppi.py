@@ -29,8 +29,7 @@ def test_preprocess_delegates_to_validation(engine, y_true, y_proxy):
     labeled_mask = np.array([True, True, False, False])
     with (
         patch.object(ppi_engine_module, "_validate_equal_lengths") as mock_validate_equal_lengths,
-        patch.object(ppi_engine_module, "_validate_y_proxy") as mock_validate_y_proxy,
-        patch.object(ppi_engine_module, "_validate_y_true") as mock_validate_y_true,
+        patch.object(ppi_engine_module, "_validate_has_no_nan") as mock_validate_has_no_nan,
         patch.object(ppi_engine_module, "_split_labeled_unlabeled") as mock_split_labeled_unlabeled,
         patch.object(ppi_engine_module, "_validate_sample_sizes") as mock_validate_sample_sizes,
     ):
@@ -42,14 +41,27 @@ def test_preprocess_delegates_to_validation(engine, y_true, y_proxy):
         )
         engine.preprocess(y_true, y_proxy)
 
-        mock_validate_equal_lengths.assert_called_once_with(y_true, y_proxy, names=["y_true", "y_proxy"])
-        mock_validate_y_proxy.assert_called_once_with(y_proxy)
-        mock_validate_y_true.assert_called_once_with(y_true)
+        mock_validate_equal_lengths.assert_called_once()
+        np.testing.assert_array_equal(mock_validate_equal_lengths.call_args[0][0], y_true)
+        np.testing.assert_array_equal(mock_validate_equal_lengths.call_args[0][1], y_proxy)
+        assert mock_validate_equal_lengths.call_args[1] == {"names": ["y_true", "y_proxy"]}
+        mock_validate_has_no_nan.assert_called_once()
+        np.testing.assert_array_equal(mock_validate_has_no_nan.call_args[0][0], y_proxy)
+        assert mock_validate_has_no_nan.call_args[0][1] == "y_proxy"
         mock_split_labeled_unlabeled.assert_called_once()
         np.testing.assert_array_equal(mock_split_labeled_unlabeled.call_args[0][0], y_true)
         np.testing.assert_array_equal(mock_split_labeled_unlabeled.call_args[0][1], y_proxy)
         mock_validate_sample_sizes.assert_called_once()
         np.testing.assert_array_equal(mock_validate_sample_sizes.call_args[0][0], labeled_mask)
+
+
+def test_preprocess_allows_constant_values_within_batch(engine):
+    y_true = np.array([1.0, 1.0, np.nan, np.nan])
+    y_proxy = np.array([2.0, 2.0, 2.0, 2.0])
+    y_true_labeled, y_proxy_labeled, y_proxy_unlabeled = engine.preprocess(y_true, y_proxy)
+    np.testing.assert_array_equal(y_true_labeled, np.array([1.0, 1.0]))
+    np.testing.assert_array_equal(y_proxy_labeled, np.array([2.0, 2.0]))
+    np.testing.assert_array_equal(y_proxy_unlabeled, np.array([2.0, 2.0]))
 
 
 def test_preprocess_valid_output(engine, y_true, y_proxy):

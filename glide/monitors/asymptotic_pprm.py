@@ -53,7 +53,7 @@ class AsymptoticPPRM(AsymptoticRM[PPIDataset]):
     2
     """
 
-    engine = PPIMeanEngine()
+    _engine = PPIMeanEngine()
 
     def detect(
         self,
@@ -140,11 +140,10 @@ class AsymptoticPPRM(AsymptoticRM[PPIDataset]):
             - If ``y_true``, ``y_proxy`` and ``batches`` have different lengths.
             - If ``batches`` contains NaN values (numeric dtype) or None values (non-numeric dtype).
             - If ``confidence_level`` is not in ``(0.5, 1)``.
-            - If any proxy value is NaN or all proxy values are identical.
-            - If labeled ``y_true`` values are constant.
+            - If any proxy value is NaN.
             - If batches are interleaved rather than grouped into contiguous blocks.
             - If any batch has fewer than 2 labeled or fewer than 2 unlabeled samples.
-            - If proxy values are constant across the prior batches (with ``power_tuning=True``).
+            - If proxy values are constant across a prefix set of batches (with ``power_tuning=True``).
             - If the accumulated variance of the batch estimates up to ``tightest_at_batch`` is zero.
         """
         batch_codes, batch_mean_estimates, confidence_sequence = self._detect(

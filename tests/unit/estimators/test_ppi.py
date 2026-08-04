@@ -1,9 +1,11 @@
 from typing import Tuple
+from unittest.mock import patch
 
 import numpy as np
 import pytest
 from numpy.typing import NDArray
 
+import glide.estimators.ppi as ppi_module
 from glide.confidence_intervals import CLTConfidenceInterval
 from glide.engines.classical import ClassicalMeanEngine
 from glide.engines.ppi import PPIMeanEngine
@@ -34,6 +36,20 @@ def test_init_sets_engines(estimator):
 
 
 # --- estimate ---
+
+
+def test_estimate_delegates_to_validation(estimator, y_arrays):
+    y_true, y_proxy = y_arrays
+    with (
+        patch.object(ppi_module, "_validate_y_proxy") as mock_validate_y_proxy,
+        patch.object(ppi_module, "_validate_y_true") as mock_validate_y_true,
+    ):
+        estimator.estimate(y_true, y_proxy)
+
+        mock_validate_y_proxy.assert_called_once()
+        np.testing.assert_array_equal(mock_validate_y_proxy.call_args[0][0], y_proxy)
+        mock_validate_y_true.assert_called_once()
+        np.testing.assert_array_equal(mock_validate_y_true.call_args[0][0], y_true)
 
 
 def test_estimate_is_valid_inference_result(estimator, y_arrays):

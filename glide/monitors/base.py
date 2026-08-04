@@ -11,11 +11,11 @@ from glide.monitors.core import _postprocess, _reorient, _unique_ordered_batches
 
 
 class AsymptoticRM(Generic[DatasetT]):
-    engine: MeanEstimationEngine[DatasetT]
+    _engine: MeanEstimationEngine[DatasetT]
 
     def _preprocess_subset(self, fields: List[NDArray], mask: NDArray) -> DatasetT:
         sliced_fields = [field[mask] for field in fields]
-        dataset = self.engine.preprocess(*sliced_fields)
+        dataset = self._engine.preprocess(*sliced_fields)
         return dataset
 
     def _detect(
@@ -52,15 +52,15 @@ class AsymptoticRM(Generic[DatasetT]):
             try:
                 batch_dataset = self._preprocess_subset(risk_fields, batch_codes == position)
             except ValueError as error:
-                raise ValueError(f"{error} (batch '{batch_identifiers[position]}')") from error
+                raise ValueError(f"{error} (batch '{batch_identifiers[position]}').") from error
 
             if position == 0 or not power_tuning:
-                tuning_parameter = self.engine.fit_tuning_parameter(batch_dataset, power_tuning=False)
+                tuning_parameter = self._engine.fit_tuning_parameter(batch_dataset, power_tuning=False)
             else:
                 prefix_dataset = self._preprocess_subset(risk_fields, batch_codes < position)
-                tuning_parameter = self.engine.fit_tuning_parameter(prefix_dataset, power_tuning=True)
+                tuning_parameter = self._engine.fit_tuning_parameter(prefix_dataset, power_tuning=True)
 
-            batch_mean_estimates[position], batch_std_estimates[position] = self.engine.compute_mean_and_std(
+            batch_mean_estimates[position], batch_std_estimates[position] = self._engine.compute_mean_and_std(
                 batch_dataset, tuning_parameter
             )
 

@@ -40,7 +40,7 @@ class AsymptoticClassicalRM(AsymptoticRM[NDArray]):
     3
     """
 
-    engine = ClassicalMeanEngine()
+    _engine = ClassicalMeanEngine()
 
     def detect(
         self,
@@ -123,17 +123,17 @@ class AsymptoticClassicalRM(AsymptoticRM[NDArray]):
             - If any batch has fewer than 2 labeled (non-NaN) samples.
             - If the accumulated variance of the batch estimates up to ``tightest_at_batch`` is zero.
         """
-        labeled_mask = ~np.isnan(y)
         batch_codes, batch_mean_estimates, confidence_sequence = self._detect(
-            fields=[y[labeled_mask]],
+            fields=[y],
             field_names=["y"],
-            batches=batches[labeled_mask],
+            batches=batches,
             higher_is_better=higher_is_better,
             confidence_level=confidence_level,
             tightest_at_batch=tightest_at_batch,
             power_tuning=False,
         )
-        batch_n = np.bincount(batch_codes, minlength=len(batch_mean_estimates))
+        labeled_mask = ~np.isnan(y)
+        batch_n = np.bincount(batch_codes[labeled_mask], minlength=len(batch_mean_estimates))
         result = ClassicalMeanMonitoringResult(
             metric_name=metric_name,
             monitor_name=self.__class__.__name__,

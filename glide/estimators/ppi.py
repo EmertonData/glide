@@ -3,6 +3,7 @@ from math import floor
 from numpy.typing import NDArray
 
 from glide.confidence_intervals import CLTConfidenceInterval
+from glide.core.validation import _validate_y_proxy, _validate_y_true
 from glide.engines.classical import ClassicalMeanEngine
 from glide.engines.ppi import PPIMeanEngine
 from glide.mean_inference_results import PredictionPoweredMeanInferenceResult
@@ -102,6 +103,8 @@ class PPIMeanEstimator:
             - If labeled ``y_true`` values are constant.
             - If there are fewer than 2 labeled or fewer than 2 unlabeled samples.
         """
+        _validate_y_proxy(y_proxy)
+        _validate_y_true(y_true)
         dataset = self._engine.preprocess(y_true, y_proxy)
         y_true_labeled, _, y_proxy_unlabeled = dataset
         n_labeled, n_unlabeled = len(y_true_labeled), len(y_proxy_unlabeled)
