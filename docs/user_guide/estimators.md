@@ -90,7 +90,7 @@ When the proxy is informative (high covariance with human labels), $\hat{\lambda
 
 ## Classical Mean
 
-The **classical mean** is the standard sample mean. It uses only the ground-truth labels $Y_j$ from the previous table, uses no proxy model, and serves as the baseline that PPI++ extends.
+The **classical mean** is the standard sample mean. It uses only the ground-truth labels $Y_j$ from the previous table and is the baseline extended by PPI++.
 
 ### Mean estimation
 
@@ -164,7 +164,7 @@ where $Y^k$ is the vector of ground-truths in stratum $k$ (i.e. available $Y_j$ 
 
 ## Stratified Classical Mean
 
-The **stratified classical mean** extends the classical mean to a dataset partitioned into strata. It uses only the ground-truth labels $Y_j$ from the previous table, grouped by stratum identifier $g_j$ and combined using the population weights $w_k$ defined above, without using a proxy model.
+The **stratified classical mean** extends the classical mean to a dataset partitioned into strata. It uses only the ground-truth labels $Y_j$ from the previous table, grouped by stratum identifier $g_j$ and combined using the population weights $w_k$ defined above.
 
 ### Mean estimation
 
@@ -258,7 +258,7 @@ When the proxy is informative, $\hat{\lambda}$ is large and the IPW-corrected la
 
 ## IPW Classical Mean (Horvitz–Thompson)
 
-The **IPW classical mean**, also known as the **Horvitz–Thompson estimator**, corrects for non-uniform selection of the labeled subset using known sampling probabilities $\pi_i$. It uses only the sampling probability $\pi_i$, sampling indicator $\xi_i$, and ground-truth label $Y_i$ from the previous table, and uses no proxy model.
+The **IPW classical mean**, also known as the **Horvitz–Thompson estimator**, corrects for non-uniform selection of the labeled subset using known sampling probabilities $\pi_i$. It uses only the sampling probability $\pi_i$, sampling indicator $\xi_i$, and ground-truth label $Y_i$ from the previous table.
 
 ### Mean estimation
 
@@ -270,7 +270,7 @@ $$\hat{\theta}_{\text{HT}} = \frac{1}{n}\sum_{i=1}^{n} \frac{\xi_i\,Y_i}{\pi_i}$
 
 The variance is estimated as:
 
-$$\hat{\sigma}^2_{\text{SE}} = \frac{\widehat{\text{Var}}\!\left(\xi_i\,Y_i / \pi_i\right)}{n}$$
+$$\hat{\sigma}^2_{\text{SE}} = \frac{\widehat{\text{Var}}\!\left(\xi\,Y / \pi\right)}{n}$$
 
 where $\widehat{\text{Var}}$ denotes the sample variance of the per-record IPW-corrected values. As in the classical mean, this yields a confidence interval at level $1-\alpha$ via the Central Limit Theorem. $\pi_i$ must be strictly positive for every labeled sample.
 
@@ -350,25 +350,25 @@ When every cluster is a singleton, $L^{\bullet} = n$ and $L^{\circ} = N$, and al
 
 ## Clustered Classical Mean
 
-The **clustered classical mean** extends the classical mean to a dataset partitioned into clusters, where observations within a cluster may be correlated but clusters are independent of one another. It uses only the ground-truth labels $Y_j$ from the previous table, aggregated by cluster identifier $c_i$, without using a proxy model.
+The **clustered classical mean** extends the classical mean to a dataset partitioned into clusters, where observations within a cluster may be correlated but clusters are independent of one another. It uses only the ground-truth labels $Y_j$ from the previous table, aggregated by cluster identifier $c_i$.
 
-For each cluster $l$, the cluster mean is:
+For each of the $L^{\bullet}$ labeled clusters $l$, the cluster mean is:
 
 $$\bar{Y}^{(l)} = \frac{1}{|C_l|}\sum_{i \in C_l} Y_i$$
 
 ### Mean estimation
 
-The clustered classical mean estimate is the average of the cluster means:
+The clustered classical mean estimate is the average of the labeled cluster means:
 
-$$\hat{\theta} = \frac{1}{L}\sum_{l=1}^{L} \bar{Y}^{(l)}$$
+$$\hat{\theta} = \frac{1}{L^{\bullet}}\sum_{l=1}^{L^{\bullet}} \bar{Y}^{(l)}$$
 
 ### Variance and confidence intervals
 
 The variance is estimated as:
 
-$$\hat{\sigma}^2 = \frac{\widehat{\text{Var}}\big(\bar{Y}^{(l)}\big)}{L}$$
+$$\hat{\sigma}^2 = \frac{\widehat{\text{Var}}\big(\bar{Y}^{(l)}\big)}{L^{\bullet}}$$
 
-where $\widehat{\text{Var}}$ denotes the sample variance computed across the $L$ cluster means. As in the Clustered Prediction-Powered Inference section above, using the mean of cluster means rather than a size-weighted mean is the minimum-variance choice when no independence is assumed within clusters. This yields a confidence interval at level $1-\alpha$ via the Central Limit Theorem applied to the cluster means.
+where $\widehat{\text{Var}}$ denotes the sample variance computed across the $L^{\bullet}$ labeled cluster means. As in the Clustered Prediction-Powered Inference section above, using the mean of cluster means rather than a size-weighted mean is the minimum-variance choice when no independence is assumed within clusters. This yields a confidence interval at level $1-\alpha$ via the Central Limit Theorem applied to the cluster means.
 
 The clustered classical mean is the special case of Clustered PPI++ at $\lambda = 0$.
 
