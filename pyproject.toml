@@ -56,7 +56,7 @@ dev = [
     "pytest>=9.1.1",
     "pytest-coverage>=0.0",
     "ruff>=0.16.0",
-    "ty>=0.0.64",
+    "ty>=0.0.65",
 ]
 doc = [
     "datasets>=5.0.1",
