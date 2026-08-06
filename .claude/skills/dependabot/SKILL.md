@@ -172,4 +172,4 @@ Print the PR number, package/action name, type (direct / indirect-python / githu
 - **Never merge.** Leave approvals and merging to the maintainer.
 - **Never force-push.**
 - **Preserve constraint operators.** Never change `>=` to `==` or vice versa.
-- **Oldest PR first.** Always select the PR with the lowest number.
+- **Oldest PR first.** Always select the PR with the lowest number, and process only that single PR per invocation — if others remain open, list them in the Step 4 summary but leave them for a separate invocation, even if the user asks to keep going.
