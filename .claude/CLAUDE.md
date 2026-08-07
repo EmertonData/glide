@@ -34,7 +34,9 @@ Do not run `make doc` (or `mkdocs build`) — it executes every tutorial noteboo
 
 The package has multiple layers:
 
-**`glide/estimators/`** — Public API. Statistical estimators (classical, PPI, ASI, IPW, PTD, and their stratified variants). Core computation modules (`ppi_core.py`, `ptd_core.py`, `stratified_core.py`) hold shared internals.
+**`glide/estimators/`** — Public API. Statistical estimators (classical, PPI, ASI, IPW, PTD, and their stratified variants). Core computation modules (`ptd_core.py`, `stratified_core.py`) hold shared internals for families not yet migrated to `glide/engines/`.
+
+**`glide/engines/`** — Internal. Per-unit computation (validate, transform, tune, then compute mean and std) shared between an estimator and its monitor counterpart for the same family. Each family implements the `MeanEstimationEngine` protocol (`base.py`); currently `classical.py` and `ppi.py` (plus `ppi_core.py`) are migrated. Estimator shells call the engine once over the whole dataset; monitor façades loop it once per batch.
 
 **`glide/confidence_intervals/`** — Confidence interval implementations depending on statistical methods.
 

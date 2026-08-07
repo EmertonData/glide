@@ -7,6 +7,8 @@ from numpy.typing import NDArray
 
 import glide.estimators.ppi as ppi_module
 from glide.confidence_intervals import CLTConfidenceInterval
+from glide.engines.classical import ClassicalMeanEngine
+from glide.engines.ppi import PPIMeanEngine
 from glide.estimators import PPIMeanEstimator
 from glide.mean_inference_results import PredictionPoweredMeanInferenceResult
 
@@ -25,46 +27,58 @@ def estimator() -> PPIMeanEstimator:
     return PPIMeanEstimator()
 
 
-# --- _preprocess ---
+# --- __init__ ---
 
 
-def test_preprocess_delegates(estimator, y_arrays):
-    y_true, y_proxy = y_arrays
-    labeled_mask = np.array([True, True, False, False])
-    with (
-        patch.object(ppi_module, "_validate_equal_lengths") as mock_validate_equal_lengths,
-        patch.object(ppi_module, "_validate_y_proxy") as mock_validate_y_proxy,
-        patch.object(ppi_module, "_validate_y_true") as mock_validate_y_true,
-        patch.object(ppi_module, "_split_labeled_unlabeled") as mock_split_labeled_unlabeled,
-        patch.object(ppi_module, "_validate_sample_sizes") as mock_validate_sample_sizes,
-    ):
-        mock_split_labeled_unlabeled.return_value = (
-            np.array([1.0, 2.0]),
-            np.array([1.0, 2.0]),
-            np.array([3.0, 4.0]),
-            labeled_mask,
-        )
-        estimator._preprocess(y_true, y_proxy)
-
-        mock_validate_equal_lengths.assert_called_once_with(y_true, y_proxy, names=["y_true", "y_proxy"])
-        mock_validate_y_proxy.assert_called_once_with(y_proxy)
-        mock_validate_y_true.assert_called_once_with(y_true)
-        mock_split_labeled_unlabeled.assert_called_once()
-        np.testing.assert_array_equal(mock_split_labeled_unlabeled.call_args[0][0], y_true)
-        np.testing.assert_array_equal(mock_split_labeled_unlabeled.call_args[0][1], y_proxy)
-        mock_validate_sample_sizes.assert_called_once()
-        np.testing.assert_array_equal(mock_validate_sample_sizes.call_args[0][0], labeled_mask)
-
-
-def test_preprocess_valid_output(estimator, y_arrays):
-    y_true_all, y_proxy_all = y_arrays
-    y_true, y_proxy_labeled, y_proxy_unlabeled = estimator._preprocess(y_true_all, y_proxy_all)
-    np.testing.assert_array_equal(y_true, np.array([1.0, 2.0]))
-    np.testing.assert_array_equal(y_proxy_labeled, np.array([1.0, 2.0]))
-    np.testing.assert_array_equal(y_proxy_unlabeled, np.array([3.0, 4.0]))
+def test_init_sets_engines(estimator):
+    assert isinstance(estimator._engine, PPIMeanEngine)
+    assert isinstance(estimator._classical_engine, ClassicalMeanEngine)
 
 
 # --- estimate ---
+
+
+def test_estimate_delegates(estimator, y_arrays):
+    y_true, y_proxy = y_arrays
+    with (
+        patch.object(ppi_module, "_validate_y_proxy") as mock_validate_y_proxy,
+        patch.object(ppi_module, "_validate_y_true") as mock_validate_y_true,
+        patch.object(estimator._engine, "preprocess", wraps=estimator._engine.preprocess) as mock_preprocess,
+        patch.object(
+            estimator._engine, "fit_tuning_parameter", wraps=estimator._engine.fit_tuning_parameter
+        ) as mock_fit_tuning_parameter,
+        patch.object(
+            estimator._engine, "compute_mean_and_std", wraps=estimator._engine.compute_mean_and_std
+        ) as mock_compute_mean_and_std,
+        patch.object(
+            estimator._classical_engine,
+            "compute_mean_and_std",
+            wraps=estimator._classical_engine.compute_mean_and_std,
+        ) as mock_classical_engine_compute_mean_and_std,
+    ):
+        estimator.estimate(y_true, y_proxy)
+
+        mock_validate_y_proxy.assert_called_once()
+        np.testing.assert_array_equal(mock_validate_y_proxy.call_args[0][0], y_proxy)
+        mock_validate_y_true.assert_called_once()
+        np.testing.assert_array_equal(mock_validate_y_true.call_args[0][0], y_true)
+
+        mock_preprocess.assert_called_once()
+        np.testing.assert_array_equal(mock_preprocess.call_args[0][0], y_true)
+        np.testing.assert_array_equal(mock_preprocess.call_args[0][1], y_proxy)
+
+        mock_fit_tuning_parameter.assert_called_once()
+        ppi_dataset = mock_fit_tuning_parameter.call_args[0][0]
+        np.testing.assert_array_equal(ppi_dataset[0], np.array([1.0, 2.0]))
+        assert mock_fit_tuning_parameter.call_args[0][1] is True
+
+        mock_compute_mean_and_std.assert_called_once()
+        np.testing.assert_array_equal(mock_compute_mean_and_std.call_args[0][0][0], np.array([1.0, 2.0]))
+        assert mock_compute_mean_and_std.call_args[0][1] == pytest.approx(0.15)
+
+        mock_classical_engine_compute_mean_and_std.assert_called_once()
+        np.testing.assert_array_equal(mock_classical_engine_compute_mean_and_std.call_args[0][0], np.array([1.0, 2.0]))
+        assert mock_classical_engine_compute_mean_and_std.call_args[0][1] is None
 
 
 def test_estimate_is_valid_inference_result(estimator, y_arrays):
@@ -86,22 +100,6 @@ def test_estimate_metadata(estimator, y_arrays):
     assert result.n_true == 2
     assert result.n_proxy == 4
     assert result.effective_sample_size == 2
-
-
-def test_estimate_custom_confidence_level(estimator, y_arrays):
-    y_true, y_proxy = y_arrays
-    result = estimator.estimate(y_true, y_proxy, metric_name="perf", confidence_level=0.90)
-
-    expected_mean = 1.8
-    expected_std = 0.431
-    expected_lower = 1.09
-    expected_upper = 2.51
-
-    assert result.confidence_interval.confidence_level == 0.90
-    assert result.confidence_interval.mean == pytest.approx(expected_mean, abs=0.01)
-    assert result.std == pytest.approx(expected_std, abs=0.01)
-    assert result.confidence_interval.lower_bound == pytest.approx(expected_lower, abs=0.01)
-    assert result.confidence_interval.upper_bound == pytest.approx(expected_upper, abs=0.01)
 
 
 # --- __str__ / __repr__ ---

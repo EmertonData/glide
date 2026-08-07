@@ -26,18 +26,20 @@ def _get_non_zero_mask(values: NDArray, warning_message: Optional[str] = None) -
     return non_zero_mask
 
 
-def _validate_y_proxy(y_proxy: NDArray, stratum_id: Optional[Hashable] = None) -> None:
+def _validate_y_proxy(
+    y_proxy: NDArray, identifier: Optional[Hashable] = None, identifier_kind: str = "stratum"
+) -> None:
     _validate_has_no_nan(y_proxy, "y_proxy")
-    stratum_part = f" in stratum '{stratum_id}'" if stratum_id is not None else ""
-    _validate_non_constant(y_proxy, f"'y_proxy' values are constant{stratum_part}.")
+    identifier_part = f" in {identifier_kind} '{identifier}'" if identifier is not None else ""
+    _validate_non_constant(y_proxy, f"'y_proxy' values are constant{identifier_part}.")
 
 
-def _validate_y_true(y_true: NDArray, stratum_id: Optional[Hashable] = None) -> None:
+def _validate_y_true(y_true: NDArray, identifier: Optional[Hashable] = None, identifier_kind: str = "stratum") -> None:
     labeled = y_true[~np.isnan(y_true)]
     if len(labeled) == 0:
         raise ValueError("'y_true' contains only NaN values.")
-    stratum_part = f" in stratum '{stratum_id}'" if stratum_id is not None else ""
-    _validate_non_constant(labeled, f"'y_true' labeled values are constant{stratum_part}.")
+    identifier_part = f" in {identifier_kind} '{identifier}'" if identifier is not None else ""
+    _validate_non_constant(labeled, f"'y_true' labeled values are constant{identifier_part}.")
 
 
 def _validate_label_prob_consistency(labeled_mask: NDArray, pi: NDArray) -> None:
@@ -136,24 +138,27 @@ def _validate_is_integer(param: int, name: str) -> None:
 
 def _validate_sample_sizes(
     labeled_mask: NDArray,
-    stratum_id: Optional[Hashable] = None,
+    identifier: Optional[Hashable] = None,
+    identifier_kind: str = "stratum",
 ) -> None:
     n_labeled = labeled_mask.sum()
     n_unlabeled = (~labeled_mask).sum()
     if min(n_labeled, n_unlabeled) <= 1:
-        stratum_part = f"stratum '{stratum_id}'" if stratum_id is not None else "dataset"
-        raise ValueError(f"Too few labeled or unlabeled samples in {stratum_part}.")
+        identifier_part = f"{identifier_kind} '{identifier}'" if identifier is not None else "dataset"
+        raise ValueError(f"Too few labeled or unlabeled samples in {identifier_part}.")
 
 
-def _validate_y_proxies(y_proxies: NDArray, stratum_id: Optional[Hashable] = None) -> None:
+def _validate_y_proxies(
+    y_proxies: NDArray, identifier: Optional[Hashable] = None, identifier_kind: str = "stratum"
+) -> None:
     if y_proxies.ndim != 2:
         raise ValueError(f"'y_proxies' must be a 2D array; got shape {y_proxies.shape!r}.")
     _validate_has_no_nan(y_proxies, "y_proxies")
-    stratum_part = f" in stratum '{stratum_id}'" if stratum_id is not None else ""
+    identifier_part = f" in {identifier_kind} '{identifier}'" if identifier is not None else ""
     for m in range(y_proxies.shape[1]):
         _validate_non_constant(
             y_proxies[:, m],
-            f"'y_proxies' column {m} values are constant{stratum_part}.",
+            f"'y_proxies' column {m} values are constant{identifier_part}.",
         )
 
 
@@ -163,12 +168,14 @@ def _validate_binary_or_nan(array: NDArray, name: str) -> None:
         raise ValueError(f"'{name}' must only contain 0, 1, and np.nan values.")
 
 
-def _validate_min_samples(values: NDArray, name: str, stratum_id: Optional[Hashable] = None) -> None:
+def _validate_min_samples(
+    values: NDArray, name: str, identifier: Optional[Hashable] = None, identifier_kind: str = "stratum"
+) -> None:
     if len(values) < 2:
-        if stratum_id is not None:
+        if identifier is not None:
             raise ValueError(
-                f"'{name}' must have at least 2 non-NaN values per stratum; "
-                f"got {len(values)} in stratum '{stratum_id}'."
+                f"'{name}' must have at least 2 non-NaN values per {identifier_kind}; "
+                f"got {len(values)} in {identifier_kind} '{identifier}'."
             )
         raise ValueError(f"'{name}' must have at least 2 non-NaN values; got {len(values)}.")
 

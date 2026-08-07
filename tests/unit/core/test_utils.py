@@ -1,6 +1,6 @@
 import numpy as np
 
-from glide.estimators.core import _split_labeled_unlabeled
+from glide.core.utils import _split_labeled_unlabeled
 
 
 def test_split_labeled_unlabeled():

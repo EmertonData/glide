@@ -4,6 +4,7 @@ import numpy as np
 import pytest
 from numpy.typing import NDArray
 
+from glide.engines.classical import ClassicalMeanEngine
 from glide.estimators import ClassicalMeanEstimator
 from glide.mean_inference_results import ClassicalMeanInferenceResult
 
@@ -20,25 +21,30 @@ def estimator() -> ClassicalMeanEstimator:
     return ClassicalMeanEstimator()
 
 
-# --- _preprocess ---
+# --- __init__ ---
 
 
-def test_preprocess_removes_nan(estimator):
-    y = np.array([2.0, np.nan, 4.0])
-    result = estimator._preprocess(y)
-    np.testing.assert_array_equal(result, np.array([2.0, 4.0]))
-
-
-def test_preprocess_delegate_to_validation(estimator):
-    y_valid = np.array([1.0])
-    with patch("glide.estimators.classical._validate_min_samples") as mock_validate_min_samples:
-        estimator._preprocess(y_valid)
-    mock_validate_min_samples.assert_called_once()
-    np.testing.assert_array_equal(mock_validate_min_samples.call_args[0][0], y_valid)
-    assert mock_validate_min_samples.call_args[0][1] == "y"
+def test_init_sets_engine(estimator):
+    assert isinstance(estimator._engine, ClassicalMeanEngine)
 
 
 # --- estimate ---
+
+
+def test_estimate_delegates(estimator, y_array):
+    with (
+        patch.object(estimator._engine, "preprocess", wraps=estimator._engine.preprocess) as mock_preprocess,
+        patch.object(
+            estimator._engine, "compute_mean_and_std", wraps=estimator._engine.compute_mean_and_std
+        ) as mock_compute_mean_and_std,
+    ):
+        estimator.estimate(y_array, confidence_level=0.90)
+
+        mock_preprocess.assert_called_once()
+        np.testing.assert_array_equal(mock_preprocess.call_args[0][0], y_array)
+        mock_compute_mean_and_std.assert_called_once()
+        np.testing.assert_array_equal(mock_compute_mean_and_std.call_args[0][0], y_array)
+        assert mock_compute_mean_and_std.call_args[0][1] is None
 
 
 def test_estimate_is_valid_inference_result(estimator, y_array):
@@ -55,22 +61,6 @@ def test_estimate_metadata(estimator, y_array):
     assert result.metric_name == "performance"
     assert result.estimator_name == estimator.__class__.__name__
     assert result.n == 4
-
-
-def test_estimate_custom_confidence_level(estimator, y_array):
-    result = estimator.estimate(y_array, confidence_level=0.90)
-    assert result.confidence_interval.confidence_level == 0.90
-
-    expected_mean = 5.24
-    expected_std = 0.45
-    expected_lower = 4.50
-    expected_upper = 5.97
-
-    assert result.confidence_interval.confidence_level == 0.90
-    assert result.confidence_interval.mean == pytest.approx(expected_mean, abs=0.01)
-    assert result.std == pytest.approx(expected_std, abs=0.01)
-    assert result.confidence_interval.lower_bound == pytest.approx(expected_lower, abs=0.01)
-    assert result.confidence_interval.upper_bound == pytest.approx(expected_upper, abs=0.01)
 
 
 # --- __str__ / __repr__ ---

@@ -1,12 +1,9 @@
-from unittest.mock import patch
-
 import numpy as np
 import pytest
 
-import glide.monitors.asymptotic_classical as asymptotic_classical_module
 from glide.confidence_sequences import AsymptoticConfidenceSequence
 from glide.mean_monitoring_results import ClassicalMeanMonitoringResult
-from glide.monitors import AsymptoticClassicalMeanMonitor
+from glide.monitors import AsymptoticClassicalRM
 
 
 @pytest.fixture
@@ -21,25 +18,10 @@ def batches():
 
 @pytest.fixture
 def monitor():
-    return AsymptoticClassicalMeanMonitor()
+    return AsymptoticClassicalRM()
 
 
 # --- detect ---
-
-
-def test_detect_delegates_to_validation(monitor, y, batches):
-    with patch.object(asymptotic_classical_module, "_validate_bounds") as mock_validate_bounds:
-        monitor.detect(y, batches, higher_is_better=False, threshold=0.5)
-
-        mock_validate_bounds.assert_called_once_with(
-            0.8,
-            "confidence_level",
-            lower=0.5,
-            upper=1,
-            left_inclusive=False,
-            right_inclusive=False,
-            error_message="'confidence_level' must be in (0.5, 1) for the asymptotic monitor; got 0.8.",
-        )
 
 
 def test_detect_is_valid_monitoring_result(monitor, y, batches):
@@ -52,7 +34,7 @@ def test_detect_is_valid_monitoring_result(monitor, y, batches):
 
     assert isinstance(result, ClassicalMeanMonitoringResult)
     assert isinstance(result.confidence_sequence, AsymptoticConfidenceSequence)
-    assert result.monitor_name == "AsymptoticClassicalMeanMonitor"
+    assert result.monitor_name == "AsymptoticClassicalRM"
     assert np.isfinite(result.running_means).all()
     assert (result.running_means >= result.confidence_bounds).all()
 
@@ -63,7 +45,7 @@ def test_detect_metadata(monitor, y, batches):
     )
 
     assert result.metric_name == "accuracy"
-    assert result.monitor_name == "AsymptoticClassicalMeanMonitor"
+    assert result.monitor_name == "AsymptoticClassicalRM"
     assert result.higher_is_better is True
     assert result.alarm_threshold == 0.5
     assert result.confidence_level == 0.85

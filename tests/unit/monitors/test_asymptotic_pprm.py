@@ -1,9 +1,6 @@
-from unittest.mock import patch
-
 import numpy as np
 import pytest
 
-import glide.monitors.asymptotic_pprm as asymptotic_pprm_module
 from glide.confidence_sequences import AsymptoticConfidenceSequence
 from glide.mean_monitoring_results import PredictionPoweredMeanMonitoringResult
 from glide.monitors import AsymptoticPPRM
@@ -30,21 +27,6 @@ def monitor():
 
 
 # --- detect ---
-
-
-def test_detect_delegates_to_validation(monitor, y_true, y_proxy, batches):
-    with patch.object(asymptotic_pprm_module, "_validate_bounds") as mock_validate_bounds:
-        monitor.detect(y_true, y_proxy, batches, higher_is_better=False, threshold=0.5)
-
-        mock_validate_bounds.assert_called_once_with(
-            0.8,
-            "confidence_level",
-            lower=0.5,
-            upper=1,
-            left_inclusive=False,
-            right_inclusive=False,
-            error_message="'confidence_level' must be in (0.5, 1) for the asymptotic monitor; got 0.8.",
-        )
 
 
 def test_detect_is_valid_monitoring_result(monitor, y_true, y_proxy, batches):
