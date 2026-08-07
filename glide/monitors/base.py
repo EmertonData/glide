@@ -3,7 +3,6 @@ from typing import Generic, List, Tuple
 import numpy as np
 from numpy.typing import NDArray
 
-from glide.confidence_sequences import AsymptoticConfidenceSequence
 from glide.confidence_sequences.asymptotic import _compute_asymptotic_bounds
 from glide.engines.base import DatasetT, MeanEstimationEngine, TuningParameterT
 from glide.monitors.core import _postprocess, _preprocess
@@ -26,7 +25,7 @@ class AsymptoticRM(Generic[DatasetT, TuningParameterT]):
         confidence_level: float,
         tightest_at_batch: int,
         power_tuning: bool,
-    ) -> Tuple[NDArray, NDArray, AsymptoticConfidenceSequence]:
+    ) -> Tuple[NDArray, NDArray, NDArray, NDArray]:
         risk_fields, batch_identifiers, batch_codes = _preprocess(
             fields, field_names, batches, higher_is_better, confidence_level
         )
@@ -56,7 +55,4 @@ class AsymptoticRM(Generic[DatasetT, TuningParameterT]):
         running_means, confidence_bounds, batch_mean_estimates = _postprocess(
             risk_running_means, risk_lower_bounds, batch_risk_mean_estimates, higher_is_better
         )
-        confidence_sequence = AsymptoticConfidenceSequence(
-            running_mean_estimates=running_means, confidence_bounds=confidence_bounds
-        )
-        return batch_codes, batch_mean_estimates, confidence_sequence
+        return batch_codes, batch_mean_estimates, running_means, confidence_bounds

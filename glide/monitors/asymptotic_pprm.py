@@ -1,6 +1,7 @@
 import numpy as np
 from numpy.typing import NDArray
 
+from glide.confidence_sequences import AsymptoticConfidenceSequence
 from glide.engines.ppi import PPIDataset, PPIMeanEngine
 from glide.mean_monitoring_results import PredictionPoweredMeanMonitoringResult
 from glide.monitors.base import AsymptoticRM
@@ -147,7 +148,7 @@ class AsymptoticPPRM(AsymptoticRM[PPIDataset, float]):
             - If ``tightest_at_batch`` is not a positive integer.
             - If the accumulated variance of the batch estimates up to ``tightest_at_batch`` is zero.
         """
-        batch_codes, batch_mean_estimates, confidence_sequence = self._detect(
+        batch_codes, batch_mean_estimates, running_means, confidence_bounds = self._detect(
             fields=[y_true, y_proxy],
             field_names=["y_true", "y_proxy"],
             batches=batches,
@@ -156,9 +157,12 @@ class AsymptoticPPRM(AsymptoticRM[PPIDataset, float]):
             tightest_at_batch=tightest_at_batch,
             power_tuning=power_tuning,
         )
+        confidence_sequence = AsymptoticConfidenceSequence(
+            running_mean_estimates=running_means, confidence_bounds=confidence_bounds
+        )
         labeled_mask = ~np.isnan(y_true)
-        batch_n_true = np.bincount(batch_codes[labeled_mask], minlength=len(batch_mean_estimates))
-        batch_n_proxy = np.bincount(batch_codes, minlength=len(batch_mean_estimates))
+        batch_n_true = np.bincount(batch_codes[labeled_mask])
+        batch_n_proxy = np.bincount(batch_codes)
         result = PredictionPoweredMeanMonitoringResult(
             metric_name=metric_name,
             monitor_name=self.__class__.__name__,

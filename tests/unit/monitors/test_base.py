@@ -1,7 +1,6 @@
 import numpy as np
 import pytest
 
-from glide.confidence_sequences import AsymptoticConfidenceSequence
 from glide.monitors import AsymptoticPPRM
 
 
@@ -46,7 +45,7 @@ def test_detect_known_output(monitor, y_true, y_proxy, batches):
     expected_running_mean_estimates = np.array([0.52, 0.57])
     expected_confidence_bounds = np.array([0.449, 0.529])
 
-    batch_codes, batch_mean_estimates, confidence_sequence = monitor._detect(
+    batch_codes, batch_mean_estimates, running_means, confidence_bounds = monitor._detect(
         fields=[y_true, y_proxy],
         field_names=["y_true", "y_proxy"],
         batches=batches,
@@ -58,9 +57,8 @@ def test_detect_known_output(monitor, y_true, y_proxy, batches):
 
     np.testing.assert_array_equal(batch_codes, batches)
     np.testing.assert_allclose(batch_mean_estimates, expected_batch_mean_estimates)
-    assert isinstance(confidence_sequence, AsymptoticConfidenceSequence)
-    np.testing.assert_allclose(confidence_sequence.running_mean_estimates, expected_running_mean_estimates)
-    np.testing.assert_allclose(confidence_sequence.confidence_bounds, expected_confidence_bounds, atol=5e-4)
+    np.testing.assert_allclose(running_means, expected_running_mean_estimates)
+    np.testing.assert_allclose(confidence_bounds, expected_confidence_bounds, atol=5e-4)
 
 
 def test_detect_known_output_power_tuning_false(monitor, y_true, y_proxy, batches):
@@ -68,7 +66,7 @@ def test_detect_known_output_power_tuning_false(monitor, y_true, y_proxy, batche
     expected_running_mean_estimates = np.array([0.52, 0.58])
     expected_confidence_bounds = np.array([0.447, 0.531])
 
-    _, batch_mean_estimates, confidence_sequence = monitor._detect(
+    _, batch_mean_estimates, running_means, confidence_bounds = monitor._detect(
         fields=[y_true, y_proxy],
         field_names=["y_true", "y_proxy"],
         batches=batches,
@@ -79,8 +77,8 @@ def test_detect_known_output_power_tuning_false(monitor, y_true, y_proxy, batche
     )
 
     np.testing.assert_allclose(batch_mean_estimates, expected_batch_mean_estimates)
-    np.testing.assert_allclose(confidence_sequence.running_mean_estimates, expected_running_mean_estimates)
-    np.testing.assert_allclose(confidence_sequence.confidence_bounds, expected_confidence_bounds, atol=5e-4)
+    np.testing.assert_allclose(running_means, expected_running_mean_estimates)
+    np.testing.assert_allclose(confidence_bounds, expected_confidence_bounds, atol=5e-4)
 
 
 def test_detect_raises_with_batch_identity_on_too_few_samples(monitor, y_true, y_proxy):

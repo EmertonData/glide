@@ -1,6 +1,7 @@
 import numpy as np
 from numpy.typing import NDArray
 
+from glide.confidence_sequences import AsymptoticConfidenceSequence
 from glide.engines.classical import ClassicalMeanEngine
 from glide.mean_monitoring_results import ClassicalMeanMonitoringResult
 from glide.monitors.base import AsymptoticRM
@@ -124,7 +125,7 @@ class AsymptoticClassicalRM(AsymptoticRM[NDArray, None]):
             - If ``tightest_at_batch`` is not a positive integer.
             - If the accumulated variance of the batch estimates up to ``tightest_at_batch`` is zero.
         """
-        batch_codes, batch_mean_estimates, confidence_sequence = self._detect(
+        batch_codes, batch_mean_estimates, running_means, confidence_bounds = self._detect(
             fields=[y],
             field_names=["y"],
             batches=batches,
@@ -133,8 +134,11 @@ class AsymptoticClassicalRM(AsymptoticRM[NDArray, None]):
             tightest_at_batch=tightest_at_batch,
             power_tuning=False,
         )
+        confidence_sequence = AsymptoticConfidenceSequence(
+            running_mean_estimates=running_means, confidence_bounds=confidence_bounds
+        )
         labeled_mask = ~np.isnan(y)
-        batch_n = np.bincount(batch_codes[labeled_mask], minlength=len(batch_mean_estimates))
+        batch_n = np.bincount(batch_codes[labeled_mask])
         result = ClassicalMeanMonitoringResult(
             metric_name=metric_name,
             monitor_name=self.__class__.__name__,
