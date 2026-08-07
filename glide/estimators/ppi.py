@@ -107,11 +107,9 @@ class PPIMeanEstimator:
         """
         _validate_y_proxy(y_proxy)
         _validate_y_true(y_true)
-        dataset = self._engine.preprocess(y_true, y_proxy)
-        y_true_labeled, _, y_proxy_unlabeled = dataset
-        n_labeled, n_unlabeled = len(y_true_labeled), len(y_proxy_unlabeled)
-        tuning_parameter = self._engine.fit_tuning_parameter(dataset, power_tuning)
-        mean, std = self._engine.compute_mean_and_std(dataset, tuning_parameter)
+        ppi_dataset = self._engine.preprocess(y_true, y_proxy)
+        tuning_parameter = self._engine.fit_tuning_parameter(ppi_dataset, power_tuning)
+        mean, std = self._engine.compute_mean_and_std(ppi_dataset, tuning_parameter)
         confidence_interval = CLTConfidenceInterval(
             mean=mean,
             std=std,
@@ -119,6 +117,10 @@ class PPIMeanEstimator:
         )
         classical_dataset = self._classical_engine.preprocess(y_true)
         _, classical_std = self._classical_engine.compute_mean_and_std(classical_dataset, None)
+
+        y_true_labeled, _, y_proxy_unlabeled = ppi_dataset
+        n_labeled, n_unlabeled = len(y_true_labeled), len(y_proxy_unlabeled)
+
         effective_sample_size = floor(n_labeled * classical_std**2 / std**2)
         result = PredictionPoweredMeanInferenceResult(
             confidence_interval=confidence_interval,

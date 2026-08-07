@@ -6,7 +6,7 @@ from glide.mean_monitoring_results import ClassicalMeanMonitoringResult
 from glide.monitors.base import AsymptoticRM
 
 
-class AsymptoticClassicalRM(AsymptoticRM[NDArray]):
+class AsymptoticClassicalRM(AsymptoticRM[NDArray, None]):
     """Anytime-valid label-only drift monitor leveraging each batch estimate's
     standard deviation.
 

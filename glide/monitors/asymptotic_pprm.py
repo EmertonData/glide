@@ -6,7 +6,7 @@ from glide.mean_monitoring_results import PredictionPoweredMeanMonitoringResult
 from glide.monitors.base import AsymptoticRM
 
 
-class AsymptoticPPRM(AsymptoticRM[PPIDataset]):
+class AsymptoticPPRM(AsymptoticRM[PPIDataset, float]):
     """Anytime-valid drift monitor leveraging the variance of each batch estimate.
 
     It computes a per-batch Prediction-Powered Inference (PPI) estimate: a small set

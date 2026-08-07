@@ -5,16 +5,16 @@ from numpy.typing import NDArray
 
 from glide.confidence_sequences import AsymptoticConfidenceSequence
 from glide.confidence_sequences.asymptotic import _compute_asymptotic_bounds
-from glide.engines.base import DatasetT, MeanEstimationEngine
+from glide.engines.base import DatasetT, MeanEstimationEngine, TuningParameterT
 from glide.monitors.core import _postprocess, _preprocess
 
 
-class AsymptoticRM(Generic[DatasetT]):
-    _engine: MeanEstimationEngine[DatasetT]
+class AsymptoticRM(Generic[DatasetT, TuningParameterT]):
+    _engine: MeanEstimationEngine[DatasetT, TuningParameterT]
 
     def _preprocess_subset(self, fields: List[NDArray], mask: NDArray) -> DatasetT:
-        sliced_fields = [field[mask] for field in fields]
-        dataset = self._engine.preprocess(*sliced_fields)
+        field_subsets = [field[mask] for field in fields]
+        dataset = self._engine.preprocess(*field_subsets)
         return dataset
 
     def _detect(
