@@ -115,8 +115,7 @@ class PPIMeanEstimator:
             std=std,
             confidence_level=confidence_level,
         )
-        classical_dataset = self._classical_engine.preprocess(y_true)
-        _, classical_std = self._classical_engine.compute_mean_and_std(classical_dataset, None)
+        _, classical_std = self._classical_engine.compute_mean_and_std(ppi_dataset[0], None)
 
         y_true_labeled, _, y_proxy_unlabeled = ppi_dataset
         n_labeled, n_unlabeled = len(y_true_labeled), len(y_proxy_unlabeled)

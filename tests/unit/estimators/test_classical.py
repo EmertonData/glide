@@ -1,3 +1,5 @@
+from unittest.mock import patch
+
 import numpy as np
 import pytest
 from numpy.typing import NDArray
@@ -29,6 +31,22 @@ def test_init_sets_engine(estimator):
 # --- estimate ---
 
 
+def test_estimate_delegates(estimator, y_array):
+    with (
+        patch.object(estimator._engine, "preprocess", wraps=estimator._engine.preprocess) as mock_preprocess,
+        patch.object(
+            estimator._engine, "compute_mean_and_std", wraps=estimator._engine.compute_mean_and_std
+        ) as mock_compute_mean_and_std,
+    ):
+        estimator.estimate(y_array, confidence_level=0.90)
+
+        mock_preprocess.assert_called_once()
+        np.testing.assert_array_equal(mock_preprocess.call_args[0][0], y_array)
+        mock_compute_mean_and_std.assert_called_once()
+        np.testing.assert_array_equal(mock_compute_mean_and_std.call_args[0][0], y_array)
+        assert mock_compute_mean_and_std.call_args[0][1] is None
+
+
 def test_estimate_is_valid_inference_result(estimator, y_array):
     result = estimator.estimate(y_array)
     assert isinstance(result, ClassicalMeanInferenceResult)
@@ -43,22 +61,6 @@ def test_estimate_metadata(estimator, y_array):
     assert result.metric_name == "performance"
     assert result.estimator_name == estimator.__class__.__name__
     assert result.n == 4
-
-
-def test_estimate_custom_confidence_level(estimator, y_array):
-    result = estimator.estimate(y_array, confidence_level=0.90)
-    assert result.confidence_interval.confidence_level == 0.90
-
-    expected_mean = 5.24
-    expected_std = 0.45
-    expected_lower = 4.50
-    expected_upper = 5.97
-
-    assert result.confidence_interval.confidence_level == 0.90
-    assert result.confidence_interval.mean == pytest.approx(expected_mean, abs=0.01)
-    assert result.std == pytest.approx(expected_std, abs=0.01)
-    assert result.confidence_interval.lower_bound == pytest.approx(expected_lower, abs=0.01)
-    assert result.confidence_interval.upper_bound == pytest.approx(expected_upper, abs=0.01)
 
 
 # --- __str__ / __repr__ ---
