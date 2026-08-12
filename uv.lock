@@ -244,7 +244,7 @@ wheels = [
 
 [[package]]
 name = "bump-my-version"
-version = "1.5.0"
+version = "1.5.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "click" },
@@ -257,9 +257,9 @@ dependencies = [
     { name = "tomlkit" },
     { name = "wcmatch" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/03/6d/6cfdbd1fd86ac555863afae19e90acf05bfa008d0ea5dd62980ebb795487/bump_my_version-1.5.0.tar.gz", hash = "sha256:701ea1acef2c945e5e0d418ccdd57669cf3169c807cd8683c62086e9db9949b3", size = 1128049, upload-time = "2026-07-27T18:17:29.472Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/23/09/5b09ac74962eca809cbf7010a08ea6ad405852bdd53489209a9f473d775c/bump_my_version-1.5.1.tar.gz", hash = "sha256:5079e443ab8c9a9903f140b427ff9f6fe8dd54013a55a4cf48b89326f3a71c07", size = 1132060, upload-time = "2026-08-06T14:26:38.9Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/55/7f/127ff18c7b5844d2fe2b8496ed05b3871eac337be4eb284d2eb4df2ff57e/bump_my_version-1.5.0-py3-none-any.whl", hash = "sha256:6545a1e06a54b7038a153d41260a273914a235533d50eba825380a5b182ac258", size = 64986, upload-time = "2026-07-27T18:17:27.697Z" },
+    { url = "https://files.pythonhosted.org/packages/b3/0b/5885530f79d4400368b9d4dcb9b39274c0d52e633f7871e7fc6feceea1e3/bump_my_version-1.5.1-py3-none-any.whl", hash = "sha256:df3e2989d0d7fe704718feb24a5880f089b6b6369e427a4445b89c3adebfcff1", size = 65090, upload-time = "2026-08-06T14:26:37.083Z" },
 ]
 
 [[package]]
@@ -276,7 +276,7 @@ name = "cffi"
 version = "2.1.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "pycparser", marker = "implementation_name != 'PyPy'" },
+    { name = "pycparser" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/57/5f/ff100cae70ebe9d8df1c01a00e510e45d9adb5c1fdda84791b199141de97/cffi-2.1.0.tar.gz", hash = "sha256:efc1cdd798b1aaf39b4610bba7aad28c9bea9b910f25c784ccf9ec1fa719d1f9", size = 531036, upload-time = "2026-07-06T21:34:30.382Z" }
 wheels = [
@@ -1984,7 +1984,7 @@ name = "pexpect"
 version = "4.9.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "ptyprocess", marker = "sys_platform != 'emscripten' and sys_platform != 'win32'" },
+    { name = "ptyprocess" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/42/92/cc564bf6381ff43ce1f4d06852fc19a2f11d180f23dc32d9588bee2f149d/pexpect-4.9.0.tar.gz", hash = "sha256:ee7d41123f3c9911050ea2c2dac107568dc43b2d3b0c7557a33212c398ead30f", size = 166450, upload-time = "2023-11-25T09:07:26.339Z" }
 wheels = [
