@@ -63,6 +63,22 @@ def test_estimate_metadata(estimator, y_array):
     assert result.n == 4
 
 
+def test_estimate_custom_confidence_level(estimator, y_array):
+    result = estimator.estimate(y_array, confidence_level=0.90)
+    assert result.confidence_interval.confidence_level == 0.90
+
+    expected_mean = 5.24
+    expected_std = 0.45
+    expected_lower = 4.50
+    expected_upper = 5.97
+
+    assert result.confidence_interval.confidence_level == 0.90
+    assert result.confidence_interval.mean == pytest.approx(expected_mean, abs=0.01)
+    assert result.std == pytest.approx(expected_std, abs=0.01)
+    assert result.confidence_interval.lower_bound == pytest.approx(expected_lower, abs=0.01)
+    assert result.confidence_interval.upper_bound == pytest.approx(expected_upper, abs=0.01)
+
+
 # --- __str__ / __repr__ ---
 
 

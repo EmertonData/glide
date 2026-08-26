@@ -41,8 +41,7 @@ def test_init_sets_engines(estimator):
 def test_estimate_delegates(estimator, y_arrays):
     y_true, y_proxy = y_arrays
     with (
-        patch.object(ppi_module, "_validate_y_proxy") as mock_validate_y_proxy,
-        patch.object(ppi_module, "_validate_y_true") as mock_validate_y_true,
+        patch.object(ppi_module, "_validate_non_constant") as mock_validate_non_constant,
         patch.object(estimator._engine, "preprocess", wraps=estimator._engine.preprocess) as mock_preprocess,
         patch.object(
             estimator._engine, "fit_tuning_parameter", wraps=estimator._engine.fit_tuning_parameter
@@ -58,14 +57,13 @@ def test_estimate_delegates(estimator, y_arrays):
     ):
         estimator.estimate(y_true, y_proxy)
 
-        mock_validate_y_proxy.assert_called_once()
-        np.testing.assert_array_equal(mock_validate_y_proxy.call_args[0][0], y_proxy)
-        mock_validate_y_true.assert_called_once()
-        np.testing.assert_array_equal(mock_validate_y_true.call_args[0][0], y_true)
-
         mock_preprocess.assert_called_once()
         np.testing.assert_array_equal(mock_preprocess.call_args[0][0], y_true)
         np.testing.assert_array_equal(mock_preprocess.call_args[0][1], y_proxy)
+
+        mock_validate_non_constant.assert_called_once()
+        np.testing.assert_array_equal(mock_validate_non_constant.call_args[0][0], np.array([1.0, 2.0]))
+        assert mock_validate_non_constant.call_args[0][1] == "'y_true' labeled values are constant."
 
         mock_fit_tuning_parameter.assert_called_once()
         ppi_dataset = mock_fit_tuning_parameter.call_args[0][0]
@@ -100,6 +98,22 @@ def test_estimate_metadata(estimator, y_arrays):
     assert result.n_true == 2
     assert result.n_proxy == 4
     assert result.effective_sample_size == 2
+
+
+def test_estimate_custom_confidence_level(estimator, y_arrays):
+    y_true, y_proxy = y_arrays
+    result = estimator.estimate(y_true, y_proxy, metric_name="perf", confidence_level=0.90)
+
+    expected_mean = 1.8
+    expected_std = 0.431
+    expected_lower = 1.09
+    expected_upper = 2.51
+
+    assert result.confidence_interval.confidence_level == 0.90
+    assert result.confidence_interval.mean == pytest.approx(expected_mean, abs=0.01)
+    assert result.std == pytest.approx(expected_std, abs=0.01)
+    assert result.confidence_interval.lower_bound == pytest.approx(expected_lower, abs=0.01)
+    assert result.confidence_interval.upper_bound == pytest.approx(expected_upper, abs=0.01)
 
 
 # --- __str__ / __repr__ ---
