@@ -1,7 +1,9 @@
-from typing import Tuple, Union, overload
+from typing import List, Tuple, Union, overload
 
 import numpy as np
 from numpy.typing import NDArray
+
+from glide.core.validation import _validate_bounds, _validate_equal_lengths, _validate_has_no_nan, _validate_non_empty
 
 
 @overload
@@ -28,6 +30,31 @@ def _unique_ordered_batches(batches: NDArray) -> Tuple[NDArray, NDArray]:
         )
     batch_codes = np.cumsum(block_starts) - 1
     return batch_identifiers, batch_codes
+
+
+def _preprocess(
+    fields: List[NDArray],
+    field_names: List[str],
+    batches: NDArray,
+    higher_is_better: bool,
+    confidence_level: float,
+) -> Tuple[List[NDArray], NDArray, NDArray]:
+    _validate_bounds(
+        confidence_level,
+        "confidence_level",
+        lower=0.5,
+        upper=1,
+        left_inclusive=False,
+        right_inclusive=False,
+        error_message=f"'confidence_level' must be in (0.5, 1) for the asymptotic monitor; got {confidence_level!r}.",
+    )
+    _validate_non_empty(batches, "batches")
+    _validate_equal_lengths(*fields, batches, names=[*field_names, "batches"])
+    _validate_has_no_nan(batches, "batches")
+
+    risk_fields = [_reorient(field, higher_is_better) for field in fields]
+    batch_identifiers, batch_codes = _unique_ordered_batches(batches)
+    return risk_fields, batch_identifiers, batch_codes
 
 
 def _postprocess(

@@ -1,7 +1,7 @@
-from glide.monitors.asymptotic_classical import AsymptoticClassicalMeanMonitor
+from glide.monitors.asymptotic_classical import AsymptoticClassicalRM
 from glide.monitors.asymptotic_pprm import AsymptoticPPRM
 
 __all__ = [
-    "AsymptoticClassicalMeanMonitor",
+    "AsymptoticClassicalRM",
     "AsymptoticPPRM",
 ]

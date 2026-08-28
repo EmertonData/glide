@@ -127,6 +127,10 @@ glide/
 │   ├── asymptotic_pprm.py
 │   ├── ...
 │
+├── engines/                # Internal — per-unit body optionally shared between an estimator and its monitor
+│   ├── ppi.py
+│   ├── ...
+│
 ├── samplers/               # Public API — sampling strategies
 │   ├── active.py
 │   ├── ...
@@ -160,7 +164,7 @@ glide/
     └── export.py
 ```
 
-**How the pieces fit together.** Estimators accept raw NumPy arrays and return a `MeanInferenceResult` subclass: prediction-powered estimators return a `PredictionPoweredMeanInferenceResult`, classical ones a `ClassicalMeanInferenceResult`. Every result embeds a `ConfidenceInterval` (e.g. `CLTConfidenceInterval`). Samplers produce the labeled arrays that estimators consume. Monitors follow the same shape for batched, accumulating data: they return a `MeanMonitoringResult` subclass embedding a `ConfidenceSequence` (e.g. `AsymptoticConfidenceSequence`). The `io` module serialises result objects.
+**How the pieces fit together.** Estimators accept raw NumPy arrays and return a `MeanInferenceResult` subclass: prediction-powered estimators return a `PredictionPoweredMeanInferenceResult`, classical ones a `ClassicalMeanInferenceResult`. Every result embeds a `ConfidenceInterval` (e.g. `CLTConfidenceInterval`). Samplers produce the labeled arrays that estimators consume. Monitors follow the same shape for batched, accumulating data: they return a `MeanMonitoringResult` subclass embedding a `ConfidenceSequence` (e.g. `AsymptoticConfidenceSequence`). The `io` module serialises result objects. When a family has both an estimator and a monitor, they can share their per-unit body (validate, transform, tune, then compute mean and std) through a common `Engine` in `glide/engines/`, so the two don't duplicate the same math.
 
 ---
 
@@ -192,6 +196,8 @@ New estimators and samplers should be backed by a scientific publication. Please
 6. **Write a numpy-style docstring** that includes the reference paper, parameter descriptions, and a small `Examples` section with a minimalistic runnable doctest. See existing estimators for inspiration.
 7. **Add an example script** in `docs/examples/plot_<name>.py` demonstrating the estimator on some synthetic data.
 8. **Update `CHANGELOG.md`** under the `[Next release]` section.
+
+If this family is likely to get a monitor counterpart too, consider factoring the per-unit computation (validate, transform, tune, then compute mean and std) into a shared `Engine` in `glide/engines/` (see `ppi.py` or `classical.py` for examples), so the estimator and monitor don't duplicate the same math.
 
 **Adding a new sampler — step by step**
 
@@ -226,6 +232,8 @@ New estimators and samplers should be backed by a scientific publication. Please
 5. **Write functional tests** in `tests/functional/monitors/test_<name>.py`. If applicable, test expected behaviors and properties of your monitor in specific situations (e.g., the monitor's per-batch estimates match the corresponding one-shot estimator), see existing files in `tests/functional/monitors` for examples.
 6. **Write a numpy-style docstring** that includes the reference paper, parameter descriptions, and a small `Examples` section with a minimalistic runnable doctest. See existing monitors for inspiration.
 7. **Update `CHANGELOG.md`** under the `[Next release]` section.
+
+If an estimator already exists for this family, check whether its per-unit computation lives in a shared `Engine` in `glide/engines/` — reusing it saves you from re-deriving the same math for the monitor.
 
 ### 3. Documentation
 
