@@ -1,14 +1,13 @@
+import numpy as np
 from numpy.typing import NDArray
 
 from glide.confidence_sequences import AsymptoticConfidenceSequence
-from glide.confidence_sequences.asymptotic import _compute_asymptotic_bounds
-from glide.core.validation import _validate_bounds
+from glide.engines.classical import ClassicalMeanEngine
 from glide.mean_monitoring_results import ClassicalMeanMonitoringResult
-from glide.monitors.classical_core import _compute_batch_estimates, _preprocess
-from glide.monitors.core import _postprocess
+from glide.monitors.base import AsymptoticRM
 
 
-class AsymptoticClassicalMeanMonitor:
+class AsymptoticClassicalRM(AsymptoticRM[NDArray, None]):
     """Anytime-valid label-only drift monitor leveraging each batch estimate's
     standard deviation.
 
@@ -29,18 +28,20 @@ class AsymptoticClassicalMeanMonitor:
     Examples
     --------
     >>> import numpy as np
-    >>> from glide.monitors import AsymptoticClassicalMeanMonitor
+    >>> from glide.monitors import AsymptoticClassicalRM
     >>> pre_drift_batch = np.array([0.0, 0.2, np.nan, np.nan])
     >>> post_drift_batch = np.array([0.8, 1.0, np.nan, np.nan])
     >>> y = np.hstack([pre_drift_batch, np.tile(post_drift_batch, 5)])
     >>> batches = np.repeat(np.arange(6), 4)
-    >>> monitor = AsymptoticClassicalMeanMonitor()
+    >>> monitor = AsymptoticClassicalRM()
     >>> result = monitor.detect(y, batches, higher_is_better=False, threshold=0.5)
     >>> result.drift_detected
     True
     >>> result.first_alarm_index
     3
     """
+
+    _engine = ClassicalMeanEngine()
 
     def detect(
         self,
@@ -115,48 +116,36 @@ class AsymptoticClassicalMeanMonitor:
         Raises
         ------
         ValueError
-            - If ``y`` is empty.
+            - If ``batches`` is empty.
             - If ``y`` and ``batches`` have different lengths.
             - If ``batches`` contains NaN values (numeric dtype) or None values (non-numeric dtype).
             - If ``confidence_level`` is not in ``(0.5, 1)``.
             - If batches are interleaved rather than grouped into contiguous blocks.
             - If any batch has fewer than 2 labeled (non-NaN) samples.
+            - If ``tightest_at_batch`` is not a positive integer.
             - If the accumulated variance of the batch estimates up to ``tightest_at_batch`` is zero.
         """
-        _validate_bounds(
-            confidence_level,
-            "confidence_level",
-            lower=0.5,
-            upper=1,
-            left_inclusive=False,
-            right_inclusive=False,
-            error_message=(
-                f"'confidence_level' must be in (0.5, 1) for the asymptotic monitor; got {confidence_level!r}."
-            ),
-        )
-        risk_y, _, batch_codes, batch_n = _preprocess(y, batches, higher_is_better, threshold, confidence_level)
-        batch_mean_estimates, batch_std_estimates = _compute_batch_estimates(risk_y, batch_codes)
-        miscoverage = 1.0 - confidence_level
-        risk_running_means, risk_lower_bounds = _compute_asymptotic_bounds(
-            batch_mean_estimates, batch_std_estimates, miscoverage, tightest_at_batch
-        )
-        running_means, confidence_bounds, metric_batch_estimates = _postprocess(
-            risk_running_means,
-            risk_lower_bounds,
-            batch_mean_estimates,
-            higher_is_better,
+        batch_codes, batch_mean_estimates, running_means, confidence_bounds = self._detect(
+            fields=[y],
+            field_names=["y"],
+            batches=batches,
+            higher_is_better=higher_is_better,
+            confidence_level=confidence_level,
+            tightest_at_batch=tightest_at_batch,
+            power_tuning=False,
         )
         confidence_sequence = AsymptoticConfidenceSequence(
-            running_mean_estimates=running_means,
-            confidence_bounds=confidence_bounds,
+            running_mean_estimates=running_means, confidence_bounds=confidence_bounds
         )
+        labeled_mask = ~np.isnan(y)
+        batch_n = np.bincount(batch_codes[labeled_mask])
         result = ClassicalMeanMonitoringResult(
             metric_name=metric_name,
             monitor_name=self.__class__.__name__,
             higher_is_better=higher_is_better,
             alarm_threshold=threshold,
             confidence_level=confidence_level,
-            batch_mean_estimates=metric_batch_estimates,
+            batch_mean_estimates=batch_mean_estimates,
             confidence_sequence=confidence_sequence,
             batch_n=batch_n,
         )
