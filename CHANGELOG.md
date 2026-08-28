@@ -14,6 +14,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - RAG answer faithfulness (MEMERAG) case study in the documentation.
 
 ### 🔄 Changed
+- Renamed `AsymptoticClassicalMeanMonitor` to `AsymptoticClassicalRM`.
 - Removed the `metric_lower_bound` and `metric_upper_bound` parameters from `AsymptoticPPRM.detect` and `AsymptoticClassicalMeanMonitor.detect`.
 - Removed `EmpiricalPPRM`, `EmpiricalClassicalMeanMonitor`, and `glide.confidence_sequences.EmpiricalBernsteinConfidenceSequence`.
 - Renamed `n_total` to `n_samples` in `glide.simulators` dataset generators.

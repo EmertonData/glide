@@ -4,11 +4,7 @@ import numpy as np
 from numpy.typing import NDArray
 
 from glide.confidence_intervals import CLTConfidenceInterval
-from glide.estimators.ppi_core import (
-    _compute_mean_estimate,
-    _compute_std_estimate,
-    _compute_tuning_parameter,
-)
+from glide.engines.ppi_core import _compute_mean_estimate, _compute_std_estimate, _compute_tuning_parameter
 from glide.estimators.stratified_classical import StratifiedClassicalMeanEstimator
 from glide.estimators.stratified_core import _preprocess
 from glide.mean_inference_results import PredictionPoweredMeanInferenceResult

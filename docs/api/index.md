@@ -55,7 +55,7 @@
 
 | Class | Description |
 |-------|-------------|
-| [`AsymptoticClassicalMeanMonitor`](monitors.md#glide.monitors.asymptotic_classical.AsymptoticClassicalMeanMonitor) | Anytime-valid drift monitor over batched labels via an asymptotic confidence sequence, without proxy predictions |
+| [`AsymptoticClassicalRM`](monitors.md#glide.monitors.asymptotic_classical.AsymptoticClassicalRM) | Anytime-valid drift monitor over batched labels via an asymptotic confidence sequence, without proxy predictions |
 
 ### Prediction-Powered
 

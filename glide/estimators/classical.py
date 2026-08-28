@@ -1,8 +1,7 @@
-import numpy as np
 from numpy.typing import NDArray
 
 from glide.confidence_intervals import CLTConfidenceInterval
-from glide.core.validation import _validate_min_samples
+from glide.engines.classical import ClassicalMeanEngine
 from glide.mean_inference_results import ClassicalMeanInferenceResult
 
 
@@ -28,11 +27,8 @@ class ClassicalMeanEstimator:
     n: 4
     """
 
-    def _preprocess(self, y: NDArray) -> NDArray:
-        not_nan_mask = ~np.isnan(y)
-        y_valid = y[not_nan_mask]
-        _validate_min_samples(y_valid, "y")
-        return y_valid
+    def __init__(self) -> None:
+        self._engine = ClassicalMeanEngine()
 
     def estimate(
         self,
@@ -62,12 +58,12 @@ class ClassicalMeanEstimator:
         Raises
         ------
         ValueError
-            If ``y`` contains fewer than 2 non-NaN values.
+            - If ``y`` contains fewer than 2 non-NaN values.
+            - If ``confidence_level`` is not in ``(0, 1)``.
         """
-        y_valid = self._preprocess(y)
-        n_samples = len(y_valid)
-        mean = np.mean(y_valid)
-        std = np.std(y_valid, ddof=1) / np.sqrt(n_samples)
+        dataset = self._engine.preprocess(y)
+        n_samples = len(dataset)
+        mean, std = self._engine.compute_mean_and_std(dataset, None)
         ci = CLTConfidenceInterval(
             mean=mean,
             std=std,

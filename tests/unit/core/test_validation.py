@@ -366,14 +366,14 @@ def test_validate_sample_sizes_valid():
     _validate_sample_sizes(np.array([True, True, False, False]))
 
 
-def test_validate_sample_sizes_no_stratum_id(too_few_labeled_mask):
+def test_validate_sample_sizes_no_identifier(too_few_labeled_mask):
     with pytest.raises(ValueError, match="Too few labeled or unlabeled samples in dataset"):
         _validate_sample_sizes(too_few_labeled_mask)
 
 
-def test_validate_sample_sizes_with_stratum_id(too_few_labeled_mask):
+def test_validate_sample_sizes_with_identifier(too_few_labeled_mask):
     with pytest.raises(ValueError, match="Too few labeled or unlabeled samples in stratum 'A'"):
-        _validate_sample_sizes(too_few_labeled_mask, stratum_id="A")
+        _validate_sample_sizes(too_few_labeled_mask, identifier="A")
 
 
 # --- _validate_binary_or_nan ---
@@ -403,7 +403,7 @@ def test_validate_min_samples_too_few():
 
 def test_validate_min_samples_too_few_with_stratum():
     with pytest.raises(ValueError, match="per stratum; got 1 in stratum 'A'"):
-        _validate_min_samples(np.array([1.0]), "y", stratum_id="A")
+        _validate_min_samples(np.array([1.0]), "y", identifier="A")
 
 
 # --- _validate_unique_clusters ---
