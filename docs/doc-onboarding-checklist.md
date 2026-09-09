@@ -78,7 +78,7 @@ In summary, ASI is PPI where each sample also carries a sampling probability, an
 Samplers decide *which* samples get sent for human annotation, and are what actually produces the $\pi_i$ that ASI (and other IPW-based estimators) consume.
 
 - [ ] Read the ASI scientific validation notebook (in the Deep Dive section) to see a sampler and an estimator used together end to end, and how the resulting estimates are checked across many random seeds.
-- [ ] Read the introduction and the "Stratified Sampler" and "Active Sampler" sections of the Samplers user guide, including the intro table of $\pi_i$/$\xi_i$.
+- [ ] Read the introduction and the "Stratified Sampler" and "Active Sampler" sections of the Samplers user guide, including the intro table of $\pi_i$ / $\xi_i$.
 - [ ] Identify which of these produces an informative, heterogeneous per-sample probability meant to be consumed by IPW-based estimators (`ActiveSampler`), versus one whose sampling design is handled structurally rather than through per-unit weighting (`StratifiedSampler`).
 - [ ] Skim `glide/samplers/active.py` (the `ActiveSampler` class) and `glide/samplers/stratified.py` (the `StratifiedSampler` class).
 
