@@ -101,7 +101,7 @@ If you use Claude Code, you don't have to do any of this by hand: it has a `crea
 
 **5. Code review**
 
-Review happens in four stages: self-review, an automated Claude review, a peer review, and a final tech-lead approval.
+Review happens in four stages: self-review, an automated Claude review, a review by a GLIDE maintainer, and a final approval.
 
 - **Self-review.** Read your own diff directly on the GitHub PR page before requesting anyone's review:
   - GitHub highlights changes line by line.
@@ -117,16 +117,9 @@ Review happens in four stages: self-review, an automated Claude review, a peer r
     /code-review
     ```
 
-  Take the feedback seriously: Claude is good at catching bugs, edge cases, and API inconsistencies. You don't have to apply every suggestion, but every ignored piece of feedback should be a conscious decision. Without access to Claude Code, skip this stage: the peer and tech-lead review below still cover the same ground by hand.
-- **Peer review.** Ask a peer developer to review the PR for logic, design, and quality (internal team members: tag them by name on the dedicated Teams channel). While waiting for feedback:
-  - Switch to an independent ticket rather than blocking.
-  - Come back to the PR as soon as feedback arrives, so PRs stay short-lived.
-
-  Address every comment: when a reviewer opens a thread, answer it, and only that reviewer closes it once satisfied.
-- **Tech lead approval.** Once you and your peer reviewer agree, send the PR to the tech lead for final approval (internal team members: tag them by name on the dedicated Teams channel too).
-  - Work an independent ticket while waiting.
-  - Return to the PR as soon as you have their feedback.
-  - Apply their feedback, or discuss it, before merging.
+  Take the feedback seriously: Claude is good at catching bugs, edge cases, and API inconsistencies. You don't have to apply every suggestion, but every ignored piece of feedback should be a conscious decision. Without access to Claude Code, skip this stage: the review and final-approval stages below still cover the same ground by hand.
+- **Review.** A GLIDE maintainer reviews the PR for logic, design, and quality (internal team members: this is a peer developer; tag them by name on the dedicated Teams channel). Address every comment: when a reviewer opens a thread, answer it, and only that reviewer closes it once satisfied.
+- **Final approval.** Once that review is satisfied, a second maintainer gives final sign-off before merging (internal team members: this is the tech lead; tag them by name on the dedicated Teams channel too). Apply their feedback, or discuss it, before merging.
 
 **6. Squash and merge**
 
