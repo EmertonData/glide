@@ -118,8 +118,8 @@ Review happens in four stages: self-review, an automated Claude review, a review
     ```
 
   Take the feedback seriously: Claude is good at catching bugs, edge cases, and API inconsistencies. You don't have to apply every suggestion, but every ignored piece of feedback should be a conscious decision. Without access to Claude Code, skip this stage: the review and final-approval stages below still cover the same ground by hand.
-- **Review.** A GLIDE maintainer reviews the PR for logic, design, and quality (internal team members: this is a peer developer; tag them by name on the dedicated Teams channel). Address every comment: when a reviewer opens a thread, answer it, and only that reviewer closes it once satisfied.
-- **Final approval.** Once that review is satisfied, a second maintainer gives final sign-off before merging (internal team members: this is the tech lead; tag them by name on the dedicated Teams channel too). Apply their feedback, or discuss it, before merging.
+- **Review.** The GLIDE team reviews the PR for logic, design, and quality. Address every comment: when a reviewer opens a thread, answer it, and only that reviewer closes it once satisfied.
+- **Final approval.** Once that review is satisfied, the GLIDE team gives final sign-off before merging.
 
 **6. Squash and merge**
 
