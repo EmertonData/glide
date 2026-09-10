@@ -7,6 +7,8 @@ from numpy.typing import NDArray
 
 import glide.estimators.multi_ppi as multi_ppi_module
 from glide.confidence_intervals import CLTConfidenceInterval
+from glide.engines.classical import ClassicalMeanEngine
+from glide.engines.multi_ppi import MultiPPIMeanEngine
 from glide.estimators import MultiPPIMeanEstimator
 from glide.mean_inference_results import PredictionPoweredMeanInferenceResult
 
@@ -25,46 +27,55 @@ def estimator() -> MultiPPIMeanEstimator:
     return MultiPPIMeanEstimator()
 
 
-# --- _preprocess ---
+# --- __init__ ---
 
 
-def test_preprocess_delegates(estimator, y_arrays):
-    y_true, y_proxies = y_arrays
-    labeled_mask = np.array([True, True, False, False])
-    with (
-        patch.object(multi_ppi_module, "_validate_equal_lengths") as mock_validate_equal_lengths,
-        patch.object(multi_ppi_module, "_validate_y_proxies") as mock_validate_y_proxies,
-        patch.object(multi_ppi_module, "_validate_y_true") as mock_validate_y_true,
-        patch.object(multi_ppi_module, "_split_labeled_unlabeled") as mock_split_labeled_unlabeled,
-        patch.object(multi_ppi_module, "_validate_sample_sizes") as mock_validate_sample_sizes,
-    ):
-        mock_split_labeled_unlabeled.return_value = (
-            np.array([1.0, 2.0]),
-            np.array([[1.0, 0.0], [2.0, 2.0]]),
-            np.array([[3.0, 1.0], [4.0, 3.0]]),
-            labeled_mask,
-        )
-        estimator._preprocess(y_true, y_proxies)
-
-        mock_validate_equal_lengths.assert_called_once_with(y_true, y_proxies, names=["y_true", "y_proxies"])
-        mock_validate_y_proxies.assert_called_once_with(y_proxies)
-        mock_validate_y_true.assert_called_once_with(y_true)
-        mock_split_labeled_unlabeled.assert_called_once()
-        np.testing.assert_array_equal(mock_split_labeled_unlabeled.call_args[0][0], y_true)
-        np.testing.assert_array_equal(mock_split_labeled_unlabeled.call_args[0][1], y_proxies)
-        mock_validate_sample_sizes.assert_called_once()
-        np.testing.assert_array_equal(mock_validate_sample_sizes.call_args[0][0], labeled_mask)
-
-
-def test_preprocess_valid_output(estimator, y_arrays):
-    y_true_all, y_proxies_all = y_arrays
-    y_true, y_proxies_labeled, y_proxies_unlabeled = estimator._preprocess(y_true_all, y_proxies_all)
-    np.testing.assert_array_equal(y_true, np.array([1.0, 2.0]))
-    np.testing.assert_array_equal(y_proxies_labeled, np.array([[1.0, 0.0], [2.0, 2.0]]))
-    np.testing.assert_array_equal(y_proxies_unlabeled, np.array([[3.0, 1.0], [4.0, 3.0]]))
+def test_init_sets_engines(estimator):
+    assert isinstance(estimator._engine, MultiPPIMeanEngine)
+    assert isinstance(estimator._classical_engine, ClassicalMeanEngine)
 
 
 # --- estimate ---
+
+
+def test_estimate_delegates(estimator, y_arrays):
+    y_true, y_proxies = y_arrays
+    with (
+        patch.object(multi_ppi_module, "_validate_non_constant") as mock_validate_non_constant,
+        patch.object(estimator._engine, "preprocess", wraps=estimator._engine.preprocess) as mock_preprocess,
+        patch.object(
+            estimator._engine, "fit_tuning_parameter", wraps=estimator._engine.fit_tuning_parameter
+        ) as mock_fit_tuning_parameter,
+        patch.object(
+            estimator._engine, "compute_mean_and_std", wraps=estimator._engine.compute_mean_and_std
+        ) as mock_compute_mean_and_std,
+        patch.object(
+            estimator._classical_engine,
+            "compute_mean_and_std",
+            wraps=estimator._classical_engine.compute_mean_and_std,
+        ) as mock_classical_engine_compute_mean_and_std,
+    ):
+        estimator.estimate(y_true, y_proxies)
+
+        mock_preprocess.assert_called_once()
+        np.testing.assert_array_equal(mock_preprocess.call_args[0][0], y_true)
+        np.testing.assert_array_equal(mock_preprocess.call_args[0][1], y_proxies)
+
+        mock_validate_non_constant.assert_called_once()
+        np.testing.assert_array_equal(mock_validate_non_constant.call_args[0][0], np.array([1.0, 2.0]))
+        assert mock_validate_non_constant.call_args[0][1] == "'y_true' labeled values are constant."
+
+        mock_fit_tuning_parameter.assert_called_once()
+        multi_ppi_dataset = mock_fit_tuning_parameter.call_args[0][0]
+        np.testing.assert_array_equal(multi_ppi_dataset[0], np.array([1.0, 2.0]))
+        assert mock_fit_tuning_parameter.call_args[0][1] is True
+
+        mock_compute_mean_and_std.assert_called_once()
+        np.testing.assert_array_equal(mock_compute_mean_and_std.call_args[0][0][0], np.array([1.0, 2.0]))
+
+        mock_classical_engine_compute_mean_and_std.assert_called_once()
+        np.testing.assert_array_equal(mock_classical_engine_compute_mean_and_std.call_args[0][0], np.array([1.0, 2.0]))
+        assert mock_classical_engine_compute_mean_and_std.call_args[0][1] is None
 
 
 def test_estimate_returns_valid_inference_result(estimator, y_arrays):
