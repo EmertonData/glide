@@ -9,6 +9,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 ## [Next release]
 
 ### ✨ Added
+- `generate_stratified_multi_binary_dataset`: generalizes `generate_stratified_binary_dataset` to `M >= 1` proxies per stratum.
 - User guide sections for the classical baseline estimators: `ClassicalMeanEstimator`, `StratifiedClassicalMeanEstimator`, `IPWClassicalMeanEstimator`, and `ClusteredClassicalMeanEstimator`.
 - Interactive PPI simulator on the landing page.
 - RAG answer faithfulness (MEMERAG) case study in the documentation.
