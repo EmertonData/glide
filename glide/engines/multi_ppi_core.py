@@ -1,6 +1,8 @@
 import numpy as np
 from numpy.typing import NDArray
 
+from glide.core.validation import _validate_non_constant
+
 
 def _compute_tuning_parameter(
     y_true: NDArray,
@@ -15,6 +17,8 @@ def _compute_tuning_parameter(
     n_labeled = len(y_true)
     n_unlabeled = len(y_proxies_unlabeled)
     y_proxies_all = np.vstack([y_proxies_labeled, y_proxies_unlabeled])
+    for m in range(n_proxies):
+        _validate_non_constant(y_proxies_all[:, m], f"'y_proxies' column {m} values are constant.")
     proxy_cov_matrix = np.atleast_2d(np.cov(y_proxies_all, rowvar=False, ddof=1))
     centered_proxies_labeled = y_proxies_labeled - np.mean(y_proxies_labeled, axis=0)
     centered_true = y_true - np.mean(y_true)

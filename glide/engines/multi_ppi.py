@@ -11,8 +11,8 @@ MultiPPIDataset = Tuple[NDArray, NDArray, NDArray]
 
 class MultiPPIMeanEngine:
     def preprocess(self, y_true: NDArray, y_proxies: NDArray) -> MultiPPIDataset:
-        _validate_equal_lengths(y_true, y_proxies, names=["y_true", "y_proxies"])
         _validate_is_2d(y_proxies, "y_proxies")
+        _validate_equal_lengths(y_true, y_proxies, names=["y_true", "y_proxies"])
         _validate_has_no_nan(y_proxies, "y_proxies")
         y_true_labeled, y_proxies_labeled, y_proxies_unlabeled, labeled_mask = _split_labeled_unlabeled(
             y_true, y_proxies

@@ -97,8 +97,10 @@ class MultiPPIMeanEstimator:
             - If any value in ``y_proxies`` is NaN.
             - If ``y_true`` labeled values are constant.
             - If there are fewer than 2 labeled or fewer than 2 unlabeled samples.
-            - If the proxy covariance matrix is singular (e.g. a column of ``y_proxies`` is
-              constant, or two or more columns are perfectly correlated), with ``power_tuning=True``.
+            - If any column of ``y_proxies`` is constant, with ``power_tuning=True``.
+            - If the proxy covariance matrix is singular (e.g. two or more columns are
+              perfectly correlated), with ``power_tuning=True``.
+            - If ``confidence_level`` is not in ``(0, 1)``.
         """
         multi_ppi_dataset = self._engine.preprocess(y_true, y_proxies)
         y_true_labeled, _, y_proxies_unlabeled = multi_ppi_dataset
