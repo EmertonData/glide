@@ -101,7 +101,25 @@ If you use Claude Code, you don't have to do any of this by hand: it has a `crea
 
 **5. Code review**
 
-A maintainer reviews the PR for logic, design, and quality. Address every comment, either with a follow-up commit or a reply. The reviewer resolves each conversation once it is addressed.
+Review happens in four stages: self-review, an automated Claude review, a review by a GLIDE maintainer, and a final approval.
+
+- **Self-review.** Read your own diff directly on the GitHub PR page before requesting anyone's review:
+  - GitHub highlights changes line by line.
+  - The built documentation is visible from the PR.
+  - This is the moment to catch typos, dead code, wrongly committed files, naming inconsistencies, or obvious omissions.
+
+  Only request a review once you are satisfied with what you see.
+- **Claude review.** If you have access to Claude Code, ask it to review the PR:
+  - Install the [GitHub CLI](https://cli.github.com/) and run `gh auth login`.
+  - Install the `code-review` plugin with `/plugin`.
+  - Run:
+    ```
+    /code-review
+    ```
+
+  Take the feedback seriously: Claude is good at catching bugs, edge cases, and API inconsistencies. You don't have to apply every suggestion, but every ignored piece of feedback should be a conscious decision. Without access to Claude Code, skip this stage: the review and final-approval stages below still cover the same ground by hand.
+- **Review.** The GLIDE team reviews the PR for logic, design, and quality. Address every comment: when a reviewer opens a thread, answer it, and only that reviewer closes it once satisfied.
+- **Final approval.** Once that review is satisfied, the GLIDE team gives final sign-off before merging.
 
 **6. Squash and merge**
 
