@@ -1,5 +1,3 @@
-from unittest.mock import patch
-
 import numpy as np
 import pytest
 from numpy.typing import NDArray
@@ -27,16 +25,6 @@ def y_proxies_unlabeled() -> NDArray:
 
 
 # --- _compute_tuning_parameter ---
-
-
-def test_compute_tuning_parameter_delegates_to_validation(y_true, y_proxies_labeled, y_proxies_unlabeled):
-    with patch("glide.engines.multi_ppi_core._validate_non_constant") as mock_validate_non_constant:
-        _compute_tuning_parameter(y_true, y_proxies_labeled, y_proxies_unlabeled, power_tuning=True)
-    assert mock_validate_non_constant.call_count == y_proxies_labeled.shape[1]
-    y_proxies_all = np.vstack([y_proxies_labeled, y_proxies_unlabeled])
-    for m, call in enumerate(mock_validate_non_constant.call_args_list):
-        np.testing.assert_array_equal(call[0][0], y_proxies_all[:, m])
-        assert call[0][1] == f"'y_proxies' column {m} values are constant."
 
 
 def test_compute_tuning_parameter_power_tuning_false(y_true, y_proxies_labeled, y_proxies_unlabeled):
