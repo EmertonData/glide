@@ -19,6 +19,11 @@ def _validate_has_no_nan(array: NDArray, name: str) -> None:
             raise ValueError(f"'{name}' contains None values.")
 
 
+def _validate_is_2d(array: NDArray, name: str) -> None:
+    if array.ndim != 2:
+        raise ValueError(f"'{name}' must be a 2D array; got shape {array.shape!r}.")
+
+
 def _get_non_zero_mask(values: NDArray, warning_message: Optional[str] = None) -> NDArray:
     non_zero_mask = values > 0
     if warning_message is not None and np.any(~non_zero_mask):
@@ -151,8 +156,7 @@ def _validate_sample_sizes(
 def _validate_y_proxies(
     y_proxies: NDArray, identifier: Optional[Hashable] = None, identifier_kind: str = "stratum"
 ) -> None:
-    if y_proxies.ndim != 2:
-        raise ValueError(f"'y_proxies' must be a 2D array; got shape {y_proxies.shape!r}.")
+    _validate_is_2d(y_proxies, "y_proxies")
     _validate_has_no_nan(y_proxies, "y_proxies")
     identifier_part = f" in {identifier_kind} '{identifier}'" if identifier is not None else ""
     for m in range(y_proxies.shape[1]):

@@ -22,6 +22,11 @@ def engine():
     return PPIMeanEngine()
 
 
+@pytest.fixture
+def dataset(engine, y_true, y_proxy):
+    return engine.preprocess(y_true, y_proxy)
+
+
 # --- preprocess ---
 
 
@@ -65,14 +70,12 @@ def test_preprocess_valid_output(engine, y_true, y_proxy):
 # --- fit_tuning_parameter ---
 
 
-def test_fit_tuning_parameter_power_tuning_true(engine, y_true, y_proxy):
-    dataset = engine.preprocess(y_true, y_proxy)
+def test_fit_tuning_parameter_power_tuning_true(engine, dataset):
     tuning_parameter = engine.fit_tuning_parameter(dataset, power_tuning=True)
     assert tuning_parameter == pytest.approx(0.15)
 
 
-def test_fit_tuning_parameter_power_tuning_false(engine, y_true, y_proxy):
-    dataset = engine.preprocess(y_true, y_proxy)
+def test_fit_tuning_parameter_power_tuning_false(engine, dataset):
     tuning_parameter = engine.fit_tuning_parameter(dataset, power_tuning=False)
     assert tuning_parameter == pytest.approx(1.0)
 
@@ -80,8 +83,7 @@ def test_fit_tuning_parameter_power_tuning_false(engine, y_true, y_proxy):
 # --- compute_mean_and_std ---
 
 
-def test_compute_mean_and_std(engine, y_true, y_proxy):
-    dataset = engine.preprocess(y_true, y_proxy)
+def test_compute_mean_and_std(engine, dataset):
     mean, std = engine.compute_mean_and_std(dataset, tuning_parameter=0.15)
     assert mean == pytest.approx(1.8)
     assert std == pytest.approx(0.4316, abs=1e-4)

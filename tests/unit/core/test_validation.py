@@ -11,6 +11,7 @@ from glide.core.validation import (
     _validate_bounds,
     _validate_equal_lengths,
     _validate_has_no_nan,
+    _validate_is_2d,
     _validate_label_prob_consistency,
     _validate_literal,
     _validate_min_samples,
@@ -79,6 +80,18 @@ def test_validate_has_no_nan_raises_none_in_non_numeric():
         _validate_has_no_nan(np.array(["a", None], dtype=object), "x")
 
 
+# --- _validate_is_2d ---
+
+
+def test_validate_is_2d_valid():
+    _validate_is_2d(np.array([[1.0, 2.0], [3.0, 4.0]]), "x")
+
+
+def test_validate_is_2d_raises():
+    with pytest.raises(ValueError, match="'x' must be a 2D array"):
+        _validate_is_2d(np.array([1.0, 2.0]), "x")
+
+
 # --- _get_non_zero_mask ---
 
 
@@ -102,18 +115,17 @@ def test_validate_y_proxies_valid():
     _validate_y_proxies(np.array([[1.0, 2.0], [3.0, 4.0]]))
 
 
-def test_validate_y_proxies_1d_raises():
-    with pytest.raises(ValueError, match="'y_proxies' must be a 2D array"):
-        _validate_y_proxies(np.array([1.0, 2.0]))
-
-
 def test_validate_y_proxies_delegates_to_validation():
     with (
+        patch("glide.core.validation._validate_is_2d") as mock_validate_is_2d,
         patch("glide.core.validation._validate_has_no_nan") as mock_validate_has_no_nan,
         patch("glide.core.validation._validate_non_constant") as mock_validate_non_constant,
     ):
         arr = np.array([[1.0, 2.0], [3.0, 4.0]])
         _validate_y_proxies(arr)
+        mock_validate_is_2d.assert_called_once()
+        np.testing.assert_array_equal(mock_validate_is_2d.call_args[0][0], arr)
+        assert mock_validate_is_2d.call_args[0][1] == "y_proxies"
         mock_validate_has_no_nan.assert_called_once()
         np.testing.assert_array_equal(mock_validate_has_no_nan.call_args[0][0], arr)
         assert mock_validate_has_no_nan.call_args[0][1] == "y_proxies"

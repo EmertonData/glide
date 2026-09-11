@@ -1,22 +1,11 @@
 from math import floor
-from typing import Tuple
 
 from numpy.typing import NDArray
 
 from glide.confidence_intervals import CLTConfidenceInterval
-from glide.core.utils import _split_labeled_unlabeled
-from glide.core.validation import (
-    _validate_equal_lengths,
-    _validate_sample_sizes,
-    _validate_y_proxies,
-    _validate_y_true,
-)
-from glide.estimators.classical import ClassicalMeanEstimator
-from glide.estimators.multi_ppi_core import (
-    _compute_mean_estimate,
-    _compute_std_estimate,
-    _compute_tuning_parameters,
-)
+from glide.core.validation import _validate_non_constant
+from glide.engines.classical import ClassicalMeanEngine
+from glide.engines.multi_ppi import MultiPPIMeanEngine
 from glide.mean_inference_results import PredictionPoweredMeanInferenceResult
 
 
@@ -56,19 +45,9 @@ class MultiPPIMeanEstimator:
     Effective Sample Size: 3
     """
 
-    def _preprocess(
-        self,
-        y_true_all: NDArray,
-        y_proxies_all: NDArray,
-    ) -> Tuple[NDArray, NDArray, NDArray]:
-        _validate_equal_lengths(y_true_all, y_proxies_all, names=["y_true", "y_proxies"])
-        _validate_y_proxies(y_proxies_all)
-        _validate_y_true(y_true_all)
-        y_true, y_proxies_labeled, y_proxies_unlabeled, labeled_mask = _split_labeled_unlabeled(
-            y_true_all, y_proxies_all
-        )
-        _validate_sample_sizes(labeled_mask)
-        return y_true, y_proxies_labeled, y_proxies_unlabeled
+    def __init__(self) -> None:
+        self._engine = MultiPPIMeanEngine()
+        self._classical_engine = ClassicalMeanEngine()
 
     def estimate(
         self,
@@ -92,7 +71,8 @@ class MultiPPIMeanEstimator:
             Labeled entries are finite; unlabeled entries are ``np.nan``.
         y_proxies : NDArray
             2D array of proxy predictions, shape ``(n_samples, M)``.
-            Must be fully populated (no NaN). Each column must have nonzero variance.
+            Must be fully populated (no NaN). Each column must have nonzero variance when
+            ``power_tuning=True``.
         metric_name : str, optional
             Human-readable label for the metric. Defaults to ``"Metric"``.
         confidence_level : float, optional
@@ -115,24 +95,29 @@ class MultiPPIMeanEstimator:
             - If ``y_true`` and ``y_proxies`` have different lengths.
             - If ``y_proxies`` is not a 2D array.
             - If any value in ``y_proxies`` is NaN.
-            - If any column of ``y_proxies`` is constant.
-            - If ``y_true`` contains only NaN or its labeled values are constant.
+            - If ``y_true`` labeled values are constant.
             - If there are fewer than 2 labeled or fewer than 2 unlabeled samples.
-            - If the proxy covariance matrix is singular.
+            - If any column of ``y_proxies`` is constant, with ``power_tuning=True``.
+            - If the proxy covariance matrix is singular (e.g. two or more columns are
+              perfectly correlated), with ``power_tuning=True``.
+            - If ``confidence_level`` is not in ``(0, 1)``.
         """
-        y_true_filtered, y_proxies_labeled, y_proxies_unlabeled = self._preprocess(y_true, y_proxies)
-        n_labeled = len(y_true_filtered)
-        n_unlabeled = len(y_proxies_unlabeled)
-        lambdas_ = _compute_tuning_parameters(y_true_filtered, y_proxies_labeled, y_proxies_unlabeled, power_tuning)
-        mean = _compute_mean_estimate(y_true_filtered, y_proxies_labeled, y_proxies_unlabeled, lambdas_)
-        std = _compute_std_estimate(y_true_filtered, y_proxies_labeled, y_proxies_unlabeled, lambdas_)
+        multi_ppi_dataset = self._engine.preprocess(y_true, y_proxies)
+        y_true_labeled, _, y_proxies_unlabeled = multi_ppi_dataset
+        _validate_non_constant(y_true_labeled, "'y_true' labeled values are constant.")
+
+        tuning_parameter = self._engine.fit_tuning_parameter(multi_ppi_dataset, power_tuning)
+        mean, std = self._engine.compute_mean_and_std(multi_ppi_dataset, tuning_parameter)
         confidence_interval = CLTConfidenceInterval(
             mean=mean,
             std=std,
             confidence_level=confidence_level,
         )
-        classical_confidence_interval = ClassicalMeanEstimator().estimate(y_true_filtered).confidence_interval
-        effective_sample_size = floor(n_labeled * classical_confidence_interval.var / confidence_interval.var)
+
+        _, classical_std = self._classical_engine.compute_mean_and_std(y_true_labeled, None)
+        n_labeled, n_unlabeled = len(y_true_labeled), len(y_proxies_unlabeled)
+        effective_sample_size = floor(n_labeled * classical_std**2 / std**2)
+
         result = PredictionPoweredMeanInferenceResult(
             confidence_interval=confidence_interval,
             metric_name=metric_name,
