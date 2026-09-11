@@ -3,7 +3,7 @@ from typing import Optional, Tuple
 import numpy as np
 from numpy.typing import ArrayLike, NDArray
 
-from glide.core.validation import _validate_equal_lengths, _validate_non_empty
+from glide.core.validation import _validate_equal_lengths, _validate_is_2d, _validate_non_empty
 from glide.simulators.multi_binary import generate_multi_binary_dataset
 
 
@@ -88,11 +88,9 @@ def generate_stratified_multi_binary_dataset(
     proxy_means_arr = np.asarray(proxy_means, dtype=float)
     correlations_arr = np.asarray(correlations, dtype=float)
 
-    for array, name in [(proxy_means_arr, "proxy_means"), (correlations_arr, "correlations")]:
-        if array.ndim != 2:
-            raise ValueError(f"'{name}' must be a 2D array; got shape {array.shape!r}.")
-
     _validate_non_empty(n_samples_arr, "n_samples")
+    _validate_is_2d(proxy_means_arr, "proxy_means")
+    _validate_is_2d(correlations_arr, "correlations")
     num_strata = len(n_samples_arr)
 
     _validate_equal_lengths(
