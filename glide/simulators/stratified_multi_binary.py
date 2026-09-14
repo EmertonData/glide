@@ -91,7 +91,6 @@ def generate_stratified_multi_binary_dataset(
     _validate_non_empty(n_samples_arr, "n_samples")
     _validate_is_2d(proxy_means_arr, "proxy_means")
     _validate_is_2d(correlations_arr, "correlations")
-    num_strata = len(n_samples_arr)
 
     _validate_equal_lengths(
         n_samples_arr,
@@ -106,6 +105,7 @@ def generate_stratified_multi_binary_dataset(
     groups_per_stratum = []
 
     seed_sequence = np.random.SeedSequence(random_seed)
+    num_strata = len(n_samples_arr)
     seeds = seed_sequence.spawn(num_strata)
 
     for stratum_id in range(num_strata):

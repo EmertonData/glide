@@ -83,7 +83,6 @@ def generate_stratified_binary_dataset(
     correlation_arr = np.asarray(correlation, dtype=float)
 
     _validate_non_empty(n_samples_arr, "n_samples")
-    num_strata = len(n_samples_arr)
 
     _validate_equal_lengths(
         n_samples_arr,
@@ -99,6 +98,7 @@ def generate_stratified_binary_dataset(
     groups_per_stratum = []
 
     seed_sequence = np.random.SeedSequence(random_seed)
+    num_strata = len(n_samples_arr)
     seeds = seed_sequence.spawn(num_strata)
 
     for stratum_id in range(num_strata):
