@@ -4,7 +4,7 @@ import pytest
 from glide.simulators import generate_gaussian_dataset
 
 
-def test_generate_gaussian_dataset_empirical_means_and_correlation():
+def test_generate_gaussian_dataset_empirical_statistics():
     true_mean = 0.7
     true_std = 0.2
     proxy_mean = 0.6

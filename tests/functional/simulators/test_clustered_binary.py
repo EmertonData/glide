@@ -4,7 +4,7 @@ import pytest
 from glide.simulators import generate_clustered_binary_dataset
 
 
-def test_generate_clustered_binary_dataset_empirical_means_and_correlation():
+def test_generate_clustered_binary_dataset_empirical_statistics():
     n_samples = 5000
     n_clusters = 50
     true_mean = 0.7

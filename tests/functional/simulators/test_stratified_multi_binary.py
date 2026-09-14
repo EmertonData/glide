@@ -4,7 +4,7 @@ import pytest
 from glide.simulators import generate_stratified_multi_binary_dataset
 
 
-def test_generate_stratified_multi_binary_dataset_empirical_means_and_correlation_per_stratum():
+def test_generate_stratified_multi_binary_dataset_empirical_statistics_per_stratum():
     n_samples = [250, 250]
     true_mean = [0.9, 0.8]
     proxy_means = [[0.8, 0.85], [0.7, 0.75]]

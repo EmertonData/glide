@@ -16,9 +16,8 @@ def generate_stratified_multi_binary_dataset(
 ) -> Tuple[NDArray, NDArray, NDArray]:
     """Generate a synthetic stratified binary-label oracle dataset with multiple proxy models.
 
-    Combines ``M >= 1`` proxy models (see ``generate_multi_binary_dataset``) with ``K >= 1``
-    strata (see ``generate_stratified_binary_dataset``). This enables simulation of
-    heterogeneous, multi-proxy data, e.g. a batched production stream monitored against
+    Combines ``M >= 1`` proxy models with ``K >= 1`` strata . This enables simulation of
+    heterogeneous, multi-proxy data, e.g., a batched production stream monitored against
     several models at once, where both the true/proxy relationship and the proxy panel
     itself can vary across strata.
 
