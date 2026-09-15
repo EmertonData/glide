@@ -153,6 +153,31 @@ To compute predictable weights $\lambda_t$, the simplest option is to pool the f
 
 Plugging $\hat{R}_s$ and $\hat{\sigma}_s$ into the [Asymptotic Confidence Sequences](#asymptotic-confidence-sequences) construction gives the anytime-valid lower bound $L_t$ derived there. The **drift alarm** fires as soon as $L_t > \tau$, the user-fixed threshold.
 
+### Asymptotic Multi-Proxy Prediction-Powered Risk Monitoring (Asymptotic Multi-PPRM)
+
+Cheap proxy labels are not limited to a single source: Asymptotic PPRM generalises to $M \ge 1$ proxies combined through [Multi-Proxy Prediction-Powered Inference (Multi-PPI)](estimators.md#multi-proxy-prediction-powered-inference-multi-ppi) [[4](#ref-4)], the same way the underlying estimator generalises PPI++.
+
+#### Setting
+
+Each batch $t$ carries the following inputs: a small set of human labels together with $M$ larger sets of proxy labels, all specific to that batch.
+
+| Value | Present for | Description |
+|---|---|---|
+| $\tilde{\mathbf{Y}}_{t,i} \in \mathbb{R}^M$ | All samples in batch $t$ | Proxy prediction vector |
+| $Y_{t,j}$ | Labeled samples in batch $t$ only | Ground-truth label |
+
+The per-batch estimate $\hat{R}_s$ is the Multi-PPI estimate on batch $s$. Denoting $\tilde{\mathbf{Y}}_s^{\bullet}$ and $\tilde{\mathbf{Y}}_s^{\circ}$ the labeled and unlabeled proxy vectors of batch $s$ respectively, with $n_s$ and $N_s$ their respective counts,
+
+$$\hat{R}_s = \frac{1}{n_s}\sum_{j=1}^{n_s} Y_{s,j} + \boldsymbol{\lambda}_s^\top\left[\frac{1}{N_s}\sum_{i=1}^{N_s} \tilde{\mathbf{Y}}_{s,i}^{\circ} - \frac{1}{n_s}\sum_{j=1}^{n_s} \tilde{\mathbf{Y}}_{s,j}^{\bullet}\right],$$
+
+together with its standard error $\hat{\sigma}_s$, obtained by applying the [Multi-Proxy Prediction-Powered Inference (Multi-PPI)](estimators.md#multi-proxy-prediction-powered-inference-multi-ppi) variance formula within batch $s$, and $\boldsymbol{\lambda}_s \in \mathbb{R}^M$ a predictable power-tuning weight vector.
+
+Predictable power-tuning carries over unchanged from [Asymptotic PPRM](#asymptotic-prediction-powered-risk-monitoring-asymptotic-pprm): weights are computed only from batches strictly earlier than $t$, and the first batch, having no predecessor, uses a fixed neutral weight vector $\boldsymbol{\lambda}_1$ with all entries set to $1/\sqrt{M}$, generalizing $\lambda_1 = 1$ from the single proxy case.
+
+#### Bound and Alarm Rule
+
+Plugging $\hat{R}_s$ and $\hat{\sigma}_s$ into the [Asymptotic Confidence Sequences](#asymptotic-confidence-sequences) construction gives the anytime-valid lower bound $L_t$ derived there. The **drift alarm** fires as soon as $L_t > \tau$, the user-fixed threshold.
+
 ---
 
 ## References
@@ -162,3 +187,5 @@ Plugging $\hat{R}_s$ and $\hat{\sigma}_s$ into the [Asymptotic Confidence Sequen
 <a id="ref-2"></a>[2] <a id="ref-2-link" href="https://doi.org/10.1214/24-AOS2408">Waudby-Smith, Ian, David Arbour, Ritwik Sinha, Edward H. Kennedy, and Aaditya Ramdas. "Time-uniform central limit theory and asymptotic confidence sequences." The Annals of Statistics 52, no. 6 (2024): 2613-2640</a>.
 
 <a id="ref-3"></a>[3] <a id="ref-3-link" href="https://projecteuclid.org/journals/annals-of-mathematical-statistics/volume-41/issue-5/Statistical-Methods-Related-to-the-Law-of-the-Iterated-Logarithm/10.1214/aoms/1177696786.full">Robbins, Herbert. "Statistical methods related to the law of the iterated logarithm." The Annals of Mathematical Statistics 41, no. 5 (1970): 1397-1409</a>.
+
+<a id="ref-4"></a>[4] <a id="ref-4-link" href="https://arxiv.org/abs/2509.21707">Shan, Jiawei, Zhifeng Chen, Yiming Dong, Yazhen Wang, and Jiwei Zhao. "SADA: Safe and Adaptive Aggregation of Multiple Black-Box Predictions in Semi-Supervised Learning." arXiv preprint arXiv:2509.21707 (2025).</a>.
