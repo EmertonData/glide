@@ -31,7 +31,7 @@ def dataset():
     xis = []
     for _ in range(n_batches):
         xi_batch = np.zeros(batch_size)
-        labeled_indices = rng.choice(batch_size, size=n_labeled_per_batch)
+        labeled_indices = rng.choice(batch_size, size=n_labeled_per_batch, replace=False)
         xi_batch[labeled_indices] = 1
         xis.append(xi_batch)
     xi = np.hstack(xis)

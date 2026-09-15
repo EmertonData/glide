@@ -14,7 +14,9 @@ class AsymptoticMultiPPRM(AsymptoticRM[MultiPPIDataset, NDArray]):
     sets of proxy labels, combined through a power-tuning weight vector fitted on the
     batches that strictly precede it), together with its standard error, and tracks
     the running mean of the per-batch estimates the same way ``AsymptoticPPRM`` does
-    for a single proxy.
+    for a single proxy. The false-alarm guarantee is asymptotic: each batch needs
+    enough labeled and proxy samples for its Multi-PPI estimate to be approximately
+    Gaussian with a consistently estimated variance.
 
     References
     ----------
@@ -127,6 +129,8 @@ class AsymptoticMultiPPRM(AsymptoticRM[MultiPPIDataset, NDArray]):
             - If batches are interleaved rather than grouped into contiguous blocks.
             - If any batch has fewer than 2 labeled or fewer than 2 unlabeled samples.
             - If any proxy column is constant across a prefix set of batches (with ``power_tuning=True``).
+            - If the proxy covariance matrix is singular (e.g. two or more columns are
+              perfectly correlated) for a prefix set of batches, with ``power_tuning=True``.
             - If ``tightest_at_batch`` is not a positive integer.
             - If the accumulated variance of the batch estimates up to ``tightest_at_batch`` is zero.
         """
