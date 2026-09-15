@@ -65,8 +65,8 @@ def test_detect_metadata(monitor, y_true, y_proxies, batches):
 
 
 def test_detect_custom_confidence_level(monitor, y_true, y_proxies, batches):
-    expected_running_means = np.array([0.52828427, 0.50971906])
-    expected_confidence_bounds = np.array([0.44185938, 0.46391843])
+    expected_running_means = np.array([0.528, 0.509])
+    expected_confidence_bounds = np.array([0.441, 0.463])
 
     result = monitor.detect(
         y_true, y_proxies, batches, higher_is_better=False, threshold=0.5, metric_name="risk", confidence_level=0.85

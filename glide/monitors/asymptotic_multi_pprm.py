@@ -49,6 +49,8 @@ class AsymptoticMultiPPRM(AsymptoticRM[MultiPPIDataset, NDArray]):
     >>> result = monitor.detect(y_true, y_proxies, batches, higher_is_better=False, threshold=0.5)
     >>> result.drift_detected
     True
+    >>> result.first_alarm_index
+    2
     """
 
     _engine = MultiPPIMeanEngine()
