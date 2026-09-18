@@ -16,6 +16,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - RAG answer faithfulness (MEMERAG) case study in the documentation.
 
 ### 🔄 Changed
+- Split `docs/tutorials/` into `estimators/` and `monitors/` subfolders, mirroring the `deep_dive/scientific_validation/` layout.
 - Renamed `AsymptoticClassicalMeanMonitor` to `AsymptoticClassicalRM`.
 - Removed the `metric_lower_bound` and `metric_upper_bound` parameters from `AsymptoticPPRM.detect` and `AsymptoticClassicalMeanMonitor.detect`.
 - Removed `EmpiricalPPRM`, `EmpiricalClassicalMeanMonitor`, and `glide.confidence_sequences.EmpiricalBernsteinConfidenceSequence`.

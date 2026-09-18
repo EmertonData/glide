@@ -54,13 +54,13 @@ Use the table below to find the tutorial that matches your situation.
 
 | Cost estimates? | Uncertainty scores? | Stratified data? | Clustered data? | Multiple proxies? | Phase 1 sampler | Phase 3 estimator | Tutorial |
 |---|---|---|---|---|---|---|---|
-| No | No | No | No | No | Uniform random | PPI++ | [Standard annotation budget (PPI++)](ppi.ipynb) |
-| No | No | No | No | Yes | Uniform random | Multi-PPI++ | [Multiple proxies (Multi-PPI++)](multi_ppi.ipynb) |
-| No | No | Yes | No | No | Stratified uniform | Stratified PPI++ | [Stratified data (Stratified PPI++)](stratified_ppi.ipynb) |
-| No | No | No | Yes | No | Clustered uniform | Clustered PPI++ | [Clustered data (Clustered PPI++)](clustered_ppi.ipynb) |
-| No | Yes | No | No | No | Uncertainty-aware | ASI | [Uncertainty scores available (ASI)](asi.ipynb) |
-| Yes | No | No | No | No | Cost-optimal random | PPI++ | [Cost estimates available (Cost-Optimal Random Sampling)](cost_optimal_random.ipynb) |
-| Yes | Yes | No | No | No | Cost-optimal | ASI | [Cost and uncertainty scores available (Cost-Optimal Sampling)](cost_optimal.ipynb) |
+| No | No | No | No | No | Uniform random | PPI++ | [Standard annotation budget (PPI++)](estimators/ppi.ipynb) |
+| No | No | No | No | Yes | Uniform random | Multi-PPI++ | [Multiple proxies (Multi-PPI++)](estimators/multi_ppi.ipynb) |
+| No | No | Yes | No | No | Stratified uniform | Stratified PPI++ | [Stratified data (Stratified PPI++)](estimators/stratified_ppi.ipynb) |
+| No | No | No | Yes | No | Clustered uniform | Clustered PPI++ | [Clustered data (Clustered PPI++)](estimators/clustered_ppi.ipynb) |
+| No | Yes | No | No | No | Uncertainty-aware | ASI | [Uncertainty scores available (ASI)](estimators/asi.ipynb) |
+| Yes | No | No | No | No | Cost-optimal random | PPI++ | [Cost estimates available (Cost-Optimal Random Sampling)](estimators/cost_optimal_random.ipynb) |
+| Yes | Yes | No | No | No | Cost-optimal | ASI | [Cost and uncertainty scores available (Cost-Optimal Sampling)](estimators/cost_optimal.ipynb) |
 
 If your data contains fewer than 50 human labels: use the PTD variant of the estimators above (`PTDMeanEstimator` for PPI++, `StratifiedPTDMeanEstimator` for Stratified PPI++, `ClusteredPTDMeanEstimator` for Clustered PPI++, `IPWPTDMeanEstimator` for ASI, and `MultiPTDMeanEstimator` for Multi-PPI++). In the stratified case, the `StratifiedPTDMeanEstimator` should be used whenever one of the strata has fewer than 50 labels. The tutorial workflow for the respective estimators is identical; only the estimator class changes.
 
@@ -72,10 +72,10 @@ Each Phase 3 estimator has a monitoring counterpart that re-estimates the same q
 
 | Phase 3 estimator | Monitor | Tutorial |
 |---|---|---|
-| PPI++ | Asymptotic PPRM | [Asymptotic PPRM](asymptotic_pprm.ipynb) |
+| PPI++ | Asymptotic PPRM | [Asymptotic PPRM](monitors/asymptotic_pprm.ipynb) |
 | Stratified PPI++ | Asymptotic Stratified PPRM | Coming soon |
 | Clustered PPI++ | Asymptotic Clustered PPRM | Coming soon |
 | Multi-PPI++ | Asymptotic Multi-PPRM | Coming soon |
 | ASI | Asymptotic Active PPRM | Coming soon |
 
-The [Asymptotic PPRM tutorial](asymptotic_pprm.ipynb) walks through the `AsymptoticPPRM` monitor, alongside its label-only counterpart `AsymptoticClassicalRM`.
+The [Asymptotic PPRM tutorial](monitors/asymptotic_pprm.ipynb) walks through the `AsymptoticPPRM` monitor, alongside its label-only counterpart `AsymptoticClassicalRM`.
