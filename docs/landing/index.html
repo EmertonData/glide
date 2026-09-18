@@ -281,6 +281,18 @@
       background: var(--human-size-track, var(--bs-secondary-bg));
     }
 
+    #totalSize.form-range::-webkit-slider-runnable-track,
+    #trueMean.form-range::-webkit-slider-runnable-track,
+    #proxyMean.form-range::-webkit-slider-runnable-track {
+      background: #90caf9;
+    }
+
+    #totalSize.form-range::-moz-range-track,
+    #trueMean.form-range::-moz-range-track,
+    #proxyMean.form-range::-moz-range-track {
+      background: #90caf9;
+    }
+
     .simulator-chart-wrap {
       background-color: rgba(255, 255, 255, 0.7);
       border-radius: 0.4rem;
@@ -556,7 +568,7 @@
       const sliderMin = Number(sliders.humanSize.min);
       const sliderMax = Number(sliders.humanSize.max);
       const maxPercent = ((maxHumanSize - sliderMin) / (sliderMax - sliderMin)) * 100;
-      const gradient = `linear-gradient(to right, #90caf9 0%, #90caf9 ${maxPercent}%, #ced4da ${maxPercent}%, #ced4da 100%)`;
+      const gradient = `linear-gradient(to right, #90caf9 0%, #90caf9 ${maxPercent}%, #e9ecef ${maxPercent}%, #e9ecef 100%)`;
       sliders.humanSize.style.setProperty('--human-size-track', gradient);
     }
 
@@ -572,7 +584,7 @@
     function updateCorrelationTrack(min, max) {
       const minPercent = min * 100;
       const maxPercent = max * 100;
-      const gradient = `linear-gradient(to right, #ced4da 0%, #ced4da ${minPercent}%, #90caf9 ${minPercent}%, #90caf9 ${maxPercent}%, #ced4da ${maxPercent}%, #ced4da 100%)`;
+      const gradient = `linear-gradient(to right, #e9ecef 0%, #e9ecef ${minPercent}%, #90caf9 ${minPercent}%, #90caf9 ${maxPercent}%, #e9ecef ${maxPercent}%, #e9ecef 100%)`;
       sliders.correlation.style.setProperty('--correlation-track', gradient);
     }
 

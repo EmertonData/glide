@@ -24,6 +24,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - Enriched the tutorials overview with a Phase 4: Monitoring section mirroring the sampler/estimator decision guide.
 
 ### 🐛 Fixed
+- Landing page PPI simulator: sliders without a dynamic bound now use light blue instead of grey, matching the valid-range color of bounded sliders.
 
 ### 💛 Contributors
 
