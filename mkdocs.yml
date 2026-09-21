@@ -93,6 +93,7 @@ nav:
       - Cost and uncertainty scores available (Cost-Optimal Sampling): tutorials/estimators/cost_optimal.ipynb
     - Monitors:
       - Monitoring a deployed system for drift (Asymptotic PPRM): tutorials/monitors/asymptotic_pprm.ipynb
+      - Monitoring a deployed system for drift with multiple judges (Asymptotic Multi-PPRM): tutorials/monitors/asymptotic_multi_pprm.ipynb
   - Deep Dive:
     - Overview: deep_dive/index.md
     - Scientific Validation:
