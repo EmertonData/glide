@@ -50,7 +50,7 @@ See prediction-powered inference in action: tune the sample size, human annotati
 </p>
 
 <p align="center">
-  👉 <a href="https://emertondata.github.io/glide/">Play with the simulator</a>
+  👉 <a href="https://emertondata.github.io/glide/">Play with the simulator</a> 👈
 </p>
 
 ## ⚡ Quick Start
