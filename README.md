@@ -12,6 +12,7 @@
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-Apache%202.0-blue" alt="License"></a>
   <a href="https://www.linkedin.com/build-relation/newsletter-follow?entityUrn=7453423077557952512"><img src="https://img.shields.io/badge/Follow-LinkedIn-0A66C2" alt="LinkedIn"></a>
   <a href="https://arxiv.org/abs/2605.31278"><img src="https://img.shields.io/badge/arXiv-2605.31278-b31b1b" alt="arXiv"></a>
+  <a href="https://emertondata.github.io/glide/"><img src="https://img.shields.io/badge/Simulator-Try%20it%20now-F9C62F" alt="Simulator"></a>
 </p>
 
 <p align="center">
@@ -37,6 +38,20 @@ GLIDE implements methods from the field of **prediction-powered inference** — 
 - ⚖️ **LLM-as-judge is biased.** Proxy evaluators (models, heuristics) are cheap but systematically over- or under-estimate true performance.
 - 🧑 **Rigorous evaluation requires a human in the loop.** Ground-truth labels from humans are expensive, so only a small subset is feasible.
 - 📐 **GLIDE bridges the gap.** It combines a small set of human annotations with a large set of proxy predictions to produce statistically valid metrics — correcting proxy bias without requiring full human labeling.
+
+## 🎛️ Try the Simulator
+
+See prediction-powered inference in action: tune the sample size, human annotation budget, and LLM-as-judge quality, and watch GLIDE combine both signals into a rigorous confidence interval.
+
+<p align="center">
+  <a href="https://emertondata.github.io/glide/">
+    <img src="https://raw.githubusercontent.com/EmertonData/glide/refs/heads/main/docs/assets/simulator-screenshot.png" alt="GLIDE interactive simulator" width="80%">
+  </a>
+</p>
+
+<p align="center">
+  👉 <a href="https://emertondata.github.io/glide/">Play with the simulator</a>
+</p>
 
 ## ⚡ Quick Start
 Install the package with your favorite package manager :
