@@ -3,30 +3,16 @@ from typing import Dict, Hashable, Tuple
 import numpy as np
 from numpy.typing import NDArray
 
-from glide.core.utils import _split_labeled_unlabeled
-from glide.core.validation import _validate_equal_lengths, _validate_has_no_nan, _validate_sample_sizes
-from glide.engines.ppi import PPIDataset
 from glide.engines.ppi_core import _compute_mean_estimate, _compute_std_estimate, _compute_tuning_parameter
+from glide.engines.stratified_core import StratifiedDataset as StratifiedPPIDataset
+from glide.engines.stratified_core import _preprocess
 
-StratifiedPPIDataset = Dict[Hashable, PPIDataset]
 StratifiedTuningParameter = Dict[Hashable, float]
 
 
 class StratifiedPPIMeanEngine:
     def preprocess(self, y_true: NDArray, y_proxy: NDArray, groups: NDArray) -> StratifiedPPIDataset:
-        _validate_has_no_nan(groups, "groups")
-        _validate_equal_lengths(y_true, y_proxy, groups, names=["y_true", "y_proxy", "groups"])
-
-        stratified_dataset = {}
-        for stratum_id in np.unique(groups):
-            stratum_mask = groups == stratum_id
-            stratum_y_true, stratum_y_proxy = y_true[stratum_mask], y_proxy[stratum_mask]
-            _validate_has_no_nan(stratum_y_proxy, "y_proxy")
-            y_true_labeled, y_proxy_labeled, y_proxy_unlabeled, labeled_mask = _split_labeled_unlabeled(
-                stratum_y_true, stratum_y_proxy
-            )
-            _validate_sample_sizes(labeled_mask, stratum_id)
-            stratified_dataset[stratum_id] = (y_true_labeled, y_proxy_labeled, y_proxy_unlabeled)
+        stratified_dataset = _preprocess(y_true, y_proxy, groups)
         return stratified_dataset
 
     def fit_tuning_parameter(self, dataset: StratifiedPPIDataset, power_tuning: bool) -> StratifiedTuningParameter:

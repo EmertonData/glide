@@ -5,14 +5,8 @@ import numpy as np
 from numpy.typing import NDArray
 
 from glide.confidence_intervals import BootstrapConfidenceInterval
-from glide.core.utils import _split_labeled_unlabeled
-from glide.core.validation import (
-    _validate_equal_lengths,
-    _validate_has_no_nan,
-    _validate_sample_sizes,
-    _validate_y_proxy,
-    _validate_y_true,
-)
+from glide.core.validation import _validate_non_constant
+from glide.engines.stratified_core import _preprocess as _preprocess_strata
 from glide.estimators.ptd_core import (
     _compute_bootstrap_labeled_means,
     _compute_bootstrap_mean_estimates,
@@ -66,21 +60,15 @@ class StratifiedPTDMeanEstimator:
         y_proxy: NDArray,
         groups: NDArray,
     ) -> List[Tuple[NDArray, NDArray, NDArray]]:
-        _validate_has_no_nan(groups, "groups")
-        _validate_equal_lengths(y_true, y_proxy, groups, names=["y_true", "y_proxy", "groups"])
-        _validate_y_proxy(y_proxy)
-        _validate_y_true(y_true)
+        stratified_dataset = _preprocess_strata(y_true, y_proxy, groups)
+        _validate_non_constant(y_true[~np.isnan(y_true)], "'y_true' labeled values are constant.")
 
         strata = []
-        for stratum_id in np.unique(groups):
-            stratum_mask = groups == stratum_id
-            stratum_y_true = y_true[stratum_mask]
-            stratum_y_proxy = y_proxy[stratum_mask]
-            _validate_y_proxy(stratum_y_proxy, stratum_id)
-            y_true_filtered, y_proxy_labeled, y_proxy_unlabeled, labeled_mask = _split_labeled_unlabeled(
-                stratum_y_true, stratum_y_proxy
+        for stratum_id, (y_true_filtered, y_proxy_labeled, y_proxy_unlabeled) in stratified_dataset.items():
+            _validate_non_constant(
+                np.hstack([y_proxy_labeled, y_proxy_unlabeled]),
+                f"'y_proxy' values are constant in stratum '{stratum_id}'.",
             )
-            _validate_sample_sizes(labeled_mask, stratum_id)
             strata.append((y_true_filtered, y_proxy_labeled, y_proxy_unlabeled))
 
         return strata

@@ -35,71 +35,17 @@ def dataset(engine, y_true, y_proxy, groups):
 # --- preprocess ---
 
 
-def test_preprocess_delegates_to_validation(engine, y_true, y_proxy, groups):
-    labeled_mask = np.array([True, True, False, False])
-    with (
-        patch.object(stratified_ppi_engine_module, "_validate_has_no_nan") as mock_validate_has_no_nan,
-        patch.object(stratified_ppi_engine_module, "_validate_equal_lengths") as mock_validate_equal_lengths,
-        patch.object(stratified_ppi_engine_module, "_split_labeled_unlabeled") as mock_split_labeled_unlabeled,
-        patch.object(stratified_ppi_engine_module, "_validate_sample_sizes") as mock_validate_sample_sizes,
-    ):
-        mock_split_labeled_unlabeled.side_effect = [
-            (np.array([5.0, 6.0]), np.array([4.9, 6.1]), np.array([5.2, 6.1]), labeled_mask),
-            (np.array([5.0, 6.0]), np.array([4.9, 6.1]), np.array([5.2, 6.1]), labeled_mask),
-        ]
-        engine.preprocess(y_true, y_proxy, groups)
+def test_preprocess_delegates_to_stratified_core(engine, y_true, y_proxy, groups):
+    sentinel_dataset = object()
+    with patch.object(stratified_ppi_engine_module, "_preprocess") as mock_preprocess:
+        mock_preprocess.return_value = sentinel_dataset
+        dataset = engine.preprocess(y_true, y_proxy, groups)
 
-        assert mock_validate_has_no_nan.call_count == 3
-        np.testing.assert_array_equal(mock_validate_has_no_nan.call_args_list[0][0][0], groups)
-        assert mock_validate_has_no_nan.call_args_list[0][0][1] == "groups"
-        y_proxy_a = y_proxy[groups == "A"]
-        np.testing.assert_array_equal(mock_validate_has_no_nan.call_args_list[1][0][0], y_proxy_a)
-        assert mock_validate_has_no_nan.call_args_list[1][0][1] == "y_proxy"
-        y_proxy_b = y_proxy[groups == "B"]
-        np.testing.assert_array_equal(mock_validate_has_no_nan.call_args_list[2][0][0], y_proxy_b)
-        assert mock_validate_has_no_nan.call_args_list[2][0][1] == "y_proxy"
-
-        mock_validate_equal_lengths.assert_called_once()
-        np.testing.assert_array_equal(mock_validate_equal_lengths.call_args[0][0], y_true)
-        np.testing.assert_array_equal(mock_validate_equal_lengths.call_args[0][1], y_proxy)
-        np.testing.assert_array_equal(mock_validate_equal_lengths.call_args[0][2], groups)
-        assert mock_validate_equal_lengths.call_args[1] == {"names": ["y_true", "y_proxy", "groups"]}
-
-        assert mock_split_labeled_unlabeled.call_count == 2
-        np.testing.assert_array_equal(mock_split_labeled_unlabeled.call_args_list[0][0][0], y_true[groups == "A"])
-        np.testing.assert_array_equal(mock_split_labeled_unlabeled.call_args_list[0][0][1], y_proxy[groups == "A"])
-        np.testing.assert_array_equal(mock_split_labeled_unlabeled.call_args_list[1][0][0], y_true[groups == "B"])
-        np.testing.assert_array_equal(mock_split_labeled_unlabeled.call_args_list[1][0][1], y_proxy[groups == "B"])
-
-        assert mock_validate_sample_sizes.call_count == 2
-        np.testing.assert_array_equal(mock_validate_sample_sizes.call_args_list[0][0][0], labeled_mask)
-        assert mock_validate_sample_sizes.call_args_list[0][0][1] == "A"
-        np.testing.assert_array_equal(mock_validate_sample_sizes.call_args_list[1][0][0], labeled_mask)
-        assert mock_validate_sample_sizes.call_args_list[1][0][1] == "B"
-
-
-def test_preprocess_valid_output(engine, y_true, y_proxy, groups):
-    dataset = engine.preprocess(y_true, y_proxy, groups)
-
-    assert set(dataset.keys()) == {"A", "B"}
-    for stratum_id in ("A", "B"):
-        y_true_labeled, y_proxy_labeled, y_proxy_unlabeled = dataset[stratum_id]
-        np.testing.assert_array_equal(y_true_labeled, np.array([5.0, 6.0]))
-        np.testing.assert_array_equal(y_proxy_labeled, np.array([4.9, 6.1]))
-        np.testing.assert_array_equal(y_proxy_unlabeled, np.array([5.2, 6.1]))
-
-
-def test_preprocess_allows_constant_proxy_within_stratum(engine):
-    y_true = np.array([1.0, 2.0, np.nan, np.nan])
-    y_proxy = np.array([5.0, 5.0, 5.0, 5.0])
-    groups = np.array(["A", "A", "A", "A"])
-
-    dataset = engine.preprocess(y_true, y_proxy, groups)
-
-    y_true_labeled, y_proxy_labeled, y_proxy_unlabeled = dataset["A"]
-    np.testing.assert_array_equal(y_true_labeled, np.array([1.0, 2.0]))
-    np.testing.assert_array_equal(y_proxy_labeled, np.array([5.0, 5.0]))
-    np.testing.assert_array_equal(y_proxy_unlabeled, np.array([5.0, 5.0]))
+        mock_preprocess.assert_called_once()
+        np.testing.assert_array_equal(mock_preprocess.call_args[0][0], y_true)
+        np.testing.assert_array_equal(mock_preprocess.call_args[0][1], y_proxy)
+        np.testing.assert_array_equal(mock_preprocess.call_args[0][2], groups)
+        assert dataset is sentinel_dataset
 
 
 # --- fit_tuning_parameter ---

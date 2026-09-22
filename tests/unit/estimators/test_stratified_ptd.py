@@ -1,6 +1,9 @@
+from unittest.mock import patch
+
 import numpy as np
 import pytest
 
+import glide.estimators.stratified_ptd as stratified_ptd_module
 from glide.confidence_intervals import BootstrapConfidenceInterval
 from glide.estimators import StratifiedPTDMeanEstimator
 from glide.mean_inference_results import PredictionPoweredMeanInferenceResult
@@ -26,6 +29,50 @@ def groups() -> np.ndarray:
 @pytest.fixture
 def estimator() -> StratifiedPTDMeanEstimator:
     return StratifiedPTDMeanEstimator()
+
+
+# --- _preprocess ---
+
+
+def test_preprocess_valid_output(estimator, y_true, y_proxy, groups):
+    strata = estimator._preprocess(y_true, y_proxy, groups)
+
+    assert len(strata) == 2
+    for y_true_filtered, y_proxy_labeled, y_proxy_unlabeled in strata:
+        np.testing.assert_array_equal(y_true_filtered, np.array([5.0, 6.0]))
+        np.testing.assert_array_equal(y_proxy_labeled, np.array([4.9, 6.1]))
+        np.testing.assert_array_equal(y_proxy_unlabeled, np.array([5.2, 6.1]))
+
+
+def test_preprocess_delegates(estimator, y_true, y_proxy, groups):
+    with (
+        patch.object(stratified_ptd_module, "_preprocess_strata") as mock_preprocess_strata,
+        patch.object(stratified_ptd_module, "_validate_non_constant") as mock_validate_non_constant,
+    ):
+        mock_preprocess_strata.return_value = {
+            "A": (np.array([5.0, 6.0]), np.array([4.9, 6.1]), np.array([5.2, 6.1])),
+            "B": (np.array([5.0, 6.0]), np.array([4.9, 6.1]), np.array([5.2, 6.1])),
+        }
+        estimator._preprocess(y_true, y_proxy, groups)
+
+        mock_preprocess_strata.assert_called_once()
+        np.testing.assert_array_equal(mock_preprocess_strata.call_args[0][0], y_true)
+        np.testing.assert_array_equal(mock_preprocess_strata.call_args[0][1], y_proxy)
+        np.testing.assert_array_equal(mock_preprocess_strata.call_args[0][2], groups)
+
+        assert mock_validate_non_constant.call_count == 3
+        np.testing.assert_array_equal(
+            mock_validate_non_constant.call_args_list[0][0][0], np.array([5.0, 6.0, 5.0, 6.0])
+        )
+        assert mock_validate_non_constant.call_args_list[0][0][1] == "'y_true' labeled values are constant."
+        np.testing.assert_array_equal(
+            mock_validate_non_constant.call_args_list[1][0][0], np.array([4.9, 6.1, 5.2, 6.1])
+        )
+        assert mock_validate_non_constant.call_args_list[1][0][1] == "'y_proxy' values are constant in stratum 'A'."
+        np.testing.assert_array_equal(
+            mock_validate_non_constant.call_args_list[2][0][0], np.array([4.9, 6.1, 5.2, 6.1])
+        )
+        assert mock_validate_non_constant.call_args_list[2][0][1] == "'y_proxy' values are constant in stratum 'B'."
 
 
 # --- estimate ---
