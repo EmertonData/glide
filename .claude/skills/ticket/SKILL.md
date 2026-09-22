@@ -59,6 +59,21 @@ Mirror rule: `glide/foo/bar.py` always pairs with `tests/unit/foo/test_bar.py`.
 
 Pick a filename: lowercase, hyphen-separated, prefixed with the type (`feat-`, `ref-`, `doc-`, `repo-`), derived from the algorithm or topic. Write to `tickets/<filename>.md`.
 
+**Never cross-reference other tickets by title or filename.** Tickets get uploaded to GitHub Projects as issues and are refined, split, reordered, or renamed independently after that; a reference like `the "Add \`AsymptoticMultiPPRM\`..." ticket` or `feat-asymptotic-multi-pprm.md` goes stale the moment the target ticket's title changes, and forces the reader to go hunt down another board item just to know what this one assumes. Instead, every ticket stands alone: it never restates or points at another ticket's content, it only states, in a `## Dependencies` section, which concrete features must already exist for this ticket's own work to make sense.
+
+**The `## Dependencies` section** goes right after Background, before Design choices, in every ticket type. Each bullet names one concrete, natural-language feature that must pre-exist — a class, function, or behavior, described the way it would read in the finished codebase, not as "ticket X" or "PR Y":
+
+```markdown
+## Dependencies
+
+- `ClusteredPPIMeanEngine` should be implemented in `glide/engines/clustered_ppi.py`, composing `PPIMeanEngine`.
+- `AsymptoticRM._detect`/`_preprocess` should accept separate `label_fields` (always reoriented) and `identifier_fields` (never reoriented) parameters instead of a single `fields` list.
+```
+
+Omit the section entirely when a ticket has no dependencies beyond the current state of the codebase. Once a dependency is listed, the rest of the ticket takes it for granted — write Background, Design choices, and Implementation as if the dependency already merged, and point back with "(see Dependencies)" wherever the assumption needs recalling, instead of re-explaining or re-justifying it inline.
+
+A feature the codebase has already shipped (check by reading the relevant file, not by assuming) is not a dependency — reference it directly by its real class, function, or file path, exactly as any other piece of existing code. Reserve `## Dependencies` for what is genuinely still missing and must land first.
+
 Load the template for the ticket type from `references/`:
 
 | Type | Template file |
