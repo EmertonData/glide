@@ -38,7 +38,7 @@ class StratifiedPPIMeanEngine:
         weighted_mean = 0.0
         weighted_var = 0.0
         for stratum_id, (y_true, y_proxy_labeled, y_proxy_unlabeled) in dataset.items():
-            lambda_k = tuning_parameter.get(stratum_id, 1.0)
+            lambda_k = tuning_parameter[stratum_id]
             mean_k = _compute_mean_estimate(y_true, y_proxy_labeled, y_proxy_unlabeled, lambda_k)
             std_k = _compute_std_estimate(y_true, y_proxy_labeled, y_proxy_unlabeled, lambda_k)
             w_k = stratum_sizes[stratum_id] / n_samples

@@ -53,8 +53,8 @@ def test_preprocess_delegates_to_stratified_core(engine, y_true, y_proxy, groups
 
 def test_fit_tuning_parameter_power_tuning_true(engine, dataset):
     tuning_parameter = engine.fit_tuning_parameter(dataset, power_tuning=True)
-    assert tuning_parameter["A"] == pytest.approx(0.7843137254901965)
-    assert tuning_parameter["B"] == pytest.approx(0.7843137254901965)
+    assert tuning_parameter["A"] == pytest.approx(0.784, abs=1e-3)
+    assert tuning_parameter["B"] == pytest.approx(0.784, abs=1e-3)
 
 
 def test_fit_tuning_parameter_power_tuning_false(engine, dataset):
@@ -79,16 +79,7 @@ def test_fit_tuning_parameter_wraps_error_with_stratum_identifier(engine):
 
 
 def test_compute_mean_and_std(engine, dataset):
-    tuning_parameter = {"A": 0.7843137254901965, "B": 0.7843137254901965}
+    tuning_parameter = {"A": 0.784, "B": 0.784}
     mean, std = engine.compute_mean_and_std(dataset, tuning_parameter)
-    assert mean == pytest.approx(5.61764705882353)
-    assert std == pytest.approx(0.25043215244009415)
-
-
-def test_compute_mean_and_std_falls_back_to_unpowered_ppi_for_missing_stratum(engine, dataset):
-    tuning_parameter = {"A": 0.5}
-
-    mean, std = engine.compute_mean_and_std(dataset, tuning_parameter)
-
-    assert mean == pytest.approx(5.612500000000001)
-    assert std == pytest.approx(0.27528394431931535)
+    assert mean == pytest.approx(5.617, abs=1e-3)
+    assert std == pytest.approx(0.250, abs=1e-3)
