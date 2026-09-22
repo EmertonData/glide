@@ -1,17 +1,24 @@
 from math import floor
-from typing import Optional
+from typing import List, Optional, Tuple
 
 import numpy as np
 from numpy.typing import NDArray
 
 from glide.confidence_intervals import BootstrapConfidenceInterval
+from glide.core.utils import _split_labeled_unlabeled
+from glide.core.validation import (
+    _validate_equal_lengths,
+    _validate_has_no_nan,
+    _validate_sample_sizes,
+    _validate_y_proxy,
+    _validate_y_true,
+)
 from glide.estimators.ptd_core import (
     _compute_bootstrap_labeled_means,
     _compute_bootstrap_mean_estimates,
     _compute_tuning_parameter,
 )
 from glide.estimators.stratified_classical import StratifiedClassicalMeanEstimator
-from glide.estimators.stratified_core import _preprocess
 from glide.mean_inference_results import PredictionPoweredMeanInferenceResult
 
 
@@ -52,6 +59,31 @@ class StratifiedPTDMeanEstimator:
     n_proxy: 8
     Effective Sample Size: 33
     """
+
+    def _preprocess(
+        self,
+        y_true: NDArray,
+        y_proxy: NDArray,
+        groups: NDArray,
+    ) -> List[Tuple[NDArray, NDArray, NDArray]]:
+        _validate_has_no_nan(groups, "groups")
+        _validate_equal_lengths(y_true, y_proxy, groups, names=["y_true", "y_proxy", "groups"])
+        _validate_y_proxy(y_proxy)
+        _validate_y_true(y_true)
+
+        strata = []
+        for stratum_id in np.unique(groups):
+            stratum_mask = groups == stratum_id
+            stratum_y_true = y_true[stratum_mask]
+            stratum_y_proxy = y_proxy[stratum_mask]
+            _validate_y_proxy(stratum_y_proxy, stratum_id)
+            y_true_filtered, y_proxy_labeled, y_proxy_unlabeled, labeled_mask = _split_labeled_unlabeled(
+                stratum_y_true, stratum_y_proxy
+            )
+            _validate_sample_sizes(labeled_mask, stratum_id)
+            strata.append((y_true_filtered, y_proxy_labeled, y_proxy_unlabeled))
+
+        return strata
 
     def estimate(
         self,
@@ -125,7 +157,7 @@ class StratifiedPTDMeanEstimator:
               cause a division by zero when computing the power-tuning parameter.
             - If any stratum has fewer than 2 labeled or fewer than 2 unlabeled samples.
         """
-        strata = _preprocess(y_true, y_proxy, groups)
+        strata = self._preprocess(y_true, y_proxy, groups)
 
         n_samples = len(y_true)
         rng = np.random.default_rng(random_seed)
