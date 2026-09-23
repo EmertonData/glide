@@ -11,7 +11,7 @@
 
 [1–2 paragraphs. What is the current problem or gap: a missing CI check, a slow test suite, a flaky pipeline, an outdated dependency, missing pre-commit hooks. Be concrete — link to the relevant config files, CI runs, or failing steps. Explain the impact (e.g. "coverage is not enforced on PRs", "the type-checker runs but its output is ignored", "notebook outputs are committed to the repository").]
 
-## Dependencies
+## Prerequisites
 
 [Omit this section entirely if there are none. Otherwise, one bullet per concrete feature — a tool, config, or behaviour — that must already exist for this ticket's own work to make sense. Describe each in natural language, not by naming another ticket.]
 

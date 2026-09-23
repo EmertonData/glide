@@ -11,7 +11,7 @@
 
 [1–2 paragraphs. What is missing, inconsistent, or unclear in the current documentation. Be specific — point to the relevant files, sections, or docstrings. Explain why this matters for users or contributors (e.g. "the API reference omits the `alpha` parameter", "the user guide for samplers was never written", "three different notebooks use different notation for the same quantity").]
 
-## Dependencies
+## Prerequisites
 
 [Omit this section entirely if there are none. Otherwise, one bullet per concrete feature — a class, function, or behaviour — that must already exist in the codebase for this ticket's own work to make sense. Describe each in natural language, the way it reads once implemented, not by naming another ticket.]
 
