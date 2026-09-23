@@ -9,6 +9,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 ## [Next release]
 
 ### ✨ Added
+- `generate_batched_stratified_binary_dataset`: a new synthetic dataset generator combining a batch (time) axis with a per-batch strata axis, for simulating a production stream monitored over successive batches where each batch is independently partitioned into strata.
 
 ### 🔄 Changed
 

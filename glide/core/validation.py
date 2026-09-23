@@ -1,5 +1,5 @@
 import warnings
-from typing import Hashable, List, Optional, Union
+from typing import Hashable, List, Optional, Sequence, Union
 
 import numpy as np
 from numpy.typing import NDArray
@@ -54,7 +54,7 @@ def _validate_label_prob_consistency(labeled_mask: NDArray, pi: NDArray) -> None
         raise ValueError("Samples with probability one of being labeled must be labeled.")
 
 
-def _validate_equal_lengths(*arrays: NDArray, names: List[str]) -> None:
+def _validate_equal_lengths(*arrays: Union[Sequence, NDArray], names: List[str]) -> None:
     lengths = [len(a) for a in arrays]
     if len(set(lengths)) > 1:
         if len(names) == 2:
@@ -72,7 +72,7 @@ def _validate_y_true_burn_in(y_true: NDArray) -> None:
     _validate_non_constant(y_true, "'y_true' label values are constant.")
 
 
-def _validate_non_empty(array: Union[List, NDArray], name: str) -> None:
+def _validate_non_empty(array: Union[Sequence, NDArray], name: str) -> None:
     if len(array) == 0:
         raise ValueError(f"'{name}' must be non-empty.")
 
