@@ -11,6 +11,10 @@
 
 [2–3 tight sentences per paragraph, 2 paragraphs max. Answer: what problem does this solve, what is the core mathematical idea, and why it matters for GLIDE. Write for a developer with no statistics background — define any term that is not common Python knowledge. One formula at most, introduced with "In math notation this is written as...". Never summarise the full paper.]
 
+## Prerequisites
+
+[Omit this section entirely if there are none. Otherwise, one bullet per concrete feature — a class, function, or behaviour — that must already exist in the codebase for this ticket's own work to make sense. Describe each in natural language, the way it reads once implemented, not by naming another ticket. E.g.: "`ClusteredPPIMeanEngine` should be implemented in `glide/engines/clustered_ppi.py`, composing `PPIMeanEngine`." The rest of the ticket then takes each prerequisite for granted, pointing back with "(see Prerequisites)" instead of re-explaining it.]
+
 ## Design choices
 
 [1–2 paragraphs, strictly synthetic. Cover only: where in the codebase this lives and why, how it relates to existing classes (inherits from X, mirrors Y), and any key interface decisions. One sentence of reasoning per choice is enough. Skip anything the code already makes obvious.]
