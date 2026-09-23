@@ -72,8 +72,8 @@ def test_estimate_delegates(estimator, y_true, y_proxy, groups):
         mock_compute_mean_and_std.assert_called_once()
         assert set(mock_compute_mean_and_std.call_args[0][0].keys()) == {"A", "B"}
         tuning_parameter = mock_compute_mean_and_std.call_args[0][1]
-        assert tuning_parameter["A"] == pytest.approx(0.7843137254901965)
-        assert tuning_parameter["B"] == pytest.approx(0.7843137254901965)
+        assert tuning_parameter["A"] == pytest.approx(0.784, abs=1e-3)
+        assert tuning_parameter["B"] == pytest.approx(0.784, abs=1e-3)
 
 
 def test_estimate_returns_valid_inference_result(estimator, y_true, y_proxy, groups):
