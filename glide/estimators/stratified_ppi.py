@@ -4,9 +4,9 @@ import numpy as np
 from numpy.typing import NDArray
 
 from glide.confidence_intervals import CLTConfidenceInterval
-from glide.engines.ppi_core import _compute_mean_estimate, _compute_std_estimate, _compute_tuning_parameter
+from glide.core.validation import _validate_non_constant
+from glide.engines.stratified_ppi import StratifiedPPIMeanEngine
 from glide.estimators.stratified_classical import StratifiedClassicalMeanEstimator
-from glide.estimators.stratified_core import _preprocess
 from glide.mean_inference_results import PredictionPoweredMeanInferenceResult
 
 
@@ -53,6 +53,9 @@ class StratifiedPPIMeanEstimator:
     Effective Sample Size: 14
     """
 
+    def __init__(self) -> None:
+        self._engine = StratifiedPPIMeanEngine()
+
     def estimate(
         self,
         y_true: NDArray,
@@ -87,7 +90,8 @@ class StratifiedPPIMeanEstimator:
             Labeled entries are finite; unlabeled entries are ``np.nan``.
         y_proxy : NDArray
             Array of proxy predictions, shape ``(n_samples,)``.
-            Must be fully populated (no NaN). Must have nonzero variance.
+            Must be fully populated (no NaN). Each stratum's proxy values must have
+            nonzero variance when ``power_tuning=True``.
         groups : NDArray
             Array of integer stratum identifiers, shape ``(n_samples,)``. Unique
             values define the strata.
@@ -114,27 +118,16 @@ class StratifiedPPIMeanEstimator:
             - If ``y_true``, ``y_proxy``, and ``groups`` do not all have the same length.
             - If any proxy value is NaN.
             - If labeled ``y_true`` values are constant.
-            - If all proxy values within a stratum are identical.
             - If any stratum has fewer than 2 labeled or fewer than 2 unlabeled samples.
+            - If a stratum's proxy values are constant, with ``power_tuning=True``.
         """
-        strata = _preprocess(y_true, y_proxy, groups)
+        stratified_dataset = self._engine.preprocess(y_true, y_proxy, groups)
+        _validate_non_constant(y_true[~np.isnan(y_true)], "'y_true' labeled values are constant.")
 
-        weighted_mean = 0.0
-        weighted_var = 0.0
+        tuning_parameter = self._engine.fit_tuning_parameter(stratified_dataset, power_tuning)
+        weighted_mean, std = self._engine.compute_mean_and_std(stratified_dataset, tuning_parameter)
+
         n_samples = len(y_true)
-
-        for y_true_filtered, y_proxy_labeled, y_proxy_unlabeled in strata:
-            stratum_size = len(y_true_filtered) + len(y_proxy_unlabeled)
-            w_k = stratum_size / n_samples
-
-            lambda_k = _compute_tuning_parameter(y_true_filtered, y_proxy_labeled, y_proxy_unlabeled, power_tuning)
-            mean_k = _compute_mean_estimate(y_true_filtered, y_proxy_labeled, y_proxy_unlabeled, lambda_k)
-            std_k = _compute_std_estimate(y_true_filtered, y_proxy_labeled, y_proxy_unlabeled, lambda_k)
-
-            weighted_mean += w_k * mean_k
-            weighted_var += w_k**2 * std_k**2
-
-        std = np.sqrt(weighted_var)
         n_true = int(np.sum(~np.isnan(y_true)))
 
         confidence_interval = CLTConfidenceInterval(
