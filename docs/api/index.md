@@ -11,6 +11,7 @@
 | [`generate_clustered_binary_dataset`](simulators.md#glide.simulators.generate_clustered_binary_dataset) | Synthetic clustered binary-label dataset |
 | [`generate_multi_binary_dataset`](simulators.md#glide.simulators.generate_multi_binary_dataset) | Synthetic binary-label dataset with multiple proxies |
 | [`generate_stratified_multi_binary_dataset`](simulators.md#glide.simulators.generate_stratified_multi_binary_dataset) | Stratified binary-label dataset with multiple proxies |
+| [`generate_batched_stratified_binary_dataset`](simulators.md#glide.simulators.generate_batched_stratified_binary_dataset) | Batched, stratified binary-label dataset |
 | [`simulate_annotation`](simulators.md#glide.simulators.simulate_annotation) | Simulate annotation in the simulation lifecycle |
 
 ## Samplers
