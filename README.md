@@ -120,6 +120,7 @@ If you use GLIDE in your work, please cite us using the "Cite this repository" b
 |------|-------|-----------------|------------------------|
 | Asymptotic Prediction-Powered Risk Monitoring | `monitors.AsymptoticPPRM` | [[10]](#ref-10), [[11]](#ref-11), [[12]](#ref-12) | — |
 | Asymptotic Multi-Proxy Prediction-Powered Risk Monitoring | `monitors.AsymptoticMultiPPRM` | [[9]](#ref-9), [[10]](#ref-10), [[11]](#ref-11), [[12]](#ref-12) | — |
+| Asymptotic Stratified Prediction-Powered Risk Monitoring | `monitors.AsymptoticStratifiedPPRM` | [[3]](#ref-3), [[4]](#ref-4), [[10]](#ref-10), [[11]](#ref-11), [[12]](#ref-12) | — |
 
 ### 📖 References
 
