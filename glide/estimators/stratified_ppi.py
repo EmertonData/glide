@@ -63,6 +63,7 @@ class StratifiedPPIMeanEstimator:
         groups: NDArray,
         metric_name: str = "Metric",
         confidence_level: float = 0.95,
+        *,
         power_tuning: bool = True,
     ) -> PredictionPoweredMeanInferenceResult:
         """Estimate the population mean using Stratified PPI++.
@@ -124,7 +125,7 @@ class StratifiedPPIMeanEstimator:
         stratified_dataset = self._engine.preprocess(y_true, y_proxy, groups)
         _validate_non_constant(y_true[~np.isnan(y_true)], "'y_true' labeled values are constant.")
 
-        tuning_parameter = self._engine.fit_tuning_parameter(stratified_dataset, power_tuning)
+        tuning_parameter = self._engine.fit_tuning_parameter(stratified_dataset, power_tuning=power_tuning)
         weighted_mean, std = self._engine.compute_mean_and_std(stratified_dataset, tuning_parameter)
 
         n_samples = len(y_true)

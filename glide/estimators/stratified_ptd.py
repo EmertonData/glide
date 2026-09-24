@@ -81,6 +81,7 @@ class StratifiedPTDMeanEstimator:
         metric_name: str = "Metric",
         confidence_level: float = 0.95,
         n_bootstrap: int = 2000,
+        *,
         power_tuning: bool = True,
         random_seed: Optional[int] = None,
     ) -> PredictionPoweredMeanInferenceResult:
@@ -164,7 +165,10 @@ class StratifiedPTDMeanEstimator:
                 y_true_filtered, y_proxy_labeled, n_bootstrap, rng
             )
             lambda_k = _compute_tuning_parameter(
-                bootstrap_y_true_means_k, bootstrap_y_proxy_labeled_means_k, var_proxy_unlabeled_k, power_tuning
+                bootstrap_y_true_means_k,
+                bootstrap_y_proxy_labeled_means_k,
+                var_proxy_unlabeled_k,
+                power_tuning=power_tuning,
             )
             bootstrap_estimates_k = _compute_bootstrap_mean_estimates(
                 bootstrap_y_true_means_k,

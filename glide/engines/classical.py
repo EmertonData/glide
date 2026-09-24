@@ -13,7 +13,7 @@ class ClassicalMeanEngine:
         _validate_min_samples(y_valid, "y")
         return y_valid
 
-    def fit_tuning_parameter(self, dataset: NDArray, power_tuning: bool) -> None:
+    def fit_tuning_parameter(self, dataset: NDArray, *, power_tuning: bool) -> None:
         return None
 
     def compute_mean_and_std(self, dataset: NDArray, tuning_parameter: None) -> Tuple[float, float]:

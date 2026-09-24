@@ -54,6 +54,7 @@ class PPIMeanEstimator:
         y_proxy: NDArray,
         metric_name: str = "Metric",
         confidence_level: float = 0.95,
+        *,
         power_tuning: bool = True,
     ) -> PredictionPoweredMeanInferenceResult:
         """Estimate the population mean using Prediction-Powered Inference (PPI).
@@ -109,7 +110,7 @@ class PPIMeanEstimator:
         y_true_labeled, _, y_proxy_unlabeled = ppi_dataset
         _validate_non_constant(y_true_labeled, "'y_true' labeled values are constant.")
 
-        tuning_parameter = self._engine.fit_tuning_parameter(ppi_dataset, power_tuning)
+        tuning_parameter = self._engine.fit_tuning_parameter(ppi_dataset, power_tuning=power_tuning)
         mean, std = self._engine.compute_mean_and_std(ppi_dataset, tuning_parameter)
         confidence_interval = CLTConfidenceInterval(
             mean=mean,

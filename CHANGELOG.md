@@ -12,6 +12,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - `generate_batched_stratified_binary_dataset`: a new synthetic dataset generator simulating a production stream as successive batches, each independently partitioned into strata.
 
 ### 🔄 Changed
+- Boolean parameters (e.g. `power_tuning`, `higher_is_better`) across estimators and monitors are now keyword-only, preventing ambiguous positional calls.
 
 ### 🐛 Fixed
 

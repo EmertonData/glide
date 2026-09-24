@@ -67,7 +67,7 @@ def test_estimate_delegates(estimator, y_true, y_proxy, groups):
         mock_fit_tuning_parameter.assert_called_once()
         stratified_dataset = mock_fit_tuning_parameter.call_args[0][0]
         assert set(stratified_dataset.keys()) == {"A", "B"}
-        assert mock_fit_tuning_parameter.call_args[0][1] is True
+        assert mock_fit_tuning_parameter.call_args.kwargs["power_tuning"] is True
 
         mock_compute_mean_and_std.assert_called_once()
         assert set(mock_compute_mean_and_std.call_args[0][0].keys()) == {"A", "B"}

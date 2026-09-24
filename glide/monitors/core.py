@@ -7,10 +7,10 @@ from glide.core.validation import _validate_bounds, _validate_equal_lengths, _va
 
 
 @overload
-def _reorient(value: float, higher_is_better: bool) -> float: ...
+def _reorient(value: float, *, higher_is_better: bool) -> float: ...
 @overload
-def _reorient(value: NDArray, higher_is_better: bool) -> NDArray: ...
-def _reorient(value: Union[float, NDArray], higher_is_better: bool) -> Union[float, NDArray]:
+def _reorient(value: NDArray, *, higher_is_better: bool) -> NDArray: ...
+def _reorient(value: Union[float, NDArray], *, higher_is_better: bool) -> Union[float, NDArray]:
     if higher_is_better:
         reoriented_value = -value
     else:
@@ -36,6 +36,7 @@ def _preprocess(
     fields: List[NDArray],
     field_names: List[str],
     batches: NDArray,
+    *,
     higher_is_better: bool,
     confidence_level: float,
 ) -> Tuple[List[NDArray], NDArray, NDArray]:
@@ -52,7 +53,7 @@ def _preprocess(
     _validate_equal_lengths(*fields, batches, names=[*field_names, "batches"])
     _validate_has_no_nan(batches, "batches")
 
-    risk_fields = [_reorient(field, higher_is_better) for field in fields]
+    risk_fields = [_reorient(field, higher_is_better=higher_is_better) for field in fields]
     batch_identifiers, batch_codes = _unique_ordered_batches(batches)
     return risk_fields, batch_identifiers, batch_codes
 
@@ -61,9 +62,10 @@ def _postprocess(
     risk_running_means: NDArray,
     risk_confidence_bounds: NDArray,
     risk_batch_mean_estimates: NDArray,
+    *,
     higher_is_better: bool,
 ) -> Tuple[NDArray, NDArray, NDArray]:
-    running_means = _reorient(risk_running_means, higher_is_better)
-    confidence_bounds = _reorient(risk_confidence_bounds, higher_is_better)
-    batch_mean_estimates = _reorient(risk_batch_mean_estimates, higher_is_better)
+    running_means = _reorient(risk_running_means, higher_is_better=higher_is_better)
+    confidence_bounds = _reorient(risk_confidence_bounds, higher_is_better=higher_is_better)
+    batch_mean_estimates = _reorient(risk_batch_mean_estimates, higher_is_better=higher_is_better)
     return running_means, confidence_bounds, batch_mean_estimates

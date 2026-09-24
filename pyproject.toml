@@ -74,7 +74,7 @@ default-groups = ["dev"]
 [tool.ruff]
 line-length = 120
 fix = true
-lint.select = ["E", "F", "I"]
+lint.select = ["E", "F", "FBT001", "FBT002", "I"]
 
 [tool.ty.analysis]
 respect-type-ignore-comments = true

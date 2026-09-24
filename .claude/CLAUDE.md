@@ -122,6 +122,18 @@ Always import from `typing`: `from typing import Dict, List, Optional, Tuple`.
 
 Never use `object` or `Any` as type annotations, use precise types or protocols instead.
 
+### Boolean Parameters
+
+Any function or method parameter typed `bool` (or with a boolean default) must be keyword-only (placed after a bare `*` in the signature); ruff enforces this via `FBT001`/`FBT002`. This applies to public and private functions alike, including internal helpers only called positionally from within the same module.
+
+```python
+# BAD
+def estimate(self, y_true: NDArray, y_proxy: NDArray, power_tuning: bool = True) -> ...: ...
+
+# GOOD
+def estimate(self, y_true: NDArray, y_proxy: NDArray, *, power_tuning: bool = True) -> ...: ...
+```
+
 ### Type Conversions
 
 Do not use needless type conversions like `float()` or `int()` unless required by the caller or for debugging purposes.

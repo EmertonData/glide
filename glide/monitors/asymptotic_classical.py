@@ -47,6 +47,7 @@ class AsymptoticClassicalRM(AsymptoticRM[NDArray, None]):
         self,
         y: NDArray,
         batches: NDArray,
+        *,
         higher_is_better: bool,
         threshold: float,
         metric_name: str = "Metric",
