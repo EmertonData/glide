@@ -95,3 +95,40 @@ def test_detect_higher_is_better_symmetry(dataset):
 
     np.testing.assert_array_equal(performance.alarms, risk.alarms)
     np.testing.assert_allclose(performance.confidence_bounds, -risk.confidence_bounds)
+
+
+def test_detect_stratum_relabeling_only_affects_subsequent_batches():
+    """Data reassigned from one stratum to another partway through the stream changes the confidence bounds
+    from that batch onward, even though the pooled data across strata is unchanged; earlier batches are unaffected."""
+    y_true_oracle, y_proxy, batches, local_groups = generate_batched_stratified_binary_dataset(
+        n_samples=[[20, 20, 20]] * 3,
+        true_mean=[[0.5, 0.5, 0.5]] * 3,
+        proxy_mean=[[0.6, 0.65, 0.7]] * 3,
+        correlation=[[0.6, 0.6, 0.6]] * 3,
+        random_seed=0,
+    )
+    rng = np.random.default_rng(seed=1)
+    xi = np.zeros(len(y_true_oracle))
+    for batch_id in np.unique(batches):
+        for local_stratum_id in np.unique(local_groups):
+            stratum_indices = np.flatnonzero((batches == batch_id) & (local_groups == local_stratum_id))
+            labeled_indices = rng.choice(stratum_indices, size=8, replace=False)
+            xi[labeled_indices] = 1
+    y_true = simulate_annotation(y_true_oracle, xi)
+
+    stable_groups = np.array(["a", "b", "c"])[local_groups.astype(int)]
+    reassigned_groups = stable_groups.copy()
+    reassigned_batch = 1
+    reassigned_slot_mask = (local_groups == 2) & (batches == reassigned_batch)
+    reassigned_groups[reassigned_slot_mask] = "d"
+
+    monitor = AsymptoticStratifiedPPRM()
+    stable_result = monitor.detect(
+        y_true, y_proxy, stable_groups, batches, higher_is_better=False, threshold=0.5, tightest_at_batch=1
+    )
+    reassigned_result = monitor.detect(
+        y_true, y_proxy, reassigned_groups, batches, higher_is_better=False, threshold=0.5, tightest_at_batch=1
+    )
+
+    np.testing.assert_allclose(stable_result.confidence_bounds[0], reassigned_result.confidence_bounds[0])
+    assert not np.allclose(stable_result.confidence_bounds[1:], reassigned_result.confidence_bounds[1:])
