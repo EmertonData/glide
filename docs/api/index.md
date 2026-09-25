@@ -64,13 +64,8 @@
 | Class | Description |
 |-------|-------------|
 | [`AsymptoticPPRM`](monitors.md#glide.monitors.asymptotic_pprm.AsymptoticPPRM) | Anytime-valid drift monitor combining true and proxy labels via an asymptotic confidence sequence |
-| [`AsymptoticMultiPPRM`](monitors.md#glide.monitors.asymptotic_multi_pprm.AsymptoticMultiPPRM) | Anytime-valid drift monitor combining true labels with predictions from multiple proxies via an asymptotic confidence sequence |
-
-### Stratified Prediction-Powered
-
-| Class | Description |
-|-------|-------------|
 | [`AsymptoticStratifiedPPRM`](monitors.md#glide.monitors.asymptotic_stratified_pprm.AsymptoticStratifiedPPRM) | Anytime-valid drift monitor combining true and proxy labels via an asymptotic confidence sequence, over a stream naturally partitioned into strata |
+| [`AsymptoticMultiPPRM`](monitors.md#glide.monitors.asymptotic_multi_pprm.AsymptoticMultiPPRM) | Anytime-valid drift monitor combining true labels with predictions from multiple proxies via an asymptotic confidence sequence |
 
 ## Confidence Intervals
 

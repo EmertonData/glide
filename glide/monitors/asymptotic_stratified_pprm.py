@@ -10,15 +10,15 @@ from glide.monitors.base import AsymptoticRM
 class AsymptoticStratifiedPPRM(AsymptoticRM[StratifiedPPIDataset, StratifiedTuningParameter]):
     """Anytime-valid drift monitor combining human and proxy labels over a stratified stream.
 
-    Computes a per-batch Stratified PPI estimate (each batch's samples are split into
-    strata, a power-tuned PPI++ estimate is computed independently within each stratum
-    using a weight fitted on the batches that strictly precede it, and the per-stratum
-    estimates are combined with population-proportional weights), together with its
-    standard error, and tracks the running mean of the per-batch estimates the same
-    way ``AsymptoticPPRM`` does for an unstratified stream. The false-alarm guarantee
-    is asymptotic: each batch needs enough labeled and proxy samples, within each of
-    its strata, for its Stratified PPI estimate to be approximately Gaussian with a
-    consistently estimated variance.
+    Computes a per-batch Stratified PPI estimate together with its standard error.
+    Each batch's samples are split into strata, a power-tuned PPI++ estimate is
+    computed independently within each stratum using a weight fitted on the batches
+    that strictly precede it, and the per-stratum estimates are combined with
+    population-proportional weights. The monitor then tracks the running mean of the
+    per-batch estimates the same way ``AsymptoticPPRM`` does for an unstratified
+    stream. The false-alarm guarantee is asymptotic: each batch needs enough labeled
+    and proxy samples, within each of its strata, for its Stratified PPI estimate to
+    be approximately Gaussian with a consistently estimated variance.
 
     References
     ----------

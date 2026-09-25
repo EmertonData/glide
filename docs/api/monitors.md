@@ -8,8 +8,8 @@
 
 ---
 
-::: glide.monitors.asymptotic_multi_pprm.AsymptoticMultiPPRM
+::: glide.monitors.asymptotic_stratified_pprm.AsymptoticStratifiedPPRM
 
 ---
 
-::: glide.monitors.asymptotic_stratified_pprm.AsymptoticStratifiedPPRM
+::: glide.monitors.asymptotic_multi_pprm.AsymptoticMultiPPRM
