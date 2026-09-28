@@ -73,8 +73,8 @@ def test_detect_delegates(monitor, y_true, y_proxy, batches):
         np.testing.assert_array_equal(mock_preprocess.call_args[0][0][1], y_proxy)
         assert mock_preprocess.call_args[0][1] == ["y_true", "y_proxy"]
         np.testing.assert_array_equal(mock_preprocess.call_args[0][2], batches)
-        assert mock_preprocess.call_args[0][3] is False
-        assert mock_preprocess.call_args[0][4] == 0.8
+        assert mock_preprocess.call_args.kwargs["higher_is_better"] is False
+        assert mock_preprocess.call_args.kwargs["confidence_level"] == 0.8
 
         assert mock_preprocess_subset.call_count == 3
         first_subset_call, second_subset_call, third_subset_call = mock_preprocess_subset.call_args_list
@@ -104,7 +104,7 @@ def test_detect_delegates(monitor, y_true, y_proxy, batches):
 
         mock_postprocess.assert_called_once()
         np.testing.assert_array_equal(mock_postprocess.call_args[0][2], np.array([0.0, 0.0]))
-        assert mock_postprocess.call_args[0][3] is False
+        assert mock_postprocess.call_args.kwargs["higher_is_better"] is False
 
 
 def test_detect_raises_with_batch_identity_on_too_few_samples(monitor, y_true, y_proxy):

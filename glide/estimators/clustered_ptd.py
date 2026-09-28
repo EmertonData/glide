@@ -62,6 +62,7 @@ class ClusteredPTDMeanEstimator:
         metric_name: str = "Metric",
         confidence_level: float = 0.95,
         n_bootstrap: int = 2000,
+        *,
         power_tuning: bool = True,
         random_seed: Optional[int] = None,
     ) -> PredictionPoweredMeanInferenceResult:
@@ -137,7 +138,7 @@ class ClusteredPTDMeanEstimator:
             labeled_true_means, labeled_proxy_means, n_bootstrap, rng
         )
         lambda_ = _compute_tuning_parameter(
-            bootstrap_y_true_means, bootstrap_y_proxy_labeled_means, var_proxy_unlabeled, power_tuning
+            bootstrap_y_true_means, bootstrap_y_proxy_labeled_means, var_proxy_unlabeled, power_tuning=power_tuning
         )
         bootstrap_estimates = _compute_bootstrap_mean_estimates(
             bootstrap_y_true_means,

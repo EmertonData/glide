@@ -15,12 +15,12 @@ class StratifiedPPIMeanEngine:
         stratified_dataset = _preprocess(y_true, y_proxy, groups)
         return stratified_dataset
 
-    def fit_tuning_parameter(self, dataset: StratifiedPPIDataset, power_tuning: bool) -> StratifiedTuningParameter:
+    def fit_tuning_parameter(self, dataset: StratifiedPPIDataset, *, power_tuning: bool) -> StratifiedTuningParameter:
         tuning_parameter = {}
         for stratum_id, (y_true, y_proxy_labeled, y_proxy_unlabeled) in dataset.items():
             try:
                 tuning_parameter[stratum_id] = _compute_tuning_parameter(
-                    y_true, y_proxy_labeled, y_proxy_unlabeled, power_tuning
+                    y_true, y_proxy_labeled, y_proxy_unlabeled, power_tuning=power_tuning
                 )
             except ValueError as error:
                 raise ValueError(f"{error} (stratum '{stratum_id}').") from error

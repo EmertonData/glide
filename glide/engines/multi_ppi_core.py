@@ -8,6 +8,7 @@ def _compute_tuning_parameter(
     y_true: NDArray,
     y_proxies_labeled: NDArray,
     y_proxies_unlabeled: NDArray,
+    *,
     power_tuning: bool,
 ) -> NDArray:
     n_proxies = y_proxies_labeled.shape[1]

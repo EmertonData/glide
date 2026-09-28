@@ -50,6 +50,7 @@ class ClusteredPPIMeanEstimator:
         clusters: NDArray,
         metric_name: str = "Metric",
         confidence_level: float = 0.95,
+        *,
         power_tuning: bool = True,
     ) -> PredictionPoweredMeanInferenceResult:
         """Estimate the population mean using the Clustered PPI++ estimator.
@@ -122,7 +123,7 @@ class ClusteredPPIMeanEstimator:
         ) = _preprocess(y_true, y_proxy, clusters)
 
         _lambda = _compute_tuning_parameter(
-            labeled_true_means, labeled_proxy_means, unlabeled_proxy_means, power_tuning
+            labeled_true_means, labeled_proxy_means, unlabeled_proxy_means, power_tuning=power_tuning
         )
         mean = _compute_mean_estimate(labeled_true_means, labeled_proxy_means, unlabeled_proxy_means, _lambda)
         std = _compute_std_estimate(labeled_true_means, labeled_proxy_means, unlabeled_proxy_means, _lambda)

@@ -90,6 +90,7 @@ class ASIMeanEstimator:
         y_proxy: NDArray,
         xi: NDArray,
         pi: NDArray,
+        *,
         power_tuning: bool,
     ) -> float:
         if not power_tuning:
@@ -119,6 +120,7 @@ class ASIMeanEstimator:
         pi: NDArray,
         metric_name: str = "Metric",
         confidence_level: float = 0.95,
+        *,
         power_tuning: bool = True,
     ) -> PredictionPoweredMeanInferenceResult:
         """Estimate the population mean using Active Statistical Inference (ASI).
@@ -168,7 +170,9 @@ class ASIMeanEstimator:
         n_true = int(xi.sum())
         n_proxy = len(pi_filtered)
 
-        _lambda = self._compute_tuning_parameter(y_true_filled, y_proxy_filtered, xi, pi_filtered, power_tuning)
+        _lambda = self._compute_tuning_parameter(
+            y_true_filled, y_proxy_filtered, xi, pi_filtered, power_tuning=power_tuning
+        )
         rectified_labels = self._compute_rectified_labels(y_true_filled, y_proxy_filtered, xi, pi_filtered, _lambda)
         mean_estimate = np.mean(rectified_labels)
         std_estimate = np.std(rectified_labels, ddof=1) / np.sqrt(n_proxy)

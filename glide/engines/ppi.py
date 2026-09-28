@@ -17,9 +17,11 @@ class PPIMeanEngine:
         _validate_sample_sizes(labeled_mask)
         return y_true_labeled, y_proxy_labeled, y_proxy_unlabeled
 
-    def fit_tuning_parameter(self, dataset: PPIDataset, power_tuning: bool) -> float:
+    def fit_tuning_parameter(self, dataset: PPIDataset, *, power_tuning: bool) -> float:
         y_true, y_proxy_labeled, y_proxy_unlabeled = dataset
-        tuning_parameter = _compute_tuning_parameter(y_true, y_proxy_labeled, y_proxy_unlabeled, power_tuning)
+        tuning_parameter = _compute_tuning_parameter(
+            y_true, y_proxy_labeled, y_proxy_unlabeled, power_tuning=power_tuning
+        )
         return tuning_parameter
 
     def compute_mean_and_std(self, dataset: PPIDataset, tuning_parameter: float) -> Tuple[float, float]:

@@ -80,6 +80,7 @@ def _validate_non_empty(array: Union[Sequence, NDArray], name: str) -> None:
 def _validate_bounds(
     value: Union[float, NDArray],
     name: str,
+    *,
     lower: float = -np.inf,
     upper: float = np.inf,
     left_inclusive: bool = True,

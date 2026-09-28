@@ -134,8 +134,8 @@ def test_postprocess_delegates_to_reorient(risk_running_means, risk_confidence_b
 
     assert mock_reorient.call_count == 3
     np.testing.assert_array_equal(mock_reorient.call_args_list[0][0][0], risk_running_means)
-    assert mock_reorient.call_args_list[0][0][1] is True
+    assert mock_reorient.call_args_list[0].kwargs["higher_is_better"] is True
     np.testing.assert_array_equal(mock_reorient.call_args_list[1][0][0], risk_confidence_bounds)
-    assert mock_reorient.call_args_list[1][0][1] is True
+    assert mock_reorient.call_args_list[1].kwargs["higher_is_better"] is True
     np.testing.assert_array_equal(mock_reorient.call_args_list[2][0][0], risk_batch_mean_estimates)
-    assert mock_reorient.call_args_list[2][0][1] is True
+    assert mock_reorient.call_args_list[2].kwargs["higher_is_better"] is True

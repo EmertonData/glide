@@ -62,6 +62,7 @@ class AsymptoticMultiPPRM(AsymptoticRM[MultiPPIDataset, NDArray]):
         y_true: NDArray,
         y_proxies: NDArray,
         batches: NDArray,
+        *,
         higher_is_better: bool,
         threshold: float,
         metric_name: str = "Metric",

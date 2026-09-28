@@ -68,7 +68,7 @@ def test_estimate_delegates(estimator, y_arrays):
         mock_fit_tuning_parameter.assert_called_once()
         ppi_dataset = mock_fit_tuning_parameter.call_args[0][0]
         np.testing.assert_array_equal(ppi_dataset[0], np.array([1.0, 2.0]))
-        assert mock_fit_tuning_parameter.call_args[0][1] is True
+        assert mock_fit_tuning_parameter.call_args.kwargs["power_tuning"] is True
 
         mock_compute_mean_and_std.assert_called_once()
         np.testing.assert_array_equal(mock_compute_mean_and_std.call_args[0][0][0], np.array([1.0, 2.0]))

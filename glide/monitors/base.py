@@ -21,13 +21,14 @@ class AsymptoticRM(Generic[DatasetT, TuningParameterT]):
         fields: List[NDArray],
         field_names: List[str],
         batches: NDArray,
+        *,
         higher_is_better: bool,
         confidence_level: float,
         tightest_at_batch: int,
         power_tuning: bool,
     ) -> Tuple[NDArray, NDArray, NDArray, NDArray]:
         risk_fields, batch_identifiers, batch_codes = _preprocess(
-            fields, field_names, batches, higher_is_better, confidence_level
+            fields, field_names, batches, higher_is_better=higher_is_better, confidence_level=confidence_level
         )
         n_batches = len(batch_identifiers)
         batch_risk_mean_estimates = np.empty(n_batches)
@@ -53,6 +54,6 @@ class AsymptoticRM(Generic[DatasetT, TuningParameterT]):
             batch_risk_mean_estimates, batch_risk_std_estimates, miscoverage, tightest_at_batch
         )
         running_means, confidence_bounds, batch_mean_estimates = _postprocess(
-            risk_running_means, risk_lower_bounds, batch_risk_mean_estimates, higher_is_better
+            risk_running_means, risk_lower_bounds, batch_risk_mean_estimates, higher_is_better=higher_is_better
         )
         return batch_codes, batch_mean_estimates, running_means, confidence_bounds

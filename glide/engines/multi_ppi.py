@@ -20,9 +20,11 @@ class MultiPPIMeanEngine:
         _validate_sample_sizes(labeled_mask)
         return y_true_labeled, y_proxies_labeled, y_proxies_unlabeled
 
-    def fit_tuning_parameter(self, dataset: MultiPPIDataset, power_tuning: bool) -> NDArray:
+    def fit_tuning_parameter(self, dataset: MultiPPIDataset, *, power_tuning: bool) -> NDArray:
         y_true, y_proxies_labeled, y_proxies_unlabeled = dataset
-        tuning_parameter = _compute_tuning_parameter(y_true, y_proxies_labeled, y_proxies_unlabeled, power_tuning)
+        tuning_parameter = _compute_tuning_parameter(
+            y_true, y_proxies_labeled, y_proxies_unlabeled, power_tuning=power_tuning
+        )
         return tuning_parameter
 
     def compute_mean_and_std(self, dataset: MultiPPIDataset, tuning_parameter: NDArray) -> Tuple[float, float]:

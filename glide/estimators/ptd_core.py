@@ -21,6 +21,7 @@ def _compute_tuning_parameter(
     bootstrap_y_true_means: NDArray,
     bootstrap_y_proxy_labeled_means: NDArray,
     var_proxy_unlabeled: float,
+    *,
     power_tuning: bool,
 ) -> float:
     if not power_tuning:
