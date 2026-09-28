@@ -63,6 +63,17 @@ def test_fit_tuning_parameter_power_tuning_false(engine, dataset):
     assert tuning_parameter["B"] == pytest.approx(1.0)
 
 
+def test_fit_tuning_parameter_per_stratum_independence(engine, dataset):
+    dataset_with_different_b = {
+        **dataset,
+        "B": (np.array([1.0, 2.0, 3.0]), np.array([1.1, 2.2, 3.3]), np.array([4.0, 5.0, 6.0, 7.0])),
+    }
+
+    tuning_parameter = engine.fit_tuning_parameter(dataset_with_different_b, power_tuning=True)
+
+    assert tuning_parameter["A"] == pytest.approx(0.784, abs=1e-3)
+
+
 def test_fit_tuning_parameter_wraps_error_with_stratum_identifier(engine):
     y_true = np.array([1.0, 2.0, np.nan, np.nan, 1.0, 2.0, np.nan, np.nan])
     y_proxy = np.array([1.0, 2.0, 3.0, 4.0, 5.0, 5.0, 5.0, 5.0])
@@ -83,3 +94,11 @@ def test_compute_mean_and_std(engine, dataset):
     mean, std = engine.compute_mean_and_std(dataset, tuning_parameter)
     assert mean == pytest.approx(5.617, abs=1e-3)
     assert std == pytest.approx(0.250, abs=1e-3)
+
+
+def test_compute_mean_and_std_missing_stratum_defaults_to_untuned(engine, dataset):
+    mean_with_missing_key, std_with_missing_key = engine.compute_mean_and_std(dataset, {"A": 0.784})
+    mean_with_explicit_one, std_with_explicit_one = engine.compute_mean_and_std(dataset, {"A": 0.784, "B": 1.0})
+
+    assert mean_with_missing_key == pytest.approx(mean_with_explicit_one)
+    assert std_with_missing_key == pytest.approx(std_with_explicit_one)
