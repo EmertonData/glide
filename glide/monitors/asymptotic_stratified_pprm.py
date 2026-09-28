@@ -72,6 +72,7 @@ class AsymptoticStratifiedPPRM(AsymptoticRM[StratifiedPPIDataset, StratifiedTuni
         y_proxy: NDArray,
         groups: NDArray,
         batches: NDArray,
+        *,
         higher_is_better: bool,
         threshold: float,
         metric_name: str = "Metric",
