@@ -153,6 +153,34 @@ To compute predictable weights $\lambda_t$, the simplest option is to pool the f
 
 Plugging $\hat{R}_s$ and $\hat{\sigma}_s$ into the [Asymptotic Confidence Sequences](#asymptotic-confidence-sequences) construction gives the anytime-valid lower bound $L_t$ derived there. The **drift alarm** fires as soon as $L_t > \tau$, the user-fixed threshold.
 
+### Asymptotic Stratified Prediction-Powered Risk Monitoring (Asymptotic Stratified PPRM)
+
+Asymptotic PPRM assumes that each batch is drawn from a single population. In practice, a batch is often naturally partitioned into strata, and the proxy's behavior can vary across them. Asymptotic PPRM generalises to a stream where each batch is split into $K$ strata combined through [Stratified PPI++](estimators.md#stratified-ppi) [[5](#ref-5), [6](#ref-6)], the same way the underlying estimator generalises PPI++.
+
+#### Setting
+
+Each batch $t$ carries the following inputs: a small set of human labels together with a larger set of proxy labels, both specific to that batch, each also tagged with a stratum identifier.
+
+| Value | Present for | Description |
+|---|---|---|
+| $\tilde{Y}_{t,i}$ | All samples in batch $t$ | Proxy label |
+| $Y_{t,j}$ | Labeled samples in batch $t$ only | Ground-truth label |
+| $g_{t,i}$ | All samples in batch $t$ | Stratum identifier |
+
+Unlike the one-shot Stratified PPI++ estimator, where every stratum is simply whatever is present in the single dataset passed in, a stratum's population weight $w_{k,t}$ is computed from batch $t$ alone, and both the weight and the stratum's very presence can vary from batch to batch: a stratum can be missing from one batch and appear for the first time later in the stream.
+
+The per-batch estimate $\hat{R}_t$ is the Stratified PPI++ estimate on batch $t$, a population-weighted sum of the per-stratum PPI++ estimates,
+
+$$\hat{R}_t = \sum_{k=1}^{K} w_{k,t} \cdot \hat{R}_{k,t}(\lambda_{k,t}),$$
+
+where $\hat{R}_{k,t}(\lambda_{k,t})$ is the PPI++ estimate restricted to batch $t$'s stratum $k$, together with its standard error $\hat{\sigma}_t$, obtained by applying the [Stratified PPI++](estimators.md#stratified-ppi) variance formula within batch $t$, and $\lambda_{k,t}$ a predictable, per-stratum power-tuning weight.
+
+Predictable power-tuning carries over unchanged from [Asymptotic PPRM](#asymptotic-prediction-powered-risk-monitoring-asymptotic-pprm), applied per stratum: $\lambda_{k,t}$ is fit on batches strictly before $t$ in which stratum $k$ appeared, and a stratum's first appearance anywhere in the stream, having no predecessor to fit on, uses the neutral weight $\lambda_{k,t} = 1$.
+
+#### Bound and Alarm Rule
+
+Plugging $\hat{R}_t$ and $\hat{\sigma}_t$ into the [Asymptotic Confidence Sequences](#asymptotic-confidence-sequences) construction gives the anytime-valid lower bound $L_t$ derived there. The **drift alarm** fires as soon as $L_t > \tau$, the user-fixed threshold.
+
 ### Asymptotic Multi-Proxy Prediction-Powered Risk Monitoring (Asymptotic Multi-PPRM)
 
 Cheap proxy labels are not limited to a single source: Asymptotic PPRM generalises to $M \ge 1$ proxies combined through [Multi-Proxy Prediction-Powered Inference (Multi-PPI)](estimators.md#multi-proxy-prediction-powered-inference-multi-ppi) [[4](#ref-4)], the same way the underlying estimator generalises PPI++.
@@ -189,3 +217,7 @@ Plugging $\hat{R}_s$ and $\hat{\sigma}_s$ into the [Asymptotic Confidence Sequen
 <a id="ref-3"></a>[3] <a id="ref-3-link" href="https://projecteuclid.org/journals/annals-of-mathematical-statistics/volume-41/issue-5/Statistical-Methods-Related-to-the-Law-of-the-Iterated-Logarithm/10.1214/aoms/1177696786.full">Robbins, Herbert. "Statistical methods related to the law of the iterated logarithm." The Annals of Mathematical Statistics 41, no. 5 (1970): 1397-1409</a>.
 
 <a id="ref-4"></a>[4] <a id="ref-4-link" href="https://arxiv.org/abs/2509.21707">Shan, Jiawei, Zhifeng Chen, Yiming Dong, Yazhen Wang, and Jiwei Zhao. "SADA: Safe and Adaptive Aggregation of Multiple Black-Box Predictions in Semi-Supervised Learning." arXiv preprint arXiv:2509.21707 (2025).</a>.
+
+<a id="ref-5"></a>[5] <a id="ref-5-link" href="https://proceedings.neurips.cc/paper_files/paper/2024/file/c9fcd02e6445c7dfbad6986abee53d0d-Paper-Conference.pdf">Fisch, Adam, Joshua Maynez, R. Alex Hofer, Bhuwan Dhingra, Amir Globerson, and William W. Cohen. "Stratified prediction-powered inference for effective hybrid evaluation of language models." Advances in Neural Information Processing Systems 37 (2024): 111489-111514.</a>.
+
+<a id="ref-6"></a>[6] <a id="ref-6-link" href="https://www.ecva.net/papers/eccv_2024/papers_ECCV/papers/12117.pdf">Fogliato, Riccardo, Pratik Patil, Mathew Monfort, and Pietro Perona. "A framework for efficient model evaluation through stratification, sampling, and estimation." In European Conference on Computer Vision, pp. 140-158. Cham: Springer Nature Switzerland, 2024.</a>.
