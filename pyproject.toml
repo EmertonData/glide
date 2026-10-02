@@ -52,20 +52,20 @@ packages = ["glide"]
 dev = [
     "bump-my-version>=1.5.1",
     "papermill>=2.7.0",
-    "prek>=0.5.0",
+    "prek>=0.5.4",
     "pytest>=9.1.1",
     "pytest-coverage>=0.0",
-    "ruff>=0.16.5",
-    "ty>=0.0.75",
+    "ruff>=0.16.9",
+    "ty>=0.0.84",
 ]
 doc = [
     "datasets>=5.0.1",
-    "matplotlib>=3.11.1",
+    "matplotlib>=3.11.2",
     "mkdocs>=1.6.1",
     "mkdocs-jupyter>=0.26.3",
     "mkdocs-material>=9.7.7",
     "mkdocstrings[python]>=1.0.4",
-    "scikit-learn>=1.9.0",
+    "scikit-learn>=1.9.1",
 ]
 
 [tool.uv]
