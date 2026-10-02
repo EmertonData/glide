@@ -986,7 +986,7 @@ dev = [
     { name = "pytest", specifier = ">=9.1.1" },
     { name = "pytest-coverage", specifier = ">=0.0" },
     { name = "ruff", specifier = ">=0.16.9" },
-    { name = "ty", specifier = ">=0.0.75" },
+    { name = "ty", specifier = ">=0.0.84" },
 ]
 doc = [
     { name = "datasets", specifier = ">=5.0.1" },
