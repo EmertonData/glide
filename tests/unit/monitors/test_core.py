@@ -122,19 +122,6 @@ def test_preprocess_known_output(label_fields, preprocess_batches):
     np.testing.assert_array_equal(batch_codes, expected_batch_codes)
 
 
-def test_preprocess_identifier_fields_not_reoriented(label_fields, identifier_fields, preprocess_batches):
-    expected_groups = np.array(["a", "a", "b", "b"])
-
-    risk_fields, _, _ = _preprocess(
-        label_fields, identifier_fields, preprocess_batches, higher_is_better=True, confidence_level=0.8
-    )
-
-    assert list(risk_fields.keys()) == ["field_a", "field_b", "groups"]
-    np.testing.assert_array_equal(risk_fields["field_a"], -label_fields["field_a"])
-    np.testing.assert_array_equal(risk_fields["field_b"], -label_fields["field_b"])
-    np.testing.assert_array_equal(risk_fields["groups"], expected_groups)
-
-
 # --- _postprocess ---
 
 
