@@ -136,8 +136,7 @@ class AsymptoticMultiPPRM(AsymptoticRM[MultiPPIDataset, NDArray]):
             - If the accumulated variance of the batch estimates up to ``tightest_at_batch`` is zero.
         """
         batch_codes, batch_mean_estimates, running_means, confidence_bounds = self._detect(
-            fields=[y_true, y_proxies],
-            field_names=["y_true", "y_proxies"],
+            label_fields={"y_true": y_true, "y_proxies": y_proxies},
             batches=batches,
             higher_is_better=higher_is_better,
             confidence_level=confidence_level,

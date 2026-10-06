@@ -127,8 +127,7 @@ class AsymptoticClassicalRM(AsymptoticRM[NDArray, None]):
             - If the accumulated variance of the batch estimates up to ``tightest_at_batch`` is zero.
         """
         batch_codes, batch_mean_estimates, running_means, confidence_bounds = self._detect(
-            fields=[y],
-            field_names=["y"],
+            label_fields={"y": y},
             batches=batches,
             higher_is_better=higher_is_better,
             confidence_level=confidence_level,
