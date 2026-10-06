@@ -9,7 +9,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 ## [Next release]
 
 ### ✨ Added
-- `generate_batched_clustered_binary_dataset`: a new synthetic dataset generator simulating a production stream as successive batches, each independently partitioned into its own clusters with globally unique identifiers.
+- `generate_batched_clustered_binary_dataset`: a new synthetic dataset generator simulating a production stream as successive batches, each independently partitioned into clusters.
 - New tutorial on monitoring a stratified production stream for drift with `AsymptoticStratifiedPPRM`.
 - `AsymptoticStratifiedPPRM`: a new anytime-valid drift monitor that combines human labels with proxy predictions over a stream of stratified data.
 - `generate_batched_stratified_binary_dataset`: a new synthetic dataset generator simulating a production stream as successive batches, each independently partitioned into strata.

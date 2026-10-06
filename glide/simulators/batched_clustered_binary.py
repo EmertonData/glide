@@ -1,4 +1,4 @@
-from typing import List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple
 
 import numpy as np
 from numpy.typing import NDArray
@@ -23,8 +23,8 @@ def generate_batched_clustered_binary_dataset(
     ``n_samples[t]``, ``n_clusters[t]``, ``true_mean[t]``, ``proxy_mean[t]``,
     ``correlation[t]``, and ``within_cluster_diversity[t]`` as that batch's own
     parameters. Cluster identifiers are offset per batch so every cluster in the
-    returned array is unique across the whole stream, never reused across two
-    different batches. Batches are concatenated in order, oldest first.
+    returned array is unique across the whole stream. Batches are concatenated in
+    order, oldest first.
 
     Parameters
     ----------
@@ -41,8 +41,8 @@ def generate_batched_clustered_binary_dataset(
         Length ``T``. Entry ``t`` is that batch's ``correlation`` argument.
     within_cluster_diversity : list of float, optional
         Length ``T``. Entry ``t`` is that batch's ``within_cluster_diversity``
-        argument. Defaults to ``0.9`` for every batch when not provided, matching
-        ``generate_clustered_binary_dataset``'s own default.
+        argument. When not provided, every batch uses ``generate_clustered_binary_dataset``'s
+        own default.
     random_seed : int, optional
         Seed for reproducibility. If provided, one independent child seed is derived
         deterministically per batch.
@@ -89,16 +89,17 @@ def generate_batched_clustered_binary_dataset(
     """
     _validate_non_empty(n_samples, "n_samples")
     n_batches = len(n_samples)
-    if within_cluster_diversity is None:
-        within_cluster_diversity = [0.9] * n_batches
+    optional_parameters: Dict[str, List[float]] = {}
+    if within_cluster_diversity is not None:
+        optional_parameters["within_cluster_diversity"] = within_cluster_diversity
     _validate_equal_lengths(
         n_samples,
         n_clusters,
         true_mean,
         proxy_mean,
         correlation,
-        within_cluster_diversity,
-        names=["n_samples", "n_clusters", "true_mean", "proxy_mean", "correlation", "within_cluster_diversity"],
+        *optional_parameters.values(),
+        names=["n_samples", "n_clusters", "true_mean", "proxy_mean", "correlation", *optional_parameters],
     )
 
     y_true_per_batch = []
@@ -117,7 +118,7 @@ def generate_batched_clustered_binary_dataset(
             true_mean=true_mean[batch_id],
             proxy_mean=proxy_mean[batch_id],
             correlation=correlation[batch_id],
-            within_cluster_diversity=within_cluster_diversity[batch_id],
+            **{name: values[batch_id] for name, values in optional_parameters.items()},
             random_seed=seeds[batch_id],
         )
         y_true_per_batch.append(y_true_t)
