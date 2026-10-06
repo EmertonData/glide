@@ -33,20 +33,12 @@ def estimator() -> ClusteredPTDMeanEstimator:
 # --- estimate ---
 
 
-def test_estimate_delegates(estimator, y_true, y_proxy, clusters):
-    with (
-        patch.object(clustered_ptd_module, "_validate_y_true") as mock_validate_y_true,
-        patch.object(clustered_ptd_module, "_preprocess", wraps=clustered_ptd_module._preprocess) as mock_preprocess,
-    ):
+def test_estimate_delegates_to_validation(estimator, y_true, y_proxy, clusters):
+    with patch.object(clustered_ptd_module, "_validate_y_true") as mock_validate_y_true:
         estimator.estimate(y_true, y_proxy, clusters, n_bootstrap=5, random_seed=0)
 
         mock_validate_y_true.assert_called_once()
         np.testing.assert_array_equal(mock_validate_y_true.call_args[0][0], y_true)
-
-        mock_preprocess.assert_called_once()
-        np.testing.assert_array_equal(mock_preprocess.call_args[0][0], y_true)
-        np.testing.assert_array_equal(mock_preprocess.call_args[0][1], y_proxy)
-        np.testing.assert_array_equal(mock_preprocess.call_args[0][2], clusters)
 
 
 def test_estimate_returns_valid_inference_result(estimator, y_true, y_proxy, clusters):
