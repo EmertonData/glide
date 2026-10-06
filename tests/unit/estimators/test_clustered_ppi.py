@@ -1,8 +1,12 @@
+from unittest.mock import patch
+
 import numpy as np
 import pytest
 from numpy.typing import NDArray
 
+import glide.estimators.clustered_ppi as clustered_ppi_module
 from glide.confidence_intervals import CLTConfidenceInterval
+from glide.engines.clustered_ppi import ClusteredPPIMeanEngine
 from glide.estimators import ClusteredPPIMeanEstimator
 from glide.mean_inference_results import PredictionPoweredMeanInferenceResult
 
@@ -27,7 +31,50 @@ def estimator() -> ClusteredPPIMeanEstimator:
     return ClusteredPPIMeanEstimator()
 
 
+# --- __init__ ---
+
+
+def test_init_sets_engine(estimator):
+    assert isinstance(estimator._engine, ClusteredPPIMeanEngine)
+
+
 # --- estimate ---
+
+
+def test_estimate_delegates(estimator, y_true, y_proxy, clusters):
+    with (
+        patch.object(clustered_ppi_module, "_validate_non_constant") as mock_validate_non_constant,
+        patch.object(estimator._engine, "preprocess", wraps=estimator._engine.preprocess) as mock_preprocess,
+        patch.object(
+            estimator._engine, "fit_tuning_parameter", wraps=estimator._engine.fit_tuning_parameter
+        ) as mock_fit_tuning_parameter,
+        patch.object(
+            estimator._engine, "compute_mean_and_std", wraps=estimator._engine.compute_mean_and_std
+        ) as mock_compute_mean_and_std,
+    ):
+        estimator.estimate(y_true, y_proxy, clusters)
+
+        mock_preprocess.assert_called_once()
+        np.testing.assert_array_equal(mock_preprocess.call_args[0][0], y_true)
+        np.testing.assert_array_equal(mock_preprocess.call_args[0][1], y_proxy)
+        np.testing.assert_array_equal(mock_preprocess.call_args[0][2], clusters)
+
+        mock_validate_non_constant.assert_called_once()
+        np.testing.assert_array_equal(mock_validate_non_constant.call_args[0][0], np.array([4.0, 6.0]))
+        assert mock_validate_non_constant.call_args[0][1] == "'y_true' labeled values are constant."
+
+        mock_fit_tuning_parameter.assert_called_once()
+        np.testing.assert_array_equal(mock_fit_tuning_parameter.call_args[0][0][0], np.array([4.0, 6.0]))
+        assert mock_fit_tuning_parameter.call_args.kwargs["power_tuning"] is True
+
+        mock_compute_mean_and_std.assert_called_once()
+        np.testing.assert_array_equal(mock_compute_mean_and_std.call_args[0][0][0], np.array([4.0, 6.0]))
+
+
+def test_estimate_constant_y_true(estimator, y_proxy, clusters):
+    y_true_constant = np.array([4.0, np.nan, 4.0, np.nan])
+    with pytest.raises(ValueError, match="'y_true' labeled values are constant."):
+        estimator.estimate(y_true_constant, y_proxy, clusters)
 
 
 def test_estimate_returns_valid_inference_result(estimator, y_true, y_proxy, clusters):
