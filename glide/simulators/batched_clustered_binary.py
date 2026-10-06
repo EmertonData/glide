@@ -1,4 +1,4 @@
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, Optional, Sequence, Tuple
 
 import numpy as np
 from numpy.typing import NDArray
@@ -8,12 +8,12 @@ from glide.simulators.clustered_binary import generate_clustered_binary_dataset
 
 
 def generate_batched_clustered_binary_dataset(
-    n_samples: List[int],
-    n_clusters: List[int],
-    true_mean: List[float],
-    proxy_mean: List[float],
-    correlation: List[float],
-    within_cluster_diversity: Optional[List[float]] = None,
+    n_samples: Sequence[int],
+    n_clusters: Sequence[int],
+    true_mean: Sequence[float],
+    proxy_mean: Sequence[float],
+    correlation: Sequence[float],
+    within_cluster_diversity: Optional[Sequence[float]] = None,
     random_seed: Optional[int] = None,
 ) -> Tuple[NDArray, NDArray, NDArray, NDArray]:
     """Generate a synthetic batched, clustered binary-label oracle dataset.
@@ -89,7 +89,7 @@ def generate_batched_clustered_binary_dataset(
     """
     _validate_non_empty(n_samples, "n_samples")
     n_batches = len(n_samples)
-    optional_parameters: Dict[str, List[float]] = {}
+    optional_parameters: Dict[str, Sequence[float]] = {}
     if within_cluster_diversity is not None:
         optional_parameters["within_cluster_diversity"] = within_cluster_diversity
     _validate_equal_lengths(
@@ -110,7 +110,7 @@ def generate_batched_clustered_binary_dataset(
     seed_sequence = np.random.SeedSequence(random_seed)
     seeds = seed_sequence.spawn(n_batches)
 
-    cluster_offset = 0
+    cluster_offsets = np.cumsum(n_clusters) - n_clusters
     for batch_id in range(n_batches):
         y_true_t, y_proxy_t, clusters_t = generate_clustered_binary_dataset(
             n_samples=n_samples[batch_id],
@@ -124,8 +124,7 @@ def generate_batched_clustered_binary_dataset(
         y_true_per_batch.append(y_true_t)
         y_proxy_per_batch.append(y_proxy_t)
         batches_per_batch.append(np.full_like(y_true_t, batch_id))
-        clusters_per_batch.append(clusters_t + cluster_offset)
-        cluster_offset += n_clusters[batch_id]
+        clusters_per_batch.append(clusters_t + cluster_offsets[batch_id])
 
     y_true = np.hstack(y_true_per_batch)
     y_proxy = np.hstack(y_proxy_per_batch)
