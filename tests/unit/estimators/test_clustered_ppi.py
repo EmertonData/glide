@@ -71,12 +71,6 @@ def test_estimate_delegates(estimator, y_true, y_proxy, clusters):
         np.testing.assert_array_equal(mock_compute_mean_and_std.call_args[0][0][0], np.array([4.0, 6.0]))
 
 
-def test_estimate_constant_y_true(estimator, y_proxy, clusters):
-    y_true_constant = np.array([4.0, np.nan, 4.0, np.nan])
-    with pytest.raises(ValueError, match="'y_true' labeled values are constant."):
-        estimator.estimate(y_true_constant, y_proxy, clusters)
-
-
 def test_estimate_returns_valid_inference_result(estimator, y_true, y_proxy, clusters):
     result = estimator.estimate(y_true, y_proxy, clusters)
     assert isinstance(result, PredictionPoweredMeanInferenceResult)

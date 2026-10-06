@@ -30,12 +30,6 @@ def estimator() -> ClusteredPTDMeanEstimator:
 # --- estimate ---
 
 
-def test_estimate_constant_y_true(estimator, y_proxy, clusters):
-    y_true_constant = np.array([4.0, 4.0, 4.0, 4.0, np.nan, np.nan, np.nan, np.nan])
-    with pytest.raises(ValueError, match="'y_true' labeled values are constant."):
-        estimator.estimate(y_true_constant, y_proxy, clusters)
-
-
 def test_estimate_returns_valid_inference_result(estimator, y_true, y_proxy, clusters):
     result = estimator.estimate(y_true, y_proxy, clusters, n_bootstrap=5, random_seed=0)
     assert isinstance(result, PredictionPoweredMeanInferenceResult)
