@@ -21,17 +21,15 @@ class AsymptoticRM(Generic[DatasetT, TuningParameterT]):
         label_fields: Dict[str, NDArray],
         batches: NDArray,
         *,
+        identifier_fields: Optional[Dict[str, NDArray]] = None,
         higher_is_better: bool,
         confidence_level: float,
         tightest_at_batch: int,
         power_tuning: bool,
-        identifier_fields: Optional[Dict[str, NDArray]] = None,
     ) -> Tuple[NDArray, NDArray, NDArray, NDArray]:
-        if identifier_fields is None:
-            identifier_fields = {}
         risk_fields, batch_identifiers, batch_codes = _preprocess(
             label_fields,
-            identifier_fields,
+            identifier_fields or {},
             batches,
             higher_is_better=higher_is_better,
             confidence_level=confidence_level,

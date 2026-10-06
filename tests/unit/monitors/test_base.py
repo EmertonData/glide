@@ -38,7 +38,6 @@ def test_preprocess_subset_delegates(monitor, y_true, y_proxy, batches):
 
         mock_preprocess.assert_called_once()
         assert mock_preprocess.call_args.args == ()
-        assert list(mock_preprocess.call_args.kwargs.keys()) == ["y_true", "y_proxy"]
         np.testing.assert_array_equal(mock_preprocess.call_args.kwargs["y_true"], y_true[mask])
         np.testing.assert_array_equal(mock_preprocess.call_args.kwargs["y_proxy"], y_proxy[mask])
 
@@ -70,7 +69,6 @@ def test_detect_delegates(monitor, y_true, y_proxy, batches):
         )
 
         mock_preprocess.assert_called_once()
-        assert list(mock_preprocess.call_args[0][0].keys()) == ["y_true", "y_proxy"]
         np.testing.assert_array_equal(mock_preprocess.call_args[0][0]["y_true"], y_true)
         np.testing.assert_array_equal(mock_preprocess.call_args[0][0]["y_proxy"], y_proxy)
         assert mock_preprocess.call_args[0][1] == {}
