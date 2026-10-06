@@ -61,7 +61,6 @@ def _preprocess(
     risk_label_fields = {
         name: _reorient(field, higher_is_better=higher_is_better) for name, field in label_fields.items()
     }
-    # label_fields must precede identifier_fields here: engines' preprocess(*fields) expect metric fields first.
     risk_fields = {**risk_label_fields, **identifier_fields}
     batch_identifiers, batch_codes = _unique_ordered_batches(batches)
     return risk_fields, batch_identifiers, batch_codes

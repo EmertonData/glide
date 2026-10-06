@@ -12,8 +12,8 @@ class AsymptoticRM(Generic[DatasetT, TuningParameterT]):
     _engine: MeanEstimationEngine[DatasetT, TuningParameterT]
 
     def _preprocess_subset(self, fields: Dict[str, NDArray], mask: NDArray) -> DatasetT:
-        field_subsets = [field[mask] for field in fields.values()]
-        dataset = self._engine.preprocess(*field_subsets)
+        field_subsets = {name: field[mask] for name, field in fields.items()}
+        dataset = self._engine.preprocess(**field_subsets)
         return dataset
 
     def _detect(
