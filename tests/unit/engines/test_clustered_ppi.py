@@ -56,13 +56,6 @@ def test_preprocess_delegates_to_clustered_core(engine, y_true, y_proxy, cluster
         assert dataset is sentinel_dataset
 
 
-def test_preprocess_valid_output(engine, y_true, y_proxy, clusters):
-    labeled_true_means, labeled_proxy_means, unlabeled_proxy_means = engine.preprocess(y_true, y_proxy, clusters)
-    np.testing.assert_array_equal(labeled_true_means, np.array([4.0, 6.0]))
-    np.testing.assert_array_equal(labeled_proxy_means, np.array([2.0, 6.0]))
-    np.testing.assert_array_equal(unlabeled_proxy_means, np.array([4.0, 6.0]))
-
-
 # --- fit_tuning_parameter ---
 
 

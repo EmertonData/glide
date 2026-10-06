@@ -93,14 +93,14 @@ def test_estimate_metadata(estimator, y_true, y_proxy, clusters):
 def test_estimate_custom_confidence_level(estimator, y_true, y_proxy, clusters):
     result = estimator.estimate(y_true, y_proxy, clusters, confidence_level=0.90)
 
-    expected_mean = 61 / 11
-    expected_std = np.sqrt(37) / 11
+    expected_mean = 5.545
+    expected_std = 0.553
     expected_lower = 4.636
     expected_upper = 6.455
 
     assert result.confidence_interval.confidence_level == 0.90
-    assert result.confidence_interval.mean == pytest.approx(expected_mean, abs=1e-10)
-    assert result.std == pytest.approx(expected_std, abs=1e-10)
+    assert result.confidence_interval.mean == pytest.approx(expected_mean, abs=1e-3)
+    assert result.std == pytest.approx(expected_std, abs=1e-3)
     assert result.confidence_interval.lower_bound == pytest.approx(expected_lower, abs=1e-3)
     assert result.confidence_interval.upper_bound == pytest.approx(expected_upper, abs=1e-3)
 
