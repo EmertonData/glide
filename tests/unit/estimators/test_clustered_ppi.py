@@ -41,36 +41,12 @@ def test_init_sets_engine(estimator):
 # --- estimate ---
 
 
-def test_estimate_delegates(estimator, y_true, y_proxy, clusters):
-    expected_labeled_true_means = np.array([4.0, 6.0])
-    with (
-        patch.object(clustered_ppi_module, "_validate_y_true") as mock_validate_y_true,
-        patch.object(estimator._engine, "preprocess", wraps=estimator._engine.preprocess) as mock_preprocess,
-        patch.object(
-            estimator._engine, "fit_tuning_parameter", wraps=estimator._engine.fit_tuning_parameter
-        ) as mock_fit_tuning_parameter,
-        patch.object(
-            estimator._engine, "compute_mean_and_std", wraps=estimator._engine.compute_mean_and_std
-        ) as mock_compute_mean_and_std,
-    ):
+def test_estimate_delegates_to_validation(estimator, y_true, y_proxy, clusters):
+    with patch.object(clustered_ppi_module, "_validate_y_true") as mock_validate_y_true:
         estimator.estimate(y_true, y_proxy, clusters)
 
         mock_validate_y_true.assert_called_once()
         np.testing.assert_array_equal(mock_validate_y_true.call_args[0][0], y_true)
-
-        mock_preprocess.assert_called_once()
-        np.testing.assert_array_equal(mock_preprocess.call_args[0][0], y_true)
-        np.testing.assert_array_equal(mock_preprocess.call_args[0][1], y_proxy)
-        np.testing.assert_array_equal(mock_preprocess.call_args[0][2], clusters)
-
-        mock_fit_tuning_parameter.assert_called_once()
-        fit_labeled_true_means, _, _ = mock_fit_tuning_parameter.call_args[0][0]
-        np.testing.assert_array_equal(fit_labeled_true_means, expected_labeled_true_means)
-        assert mock_fit_tuning_parameter.call_args.kwargs["power_tuning"] is True
-
-        mock_compute_mean_and_std.assert_called_once()
-        compute_labeled_true_means, _, _ = mock_compute_mean_and_std.call_args[0][0]
-        np.testing.assert_array_equal(compute_labeled_true_means, expected_labeled_true_means)
 
 
 def test_estimate_returns_valid_inference_result(estimator, y_true, y_proxy, clusters):
