@@ -2,10 +2,9 @@ from typing import Tuple
 
 from numpy.typing import NDArray
 
+from glide.engines.clustered_core import ClusteredDataset as ClusteredPPIDataset
 from glide.engines.clustered_core import _preprocess
-from glide.engines.ppi import PPIDataset, PPIMeanEngine
-
-ClusteredPPIDataset = PPIDataset
+from glide.engines.ppi import PPIMeanEngine
 
 
 class ClusteredPPIMeanEngine:
