@@ -1,10 +1,11 @@
+import inspect
 from unittest.mock import patch
 
 import numpy as np
 import pytest
 
 import glide.simulators.batched_clustered_binary as batched_clustered_binary_module
-from glide.simulators import generate_batched_clustered_binary_dataset
+from glide.simulators import generate_batched_clustered_binary_dataset, generate_clustered_binary_dataset
 
 
 @pytest.fixture
@@ -41,22 +42,15 @@ def test_generate_batched_clustered_binary_dataset_delegates_to_validation(datas
 
         mock_validate_non_empty.assert_called_once_with(n_samples, "n_samples")
 
-        mock_validate_equal_lengths.assert_called_once()
-        assert mock_validate_equal_lengths.call_args[0][0] is n_samples
-        assert mock_validate_equal_lengths.call_args[0][1] is dataset_params["n_clusters"]
-        assert mock_validate_equal_lengths.call_args[0][2] is dataset_params["true_mean"]
-        assert mock_validate_equal_lengths.call_args[0][3] is dataset_params["proxy_mean"]
-        assert mock_validate_equal_lengths.call_args[0][4] is dataset_params["correlation"]
-        assert mock_validate_equal_lengths.call_args[0][5] is within_cluster_diversity
-        expected_names = [
-            "n_samples",
-            "n_clusters",
-            "true_mean",
-            "proxy_mean",
-            "correlation",
-            "within_cluster_diversity",
-        ]
-        assert mock_validate_equal_lengths.call_args[1]["names"] == expected_names
+        mock_validate_equal_lengths.assert_called_once_with(
+            n_samples,
+            dataset_params["n_clusters"],
+            dataset_params["true_mean"],
+            dataset_params["proxy_mean"],
+            dataset_params["correlation"],
+            within_cluster_diversity,
+            names=["n_samples", "n_clusters", "true_mean", "proxy_mean", "correlation", "within_cluster_diversity"],
+        )
 
 
 def test_generate_batched_clustered_binary_dataset_reproducibility(dataset_params):
@@ -75,3 +69,11 @@ def test_generate_batched_clustered_binary_dataset_different_seed_results_differ
         or not np.array_equal(y_proxy1, y_proxy2)
         or not np.array_equal(clusters1, clusters2)
     )
+
+
+def test_generate_batched_clustered_binary_dataset_within_cluster_diversity_default_matches_base_function():
+    batched_default = (
+        inspect.signature(generate_batched_clustered_binary_dataset).parameters["within_cluster_diversity"].default
+    )
+    base_default = inspect.signature(generate_clustered_binary_dataset).parameters["within_cluster_diversity"].default
+    assert batched_default == base_default
