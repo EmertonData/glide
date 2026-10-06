@@ -42,8 +42,9 @@ def test_init_sets_engine(estimator):
 
 
 def test_estimate_delegates(estimator, y_true, y_proxy, clusters):
+    expected_labeled_true_means = np.array([4.0, 6.0])
     with (
-        patch.object(clustered_ppi_module, "_validate_non_constant") as mock_validate_non_constant,
+        patch.object(clustered_ppi_module, "_validate_y_true") as mock_validate_y_true,
         patch.object(estimator._engine, "preprocess", wraps=estimator._engine.preprocess) as mock_preprocess,
         patch.object(
             estimator._engine, "fit_tuning_parameter", wraps=estimator._engine.fit_tuning_parameter
@@ -54,21 +55,22 @@ def test_estimate_delegates(estimator, y_true, y_proxy, clusters):
     ):
         estimator.estimate(y_true, y_proxy, clusters)
 
+        mock_validate_y_true.assert_called_once()
+        np.testing.assert_array_equal(mock_validate_y_true.call_args[0][0], y_true)
+
         mock_preprocess.assert_called_once()
         np.testing.assert_array_equal(mock_preprocess.call_args[0][0], y_true)
         np.testing.assert_array_equal(mock_preprocess.call_args[0][1], y_proxy)
         np.testing.assert_array_equal(mock_preprocess.call_args[0][2], clusters)
 
-        mock_validate_non_constant.assert_called_once()
-        np.testing.assert_array_equal(mock_validate_non_constant.call_args[0][0], np.array([4.0, 6.0]))
-        assert mock_validate_non_constant.call_args[0][1] == "'y_true' labeled values are constant."
-
         mock_fit_tuning_parameter.assert_called_once()
-        np.testing.assert_array_equal(mock_fit_tuning_parameter.call_args[0][0][0], np.array([4.0, 6.0]))
+        fit_labeled_true_means, _, _ = mock_fit_tuning_parameter.call_args[0][0]
+        np.testing.assert_array_equal(fit_labeled_true_means, expected_labeled_true_means)
         assert mock_fit_tuning_parameter.call_args.kwargs["power_tuning"] is True
 
         mock_compute_mean_and_std.assert_called_once()
-        np.testing.assert_array_equal(mock_compute_mean_and_std.call_args[0][0][0], np.array([4.0, 6.0]))
+        compute_labeled_true_means, _, _ = mock_compute_mean_and_std.call_args[0][0]
+        np.testing.assert_array_equal(compute_labeled_true_means, expected_labeled_true_means)
 
 
 def test_estimate_returns_valid_inference_result(estimator, y_true, y_proxy, clusters):
@@ -93,14 +95,14 @@ def test_estimate_metadata(estimator, y_true, y_proxy, clusters):
 def test_estimate_custom_confidence_level(estimator, y_true, y_proxy, clusters):
     result = estimator.estimate(y_true, y_proxy, clusters, confidence_level=0.90)
 
-    expected_mean = 5.545
-    expected_std = 0.553
+    expected_mean = 61 / 11
+    expected_std = np.sqrt(37) / 11
     expected_lower = 4.636
     expected_upper = 6.455
 
     assert result.confidence_interval.confidence_level == 0.90
-    assert result.confidence_interval.mean == pytest.approx(expected_mean, abs=1e-3)
-    assert result.std == pytest.approx(expected_std, abs=1e-3)
+    assert result.confidence_interval.mean == pytest.approx(expected_mean, abs=1e-10)
+    assert result.std == pytest.approx(expected_std, abs=1e-10)
     assert result.confidence_interval.lower_bound == pytest.approx(expected_lower, abs=1e-3)
     assert result.confidence_interval.upper_bound == pytest.approx(expected_upper, abs=1e-3)
 
