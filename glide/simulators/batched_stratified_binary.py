@@ -102,7 +102,7 @@ def generate_batched_stratified_binary_dataset(
         )
         y_true_per_batch.append(y_true_t)
         y_proxy_per_batch.append(y_proxy_t)
-        batches_per_batch.append(np.full_like(y_true_t, batch_id))
+        batches_per_batch.append(np.full_like(y_true_t, batch_id, dtype=np.int64))
         groups_per_batch.append(groups_t)
 
     y_true = np.hstack(y_true_per_batch)

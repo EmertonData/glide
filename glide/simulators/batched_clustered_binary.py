@@ -88,10 +88,10 @@ def generate_batched_clustered_binary_dataset(
     """
     _validate_non_empty(n_samples, "n_samples")
     n_batches = len(n_samples)
-    if isinstance(within_cluster_diversity, (int, float)):
-        within_cluster_diversities = [within_cluster_diversity] * n_batches
-    else:
+    if isinstance(within_cluster_diversity, (Sequence, np.ndarray)):
         within_cluster_diversities = within_cluster_diversity
+    else:
+        within_cluster_diversities = [within_cluster_diversity] * n_batches
     _validate_equal_lengths(
         n_samples,
         n_clusters,
@@ -123,7 +123,7 @@ def generate_batched_clustered_binary_dataset(
         )
         y_true_per_batch.append(y_true_t)
         y_proxy_per_batch.append(y_proxy_t)
-        batches_per_batch.append(np.full_like(y_true_t, batch_id))
+        batches_per_batch.append(np.full_like(y_true_t, batch_id, dtype=np.int64))
         clusters_per_batch.append(clusters_t + cluster_offsets[batch_id])
 
     y_true = np.hstack(y_true_per_batch)

@@ -114,7 +114,7 @@ def generate_stratified_binary_dataset(
         )
         y_true_per_stratum.append(y_true_k)
         y_proxy_per_stratum.append(y_proxy_k)
-        groups_per_stratum.append(np.full_like(y_true_k, stratum_id))
+        groups_per_stratum.append(np.full_like(y_true_k, stratum_id, dtype=np.int64))
 
     y_true = np.hstack(y_true_per_stratum)
     y_proxy = np.hstack(y_proxy_per_stratum)
