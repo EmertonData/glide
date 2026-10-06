@@ -1,4 +1,4 @@
-from typing import Generic, List, Tuple
+from typing import Dict, Generic, Optional, Tuple
 
 import numpy as np
 from numpy.typing import NDArray
@@ -11,24 +11,28 @@ from glide.monitors.core import _postprocess, _preprocess
 class AsymptoticRM(Generic[DatasetT, TuningParameterT]):
     _engine: MeanEstimationEngine[DatasetT, TuningParameterT]
 
-    def _preprocess_subset(self, fields: List[NDArray], mask: NDArray) -> DatasetT:
-        field_subsets = [field[mask] for field in fields]
-        dataset = self._engine.preprocess(*field_subsets)
+    def _preprocess_subset(self, fields: Dict[str, NDArray], mask: NDArray) -> DatasetT:
+        field_subsets = {name: field[mask] for name, field in fields.items()}
+        dataset = self._engine.preprocess(**field_subsets)
         return dataset
 
     def _detect(
         self,
-        fields: List[NDArray],
-        field_names: List[str],
+        label_fields: Dict[str, NDArray],
         batches: NDArray,
         *,
+        identifier_fields: Optional[Dict[str, NDArray]] = None,
         higher_is_better: bool,
         confidence_level: float,
         tightest_at_batch: int,
         power_tuning: bool,
     ) -> Tuple[NDArray, NDArray, NDArray, NDArray]:
         risk_fields, batch_identifiers, batch_codes = _preprocess(
-            fields, field_names, batches, higher_is_better=higher_is_better, confidence_level=confidence_level
+            label_fields,
+            identifier_fields or {},
+            batches,
+            higher_is_better=higher_is_better,
+            confidence_level=confidence_level,
         )
         n_batches = len(batch_identifiers)
         batch_risk_mean_estimates = np.empty(n_batches)

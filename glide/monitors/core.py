@@ -1,4 +1,4 @@
-from typing import List, Tuple, Union, overload
+from typing import Dict, Tuple, Union, overload
 
 import numpy as np
 from numpy.typing import NDArray
@@ -33,13 +33,13 @@ def _unique_ordered_batches(batches: NDArray) -> Tuple[NDArray, NDArray]:
 
 
 def _preprocess(
-    fields: List[NDArray],
-    field_names: List[str],
+    label_fields: Dict[str, NDArray],
+    identifier_fields: Dict[str, NDArray],
     batches: NDArray,
     *,
     higher_is_better: bool,
     confidence_level: float,
-) -> Tuple[List[NDArray], NDArray, NDArray]:
+) -> Tuple[Dict[str, NDArray], NDArray, NDArray]:
     _validate_bounds(
         confidence_level,
         "confidence_level",
@@ -50,10 +50,18 @@ def _preprocess(
         error_message=f"'confidence_level' must be in (0.5, 1) for the asymptotic monitor; got {confidence_level!r}.",
     )
     _validate_non_empty(batches, "batches")
-    _validate_equal_lengths(*fields, batches, names=[*field_names, "batches"])
+    _validate_equal_lengths(
+        *label_fields.values(),
+        *identifier_fields.values(),
+        batches,
+        names=[*label_fields.keys(), *identifier_fields.keys(), "batches"],
+    )
     _validate_has_no_nan(batches, "batches")
 
-    risk_fields = [_reorient(field, higher_is_better=higher_is_better) for field in fields]
+    risk_label_fields = {
+        name: _reorient(field, higher_is_better=higher_is_better) for name, field in label_fields.items()
+    }
+    risk_fields = {**risk_label_fields, **identifier_fields}
     batch_identifiers, batch_codes = _unique_ordered_batches(batches)
     return risk_fields, batch_identifiers, batch_codes
 
