@@ -23,13 +23,13 @@ def risk_batch_mean_estimates():
 
 
 @pytest.fixture
-def fields():
-    return [np.array([0.1, 0.2, 0.3, 0.4]), np.array([0.5, 0.6, 0.7, 0.8])]
+def label_fields():
+    return {"field_a": np.array([0.1, 0.2, 0.3, 0.4]), "field_b": np.array([0.5, 0.6, 0.7, 0.8])}
 
 
 @pytest.fixture
-def field_names():
-    return ["field_a", "field_b"]
+def identifier_fields():
+    return {"groups": np.array(["a", "a", "b", "b"])}
 
 
 @pytest.fixture
@@ -75,14 +75,14 @@ def test_unique_ordered_batches_interleaved_raises():
 # --- _preprocess ---
 
 
-def test_preprocess_delegates_to_validation(fields, field_names, preprocess_batches):
+def test_preprocess_delegates_to_validation(label_fields, identifier_fields, preprocess_batches):
     with (
         patch.object(core_module, "_validate_bounds") as mock_validate_bounds,
         patch.object(core_module, "_validate_non_empty") as mock_validate_non_empty,
         patch.object(core_module, "_validate_equal_lengths") as mock_validate_equal_lengths,
         patch.object(core_module, "_validate_has_no_nan") as mock_validate_has_no_nan,
     ):
-        _preprocess(fields, field_names, preprocess_batches, higher_is_better=False, confidence_level=0.8)
+        _preprocess(label_fields, identifier_fields, preprocess_batches, higher_is_better=False, confidence_level=0.8)
 
     mock_validate_bounds.assert_called_once_with(
         0.8,
@@ -97,25 +97,29 @@ def test_preprocess_delegates_to_validation(fields, field_names, preprocess_batc
     np.testing.assert_array_equal(mock_validate_non_empty.call_args[0][0], preprocess_batches)
     assert mock_validate_non_empty.call_args[0][1] == "batches"
     mock_validate_equal_lengths.assert_called_once()
-    np.testing.assert_array_equal(mock_validate_equal_lengths.call_args[0][0], fields[0])
-    np.testing.assert_array_equal(mock_validate_equal_lengths.call_args[0][1], fields[1])
-    np.testing.assert_array_equal(mock_validate_equal_lengths.call_args[0][2], preprocess_batches)
-    assert mock_validate_equal_lengths.call_args[1] == {"names": ["field_a", "field_b", "batches"]}
+    np.testing.assert_array_equal(mock_validate_equal_lengths.call_args[0][0], label_fields["field_a"])
+    np.testing.assert_array_equal(mock_validate_equal_lengths.call_args[0][1], label_fields["field_b"])
+    np.testing.assert_array_equal(mock_validate_equal_lengths.call_args[0][2], identifier_fields["groups"])
+    np.testing.assert_array_equal(mock_validate_equal_lengths.call_args[0][3], preprocess_batches)
+    assert mock_validate_equal_lengths.call_args[1] == {"names": ["field_a", "field_b", "groups", "batches"]}
     mock_validate_has_no_nan.assert_called_once()
     np.testing.assert_array_equal(mock_validate_has_no_nan.call_args[0][0], preprocess_batches)
     assert mock_validate_has_no_nan.call_args[0][1] == "batches"
 
 
-def test_preprocess_known_output(fields, field_names, preprocess_batches):
+def test_preprocess_known_output(label_fields, identifier_fields, preprocess_batches):
+    expected_groups = np.array(["a", "a", "b", "b"])
     expected_batch_identifiers = np.array([0, 1])
     expected_batch_codes = np.array([0, 0, 1, 1])
 
     risk_fields, batch_identifiers, batch_codes = _preprocess(
-        fields, field_names, preprocess_batches, higher_is_better=True, confidence_level=0.8
+        label_fields, identifier_fields, preprocess_batches, higher_is_better=True, confidence_level=0.8
     )
 
-    np.testing.assert_array_equal(risk_fields[0], -fields[0])
-    np.testing.assert_array_equal(risk_fields[1], -fields[1])
+    assert list(risk_fields.keys()) == ["field_a", "field_b", "groups"]
+    np.testing.assert_array_equal(risk_fields["field_a"], -label_fields["field_a"])
+    np.testing.assert_array_equal(risk_fields["field_b"], -label_fields["field_b"])
+    np.testing.assert_array_equal(risk_fields["groups"], expected_groups)
     np.testing.assert_array_equal(batch_identifiers, expected_batch_identifiers)
     np.testing.assert_array_equal(batch_codes, expected_batch_codes)
 
