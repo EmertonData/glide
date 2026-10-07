@@ -33,7 +33,7 @@ def estimator() -> ClusteredPTDMeanEstimator:
 # --- estimate ---
 
 
-def test_estimate_delegates_to_validation(estimator, y_true, y_proxy, clusters):
+def test_estimate_delegates(estimator, y_true, y_proxy, clusters):
     with patch.object(clustered_ptd_module, "_validate_y_true") as mock_validate_y_true:
         estimator.estimate(y_true, y_proxy, clusters, n_bootstrap=5, random_seed=0)
 
