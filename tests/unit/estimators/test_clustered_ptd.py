@@ -1,7 +1,10 @@
+from unittest.mock import patch
+
 import numpy as np
 import pytest
 from numpy.typing import NDArray
 
+import glide.estimators.clustered_ptd as clustered_ptd_module
 from glide.confidence_intervals import BootstrapConfidenceInterval
 from glide.estimators import ClusteredPTDMeanEstimator
 from glide.mean_inference_results import PredictionPoweredMeanInferenceResult
@@ -28,6 +31,15 @@ def estimator() -> ClusteredPTDMeanEstimator:
 
 
 # --- estimate ---
+
+
+def test_estimate_delegates(estimator, y_true, y_proxy, clusters):
+    with patch.object(clustered_ptd_module, "_validate_non_constant") as mock_validate_non_constant:
+        estimator.estimate(y_true, y_proxy, clusters, n_bootstrap=5, random_seed=0)
+
+        mock_validate_non_constant.assert_called_once()
+        np.testing.assert_array_equal(mock_validate_non_constant.call_args[0][0], np.array([1.5, 3.5]))
+        assert mock_validate_non_constant.call_args[0][1] == "'y_true' labeled cluster means are constant."
 
 
 def test_estimate_returns_valid_inference_result(estimator, y_true, y_proxy, clusters):

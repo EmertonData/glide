@@ -5,8 +5,9 @@ import numpy as np
 from numpy.typing import NDArray
 
 from glide.confidence_intervals import BootstrapConfidenceInterval
+from glide.core.validation import _validate_non_constant
+from glide.engines.clustered_core import _preprocess
 from glide.estimators.clustered_classical import ClusteredClassicalMeanEstimator
-from glide.estimators.clustered_core import _preprocess
 from glide.estimators.ptd_core import (
     _compute_bootstrap_labeled_means,
     _compute_bootstrap_mean_estimates,
@@ -115,7 +116,7 @@ class ClusteredPTDMeanEstimator:
         ------
         ValueError
             - If ``y_true``, ``y_proxy``, and ``clusters`` do not all have the same length.
-            - If labeled ``y_true`` values are constant.
+            - If the cluster means of the labeled ``y_true`` values are constant.
             - If any proxy value is NaN.
             - If ``clusters`` contains NaN values (numeric dtype) or None values (non-numeric dtype).
             - If any cluster contains both labeled and unlabeled observations.
@@ -127,6 +128,7 @@ class ClusteredPTDMeanEstimator:
             labeled_proxy_means,
             unlabeled_proxy_means,
         ) = _preprocess(y_true, y_proxy, clusters)
+        _validate_non_constant(labeled_true_means, "'y_true' labeled cluster means are constant.")
 
         n_unlabeled_clusters = len(unlabeled_proxy_means)
         mean_proxy_unlabeled = np.mean(unlabeled_proxy_means)

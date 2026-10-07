@@ -1,8 +1,12 @@
+from unittest.mock import patch
+
 import numpy as np
 import pytest
 from numpy.typing import NDArray
 
+import glide.estimators.clustered_ppi as clustered_ppi_module
 from glide.confidence_intervals import CLTConfidenceInterval
+from glide.engines.clustered_ppi import ClusteredPPIMeanEngine
 from glide.estimators import ClusteredPPIMeanEstimator
 from glide.mean_inference_results import PredictionPoweredMeanInferenceResult
 
@@ -27,7 +31,23 @@ def estimator() -> ClusteredPPIMeanEstimator:
     return ClusteredPPIMeanEstimator()
 
 
+# --- __init__ ---
+
+
+def test_init_sets_engine(estimator):
+    assert isinstance(estimator._engine, ClusteredPPIMeanEngine)
+
+
 # --- estimate ---
+
+
+def test_estimate_delegates(estimator, y_true, y_proxy, clusters):
+    with patch.object(clustered_ppi_module, "_validate_non_constant") as mock_validate_non_constant:
+        estimator.estimate(y_true, y_proxy, clusters)
+
+        mock_validate_non_constant.assert_called_once()
+        np.testing.assert_array_equal(mock_validate_non_constant.call_args[0][0], np.array([4.0, 6.0]))
+        assert mock_validate_non_constant.call_args[0][1] == "'y_true' labeled cluster means are constant."
 
 
 def test_estimate_returns_valid_inference_result(estimator, y_true, y_proxy, clusters):

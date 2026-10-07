@@ -4,9 +4,9 @@ import numpy as np
 from numpy.typing import NDArray
 
 from glide.confidence_intervals import CLTConfidenceInterval
-from glide.engines.ppi_core import _compute_mean_estimate, _compute_std_estimate, _compute_tuning_parameter
+from glide.core.validation import _validate_non_constant
+from glide.engines.clustered_ppi import ClusteredPPIMeanEngine
 from glide.estimators.clustered_classical import ClusteredClassicalMeanEstimator
-from glide.estimators.clustered_core import _preprocess
 from glide.mean_inference_results import PredictionPoweredMeanInferenceResult
 
 
@@ -42,6 +42,9 @@ class ClusteredPPIMeanEstimator:
     n_proxy: 8
     Effective Sample Size: 5
     """
+
+    def __init__(self) -> None:
+        self._engine = ClusteredPPIMeanEngine()
 
     def estimate(
         self,
@@ -107,7 +110,7 @@ class ClusteredPPIMeanEstimator:
         ValueError
             - If ``y_true``, ``y_proxy``, and ``clusters`` do not all have the
               same length.
-            - If labeled ``y_true`` values are constant.
+            - If the cluster means of the labeled ``y_true`` values are constant.
             - If any proxy value is NaN.
             - If ``clusters`` contains NaN values (numeric dtype) or None values (non-numeric dtype).
             - If any cluster contains both labeled and unlabeled observations.
@@ -116,17 +119,11 @@ class ClusteredPPIMeanEstimator:
             - If ``power_tuning=True`` and proxy cluster means have zero variance across
               both labeled and unlabeled clusters.
         """
-        (
-            labeled_true_means,
-            labeled_proxy_means,
-            unlabeled_proxy_means,
-        ) = _preprocess(y_true, y_proxy, clusters)
-
-        _lambda = _compute_tuning_parameter(
-            labeled_true_means, labeled_proxy_means, unlabeled_proxy_means, power_tuning=power_tuning
-        )
-        mean = _compute_mean_estimate(labeled_true_means, labeled_proxy_means, unlabeled_proxy_means, _lambda)
-        std = _compute_std_estimate(labeled_true_means, labeled_proxy_means, unlabeled_proxy_means, _lambda)
+        clustered_dataset = self._engine.preprocess(y_true, y_proxy, clusters)
+        labeled_true_means, _, _ = clustered_dataset
+        _validate_non_constant(labeled_true_means, "'y_true' labeled cluster means are constant.")
+        tuning_parameter = self._engine.fit_tuning_parameter(clustered_dataset, power_tuning=power_tuning)
+        mean, std = self._engine.compute_mean_and_std(clustered_dataset, tuning_parameter)
         confidence_interval = CLTConfidenceInterval(
             mean=mean,
             std=std,
