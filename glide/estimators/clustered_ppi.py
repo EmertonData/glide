@@ -4,7 +4,7 @@ import numpy as np
 from numpy.typing import NDArray
 
 from glide.confidence_intervals import CLTConfidenceInterval
-from glide.core.validation import _validate_y_true
+from glide.core.validation import _validate_non_constant
 from glide.engines.clustered_ppi import ClusteredPPIMeanEngine
 from glide.estimators.clustered_classical import ClusteredClassicalMeanEstimator
 from glide.mean_inference_results import PredictionPoweredMeanInferenceResult
@@ -110,8 +110,7 @@ class ClusteredPPIMeanEstimator:
         ValueError
             - If ``y_true``, ``y_proxy``, and ``clusters`` do not all have the
               same length.
-            - If all ``y_true`` values are ``np.nan``.
-            - If labeled ``y_true`` values are constant.
+            - If the cluster means of the labeled ``y_true`` values are constant.
             - If any proxy value is NaN.
             - If ``clusters`` contains NaN values (numeric dtype) or None values (non-numeric dtype).
             - If any cluster contains both labeled and unlabeled observations.
@@ -120,8 +119,9 @@ class ClusteredPPIMeanEstimator:
             - If ``power_tuning=True`` and proxy cluster means have zero variance across
               both labeled and unlabeled clusters.
         """
-        _validate_y_true(y_true)
         clustered_dataset = self._engine.preprocess(y_true, y_proxy, clusters)
+        labeled_true_means, _, _ = clustered_dataset
+        _validate_non_constant(labeled_true_means, "'y_true' labeled cluster means are constant.")
         tuning_parameter = self._engine.fit_tuning_parameter(clustered_dataset, power_tuning=power_tuning)
         mean, std = self._engine.compute_mean_and_std(clustered_dataset, tuning_parameter)
         confidence_interval = CLTConfidenceInterval(

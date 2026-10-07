@@ -42,11 +42,12 @@ def test_init_sets_engine(estimator):
 
 
 def test_estimate_delegates(estimator, y_true, y_proxy, clusters):
-    with patch.object(clustered_ppi_module, "_validate_y_true") as mock_validate_y_true:
+    with patch.object(clustered_ppi_module, "_validate_non_constant") as mock_validate_non_constant:
         estimator.estimate(y_true, y_proxy, clusters)
 
-        mock_validate_y_true.assert_called_once()
-        np.testing.assert_array_equal(mock_validate_y_true.call_args[0][0], y_true)
+        mock_validate_non_constant.assert_called_once()
+        np.testing.assert_array_equal(mock_validate_non_constant.call_args[0][0], np.array([4.0, 6.0]))
+        assert mock_validate_non_constant.call_args[0][1] == "'y_true' labeled cluster means are constant."
 
 
 def test_estimate_returns_valid_inference_result(estimator, y_true, y_proxy, clusters):
