@@ -78,6 +78,9 @@ build:
 	rm -rf dist
 	uv build
 
+paper:
+	docker run --rm -v $(PWD):/data -u $(shell id -u):$(shell id -g) openjournals/inara:latest -o pdf JOSS/paper.md
+
 bump-major:
 	uv run bump-my-version bump major
 

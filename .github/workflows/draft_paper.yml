@@ -1,0 +1,41 @@
+name: Draft paper PDF
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "JOSS/**"
+      - ".github/workflows/draft_paper.yml"
+  pull_request:
+    branches: [main]
+    paths:
+      - "JOSS/**"
+      - ".github/workflows/draft_paper.yml"
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  paper:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Build draft PDF
+        uses: openjournals/openjournals-draft-action@v1.0
+        with:
+          journal: joss
+          paper-path: JOSS/paper.md
+
+      - name: Upload draft PDF
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          name: joss-paper
+          path: JOSS/paper.pdf
