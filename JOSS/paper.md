@@ -89,12 +89,16 @@ Additionally, three case studies run full workflows on public benchmarks whose p
 
 # AI usage disclosure
 
-`GLIDE` was developed in two-week agile sprints. Each sprint opens with a planning phase in which development tickets are co-designed with Claude in plan mode. These tickets are refined until every corner case and design decision is validated by the project's tech lead. Only then does a ticket reach a developer, who implements it with Claude Code, departing from the specification when unanticipated technical limits surface. Developers are assisted by dedicated skills (ticket writing, pull-request creation, renaming, releases, literature watch, dependency updates) reinforced whenever they fall short. Each pull request receives a first automated review that the developer resolves autonomously, followed by a mandatory line-by-line human review by the tech lead. The repository's `CLAUDE.md` file encodes the project's conventions and architecture and is updated continuously. This has cut review time significantly sprint after sprint. Every decision, and the ownership of it, remains human.
+Generative AI was used in two places: in the development of the software, and in the writing of this manuscript. Because AI assistance in the software is embedded in the project's agile process, we describe that process here.
+
+`GLIDE` was developed in two-week agile sprints. Each sprint opens with a planning phase in which development tickets are co-designed with Claude in plan mode. These tickets are refined until the project's tech lead has validated every corner case and design decision. Only then does a ticket reach a developer. Developers implement it with Claude Code, either alone or together with other developers during pair-programming sessions. They depart from the specification when unanticipated technical limits or opportunities surface. Developers are assisted by dedicated skills (ticket writing, pull-request creation, renaming, releases, literature watch, dependency updates). We refine these skills whenever they fall short.
+
+Each pull request first receives an automated review from Claude's code-review plugin. Developer resolve it autonomously. A mandatory line-by-line human review by the tech lead follows. The repository's `CLAUDE.md` file encodes the project's conventions and architecture and is updated continuously. This setup has steadily reduced review time from one sprint to the next. Every decision, and the ownership of it, remains human.
 
 For this manuscript, Claude was used to brainstorm and draft structure and formulations, to format the file, and to audit the draft against the journal's author guidelines. The authors wrote and own its argument, verified every reference and every reported figure against the sources and the repository, and take full responsibility for the result.
 
 # Acknowledgements
 
-We thank Mohammed Raki, Guillaume D'Hérouville, Victor Woelffel and the other contributors to the repository for their work on estimators, samplers, documentation and tooling, and Emerton Data for supporting the development of the library as an open-source project. We also thank the authors of the methods and reference implementations `GLIDE` builds upon.
+We thank Anastasios Angelopoulos, Stephen Bates, Dan Kluger and Adam Fisch for useful discussions and guidance at the beginning of the project, and for their encouragement at ICML 2026. We are grateful to Pravallika Mavilla, Mohammed Raki, Guillaume D'Hérouville, Victor Woelffel and all contributors to the repository, and to Emerton Data for its financial support of the library as an open-source project. Finally, we thank the authors of the methods and reference implementations `GLIDE` builds upon.
 
 # References
