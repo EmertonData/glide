@@ -1,6 +1,6 @@
 # JOSS submission form — proposed content
 
-Form: <https://joss.theoj.org/papers/new>. Everything below is copy-paste ready; the two bracketed items must be settled before submitting.
+Form: <https://joss.theoj.org/papers/new>. Everything below is copy-paste ready.
 
 ## Form fields
 
@@ -64,20 +64,24 @@ summarizes.
 
 Development history. The repository has been public since its first commit on
 5 March 2026, and development has been entirely in the open since: eleven
-releases, over 340 merged pull requests, 70 public issues, seven contributors, an
+releases, over 340 merged pull requests, 70 public issues, a dozen contributors, an
 issue-first contribution guide with templates, a code of conduct, automated
 dependency updates, and continuous integration enforcing linting, type
 checking, 100% unit-test coverage, doctests, functional statistical tests and
 execution of every documentation notebook.
 
 Generative AI. As disclosed in the paper's AI usage disclosure section, Claude
-Code was used as a coding assistant for implementation, tests, documentation
-and manuscript drafting, while problem framing, method selection, architectural
-decisions, statistical validation and code review were performed by the human
-authors, who verified and take responsibility for all output.
+Code was used as a coding assistant for implementation, tests and
+documentation, and Claude was used to brainstorm structure and formulations,
+format the manuscript and audit it against the journal's guidelines. Problem
+framing, method selection, architectural decisions, statistical validation and
+code review (automated, then line-by-line by the tech lead) were performed by
+the human authors, who wrote the argument, verified every reference and figure,
+and take responsibility for all output.
 
 Dissemination. GLIDE is the subject of a tutorial at PyData Amsterdam on
-12 September 2026 and of a talk at Compute! Paris on 25 November 2026.
+12 September 2026 and of talks at Compute! Paris on 25 November 2026 and at the
+AI4Good workshop at NeurIPS 2026 in Paris.
 
 Conflicts of interest. All authors are employed by Emerton Data, which funded
 the development of GLIDE and releases it under the Apache-2.0 license; the
@@ -95,8 +99,8 @@ involved in this work.
 
 ## Before pressing submit
 
-1. **[to settle] ORCIDs.** `JOSS/paper.md` carries `0000-0000-0000-0000` placeholders for both authors. JOSS strongly prefers a real ORCID for every author and validates the checksum, so these must be replaced.
-2. **[to settle] Submission date.** The `date:` field in `JOSS/paper.md` reads `8 September 2026`. Set it to the actual submission date, which must be on or after **5 September 2026** to satisfy JOSS's requirement of six months of public repository history.
+1. **ORCIDs.** Settled: `JOSS/paper.md` now carries a real ORCID for both authors.
+2. **Submission date.** The `date:` field in `JOSS/paper.md` reads `8 October 2026`. Update it if the actual submission date differs; it must be on or after **5 September 2026** to satisfy JOSS's requirement of six months of public repository history.
 3. Release `v0.11.0` and confirm the tag exists, since the version entered on the form is the one reviewers will check out.
 4. Run the `Draft paper PDF` workflow and confirm the PDF renders, in particular the figure and the reference list.
 5. Confirm that the co-authors listed in `paper.md` agree to being listed, and that the contributors credited in the Acknowledgements are happy with that credit rather than authorship.
