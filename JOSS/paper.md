@@ -61,13 +61,7 @@ GLIDE can be installed from PyPI with `pip install glide-py`. The source, test s
 
 # AI usage disclosure
 
-Generative AI was used in two places: in the development of the software, and in the writing of this manuscript. Because AI assistance in the software is embedded in the project's agile process, we describe that process here.
-
-`GLIDE` was developed in two-week agile sprints. Each sprint opens with a planning phase in which development tickets are co-designed with Claude in plan mode. These tickets are refined until the project's tech lead has validated every corner case and design decision. Only then does a ticket reach a developer. Developers implement it with Claude Code, either alone or together with other developers during pair-programming sessions. They depart from the specification when unanticipated technical limits or opportunities surface. Developers are assisted by dedicated skills (ticket writing, pull-request creation, renaming, releases, literature watch, dependency updates). We refine these skills whenever they fall short.
-
-Each pull request first receives an automated review from Claude's code-review plugin. Developer resolve it autonomously. A mandatory line-by-line human review by the tech lead follows. The repository's `CLAUDE.md` file encodes the project's conventions and architecture and is updated continuously. This setup has steadily reduced review time from one sprint to the next. Every decision, and the ownership of it, remains human.
-
-For this manuscript, Claude was used to brainstorm and draft structure and formulations, to format the file, and to audit the draft against the journal's author guidelines. The authors wrote and own its argument, verified every reference and every reported figure against the sources and the repository, and take full responsibility for the result.
+Generative AI was used both to develop the software and to prepare this manuscript. `GLIDE` is developed in two-week agile sprints. Development tickets are co-designed with Claude in plan mode and validated by the tech lead before reaching a developer. Developers implement them with Claude Code, assisted by dedicated skills (ticket writing, pull-request creation, releases, and others), and the repository's `CLAUDE.md` file encodes the project's conventions. Each pull request receives an automated review from Claude's code-review plugin, followed by a mandatory line-by-line human review by the tech lead. For the manuscript, Claude was used to brainstorm structure and formulations, format the file, and audit the draft against the journal's guidelines. All decisions remain human: the authors wrote the argument, verified every reference and figure, and take full responsibility for the result.
 
 # Acknowledgements
 
