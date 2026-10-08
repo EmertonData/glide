@@ -87,6 +87,10 @@ Additionally, three case studies run full workflows on public benchmarks whose p
 
 `GLIDE` has been developed in public since its first commit in March 2026, with roughly two releases per month and a dozen contributors. It has attracted more than a hundred stars and is disseminated through a monthly newsletter. It was the subject of a tutorial at PyData Amsterdam 2026 [@martinon2026pydata] and will be presented in a talk at Compute! Paris 2026 [@martinon2026compute], two venues whose audiences are practitioners. It will also be presented at the AI4Good workshop at NeurIPS 2026 in Paris [@martinon2026aigood].
 
+# Code availability
+
+The package can be installed from PyPI with `pip install glide-py`. The source is on GitHub (https://github.com/EmertonData/glide), together with the test suite, the scientific validation notebooks and the released datasets described above. The documentation, including tutorials, user guides and case studies, is at https://glide-py.readthedocs.io. A landing page (https://emertondata.github.io/glide/) serves as a reference hub linking to these resources, and hosts an interactive simulator in which users can see how the prediction-powered confidence interval narrows compared to the human-only one. Contributions are welcome by forking the repository and opening a pull request.
+
 # AI usage disclosure
 
 Generative AI was used in two places: in the development of the software, and in the writing of this manuscript. Because AI assistance in the software is embedded in the project's agile process, we describe that process here.
