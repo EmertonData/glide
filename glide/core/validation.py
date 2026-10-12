@@ -198,14 +198,16 @@ def _validate_unique_clusters(unique_labeled_clusters: NDArray, unique_unlabeled
 
 def _validate_clusters_unique_across_batches(clusters: NDArray, batches: NDArray) -> None:
     _validate_equal_lengths(clusters, batches, names=["clusters", "batches"])
+    _validate_has_no_nan(clusters, "clusters")
+    _validate_has_no_nan(batches, "batches")
     unique_clusters, cluster_codes = np.unique(clusters, return_inverse=True)
     _, batch_codes = np.unique(batches, return_inverse=True)
     cluster_batch_codes = np.empty(len(unique_clusters), dtype=batch_codes.dtype)
     cluster_batch_codes[cluster_codes] = batch_codes
     is_split = cluster_batch_codes[cluster_codes] != batch_codes
     if np.any(is_split):
-        bad_cluster = unique_clusters.tolist()[cluster_codes[is_split][0]]
+        bad_cluster = unique_clusters[cluster_codes[is_split][0]]
         raise ValueError(
-            f"Cluster {bad_cluster!r} appears in more than one batch; cluster identifiers must be unique "
+            f"Cluster '{bad_cluster}' appears in more than one batch; cluster identifiers must be unique "
             "across the whole stream."
         )

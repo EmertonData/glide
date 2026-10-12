@@ -123,8 +123,8 @@ class AsymptoticClusteredPPRM(AsymptoticRM[ClusteredPPIDataset, float]):
         PredictionPoweredMeanMonitoringResult
             Per-batch estimates, running means, anytime-valid confidence bounds,
             alarm flags, and the alarm threshold, all in the original metric
-            orientation. ``batch_n_true``/``batch_n_proxy`` count observations, not
-            clusters, unaffected by cluster sizes.
+            orientation. ``batch_n_true``/``batch_n_proxy`` aggregate across all of a
+            batch's clusters.
 
         Raises
         ------
@@ -132,7 +132,7 @@ class AsymptoticClusteredPPRM(AsymptoticRM[ClusteredPPIDataset, float]):
             - If ``batches`` is empty.
             - If ``y_true``, ``y_proxy``, ``clusters`` and ``batches`` have different lengths.
             - If ``batches`` contains NaN values (numeric dtype) or None values (non-numeric dtype).
-            - If ``clusters`` contains NaN values.
+            - If ``clusters`` contains NaN values (numeric dtype) or None values (non-numeric dtype).
             - If ``confidence_level`` is not in ``(0.5, 1)``.
             - If any proxy value is NaN.
             - If batches are interleaved rather than grouped into contiguous blocks.
