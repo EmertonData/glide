@@ -9,6 +9,7 @@ from glide.core.validation import (
     _get_non_zero_mask,
     _validate_binary_or_nan,
     _validate_bounds,
+    _validate_clusters_unique_across_batches,
     _validate_equal_lengths,
     _validate_has_no_nan,
     _validate_is_2d,
@@ -428,3 +429,20 @@ def test_validate_unique_clusters_valid():
 def test_validate_unique_clusters_raises_on_intersection():
     with pytest.raises(ValueError, match="Cluster 'A' contains both labeled and unlabeled observations."):
         _validate_unique_clusters(np.array(["A", "B"]), np.array(["A", "C"]))
+
+
+# --- _validate_clusters_unique_across_batches ---
+
+
+def test_validate_clusters_unique_across_batches_valid():
+    _validate_clusters_unique_across_batches(np.array(["A", "A", "B"]), np.array([0, 0, 1]))
+
+
+def test_validate_clusters_unique_across_batches_raises_on_split_cluster():
+    with pytest.raises(ValueError, match="Cluster 'A' appears in more than one batch"):
+        _validate_clusters_unique_across_batches(np.array(["A", "A", "B"]), np.array([0, 1, 1]))
+
+
+def test_validate_clusters_unique_across_batches_raises_on_different_lengths():
+    with pytest.raises(ValueError, match="'clusters' and 'batches' must have the same length; got 3 and 2."):
+        _validate_clusters_unique_across_batches(np.array(["A", "A", "B"]), np.array([0, 1]))
