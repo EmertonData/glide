@@ -181,6 +181,34 @@ Predictable power-tuning carries over unchanged from [Asymptotic PPRM](#asymptot
 
 Plugging $\hat{R}_t$ and $\hat{\sigma}_t$ into the [Asymptotic Confidence Sequences](#asymptotic-confidence-sequences) construction gives the anytime-valid lower bound $L_t$ derived there. The **drift alarm** fires as soon as $L_t > \tau$, the user-fixed threshold.
 
+### Asymptotic Clustered Prediction-Powered Risk Monitoring (Asymptotic Clustered PPRM)
+
+Asymptotic PPRM assumes that the samples of a batch are independent. In practice, samples are often grouped into clusters within which observations may be correlated. Asymptotic PPRM generalises to a stream of clustered data, where each cluster is reduced to its mean and the cluster means are combined through [Clustered PPI++](estimators.md#clustered-prediction-powered-inference), the same way the underlying estimator generalises PPI++.
+
+#### Setting
+
+Each batch $t$ carries the following inputs: a small set of human labels together with a larger set of proxy labels, both specific to that batch, each also tagged with a cluster identifier. The observations of batch $t$ are partitioned into clusters, each either fully labeled ($L^{\bullet}_t$ clusters) or fully unlabeled ($L^{\circ}_t$ clusters).
+
+| Value | Present for | Description |
+|---|---|---|
+| $\tilde{Y}_{t,i}$ | All samples in batch $t$ | Proxy label |
+| $Y_{t,j}$ | Labeled samples in batch $t$ only | Ground-truth label |
+| $c_{t,i}$ | All samples in batch $t$ | Cluster identifier |
+
+Unlike strata, which are recurring categories (for example, a language) that can appear in many batches, a cluster is a group of correlated samples (for example, the phrases of one paragraph) that belongs to a single batch. A cluster must therefore never reappear in a later batch: each batch is made of its own distinct clusters, which are never matched with those of other batches.
+
+The per-batch estimate $\hat{R}_t$ is the [Clustered PPI++](estimators.md#clustered-prediction-powered-inference) estimate on batch $t$'s own cluster means, with $\bar{Y}^{(l)}_t$, $\bar{\tilde{Y}}^{(l),\bullet}_t$ and $\bar{\tilde{Y}}^{(m),\circ}_t$ the cluster means of the labels, labeled proxies and unlabeled proxies respectively,
+
+$$\hat{R}_t = \frac{1}{L^{\bullet}_t}\sum_{l=1}^{L^{\bullet}_t} \bar{Y}^{(l)}_t + \lambda_t\left[\frac{1}{L^{\circ}_t}\sum_{m=1}^{L^{\circ}_t} \bar{\tilde{Y}}^{(m),\circ}_t - \frac{1}{L^{\bullet}_t}\sum_{l=1}^{L^{\bullet}_t} \bar{\tilde{Y}}^{(l),\bullet}_t\right],$$
+
+together with its standard error $\hat{\sigma}_t$, obtained by applying the [Clustered Prediction-Powered Inference](estimators.md#clustered-prediction-powered-inference) variance formula within batch $t$, and $\lambda_t$ a predictable power-tuning weight.
+
+Predictable power-tuning carries over unchanged from [Asymptotic PPRM](#asymptotic-prediction-powered-risk-monitoring-asymptotic-pprm): $\lambda_t$ is fit on the pooled cluster means of every batch strictly before $t$, and the first batch, having no predecessor, uses the neutral weight $\lambda_1 = 1$.
+
+#### Bound and Alarm Rule
+
+Plugging $\hat{R}_t$ and $\hat{\sigma}_t$ into the [Asymptotic Confidence Sequences](#asymptotic-confidence-sequences) construction gives the anytime-valid lower bound $L_t$ derived there. The **drift alarm** fires as soon as $L_t > \tau$, the user-fixed threshold.
+
 ### Asymptotic Multi-Proxy Prediction-Powered Risk Monitoring (Asymptotic Multi-PPRM)
 
 Cheap proxy labels are not limited to a single source: Asymptotic PPRM generalises to $M \ge 1$ proxies combined through [Multi-Proxy Prediction-Powered Inference (Multi-PPI)](estimators.md#multi-proxy-prediction-powered-inference-multi-ppi) [[4](#ref-4)], the same way the underlying estimator generalises PPI++.
