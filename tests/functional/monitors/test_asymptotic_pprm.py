@@ -9,6 +9,7 @@ import pytest
 
 from glide.estimators import PPIMeanEstimator
 from glide.monitors import AsymptoticPPRM
+from glide.samplers import UniformSampler
 from glide.simulators import generate_stratified_binary_dataset, simulate_annotation
 
 # ── fixtures ───────────────────────────────────────────────────────────────────
@@ -27,14 +28,12 @@ def dataset():
         correlation=[0.8] * n_batches,
         random_seed=0,
     )
-    rng = np.random.default_rng(seed=1)
-    xis = []
-    for _ in range(n_batches):
-        xi_batch = np.zeros(batch_size)
-        labeled_indices = rng.choice(batch_size, size=n_labeled_per_batch, replace=False)
-        xi_batch[labeled_indices] = 1
-        xis.append(xi_batch)
-    xi = np.hstack(xis)
+    xi = np.hstack(
+        [
+            UniformSampler().sample(n_total=batch_size, n_samples=n_labeled_per_batch, random_seed=batch_id)
+            for batch_id in range(n_batches)
+        ]
+    )
     y_true = simulate_annotation(y_true_oracle, xi)
     return y_true, y_proxy, batches
 

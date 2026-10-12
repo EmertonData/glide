@@ -9,6 +9,7 @@ from glide.core.validation import (
     _get_non_zero_mask,
     _validate_binary_or_nan,
     _validate_bounds,
+    _validate_clusters_unique_across_batches,
     _validate_equal_lengths,
     _validate_has_no_nan,
     _validate_is_2d,
@@ -115,7 +116,7 @@ def test_validate_y_proxies_valid():
     _validate_y_proxies(np.array([[1.0, 2.0], [3.0, 4.0]]))
 
 
-def test_validate_y_proxies_delegates_to_validation():
+def test_validate_y_proxies_delegates():
     with (
         patch("glide.core.validation._validate_is_2d") as mock_validate_is_2d,
         patch("glide.core.validation._validate_has_no_nan") as mock_validate_has_no_nan,
@@ -428,3 +429,34 @@ def test_validate_unique_clusters_valid():
 def test_validate_unique_clusters_raises_on_intersection():
     with pytest.raises(ValueError, match="Cluster 'A' contains both labeled and unlabeled observations."):
         _validate_unique_clusters(np.array(["A", "B"]), np.array(["A", "C"]))
+
+
+# --- _validate_clusters_unique_across_batches ---
+
+
+def test_validate_clusters_unique_across_batches_delegates():
+    with (
+        patch("glide.core.validation._validate_equal_lengths") as mock_validate_equal_lengths,
+        patch("glide.core.validation._validate_has_no_nan") as mock_validate_has_no_nan,
+    ):
+        clusters = np.array(["A", "A", "B"])
+        batches = np.array([0, 0, 1])
+        _validate_clusters_unique_across_batches(clusters, batches)
+        mock_validate_equal_lengths.assert_called_once()
+        np.testing.assert_array_equal(mock_validate_equal_lengths.call_args[0][0], clusters)
+        np.testing.assert_array_equal(mock_validate_equal_lengths.call_args[0][1], batches)
+        assert mock_validate_equal_lengths.call_args[1] == {"names": ["clusters", "batches"]}
+        assert mock_validate_has_no_nan.call_count == 2
+        np.testing.assert_array_equal(mock_validate_has_no_nan.call_args_list[0][0][0], clusters)
+        assert mock_validate_has_no_nan.call_args_list[0][0][1] == "clusters"
+        np.testing.assert_array_equal(mock_validate_has_no_nan.call_args_list[1][0][0], batches)
+        assert mock_validate_has_no_nan.call_args_list[1][0][1] == "batches"
+
+
+def test_validate_clusters_unique_across_batches_valid():
+    _validate_clusters_unique_across_batches(np.array(["A", "A", "B"]), np.array([0, 0, 1]))
+
+
+def test_validate_clusters_unique_across_batches_raises_on_split_cluster():
+    with pytest.raises(ValueError, match="Cluster 'A' appears in more than one batch"):
+        _validate_clusters_unique_across_batches(np.array(["A", "A", "B"]), np.array([0, 1, 1]))
