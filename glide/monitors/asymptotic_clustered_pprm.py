@@ -45,12 +45,14 @@ class AsymptoticClusteredPPRM(AsymptoticRM[ClusteredPPIDataset, float]):
     >>> post_drift_y_proxy = np.array([0.8, 1.0, 0.8, 1.0, 0.7, 0.9, 0.7, 0.9])
     >>> y_true = np.hstack([pre_drift_y_true, np.tile(post_drift_y_true, 5)])
     >>> y_proxy = np.hstack([pre_drift_y_proxy, np.tile(post_drift_y_proxy, 5)])
-    >>> clusters = np.arange(48)
+    >>> clusters = np.repeat(np.arange(24), 2)
     >>> batches = np.repeat(np.arange(6), 8)
     >>> monitor = AsymptoticClusteredPPRM()
     >>> result = monitor.detect(y_true, y_proxy, clusters, batches, higher_is_better=False, threshold=0.5)
     >>> result.drift_detected
     True
+    >>> result.first_alarm_index
+    2
     """
 
     _engine = ClusteredPPIMeanEngine()
@@ -137,7 +139,7 @@ class AsymptoticClusteredPPRM(AsymptoticRM[ClusteredPPIDataset, float]):
             - If any batch has a cluster containing both labeled and unlabeled observations.
             - If any batch has fewer than 2 fully labeled or fewer than 2 fully unlabeled clusters.
             - If a cluster identifier's rows span more than one batch.
-            - If a batch's proxy cluster means are constant across a prefix set of batches (with ``power_tuning=True``).
+            - If proxy cluster means are constant across a prefix set of batches (with ``power_tuning=True``).
             - If ``tightest_at_batch`` is not a positive integer.
             - If the accumulated variance of the batch estimates up to ``tightest_at_batch`` is zero.
         """

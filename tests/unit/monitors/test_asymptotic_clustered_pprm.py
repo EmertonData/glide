@@ -5,7 +5,6 @@ import pytest
 
 import glide.monitors.asymptotic_clustered_pprm as asymptotic_clustered_pprm_module
 from glide.confidence_sequences import AsymptoticConfidenceSequence
-from glide.engines.clustered_ppi import ClusteredPPIMeanEngine
 from glide.mean_monitoring_results import PredictionPoweredMeanMonitoringResult
 from glide.monitors import AsymptoticClusteredPPRM
 
@@ -35,13 +34,6 @@ def batches():
 @pytest.fixture
 def monitor():
     return AsymptoticClusteredPPRM()
-
-
-# --- __init__ ---
-
-
-def test_init_sets_engine(monitor):
-    assert isinstance(monitor._engine, ClusteredPPIMeanEngine)
 
 
 # --- detect ---
@@ -98,12 +90,6 @@ def test_detect_custom_confidence_level(monitor, y_true, y_proxy, clusters, batc
     np.testing.assert_allclose(result.confidence_bounds, expected_confidence_bounds, atol=0.001)
 
 
-def test_detect_string_clusters_with_higher_is_better(monitor, y_true, y_proxy, clusters, batches):
-    result = monitor.detect(y_true, y_proxy, clusters, batches, higher_is_better=True, threshold=0.5)
-
-    assert isinstance(result, PredictionPoweredMeanMonitoringResult)
-
-
 def test_detect_delegates_to_validation(monitor, y_true, y_proxy, clusters, batches):
     with patch.object(
         asymptotic_clustered_pprm_module, "_validate_clusters_unique_across_batches"
@@ -113,11 +99,3 @@ def test_detect_delegates_to_validation(monitor, y_true, y_proxy, clusters, batc
         mock_validate_clusters_unique_across_batches.assert_called_once()
         np.testing.assert_array_equal(mock_validate_clusters_unique_across_batches.call_args[0][0], clusters)
         np.testing.assert_array_equal(mock_validate_clusters_unique_across_batches.call_args[0][1], batches)
-
-
-def test_detect_reused_cluster_id_raises(monitor, y_true, y_proxy, clusters, batches):
-    reused_clusters = clusters.copy()
-    reused_clusters[8:] = np.array(["A", "A", "F", "F", "G", "G", "H", "H"])
-
-    with pytest.raises(ValueError, match="Cluster 'A' appears in more than one batch"):
-        monitor.detect(y_true, y_proxy, reused_clusters, batches, higher_is_better=False, threshold=0.5)

@@ -443,6 +443,14 @@ def test_validate_clusters_unique_across_batches_raises_on_split_cluster():
         _validate_clusters_unique_across_batches(np.array(["A", "A", "B"]), np.array([0, 1, 1]))
 
 
+def test_validate_clusters_unique_across_batches_raises_on_split_cluster_object_dtype():
+    clusters = np.array([1, 1, 2], dtype=object)
+    batches = np.array([0, 1, 1])
+
+    with pytest.raises(ValueError, match="Cluster 1 appears in more than one batch"):
+        _validate_clusters_unique_across_batches(clusters, batches)
+
+
 def test_validate_clusters_unique_across_batches_raises_on_different_lengths():
     with pytest.raises(ValueError, match="'clusters' and 'batches' must have the same length; got 3 and 2."):
         _validate_clusters_unique_across_batches(np.array(["A", "A", "B"]), np.array([0, 1]))

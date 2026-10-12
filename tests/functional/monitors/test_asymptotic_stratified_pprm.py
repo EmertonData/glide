@@ -9,6 +9,7 @@ import pytest
 
 from glide.estimators import StratifiedPPIMeanEstimator
 from glide.monitors import AsymptoticStratifiedPPRM
+from glide.samplers import StratifiedSampler
 from glide.simulators import generate_batched_stratified_binary_dataset, simulate_annotation
 
 # ── fixtures ───────────────────────────────────────────────────────────────────
@@ -27,13 +28,16 @@ def dataset():
         correlation=[[0.6, 0.6]] * n_batches,
         random_seed=0,
     )
-    rng = np.random.default_rng(seed=1)
     xi = np.zeros(len(y_true_oracle))
     for batch_id in np.unique(batches):
-        for stratum_id in np.unique(groups):
-            stratum_indices = np.flatnonzero((batches == batch_id) & (groups == stratum_id))
-            labeled_indices = rng.choice(stratum_indices, size=n_labeled_per_stratum, replace=False)
-            xi[labeled_indices] = 1
+        batch_mask = batches == batch_id
+        xi[batch_mask] = StratifiedSampler().sample(
+            y_proxy[batch_mask],
+            groups[batch_mask],
+            n_samples=n_labeled_per_stratum * 2,
+            strategy="proportional",
+            random_seed=batch_id,
+        )
     y_true = simulate_annotation(y_true_oracle, xi)
     return y_true, y_proxy, groups, batches
 
@@ -107,13 +111,16 @@ def test_detect_stratum_relabeling_only_affects_subsequent_batches():
         correlation=[[0.6, 0.6, 0.6]] * 3,
         random_seed=0,
     )
-    rng = np.random.default_rng(seed=1)
     xi = np.zeros(len(y_true_oracle))
     for batch_id in np.unique(batches):
-        for local_stratum_id in np.unique(local_groups):
-            stratum_indices = np.flatnonzero((batches == batch_id) & (local_groups == local_stratum_id))
-            labeled_indices = rng.choice(stratum_indices, size=8, replace=False)
-            xi[labeled_indices] = 1
+        batch_mask = batches == batch_id
+        xi[batch_mask] = StratifiedSampler().sample(
+            y_proxy[batch_mask],
+            local_groups[batch_mask],
+            n_samples=24,
+            strategy="proportional",
+            random_seed=batch_id,
+        )
     y_true = simulate_annotation(y_true_oracle, xi)
 
     stable_groups = np.array(["a", "b", "c"])[local_groups.astype(int)]
