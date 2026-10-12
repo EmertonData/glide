@@ -434,15 +434,6 @@ def test_validate_unique_clusters_raises_on_intersection():
 # --- _validate_clusters_unique_across_batches ---
 
 
-def test_validate_clusters_unique_across_batches_valid():
-    _validate_clusters_unique_across_batches(np.array(["A", "A", "B"]), np.array([0, 0, 1]))
-
-
-def test_validate_clusters_unique_across_batches_raises_on_split_cluster():
-    with pytest.raises(ValueError, match="Cluster 'A' appears in more than one batch"):
-        _validate_clusters_unique_across_batches(np.array(["A", "A", "B"]), np.array([0, 1, 1]))
-
-
 def test_validate_clusters_unique_across_batches_delegates():
     with (
         patch("glide.core.validation._validate_equal_lengths") as mock_validate_equal_lengths,
@@ -460,3 +451,12 @@ def test_validate_clusters_unique_across_batches_delegates():
         assert mock_validate_has_no_nan.call_args_list[0][0][1] == "clusters"
         np.testing.assert_array_equal(mock_validate_has_no_nan.call_args_list[1][0][0], batches)
         assert mock_validate_has_no_nan.call_args_list[1][0][1] == "batches"
+
+
+def test_validate_clusters_unique_across_batches_valid():
+    _validate_clusters_unique_across_batches(np.array(["A", "A", "B"]), np.array([0, 0, 1]))
+
+
+def test_validate_clusters_unique_across_batches_raises_on_split_cluster():
+    with pytest.raises(ValueError, match="Cluster 'A' appears in more than one batch"):
+        _validate_clusters_unique_across_batches(np.array(["A", "A", "B"]), np.array([0, 1, 1]))
