@@ -16,6 +16,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - `generate_batched_stratified_binary_dataset`: a new synthetic dataset generator simulating a production stream as successive batches, each independently partitioned into strata.
 
 ### 🔄 Changed
+- `UniformSampler.sample` now takes `y_proxy` instead of `n_total`, consistent with the other samplers.
 
 ### 🐛 Fixed
 

@@ -30,7 +30,7 @@ def dataset():
     )
     xi = np.hstack(
         [
-            UniformSampler().sample(n_total=batch_size, n_samples=n_labeled_per_batch, random_seed=batch_id)
+            UniformSampler().sample(y_proxies[batches == batch_id], n_samples=n_labeled_per_batch, random_seed=batch_id)
             for batch_id in range(n_batches)
         ]
     )
