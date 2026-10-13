@@ -1,4 +1,4 @@
-from unittest.mock import call, patch
+from unittest.mock import patch
 
 import numpy as np
 import pytest
@@ -19,28 +19,27 @@ def sampler() -> UniformSampler:
 # --- sample ---
 
 
-def test_sample_delegates_validation(sampler):
-    y_proxy = np.array([0.0, 1.0])
+def test_sample_delegates_validation(sampler, y_proxy):
     with (
         patch("glide.samplers.uniform._validate_is_integer") as mock_validate_is_integer,
         patch("glide.samplers.uniform._validate_strictly_positive") as mock_validate_strictly_positive,
         patch("glide.samplers.uniform._validate_n_samples_bound") as mock_validate_n_samples_bound,
     ):
         sampler.sample(y_proxy, n_samples=1, random_seed=0)
-    mock_validate_is_integer.assert_has_calls([call(1, "n_samples")])
-    mock_validate_strictly_positive.assert_has_calls([call(1, "n_samples")])
-    mock_validate_n_samples_bound.assert_called_once_with(1, 2)
+    mock_validate_is_integer.assert_called_once_with(1, "n_samples")
+    mock_validate_strictly_positive.assert_called_once_with(1, "n_samples")
+    mock_validate_n_samples_bound.assert_called_once_with(1, 5)
 
 
-def test_sample_valid_output(sampler):
-    xi = sampler.sample(np.array([0.0, 1.0]), n_samples=1, random_seed=0)
-    expected_xi = np.array([0.0, 1.0])
+def test_sample_valid_output(sampler, y_proxy):
+    xi = sampler.sample(y_proxy, n_samples=1, random_seed=0)
+    expected_xi = np.array([0.0, 0.0, 0.0, 0.0, 1.0])
     np.testing.assert_array_equal(xi, expected_xi)
 
 
 def test_sample_2d_y_proxy(sampler):
-    y_proxy = np.array([[0.0, 1.0], [1.0, 1.0]])
-    xi = sampler.sample(y_proxy, n_samples=1, random_seed=0)
+    y_proxies = np.array([[0.0, 1.0], [1.0, 1.0]])
+    xi = sampler.sample(y_proxies, n_samples=1, random_seed=0)
     expected_xi = np.array([0.0, 1.0])
     np.testing.assert_array_equal(xi, expected_xi)
 
