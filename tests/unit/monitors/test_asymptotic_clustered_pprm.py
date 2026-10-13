@@ -39,6 +39,17 @@ def monitor():
 # --- detect ---
 
 
+def test_detect_delegates_to_validation(monitor, y_true, y_proxy, clusters, batches):
+    with patch.object(
+        asymptotic_clustered_pprm_module, "_validate_clusters_unique_across_batches"
+    ) as mock_validate_clusters_unique_across_batches:
+        monitor.detect(y_true, y_proxy, clusters, batches, higher_is_better=False, threshold=0.5)
+
+        mock_validate_clusters_unique_across_batches.assert_called_once()
+        np.testing.assert_array_equal(mock_validate_clusters_unique_across_batches.call_args[0][0], clusters)
+        np.testing.assert_array_equal(mock_validate_clusters_unique_across_batches.call_args[0][1], batches)
+
+
 def test_detect_is_valid_monitoring_result(monitor, y_true, y_proxy, clusters, batches):
     result = monitor.detect(y_true, y_proxy, clusters, batches, higher_is_better=False, threshold=0.5)
 
@@ -88,14 +99,3 @@ def test_detect_custom_confidence_level(monitor, y_true, y_proxy, clusters, batc
     assert result.confidence_level == 0.85
     np.testing.assert_allclose(result.running_means, expected_running_means, atol=0.001)
     np.testing.assert_allclose(result.confidence_bounds, expected_confidence_bounds, atol=0.001)
-
-
-def test_detect_delegates_to_validation(monitor, y_true, y_proxy, clusters, batches):
-    with patch.object(
-        asymptotic_clustered_pprm_module, "_validate_clusters_unique_across_batches"
-    ) as mock_validate_clusters_unique_across_batches:
-        monitor.detect(y_true, y_proxy, clusters, batches, higher_is_better=False, threshold=0.5)
-
-        mock_validate_clusters_unique_across_batches.assert_called_once()
-        np.testing.assert_array_equal(mock_validate_clusters_unique_across_batches.call_args[0][0], clusters)
-        np.testing.assert_array_equal(mock_validate_clusters_unique_across_batches.call_args[0][1], batches)

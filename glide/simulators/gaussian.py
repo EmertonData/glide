@@ -59,7 +59,7 @@ def generate_gaussian_dataset(
          [rho · true_std · proxy_std,         proxy_std²                ]]
     ```
 
-    and ``rho`` is the target Pearson correlation.
+    and ``rho`` is the target Pearson correlation, i.e. the ``correlation`` argument.
 
     **Step 1 — Cholesky decomposition of Σ**
 
