@@ -150,6 +150,14 @@ Do not use needless type conversions like `float()` or `int()` unless required b
 
 Only add a comment when the *why* is non-obvious: a hidden constraint, a subtle invariant, a workaround for a specific bug, behavior that would surprise a reader. No comments restating what the code does.
 
+### Ambiguous Unicode Characters
+
+Strings, comments and docstrings (including notebook code cells) must not contain Unicode characters that look like an ASCII one; ruff enforces this via `RUF001`/`RUF002`/`RUF003`. Characters that are not ambiguous (e.g. `θ`, `Σ`, `²`, `·`) are allowed. Replace the ambiguous ones, there is no autofix:
+
+- Spell out the Greek letter: `rho` instead of `ρ`
+- Use a shape tuple or `x` instead of `×`: `(2, n_samples)` instead of `2 × n_samples`
+- Use `-` instead of an en dash in compound words and labels (`proxy-true correlation`), and "to" in numeric ranges (`0 to 3`)
+
 ### Docstrings
 
 - NumPy-style docstrings for all public API; paper references go exclusively in the `References` section. Never mention papers inline in parameter descriptions, summaries, or notes
