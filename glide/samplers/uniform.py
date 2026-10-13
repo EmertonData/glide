@@ -16,30 +16,33 @@ class UniformSampler:
     --------
     >>> from glide.samplers import UniformSampler
     >>> sampler = UniformSampler()
-    >>> xi = sampler.sample(n_total=2, n_samples=1, random_seed=0)
+    >>> import numpy as np
+    >>> y_proxy = np.array([0.0, 1.0])
+    >>> xi = sampler.sample(y_proxy, n_samples=1, random_seed=0)
     >>> xi
     array([0., 1.])
     """
 
     def sample(
         self,
-        n_total: int,
+        y_proxy: NDArray,
         n_samples: int,
         random_seed: Optional[Union[int, SeedSequence]] = None,
     ) -> NDArray:
         """Sample observations uniformly at random without replacement.
 
-        Selects exactly ``n_samples`` observations from a pool of ``n_total``
-        without replacement.
+        Selects exactly ``n_samples`` observations from the pool described by
+        ``y_proxy`` without replacement.
 
         Parameters
         ----------
-        n_total : int
-            Total number of observations in the pool. Must be a strictly
-            positive integer.
+        y_proxy : NDArray
+            Proxy labels for all observations in the pool, of shape ``(n_total,)``
+            or ``(n_total, n_proxies)``. Only the number of observations is used.
         n_samples : int
             Exact number of observations to select. Must be a strictly
-            positive integer and must not exceed ``n_total``.
+            positive integer and must not exceed the number of observations in
+            ``y_proxy``.
         random_seed : int or SeedSequence or None, optional
             Random seed passed to ``numpy.random.default_rng`` for
             reproducibility. Pass ``None`` (the default) to use a
@@ -54,11 +57,10 @@ class UniformSampler:
         Raises
         ------
         ValueError
-            If ``n_total`` or ``n_samples`` is not a strictly positive integer,
-            or if ``n_samples`` exceeds ``n_total``.
+            If ``n_samples`` is not a strictly positive integer, or if
+            ``n_samples`` exceeds the number of observations in ``y_proxy``.
         """
-        _validate_is_integer(n_total, "n_total")
-        _validate_strictly_positive(n_total, "n_total")
+        n_total = len(y_proxy)
         _validate_is_integer(n_samples, "n_samples")
         _validate_strictly_positive(n_samples, "n_samples")
         _validate_n_samples_bound(n_samples, n_total)
