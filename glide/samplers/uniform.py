@@ -14,9 +14,9 @@ class UniformSampler:
 
     Examples
     --------
+    >>> import numpy as np
     >>> from glide.samplers import UniformSampler
     >>> sampler = UniformSampler()
-    >>> import numpy as np
     >>> y_proxy = np.array([0.0, 1.0])
     >>> xi = sampler.sample(y_proxy, n_samples=1, random_seed=0)
     >>> xi
