@@ -132,7 +132,7 @@ def generate_binary_dataset_with_oracle_sampling(
     Since each sample has its own probability vector, ``numpy.random.choice``
     (which takes a single fixed probability vector) cannot be used.  Instead,
     the four outcomes ``(0,0), (0,1), (1,0), (1,1)`` are encoded as integers
-    0–3 and sampled via cumulative-threshold comparison on a single
+    0 to 3 and sampled via cumulative-threshold comparison on a single
     ``u ~ Uniform(0,1)`` draw:
 
     ```

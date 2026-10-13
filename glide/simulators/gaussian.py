@@ -55,17 +55,17 @@ def generate_gaussian_dataset(
     ```
     μ = (true_mean, proxy_mean)
 
-    Σ = [[true_std²,                          ρ · true_std · proxy_std],
-         [ρ · true_std · proxy_std,           proxy_std²              ]]
+    Σ = [[true_std²,                          rho · true_std · proxy_std],
+         [rho · true_std · proxy_std,         proxy_std²                ]]
     ```
 
-    and ``ρ`` is the target Pearson correlation.
+    and ``rho`` is the target Pearson correlation, i.e. the ``correlation`` argument.
 
     **Step 1 — Cholesky decomposition of Σ**
 
     To sample from ``N(0, Σ)``, we find a lower-triangular matrix ``L`` such that
     ``Σ = L @ Lᵀ`` (Cholesky factor). The construction uses the angle
-    ``θ = arccos(ρ)``, so that ``cos(θ) = ρ`` and ``sin(θ) = √(1 - ρ²)``:
+    ``θ = arccos(rho)``, so that ``cos(θ) = rho`` and ``sin(θ) = √(1 - rho²)``:
 
     ```
     L = [[true_std,                  0                  ],
@@ -78,20 +78,20 @@ def generate_gaussian_dataset(
     L @ Lᵀ = [[true_std²,                    true_std · proxy_std · cos(θ)],
               [true_std · proxy_std · cos(θ), proxy_std² · (cos²(θ)+sin²(θ))]]
 
-           = [[true_std²,                    true_std · proxy_std · ρ],
-              [true_std · proxy_std · ρ,     proxy_std²              ]]  = Σ
+           = [[true_std²,                    true_std · proxy_std · rho],
+              [true_std · proxy_std · rho,   proxy_std²                ]]  = Σ
     ```
 
     **Step 2 — Sampling via the linear transform**
 
-    Let ``Z`` be a ``2 × n_samples`` matrix whose entries are i.i.d. standard normals
+    Let ``Z`` be a ``(2, n_samples)`` matrix whose entries are i.i.d. standard normals
     ``Z_i ~ N(0, 1)``. Then:
 
     ```
     Y = L @ Z
     ```
 
-    gives a ``2 × n_samples`` matrix where each column is a zero-mean sample from
+    gives a ``(2, n_samples)`` matrix where each column is a zero-mean sample from
     ``N(0, Σ)``. In component form, each column ``(Z₁, Z₂)`` maps to:
 
     ```
@@ -101,8 +101,8 @@ def generate_gaussian_dataset(
 
     The resulting properties are:
     - ``Var(Y₁) = true_std²`` and ``Var(Y₂) = proxy_std²`` (correct marginal variances)
-    - ``Cov(Y₁, Y₂) = true_std · proxy_std · cos(θ) = true_std · proxy_std · ρ``
-    - ``Corr(Y₁, Y₂) = ρ`` (correct Pearson correlation)
+    - ``Cov(Y₁, Y₂) = true_std · proxy_std · cos(θ) = true_std · proxy_std · rho``
+    - ``Corr(Y₁, Y₂) = rho`` (correct Pearson correlation)
 
     **Step 3 — Shifting by the means**
 
