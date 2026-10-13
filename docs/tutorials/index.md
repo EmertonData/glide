@@ -74,7 +74,7 @@ Each Phase 3 estimator has a monitoring counterpart that re-estimates the same q
 |---|---|---|
 | PPI++ | Asymptotic PPRM | [Asymptotic PPRM](monitors/asymptotic_pprm.ipynb) |
 | Stratified PPI++ | Asymptotic Stratified PPRM | [Asymptotic Stratified PPRM](monitors/asymptotic_stratified_pprm.ipynb) |
-| Clustered PPI++ | Asymptotic Clustered PPRM | Coming soon |
+| Clustered PPI++ | Asymptotic Clustered PPRM | [Asymptotic Clustered PPRM](monitors/asymptotic_clustered_pprm.ipynb) |
 | Multi-PPI++ | Asymptotic Multi-PPRM | [Asymptotic Multi-PPRM](monitors/asymptotic_multi_pprm.ipynb) |
 | ASI | Asymptotic Active PPRM | Coming soon |
 
