@@ -164,7 +164,18 @@ where $Y^k$ is the vector of ground-truths in stratum $k$ (i.e. available $Y_j$ 
 
 ## Stratified Classical Mean
 
-The **stratified classical mean** extends the classical mean to a dataset partitioned into strata. It uses only ground-truth labels $Y_j$, grouped by stratum identifier $g_j$ (see table in previous section) and combined using the population weights $w_k$ defined above.
+The **stratified classical mean** extends the classical mean to a dataset partitioned into strata. Stratum $k$ contains $n_k+N_k$ samples, of which $n_k$ are labeled, and we let $n = \sum_k n_k$ and $N = \sum_k N_k$ be the total numbers of labeled and unlabeled samples. Each sample has the following values:
+
+| Value | Present for | Description |
+|---|---|---|
+| $Y_j$ | Labeled samples only | Ground-truth label |
+| $g_i$ | All $n+N$ samples | Stratum identifier |
+
+The **population weight** of stratum $k$ is the share of all samples, labeled or not, falling in that stratum:
+
+$$w_k = \frac{n_k+N_k}{n+N}$$
+
+Unlabeled samples therefore only contribute to the weights. Each stratum needs at least two labeled samples.
 
 ### Mean estimation
 
