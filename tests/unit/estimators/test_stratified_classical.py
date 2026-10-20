@@ -57,7 +57,12 @@ def test_estimate_delegates(estimator, y, groups):
         np.testing.assert_array_equal(mock_preprocess.call_args[0][2], np.array([0.8, 0.2]))
 
         mock_compute_mean_and_std.assert_called_once()
-        assert set(mock_compute_mean_and_std.call_args[0][0].keys()) == {"A", "B"}
+        dataset = mock_compute_mean_and_std.call_args[0][0]
+        assert list(dataset.keys()) == ["A", "B"]
+        np.testing.assert_array_equal(dataset["A"][0], np.array([1.0, 3.0]))
+        np.testing.assert_array_equal(dataset["B"][0], np.array([5.0, 7.0]))
+        assert dataset["A"][1] == pytest.approx(0.8, abs=1e-12)
+        assert dataset["B"][1] == pytest.approx(0.2, abs=1e-12)
         assert mock_compute_mean_and_std.call_args[0][1] is None
 
 
