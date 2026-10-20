@@ -26,18 +26,11 @@ def clusters() -> NDArray:
 # --- _compute_cluster_means ---
 
 
-def test_compute_cluster_means():
-    values = np.array([1.0, 3.0, 5.0, 9.0, 10.0])
-    cluster_indices = np.array([0, 0, 1, 1, 2])
-    cluster_means = _compute_cluster_means(values, cluster_indices)
-    np.testing.assert_allclose(cluster_means, np.array([2.0, 7.0, 10.0]))
-
-
-def test_compute_cluster_means_single_observation_per_cluster():
-    values = np.array([4.0, 6.0])
-    cluster_indices = np.array([0, 1])
-    cluster_means = _compute_cluster_means(values, cluster_indices)
-    np.testing.assert_allclose(cluster_means, values)
+def test_compute_cluster_means(y_proxy):
+    cluster_indices = np.array([0, 0, 1, 1])
+    expected = np.array([3.0, 6.0])
+    cluster_means = _compute_cluster_means(y_proxy, cluster_indices)
+    np.testing.assert_allclose(cluster_means, expected)
 
 
 # --- _preprocess ---

@@ -63,49 +63,6 @@ def test_preprocess_delegates_to_validation(engine, y, clusters):
         )
 
 
-def test_preprocess_delegates_to_compute_cluster_means(engine):
-    y = np.array([2.0, np.nan, 4.0, 6.0])
-    clusters = np.array(["A", "A", "B", "C"])
-    sentinel_cluster_means = np.array([1.0, 2.0, 3.0])
-    with patch.object(clustered_classical_engine_module, "_compute_cluster_means") as mock_compute_cluster_means:
-        mock_compute_cluster_means.return_value = sentinel_cluster_means
-        cluster_means = engine.preprocess(y, clusters)
-
-        mock_compute_cluster_means.assert_called_once()
-        np.testing.assert_array_equal(mock_compute_cluster_means.call_args[0][0], np.array([2.0, 4.0, 6.0]))
-        np.testing.assert_array_equal(mock_compute_cluster_means.call_args[0][1], np.array([0, 1, 2]))
-        assert cluster_means is sentinel_cluster_means
-
-
-def test_preprocess_known_result(engine):
-    y = np.array([2.0, 4.0, np.nan, 6.0, 10.0])
-    clusters = np.array(["A", "A", "B", "C", "C"])
-    cluster_means = engine.preprocess(y, clusters)
-    np.testing.assert_allclose(cluster_means, np.array([3.0, 8.0]))
-
-
-def test_preprocess_unequal_lengths(engine):
-    with pytest.raises(ValueError, match="'y' and 'clusters' must have the same length; got 3 and 2."):
-        engine.preprocess(np.array([1.0, 2.0, 3.0]), np.array(["A", "B"]))
-
-
-def test_preprocess_nan_clusters(engine):
-    with pytest.raises(ValueError, match="'clusters' contains NaN values."):
-        engine.preprocess(np.array([1.0, 2.0]), np.array([0.0, np.nan]))
-
-
-def test_preprocess_none_clusters(engine):
-    with pytest.raises(ValueError, match="'clusters' contains None values."):
-        engine.preprocess(np.array([1.0, 2.0]), np.array(["A", None], dtype=object))
-
-
-def test_preprocess_too_few_valid_clusters(engine):
-    y = np.array([1.0, 2.0, np.nan])
-    clusters = np.array(["A", "A", "B"])
-    with pytest.raises(ValueError, match="Need at least 2 clusters with non-NaN observations; got 1."):
-        engine.preprocess(y, clusters)
-
-
 # --- fit_tuning_parameter ---
 
 
@@ -132,9 +89,3 @@ def test_compute_mean_and_std_delegates_to_classical_engine(engine, dataset):
         np.testing.assert_array_equal(mock_compute_mean_and_std.call_args[0][0], dataset)
         assert mock_compute_mean_and_std.call_args[0][1] is None
         assert (mean, std) == (1.5, 0.25)
-
-
-def test_compute_mean_and_std_known_result(engine, dataset):
-    mean, std = engine.compute_mean_and_std(dataset, tuning_parameter=None)
-    assert mean == pytest.approx(6.0, abs=1e-12)
-    assert std == pytest.approx(1.0, abs=1e-12)

@@ -357,7 +357,7 @@ The **clustered classical mean** extends the classical mean to a dataset partiti
 | $Y_j$ | Labeled samples only | Ground-truth label |
 | $c_i$ | All samples | Cluster identifier |
 
-Unlabeled observations are discarded before aggregating, so a cluster's mean is taken over its labeled observations only. Clusters with no labeled observation do not contribute, and at least two clusters must remain ($L^{\bullet} \geq 2$). Unlike in Clustered PPI++, a cluster may therefore mix labeled and unlabeled observations.
+Unlabeled observations are discarded before aggregating, so a cluster's mean is taken over its labeled observations only. Clusters with no labeled observation do not contribute, and at least two clusters must remain ($L^{\bullet} \geq 2$).
 
 For each of the $L^{\bullet}$ labeled clusters $l$, the cluster mean is:
 
