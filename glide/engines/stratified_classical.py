@@ -23,10 +23,11 @@ class StratifiedClassicalMeanEngine:
             stratum_weights = np.bincount(stratum_codes) / len(groups)
         not_nan_mask = ~np.isnan(y)
         stratified_dataset = {}
-        for code, stratum_id in enumerate(unique_strata):
-            y_stratum = y[(stratum_codes == code) & not_nan_mask]
+        for stratum_code, stratum_id in enumerate(unique_strata):
+            stratum_mask = (stratum_codes == stratum_code) & not_nan_mask
+            y_stratum = y[stratum_mask]
             _validate_min_samples(y_stratum, "y", stratum_id)
-            stratified_dataset[stratum_id] = (y_stratum, stratum_weights[code])
+            stratified_dataset[stratum_id] = (y_stratum, stratum_weights[stratum_code])
         return stratified_dataset
 
     def fit_tuning_parameter(self, dataset: StratifiedClassicalDataset, *, power_tuning: bool) -> None:
