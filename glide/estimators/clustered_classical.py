@@ -1,10 +1,8 @@
-from typing import Tuple
-
 import numpy as np
 from numpy.typing import NDArray
 
 from glide.confidence_intervals import CLTConfidenceInterval
-from glide.core.validation import _validate_bounds, _validate_equal_lengths, _validate_has_no_nan
+from glide.engines.clustered_classical import ClusteredClassicalMeanEngine
 from glide.mean_inference_results import ClassicalMeanInferenceResult
 
 
@@ -32,26 +30,8 @@ class ClusteredClassicalMeanEstimator:
     n: 4
     """
 
-    def _preprocess(
-        self,
-        y: NDArray,
-        clusters: NDArray,
-    ) -> Tuple[NDArray, NDArray, int]:
-        _validate_equal_lengths(y, clusters, names=["y", "clusters"])
-        _validate_has_no_nan(clusters, "clusters")
-        not_nan_mask = ~np.isnan(y)
-        y_valid = y[not_nan_mask]
-        clusters_valid = clusters[not_nan_mask]
-
-        unique_valid_clusters, cluster_indices = np.unique(clusters_valid, return_inverse=True)
-        n_valid_clusters = len(unique_valid_clusters)
-        _validate_bounds(
-            n_valid_clusters,
-            "n_valid_clusters",
-            lower=2,
-            error_message=f"Need at least 2 clusters with non-NaN observations; got {n_valid_clusters}.",
-        )
-        return y_valid, cluster_indices, n_valid_clusters
+    def __init__(self) -> None:
+        self._engine = ClusteredClassicalMeanEngine()
 
     def estimate(
         self,
@@ -99,16 +79,9 @@ class ClusteredClassicalMeanEstimator:
             - If ``clusters`` contains NaN values (numeric dtype) or None values (non-numeric dtype).
             - If fewer than 2 clusters have at least one non-NaN observation.
         """
-        y_valid, cluster_indices, n_valid_clusters = self._preprocess(y, clusters)
-        total_size = len(y_valid)
-
-        cluster_sums = np.bincount(cluster_indices, weights=y_valid)
-        cluster_sizes = np.bincount(cluster_indices)
-        cluster_means = cluster_sums / cluster_sizes
-
-        mean = float(np.mean(cluster_means))
-        var = np.var(cluster_means, ddof=1) / n_valid_clusters
-        std = np.sqrt(var)
+        cluster_means = self._engine.preprocess(y, clusters)
+        mean, std = self._engine.compute_mean_and_std(cluster_means, None)
+        total_size = np.sum(~np.isnan(y))
 
         ci = CLTConfidenceInterval(
             mean=mean,
