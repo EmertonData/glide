@@ -35,11 +35,17 @@ def test_init_sets_engine(estimator):
 
 
 def test_estimate_delegates(estimator, y, clusters):
-    with patch.object(
-        estimator._engine, "compute_mean_and_std", wraps=estimator._engine.compute_mean_and_std
-    ) as mock_compute_mean_and_std:
+    with (
+        patch.object(estimator._engine, "preprocess", wraps=estimator._engine.preprocess) as mock_preprocess,
+        patch.object(
+            estimator._engine, "compute_mean_and_std", wraps=estimator._engine.compute_mean_and_std
+        ) as mock_compute_mean_and_std,
+    ):
         estimator.estimate(y, clusters)
 
+        mock_preprocess.assert_called_once()
+        np.testing.assert_array_equal(mock_preprocess.call_args[0][0], y)
+        np.testing.assert_array_equal(mock_preprocess.call_args[0][1], clusters)
         mock_compute_mean_and_std.assert_called_once()
         np.testing.assert_array_equal(mock_compute_mean_and_std.call_args[0][0], np.array([5.0, 7.0]))
         assert mock_compute_mean_and_std.call_args[0][1] is None

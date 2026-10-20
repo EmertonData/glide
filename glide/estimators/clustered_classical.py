@@ -81,7 +81,7 @@ class ClusteredClassicalMeanEstimator:
         """
         cluster_means = self._engine.preprocess(y, clusters)
         mean, std = self._engine.compute_mean_and_std(cluster_means, None)
-        total_size = np.sum(~np.isnan(y))
+        n_labeled = np.sum(~np.isnan(y))
 
         ci = CLTConfidenceInterval(
             mean=mean,
@@ -92,6 +92,6 @@ class ClusteredClassicalMeanEstimator:
             confidence_interval=ci,
             metric_name=metric_name,
             estimator_name=self.__class__.__name__,
-            n=total_size,
+            n=n_labeled,
         )
         return result

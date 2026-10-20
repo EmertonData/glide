@@ -49,7 +49,7 @@ class StratifiedClassicalMeanEstimator:
             sigma2 = sum_k  w_k^2 * sigma2_k
 
         where ``w_k`` is the weight of stratum *k*. By default ``w_k`` is the
-        sample fraction ``n_samples_k / n_samples``; pass ``stratum_weights``
+        sample fraction ``n_labeled_k / n_labeled``; pass ``stratum_weights``
         to use a different weighting.
 
         It is assumed that ``w_k`` reflects the true weight of stratum *k* for
@@ -87,7 +87,7 @@ class StratifiedClassicalMeanEstimator:
         """
         _validate_has_no_nan(groups, "groups")
         not_nan_mask = ~np.isnan(y)
-        n_samples = np.sum(not_nan_mask)
+        n_labeled = np.sum(not_nan_mask)
         weighted_mean = 0.0
         weighted_var = 0.0
 
@@ -97,13 +97,13 @@ class StratifiedClassicalMeanEstimator:
             y_stratum = y[stratum_mask & not_nan_mask]
             _validate_min_samples(y_stratum, "y", stratum_id)
 
-            n_samples_k = len(y_stratum)
+            n_labeled_k = len(y_stratum)
             if stratum_weights is not None:
                 w_k = stratum_weights[i]
             else:
-                w_k = n_samples_k / n_samples
+                w_k = n_labeled_k / n_labeled
             mean_k = np.mean(y_stratum)
-            var_k = np.var(y_stratum, ddof=1) / n_samples_k
+            var_k = np.var(y_stratum, ddof=1) / n_labeled_k
             weighted_mean += w_k * mean_k
             weighted_var += w_k**2 * var_k
 
@@ -117,6 +117,6 @@ class StratifiedClassicalMeanEstimator:
             confidence_interval=ci,
             metric_name=metric_name,
             estimator_name=self.__class__.__name__,
-            n=n_samples,
+            n=n_labeled,
         )
         return result

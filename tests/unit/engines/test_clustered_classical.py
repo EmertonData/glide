@@ -63,6 +63,12 @@ def test_preprocess_delegates_to_validation(engine, y, clusters):
         )
 
 
+def test_preprocess_valid_output(engine, y, clusters):
+    cluster_means = engine.preprocess(y, clusters)
+    expected = np.array([5.0, 7.0])
+    np.testing.assert_allclose(cluster_means, expected)
+
+
 # --- fit_tuning_parameter ---
 
 
