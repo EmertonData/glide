@@ -16,7 +16,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - `generate_batched_stratified_binary_dataset`: a new synthetic dataset generator simulating a production stream as successive batches, each independently partitioned into strata.
 
 ### 🔄 Changed
-- `StratifiedClassicalMeanEstimator` now weights strata by their share of all rows by default, including rows with a `NaN` label (previously only labeled rows were counted), and raises a `ValueError` when `y` and `groups` have different lengths. Results are unchanged for fully labeled `y`.
+- `StratifiedClassicalMeanEstimator` now weights strata by their share of all rows by default, labeled or not (previously, only labeled rows were counted).
 - `UniformSampler.sample` now takes `y_proxy` instead of `n_total`, consistent with the other samplers.
 
 ### 🐛 Fixed

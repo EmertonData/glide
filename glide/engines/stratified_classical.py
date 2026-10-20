@@ -20,7 +20,6 @@ class StratifiedClassicalMeanEngine:
         _validate_equal_lengths(y, groups, names=["y", "groups"])
         unique_strata, stratum_codes = np.unique(groups, return_inverse=True)
         if stratum_weights is None:
-            # Population shares count every row, labeled or not, as in StratifiedPPIMeanEngine
             stratum_weights = np.bincount(stratum_codes) / len(groups)
         not_nan_mask = ~np.isnan(y)
         stratified_dataset = {}
