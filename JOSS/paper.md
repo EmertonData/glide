@@ -77,7 +77,7 @@ The first is the data contract: each class method take as inputs one aligned arr
 
 The second is a middle layer of abstraction: each estimator family factors its computation into a `MeanEstimationEngine`, which an estimator calls once over the whole dataset and a monitor calls once per batch. Because estimators and monitors share this middle layer, contributors can readily extend any estimator into its anytime-valid monitor counterpart, without reimplementing its statistics.
 
-In terms of quality gates, every new component passes three lines of defense, all run in continuous integration: unit tests with 100% coverage and executed docstring examples, functional tests of statistical properties (e.g., a stratified estimator on a single stratum must equal the uniform one), and Monte Carlo validation notebooks assessing coverage, interval width, false-alarm and miscoverage rates.
+In terms of quality gates, every new component passes three lines of defense, all run in continuous integration: unit tests with 100% code coverage and executed docstring examples, functional tests of statistical properties (e.g., a stratified estimator on a single stratum must equal the uniform one), and Monte Carlo validation notebooks assessing statistical coverage, interval width, false-alarm and miscoverage rates.
 
 Regarding maintenance philosophy, `scipy` [@2020SciPy-NMeth] is the single runtime dependency, our dependency support windows follow SPEC 0, and releases follow semantic versioning.
 
@@ -85,7 +85,7 @@ Regarding maintenance philosophy, `scipy` [@2020SciPy-NMeth] is the single runti
 
 The statistical framework behind the library is described in a companion methods paper presented at the ICML 2026 workshop on statistical frameworks for uncertainty in agentic systems [@martinon2026industrializing]. Three reproducible case studies in the documentation run full workflows on public benchmarks, whose proxy-labeled versions we release as documented datasets: agentic safety evaluation on R-Judge [@yuan-etal-2024-r], text-to-SQL accuracy on Spider [@yu-etal-2018-spider], and multilingual retrieval-augmented generation faithfulness on MEMERAG [@cruz-blandon-etal-2025-memerag].
 
-`GLIDE` has reached practitioner and research audiences alike. It was the subject of a tutorial at PyData Amsterdam 2026 [@martinon2026pydata], will be presented at Compute! Paris 2026 [@martinon2026compute] and at the AI4Good workshop at NeurIPS 2026 in Paris [@martinon2026aigood].
+`GLIDE` has reached practitioner and research audiences alike. It was the subject of a tutorial at PyData Amsterdam 2026 [@martinon2026pydata], will be presented at Compute! Paris 2026 [@martinon2026compute] and at the AI4Good workshop at NeurIPS 2026 in Paris [@merad2026industrializing].
 
 `GLIDE` has been developed in public since its first commit in March 2026, with roughly two releases per month and a dozen contributors. It has attracted more than a hundred stars and is disseminated through a monthly newsletter. Beyond the open-source community, the package has already been used in several missions delivered by Emerton Data, a consulting firm, to evaluate industrialized GenAI systems with limited human annotation budgets.
 
