@@ -350,7 +350,14 @@ When every cluster is a singleton, $L^{\bullet} = n$ and $L^{\circ} = N$, and al
 
 ## Clustered Classical Mean
 
-The **clustered classical mean** extends the classical mean to a dataset partitioned into clusters, where observations within a cluster may be correlated but clusters are independent of one another. It uses only ground-truth labels $Y_j$, aggregated by cluster identifier $c_i$ (see table in previous section).
+The **clustered classical mean** extends the classical mean to a dataset partitioned into clusters, where observations within a cluster may be correlated but clusters are independent of one another. The data is partitioned into clusters as in Clustered Prediction-Powered Inference above, and only ground-truth labels are used:
+
+| Value | Present for | Description |
+|---|---|---|
+| $Y_j$ | Labeled samples only | Ground-truth label |
+| $c_i$ | All samples | Cluster identifier |
+
+Unlabeled observations are discarded before aggregating, so a cluster's mean is taken over its labeled observations only. Clusters with no labeled observation do not contribute, and at least two clusters must remain ($L^{\bullet} \geq 2$).
 
 For each of the $L^{\bullet}$ labeled clusters $l$, the cluster mean is:
 

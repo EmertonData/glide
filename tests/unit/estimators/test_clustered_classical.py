@@ -4,7 +4,7 @@ import numpy as np
 import pytest
 from numpy.typing import NDArray
 
-import glide.estimators.clustered_classical as clustered_classical_module
+from glide.engines.clustered_classical import ClusteredClassicalMeanEngine
 from glide.estimators import ClusteredClassicalMeanEstimator
 from glide.mean_inference_results import ClassicalMeanInferenceResult
 
@@ -24,45 +24,31 @@ def estimator() -> ClusteredClassicalMeanEstimator:
     return ClusteredClassicalMeanEstimator()
 
 
-# --- _preprocess ---
+# --- __init__ ---
 
 
-def test_preprocess_delegates_to_validation(estimator, y, clusters):
-
-    with (
-        patch.object(clustered_classical_module, "_validate_equal_lengths") as mock_validate_equal_lengths,
-        patch.object(clustered_classical_module, "_validate_has_no_nan") as mock_validate_has_no_nan,
-        patch.object(clustered_classical_module, "_validate_bounds") as mock_validate_bounds,
-    ):
-        estimator._preprocess(y, clusters)
-
-        mock_validate_equal_lengths.assert_called_once()
-        np.testing.assert_array_equal(mock_validate_equal_lengths.call_args[0][0], y)
-        np.testing.assert_array_equal(mock_validate_equal_lengths.call_args[0][1], clusters)
-        assert mock_validate_equal_lengths.call_args[1] == {"names": ["y", "clusters"]}
-
-        mock_validate_has_no_nan.assert_called_once()
-        np.testing.assert_array_equal(mock_validate_has_no_nan.call_args[0][0], clusters)
-        assert mock_validate_has_no_nan.call_args[0][1] == "clusters"
-
-        mock_validate_bounds.assert_called_once_with(
-            2,
-            "n_valid_clusters",
-            lower=2,
-            error_message="Need at least 2 clusters with non-NaN observations; got 2.",
-        )
-
-
-def test_preprocess_known_result(estimator):
-    y = np.array([2.0, np.nan, 4.0, np.nan, np.nan])
-    clusters = np.array(["A", "A", "B", "C", "C"])
-    y_valid, cluster_indices, n_valid_clusters = estimator._preprocess(y, clusters)
-    assert n_valid_clusters == 2
-    np.testing.assert_array_equal(y_valid, np.array([2.0, 4.0]))
-    np.testing.assert_array_equal(cluster_indices, np.array([0, 1]))
+def test_init_sets_engine(estimator):
+    assert isinstance(estimator._engine, ClusteredClassicalMeanEngine)
 
 
 # --- estimate ---
+
+
+def test_estimate_delegates(estimator, y, clusters):
+    with (
+        patch.object(estimator._engine, "preprocess", wraps=estimator._engine.preprocess) as mock_preprocess,
+        patch.object(
+            estimator._engine, "compute_mean_and_std", wraps=estimator._engine.compute_mean_and_std
+        ) as mock_compute_mean_and_std,
+    ):
+        estimator.estimate(y, clusters)
+
+        mock_preprocess.assert_called_once()
+        np.testing.assert_array_equal(mock_preprocess.call_args[0][0], y)
+        np.testing.assert_array_equal(mock_preprocess.call_args[0][1], clusters)
+        mock_compute_mean_and_std.assert_called_once()
+        np.testing.assert_array_equal(mock_compute_mean_and_std.call_args[0][0], np.array([5.0, 7.0]))
+        assert mock_compute_mean_and_std.call_args[0][1] is None
 
 
 def test_estimate_is_valid_inference_result(estimator, y, clusters):

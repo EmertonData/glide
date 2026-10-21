@@ -13,6 +13,13 @@ from glide.engines.ppi import PPIDataset
 ClusteredDataset = PPIDataset
 
 
+def _compute_cluster_means(values: NDArray, cluster_indices: NDArray) -> NDArray:
+    cluster_sums = np.bincount(cluster_indices, weights=values)
+    cluster_sizes = np.bincount(cluster_indices)
+    cluster_means = cluster_sums / cluster_sizes
+    return cluster_means
+
+
 def _preprocess(
     y_true: NDArray,
     y_proxy: NDArray,
@@ -47,15 +54,9 @@ def _preprocess(
         error_message=f"Need at least 2 fully unlabeled clusters; got {n_unlabeled_clusters}.",
     )
 
-    labeled_true_sums = np.bincount(labeled_cluster_indices, weights=y_true_labeled)
-    labeled_proxy_sums = np.bincount(labeled_cluster_indices, weights=y_proxy_labeled)
-    unlabeled_proxy_sums = np.bincount(unlabeled_cluster_indices, weights=y_proxy_unlabeled)
-    labeled_sizes = np.bincount(labeled_cluster_indices)
-    unlabeled_sizes = np.bincount(unlabeled_cluster_indices)
-
-    labeled_true_means = labeled_true_sums / labeled_sizes
-    labeled_proxy_means = labeled_proxy_sums / labeled_sizes
-    unlabeled_proxy_means = unlabeled_proxy_sums / unlabeled_sizes
+    labeled_true_means = _compute_cluster_means(y_true_labeled, labeled_cluster_indices)
+    labeled_proxy_means = _compute_cluster_means(y_proxy_labeled, labeled_cluster_indices)
+    unlabeled_proxy_means = _compute_cluster_means(y_proxy_unlabeled, unlabeled_cluster_indices)
 
     clustered_dataset = labeled_true_means, labeled_proxy_means, unlabeled_proxy_means
     return clustered_dataset

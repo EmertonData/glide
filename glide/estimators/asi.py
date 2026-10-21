@@ -167,7 +167,7 @@ class ASIMeanEstimator:
         """
         y_true_filled, y_proxy_filtered, xi, pi_filtered = self._preprocess(y_true, y_proxy, pi)
 
-        n_true = int(xi.sum())
+        n_labeled = int(xi.sum())
         n_proxy = len(pi_filtered)
 
         _lambda = self._compute_tuning_parameter(
@@ -181,13 +181,13 @@ class ASIMeanEstimator:
             mean=mean_estimate, std=std_estimate, confidence_level=confidence_level
         )
         classical_confidence_interval = IPWClassicalMeanEstimator().estimate(y_true, pi).confidence_interval
-        effective_sample_size = floor(n_true * classical_confidence_interval.var / confidence_interval.var)
+        effective_sample_size = floor(n_labeled * classical_confidence_interval.var / confidence_interval.var)
 
         return PredictionPoweredMeanInferenceResult(
             confidence_interval=confidence_interval,
             metric_name=metric_name,
             estimator_name=self.__class__.__name__,
-            n_true=n_true,
+            n_true=n_labeled,
             n_proxy=n_proxy,
             effective_sample_size=effective_sample_size,
         )
