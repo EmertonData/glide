@@ -29,8 +29,7 @@ class ClusteredClassicalMeanEngine:
         return cluster_means
 
     def fit_tuning_parameter(self, dataset: NDArray, *, power_tuning: bool) -> None:
-        tuning_parameter = self._classical_engine.fit_tuning_parameter(dataset, power_tuning=power_tuning)
-        return tuning_parameter
+        return None
 
     def compute_mean_and_std(self, dataset: NDArray, tuning_parameter: None) -> Tuple[float, float]:
         mean, std = self._classical_engine.compute_mean_and_std(dataset, tuning_parameter)

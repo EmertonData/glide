@@ -136,13 +136,7 @@ class StratifiedPPIMeanEstimator:
             std=std,
             confidence_level=confidence_level,
         )
-        _, stratum_counts = np.unique(groups, return_counts=True)
-        stratum_weights = stratum_counts / n_samples
-        classical_confidence_interval = (
-            StratifiedClassicalMeanEstimator()
-            .estimate(y_true, groups, stratum_weights=stratum_weights)
-            .confidence_interval
-        )
+        classical_confidence_interval = StratifiedClassicalMeanEstimator().estimate(y_true, groups).confidence_interval
         effective_sample_size = floor(n_labeled * classical_confidence_interval.var / confidence_interval.var)
         result = PredictionPoweredMeanInferenceResult(
             confidence_interval=confidence_interval,

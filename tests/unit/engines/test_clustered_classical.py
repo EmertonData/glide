@@ -49,7 +49,7 @@ def test_preprocess_delegates_to_validation(engine, y, clusters):
         mock_validate_equal_lengths.assert_called_once()
         np.testing.assert_array_equal(mock_validate_equal_lengths.call_args[0][0], y)
         np.testing.assert_array_equal(mock_validate_equal_lengths.call_args[0][1], clusters)
-        assert mock_validate_equal_lengths.call_args[1] == {"names": ["y", "clusters"]}
+        assert mock_validate_equal_lengths.call_args.kwargs == {"names": ["y", "clusters"]}
 
         mock_validate_has_no_nan.assert_called_once()
         np.testing.assert_array_equal(mock_validate_has_no_nan.call_args[0][0], clusters)
@@ -72,15 +72,9 @@ def test_preprocess_valid_output(engine, y, clusters):
 # --- fit_tuning_parameter ---
 
 
-def test_fit_tuning_parameter_delegates_to_classical_engine(engine, dataset):
-    with patch.object(engine._classical_engine, "fit_tuning_parameter") as mock_fit_tuning_parameter:
-        mock_fit_tuning_parameter.return_value = None
-        tuning_parameter = engine.fit_tuning_parameter(dataset, power_tuning=False)
-
-        mock_fit_tuning_parameter.assert_called_once()
-        np.testing.assert_array_equal(mock_fit_tuning_parameter.call_args[0][0], dataset)
-        assert mock_fit_tuning_parameter.call_args.kwargs == {"power_tuning": False}
-        assert tuning_parameter is None
+def test_fit_tuning_parameter_returns_none(engine, dataset):
+    assert engine.fit_tuning_parameter(dataset, power_tuning=True) is None
+    assert engine.fit_tuning_parameter(dataset, power_tuning=False) is None
 
 
 # --- compute_mean_and_std ---
