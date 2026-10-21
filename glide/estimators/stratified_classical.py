@@ -93,7 +93,7 @@ class StratifiedClassicalMeanEstimator:
         """
         stratified_dataset = self._engine.preprocess(y, groups, stratum_weights)
         weighted_mean, std = self._engine.compute_mean_and_std(stratified_dataset, None)
-        n_samples = np.sum(~np.isnan(y))
+        n_labeled = np.sum(~np.isnan(y))
         ci = CLTConfidenceInterval(
             mean=weighted_mean,
             std=std,
@@ -103,6 +103,6 @@ class StratifiedClassicalMeanEstimator:
             confidence_interval=ci,
             metric_name=metric_name,
             estimator_name=self.__class__.__name__,
-            n=n_samples,
+            n=n_labeled,
         )
         return result

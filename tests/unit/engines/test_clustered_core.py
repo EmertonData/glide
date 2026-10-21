@@ -5,7 +5,7 @@ import pytest
 from numpy.typing import NDArray
 
 import glide.engines.clustered_core as clustered_core_module
-from glide.engines.clustered_core import _preprocess
+from glide.engines.clustered_core import _compute_cluster_means, _preprocess
 
 
 @pytest.fixture
@@ -21,6 +21,16 @@ def y_proxy() -> NDArray:
 @pytest.fixture
 def clusters() -> NDArray:
     return np.array(["A", "B", "C", "D"])
+
+
+# --- _compute_cluster_means ---
+
+
+def test_compute_cluster_means(y_proxy):
+    cluster_indices = np.array([0, 0, 1, 1])
+    expected = np.array([3.0, 6.0])
+    cluster_means = _compute_cluster_means(y_proxy, cluster_indices)
+    np.testing.assert_allclose(cluster_means, expected)
 
 
 # --- _preprocess ---
