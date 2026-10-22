@@ -91,8 +91,8 @@ class StratifiedClassicalMeanEstimator:
             - If ``y`` and ``groups`` have different lengths.
             - If any stratum contains fewer than 2 non-NaN values.
         """
-        stratified_dataset = self._engine.preprocess(y, groups, stratum_weights)
-        weighted_mean, std = self._engine.compute_mean_and_std(stratified_dataset, None)
+        stratified_dataset = self._engine._preprocess(y, groups, stratum_weights)
+        weighted_mean, std = self._engine._compute_mean_and_std(stratified_dataset, None)
         n_labeled = np.sum(~np.isnan(y))
         ci = CLTConfidenceInterval(
             mean=weighted_mean,

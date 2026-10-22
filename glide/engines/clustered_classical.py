@@ -12,7 +12,7 @@ class ClusteredClassicalMeanEngine:
     def __init__(self) -> None:
         self._classical_engine = ClassicalMeanEngine()
 
-    def preprocess(self, y: NDArray, clusters: NDArray) -> NDArray:
+    def _preprocess(self, y: NDArray, clusters: NDArray) -> NDArray:
         _validate_equal_lengths(y, clusters, names=["y", "clusters"])
         _validate_has_no_nan(clusters, "clusters")
         not_nan_mask = ~np.isnan(y)
@@ -28,9 +28,9 @@ class ClusteredClassicalMeanEngine:
         cluster_means = _compute_cluster_means(y_valid, cluster_indices)
         return cluster_means
 
-    def fit_tuning_parameter(self, dataset: NDArray, *, power_tuning: bool) -> None:
+    def _fit_tuning_parameter(self, dataset: NDArray, *, power_tuning: bool) -> None:
         return None
 
-    def compute_mean_and_std(self, dataset: NDArray, tuning_parameter: None) -> Tuple[float, float]:
-        mean, std = self._classical_engine.compute_mean_and_std(dataset, tuning_parameter)
+    def _compute_mean_and_std(self, dataset: NDArray, tuning_parameter: None) -> Tuple[float, float]:
+        mean, std = self._classical_engine._compute_mean_and_std(dataset, tuning_parameter)
         return mean, std

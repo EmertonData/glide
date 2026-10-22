@@ -10,6 +10,7 @@ class ClassicalMeanInferenceResult(MeanInferenceResult):
     n: int = 0
 
     def __str__(self) -> str:
+        """Return the multi-line textual representation of the result."""
         lines = self._common_lines() + [
             f"n: {self.n}",
         ]

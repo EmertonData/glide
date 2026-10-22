@@ -119,11 +119,11 @@ class ClusteredPPIMeanEstimator:
             - If ``power_tuning=True`` and proxy cluster means have zero variance across
               both labeled and unlabeled clusters.
         """
-        clustered_dataset = self._engine.preprocess(y_true, y_proxy, clusters)
+        clustered_dataset = self._engine._preprocess(y_true, y_proxy, clusters)
         labeled_true_means, _, _ = clustered_dataset
         _validate_non_constant(labeled_true_means, "'y_true' labeled cluster means are constant.")
-        tuning_parameter = self._engine.fit_tuning_parameter(clustered_dataset, power_tuning=power_tuning)
-        mean, std = self._engine.compute_mean_and_std(clustered_dataset, tuning_parameter)
+        tuning_parameter = self._engine._fit_tuning_parameter(clustered_dataset, power_tuning=power_tuning)
+        mean, std = self._engine._compute_mean_and_std(clustered_dataset, tuning_parameter)
         confidence_interval = CLTConfidenceInterval(
             mean=mean,
             std=std,

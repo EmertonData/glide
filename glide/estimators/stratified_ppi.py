@@ -122,11 +122,11 @@ class StratifiedPPIMeanEstimator:
             - If any stratum has fewer than 2 labeled or fewer than 2 unlabeled samples.
             - If a stratum's proxy values are constant, with ``power_tuning=True``.
         """
-        stratified_dataset = self._engine.preprocess(y_true, y_proxy, groups)
+        stratified_dataset = self._engine._preprocess(y_true, y_proxy, groups)
         _validate_non_constant(y_true[~np.isnan(y_true)], "'y_true' labeled values are constant.")
 
-        tuning_parameter = self._engine.fit_tuning_parameter(stratified_dataset, power_tuning=power_tuning)
-        weighted_mean, std = self._engine.compute_mean_and_std(stratified_dataset, tuning_parameter)
+        tuning_parameter = self._engine._fit_tuning_parameter(stratified_dataset, power_tuning=power_tuning)
+        weighted_mean, std = self._engine._compute_mean_and_std(stratified_dataset, tuning_parameter)
 
         n_samples = len(y_true)
         n_labeled = int(np.sum(~np.isnan(y_true)))

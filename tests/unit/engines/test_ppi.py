@@ -24,10 +24,10 @@ def engine():
 
 @pytest.fixture
 def dataset(engine, y_true, y_proxy):
-    return engine.preprocess(y_true, y_proxy)
+    return engine._preprocess(y_true, y_proxy)
 
 
-# --- preprocess ---
+# --- _preprocess ---
 
 
 def test_preprocess_delegates_to_validation(engine, y_true, y_proxy):
@@ -44,7 +44,7 @@ def test_preprocess_delegates_to_validation(engine, y_true, y_proxy):
             np.array([3.0, 4.0]),
             labeled_mask,
         )
-        engine.preprocess(y_true, y_proxy)
+        engine._preprocess(y_true, y_proxy)
 
         mock_validate_equal_lengths.assert_called_once()
         np.testing.assert_array_equal(mock_validate_equal_lengths.call_args[0][0], y_true)
@@ -61,29 +61,29 @@ def test_preprocess_delegates_to_validation(engine, y_true, y_proxy):
 
 
 def test_preprocess_valid_output(engine, y_true, y_proxy):
-    y_true_labeled, y_proxy_labeled, y_proxy_unlabeled = engine.preprocess(y_true, y_proxy)
+    y_true_labeled, y_proxy_labeled, y_proxy_unlabeled = engine._preprocess(y_true, y_proxy)
     np.testing.assert_array_equal(y_true_labeled, np.array([1.0, 2.0]))
     np.testing.assert_array_equal(y_proxy_labeled, np.array([1.0, 2.0]))
     np.testing.assert_array_equal(y_proxy_unlabeled, np.array([3.0, 4.0]))
 
 
-# --- fit_tuning_parameter ---
+# --- _fit_tuning_parameter ---
 
 
 def test_fit_tuning_parameter_power_tuning_true(engine, dataset):
-    tuning_parameter = engine.fit_tuning_parameter(dataset, power_tuning=True)
+    tuning_parameter = engine._fit_tuning_parameter(dataset, power_tuning=True)
     assert tuning_parameter == pytest.approx(0.15)
 
 
 def test_fit_tuning_parameter_power_tuning_false(engine, dataset):
-    tuning_parameter = engine.fit_tuning_parameter(dataset, power_tuning=False)
+    tuning_parameter = engine._fit_tuning_parameter(dataset, power_tuning=False)
     assert tuning_parameter == pytest.approx(1.0)
 
 
-# --- compute_mean_and_std ---
+# --- _compute_mean_and_std ---
 
 
 def test_compute_mean_and_std(engine, dataset):
-    mean, std = engine.compute_mean_and_std(dataset, tuning_parameter=0.15)
+    mean, std = engine._compute_mean_and_std(dataset, tuning_parameter=0.15)
     assert mean == pytest.approx(1.8)
     assert std == pytest.approx(0.4316, abs=1e-4)

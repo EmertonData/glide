@@ -29,17 +29,17 @@ def engine():
 
 @pytest.fixture
 def dataset(engine, y_true, y_proxy, groups):
-    return engine.preprocess(y_true, y_proxy, groups)
+    return engine._preprocess(y_true, y_proxy, groups)
 
 
-# --- preprocess ---
+# --- _preprocess ---
 
 
 def test_preprocess_delegates_to_stratified_core(engine, y_true, y_proxy, groups):
     sentinel_dataset = object()
     with patch.object(stratified_ppi_engine_module, "_preprocess") as mock_preprocess:
         mock_preprocess.return_value = sentinel_dataset
-        dataset = engine.preprocess(y_true, y_proxy, groups)
+        dataset = engine._preprocess(y_true, y_proxy, groups)
 
         mock_preprocess.assert_called_once()
         np.testing.assert_array_equal(mock_preprocess.call_args[0][0], y_true)
@@ -48,17 +48,17 @@ def test_preprocess_delegates_to_stratified_core(engine, y_true, y_proxy, groups
         assert dataset is sentinel_dataset
 
 
-# --- fit_tuning_parameter ---
+# --- _fit_tuning_parameter ---
 
 
 def test_fit_tuning_parameter_power_tuning_true(engine, dataset):
-    tuning_parameter = engine.fit_tuning_parameter(dataset, power_tuning=True)
+    tuning_parameter = engine._fit_tuning_parameter(dataset, power_tuning=True)
     assert tuning_parameter["A"] == pytest.approx(0.784, abs=1e-3)
     assert tuning_parameter["B"] == pytest.approx(0.784, abs=1e-3)
 
 
 def test_fit_tuning_parameter_power_tuning_false(engine, dataset):
-    tuning_parameter = engine.fit_tuning_parameter(dataset, power_tuning=False)
+    tuning_parameter = engine._fit_tuning_parameter(dataset, power_tuning=False)
     assert tuning_parameter["A"] == pytest.approx(1.0)
     assert tuning_parameter["B"] == pytest.approx(1.0)
 
@@ -69,7 +69,7 @@ def test_fit_tuning_parameter_per_stratum_independence(engine, dataset):
         "B": (np.array([1.0, 2.0, 3.0]), np.array([1.1, 2.2, 3.3]), np.array([4.0, 5.0, 6.0, 7.0])),
     }
 
-    tuning_parameter = engine.fit_tuning_parameter(dataset_with_different_b, power_tuning=True)
+    tuning_parameter = engine._fit_tuning_parameter(dataset_with_different_b, power_tuning=True)
 
     assert tuning_parameter["A"] == pytest.approx(0.784, abs=1e-3)
 
@@ -78,27 +78,27 @@ def test_fit_tuning_parameter_wraps_error_with_stratum_identifier(engine):
     y_true = np.array([1.0, 2.0, np.nan, np.nan, 1.0, 2.0, np.nan, np.nan])
     y_proxy = np.array([1.0, 2.0, 3.0, 4.0, 5.0, 5.0, 5.0, 5.0])
     groups = np.array(["A", "A", "A", "A", "B", "B", "B", "B"])
-    dataset = engine.preprocess(y_true, y_proxy, groups)
+    dataset = engine._preprocess(y_true, y_proxy, groups)
 
     expected_message = "Proxy labels have zero variance; cannot estimate the tuning parameter. (stratum 'B')."
     with pytest.raises(ValueError, match=r"^Proxy labels have zero variance") as exc_info:
-        engine.fit_tuning_parameter(dataset, power_tuning=True)
+        engine._fit_tuning_parameter(dataset, power_tuning=True)
     assert str(exc_info.value) == expected_message
 
 
-# --- compute_mean_and_std ---
+# --- _compute_mean_and_std ---
 
 
 def test_compute_mean_and_std(engine, dataset):
     tuning_parameter = {"A": 0.784, "B": 0.784}
-    mean, std = engine.compute_mean_and_std(dataset, tuning_parameter)
+    mean, std = engine._compute_mean_and_std(dataset, tuning_parameter)
     assert mean == pytest.approx(5.617, abs=1e-3)
     assert std == pytest.approx(0.250, abs=1e-3)
 
 
 def test_compute_mean_and_std_missing_stratum_defaults_to_untuned(engine, dataset):
-    mean_with_missing_key, std_with_missing_key = engine.compute_mean_and_std(dataset, {"A": 0.784})
-    mean_with_explicit_one, std_with_explicit_one = engine.compute_mean_and_std(dataset, {"A": 0.784, "B": 1.0})
+    mean_with_missing_key, std_with_missing_key = engine._compute_mean_and_std(dataset, {"A": 0.784})
+    mean_with_explicit_one, std_with_explicit_one = engine._compute_mean_and_std(dataset, {"A": 0.784, "B": 1.0})
 
     assert mean_with_missing_key == pytest.approx(mean_with_explicit_one)
     assert std_with_missing_key == pytest.approx(std_with_explicit_one)

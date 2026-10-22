@@ -13,7 +13,7 @@ class StratifiedClassicalMeanEngine:
     def __init__(self) -> None:
         self._classical_engine = ClassicalMeanEngine()
 
-    def preprocess(
+    def _preprocess(
         self, y: NDArray, groups: NDArray, stratum_weights: Optional[NDArray] = None
     ) -> StratifiedClassicalDataset:
         _validate_has_no_nan(groups, "groups")
@@ -30,14 +30,14 @@ class StratifiedClassicalMeanEngine:
             stratified_dataset[stratum_id] = (y_stratum, stratum_weights[stratum_code])
         return stratified_dataset
 
-    def fit_tuning_parameter(self, dataset: StratifiedClassicalDataset, *, power_tuning: bool) -> None:
+    def _fit_tuning_parameter(self, dataset: StratifiedClassicalDataset, *, power_tuning: bool) -> None:
         return None
 
-    def compute_mean_and_std(self, dataset: StratifiedClassicalDataset, tuning_parameter: None) -> Tuple[float, float]:
+    def _compute_mean_and_std(self, dataset: StratifiedClassicalDataset, tuning_parameter: None) -> Tuple[float, float]:
         weighted_mean = 0.0
         weighted_var = 0.0
         for y_stratum, stratum_weight in dataset.values():
-            mean_k, std_k = self._classical_engine.compute_mean_and_std(y_stratum, tuning_parameter)
+            mean_k, std_k = self._classical_engine._compute_mean_and_std(y_stratum, tuning_parameter)
             weighted_mean += stratum_weight * mean_k
             weighted_var += stratum_weight**2 * std_k**2
         std = np.sqrt(weighted_var)

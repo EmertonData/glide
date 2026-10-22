@@ -20,6 +20,7 @@ class PredictionPoweredMeanMonitoringResult(MeanMonitoringResult):
     batch_n_proxy: NDArray
 
     def __post_init__(self) -> None:
+        """Validate that the per-batch sample counts match the batch estimates."""
         super().__post_init__()
         _validate_equal_lengths(
             self.batch_mean_estimates,
@@ -29,6 +30,7 @@ class PredictionPoweredMeanMonitoringResult(MeanMonitoringResult):
         )
 
     def __str__(self) -> str:
+        """Return the multi-line textual representation of the result."""
         lines = self._common_lines() + [
             f"batch_n_true: {self.batch_n_true.tolist()}",
             f"batch_n_proxy: {self.batch_n_proxy.tolist()}",
