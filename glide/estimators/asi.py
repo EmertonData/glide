@@ -44,9 +44,9 @@ class ASIMeanEstimator:
     >>> from glide.estimators import ASIMeanEstimator
     >>> y_true = np.array([0.0, 1.0, np.nan, np.nan])
     >>> y_proxy = np.array([0.1, 0.9, 0.5, 0.5])
-    >>> pi = np.array([0.8, 0.8, 0.8, 0.8])
+    >>> sampling_probability = np.array([0.8, 0.8, 0.8, 0.8])
     >>> estimator = ASIMeanEstimator()
-    >>> result = estimator.estimate(y_true, y_proxy, pi)
+    >>> result = estimator.estimate(y_true, y_proxy, sampling_probability)
     >>> print(result)
     Metric: Metric
     Point Estimate: 0.548
@@ -61,42 +61,44 @@ class ASIMeanEstimator:
         self,
         y_true_all: NDArray,
         y_proxy: NDArray,
-        pi: NDArray,
+        sampling_probability: NDArray,
     ) -> Tuple[NDArray, NDArray, NDArray, NDArray]:
-        _validate_equal_lengths(y_true_all, y_proxy, pi, names=["y_true", "y_proxy", "pi"])
+        _validate_equal_lengths(
+            y_true_all, y_proxy, sampling_probability, names=["y_true", "y_proxy", "sampling_probability"]
+        )
         _validate_y_proxy(y_proxy)
-        _validate_probabilities(pi)
+        _validate_probabilities(sampling_probability)
         y_true_non_nan_mask = ~np.isnan(y_true_all)
-        _validate_label_prob_consistency(y_true_non_nan_mask, pi)
+        _validate_label_prob_consistency(y_true_non_nan_mask, sampling_probability)
         xi = y_true_non_nan_mask.astype(float)
 
-        non_zero_mask = _get_non_zero_mask(pi)
+        non_zero_mask = _get_non_zero_mask(sampling_probability)
         y_true_all_filtered = y_true_all[non_zero_mask]
         y_proxy_filtered = y_proxy[non_zero_mask]
-        pi_filtered = pi[non_zero_mask]
+        sampling_probability_filtered = sampling_probability[non_zero_mask]
         xi_filtered = xi[non_zero_mask]
 
         _validate_non_constant(
-            y_proxy_filtered * (xi_filtered / pi_filtered - 1),
+            y_proxy_filtered * (xi_filtered / sampling_probability_filtered - 1),
             "'y_proxy' values lead to constant rectifiers.",
         )
 
         y_true_filled = np.nan_to_num(y_true_all_filtered, nan=0)
-        return y_true_filled, y_proxy_filtered, xi_filtered, pi_filtered
+        return y_true_filled, y_proxy_filtered, xi_filtered, sampling_probability_filtered
 
     def _compute_tuning_parameter(
         self,
         y_true: NDArray,
         y_proxy: NDArray,
         xi: NDArray,
-        pi: NDArray,
+        sampling_probability: NDArray,
         *,
         power_tuning: bool,
     ) -> float:
         if not power_tuning:
             return 1.0
-        a = y_proxy * (xi / pi - 1)
-        b = y_true * xi / pi
+        a = y_proxy * (xi / sampling_probability - 1)
+        b = y_true * xi / sampling_probability
         cov_matrix = np.cov(a, b, ddof=1)
         var, cov = cov_matrix[0]
         _lambda = cov / var
@@ -107,17 +109,17 @@ class ASIMeanEstimator:
         y_true: NDArray,
         y_proxy: NDArray,
         xi: NDArray,
-        pi: NDArray,
+        sampling_probability: NDArray,
         _lambda: float,
     ) -> NDArray:
-        rectified_labels = _lambda * y_proxy + xi * (y_true - _lambda * y_proxy) / pi
+        rectified_labels = _lambda * y_proxy + xi * (y_true - _lambda * y_proxy) / sampling_probability
         return rectified_labels
 
     def estimate(
         self,
         y_true: NDArray,
         y_proxy: NDArray,
-        pi: NDArray,
+        sampling_probability: NDArray,
         metric_name: str = "Metric",
         confidence_level: float = 0.95,
         *,
@@ -138,7 +140,7 @@ class ASIMeanEstimator:
         y_proxy : NDArray
             Array of shape ``(n_samples,)`` with proxy predictions. Must be present for every
             sample and must not contain NaN.
-        pi : NDArray
+        sampling_probability : NDArray
             Array of shape ``(n_samples,)`` with the pre-determined sampling probability
             π_i ∈ [0, 1] for each sample. Entries with π_i = 0 are excluded from all
             computations.
@@ -160,27 +162,33 @@ class ASIMeanEstimator:
         Raises
         ------
         ValueError
-            - If ``y_true``, ``y_proxy``, and ``pi`` do not all have the same length.
+            - If ``y_true``, ``y_proxy``, and ``sampling_probability`` do not all have the same length.
             - If any proxy value is NaN.
             - If the rectifiers ``y_proxy * (ξ_i / π_i - 1)`` are constant.
-            - If any value in ``pi`` is not in [0, 1].
+            - If any value in ``sampling_probability`` is not in [0, 1].
         """
-        y_true_filled, y_proxy_filtered, xi, pi_filtered = self._preprocess(y_true, y_proxy, pi)
+        y_true_filled, y_proxy_filtered, xi, sampling_probability_filtered = self._preprocess(
+            y_true, y_proxy, sampling_probability
+        )
 
         n_labeled = int(xi.sum())
-        n_proxy = len(pi_filtered)
+        n_proxy = len(sampling_probability_filtered)
 
         _lambda = self._compute_tuning_parameter(
-            y_true_filled, y_proxy_filtered, xi, pi_filtered, power_tuning=power_tuning
+            y_true_filled, y_proxy_filtered, xi, sampling_probability_filtered, power_tuning=power_tuning
         )
-        rectified_labels = self._compute_rectified_labels(y_true_filled, y_proxy_filtered, xi, pi_filtered, _lambda)
+        rectified_labels = self._compute_rectified_labels(
+            y_true_filled, y_proxy_filtered, xi, sampling_probability_filtered, _lambda
+        )
         mean_estimate = np.mean(rectified_labels)
         std_estimate = np.std(rectified_labels, ddof=1) / np.sqrt(n_proxy)
 
         confidence_interval = CLTConfidenceInterval(
             mean=mean_estimate, std=std_estimate, confidence_level=confidence_level
         )
-        classical_confidence_interval = IPWClassicalMeanEstimator().estimate(y_true, pi).confidence_interval
+        classical_confidence_interval = (
+            IPWClassicalMeanEstimator().estimate(y_true, sampling_probability).confidence_interval
+        )
         effective_sample_size = floor(n_labeled * classical_confidence_interval.var / confidence_interval.var)
 
         return PredictionPoweredMeanInferenceResult(

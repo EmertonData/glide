@@ -34,7 +34,7 @@ from glide.core.validation import (
 
 
 @pytest.fixture
-def pi_consistency_mask() -> NDArray:
+def sampling_probability_consistency_mask() -> NDArray:
     return np.array([True, False])
 
 
@@ -180,18 +180,18 @@ def test_validate_y_true_delegates_to_validate_non_constant():
 # --- _validate_label_prob_consistency ---
 
 
-def test_validate_label_prob_consistency_valid(pi_consistency_mask):
-    _validate_label_prob_consistency(pi_consistency_mask, np.array([0.5, 0.5]))
+def test_validate_label_prob_consistency_valid(sampling_probability_consistency_mask):
+    _validate_label_prob_consistency(sampling_probability_consistency_mask, np.array([0.5, 0.5]))
 
 
-def test_validate_label_prob_consistency_labeled_with_zero_pi(pi_consistency_mask):
+def test_validate_label_prob_consistency_labeled_with_zero_sampling_probability(sampling_probability_consistency_mask):
     with pytest.raises(ValueError, match="zero probability of being labeled cannot be labeled"):
-        _validate_label_prob_consistency(pi_consistency_mask, np.array([0.0, 0.5]))
+        _validate_label_prob_consistency(sampling_probability_consistency_mask, np.array([0.0, 0.5]))
 
 
-def test_validate_label_prob_consistency_unlabeled_with_pi_one(pi_consistency_mask):
+def test_validate_label_prob_consistency_unlabeled_with_sampling_probability_one(sampling_probability_consistency_mask):
     with pytest.raises(ValueError, match="probability one of being labeled must be labeled"):
-        _validate_label_prob_consistency(pi_consistency_mask, np.array([0.5, 1.0]))
+        _validate_label_prob_consistency(sampling_probability_consistency_mask, np.array([0.5, 1.0]))
 
 
 # --- _validate_equal_lengths ---
