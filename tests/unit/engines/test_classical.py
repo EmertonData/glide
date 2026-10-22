@@ -16,10 +16,15 @@ def engine():
     return ClassicalMeanEngine()
 
 
+@pytest.fixture
+def dataset(engine, y):
+    return engine.preprocess(y)
+
+
 # --- preprocess ---
 
 
-def test_preprocess_removes_nan(engine, y):
+def test_preprocess_valid_output(engine, y):
     dataset = engine.preprocess(y)
     np.testing.assert_array_equal(dataset, np.array([2.0, 4.0]))
 
@@ -35,8 +40,7 @@ def test_preprocess_delegates_to_validation(engine, y):
 # --- fit_tuning_parameter ---
 
 
-def test_fit_tuning_parameter_returns_none(engine, y):
-    dataset = engine.preprocess(y)
+def test_fit_tuning_parameter_returns_none(engine, dataset):
     assert engine.fit_tuning_parameter(dataset, power_tuning=True) is None
     assert engine.fit_tuning_parameter(dataset, power_tuning=False) is None
 
@@ -44,8 +48,7 @@ def test_fit_tuning_parameter_returns_none(engine, y):
 # --- compute_mean_and_std ---
 
 
-def test_compute_mean_and_std(engine, y):
-    dataset = engine.preprocess(y)
+def test_compute_mean_and_std(engine, dataset):
     mean, std = engine.compute_mean_and_std(dataset, tuning_parameter=None)
     assert mean == pytest.approx(3.0)
     assert std == pytest.approx(1.0)

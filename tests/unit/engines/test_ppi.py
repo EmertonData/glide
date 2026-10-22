@@ -49,7 +49,7 @@ def test_preprocess_delegates_to_validation(engine, y_true, y_proxy):
         mock_validate_equal_lengths.assert_called_once()
         np.testing.assert_array_equal(mock_validate_equal_lengths.call_args[0][0], y_true)
         np.testing.assert_array_equal(mock_validate_equal_lengths.call_args[0][1], y_proxy)
-        assert mock_validate_equal_lengths.call_args[1] == {"names": ["y_true", "y_proxy"]}
+        assert mock_validate_equal_lengths.call_args.kwargs == {"names": ["y_true", "y_proxy"]}
         mock_validate_has_no_nan.assert_called_once()
         np.testing.assert_array_equal(mock_validate_has_no_nan.call_args[0][0], y_proxy)
         assert mock_validate_has_no_nan.call_args[0][1] == "y_proxy"

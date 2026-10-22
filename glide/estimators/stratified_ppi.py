@@ -129,26 +129,20 @@ class StratifiedPPIMeanEstimator:
         weighted_mean, std = self._engine.compute_mean_and_std(stratified_dataset, tuning_parameter)
 
         n_samples = len(y_true)
-        n_true = int(np.sum(~np.isnan(y_true)))
+        n_labeled = int(np.sum(~np.isnan(y_true)))
 
         confidence_interval = CLTConfidenceInterval(
             mean=weighted_mean,
             std=std,
             confidence_level=confidence_level,
         )
-        _, stratum_counts = np.unique(groups, return_counts=True)
-        stratum_weights = stratum_counts / n_samples
-        classical_confidence_interval = (
-            StratifiedClassicalMeanEstimator()
-            .estimate(y_true, groups, stratum_weights=stratum_weights)
-            .confidence_interval
-        )
-        effective_sample_size = floor(n_true * classical_confidence_interval.var / confidence_interval.var)
+        classical_confidence_interval = StratifiedClassicalMeanEstimator().estimate(y_true, groups).confidence_interval
+        effective_sample_size = floor(n_labeled * classical_confidence_interval.var / confidence_interval.var)
         result = PredictionPoweredMeanInferenceResult(
             confidence_interval=confidence_interval,
             metric_name=metric_name,
             estimator_name=self.__class__.__name__,
-            n_true=n_true,
+            n_true=n_labeled,
             n_proxy=n_samples,
             effective_sample_size=effective_sample_size,
         )

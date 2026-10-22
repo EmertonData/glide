@@ -4,7 +4,7 @@ import numpy as np
 import pytest
 from numpy.typing import NDArray
 
-import glide.estimators.stratified_classical as stratified_classical_module
+from glide.engines.stratified_classical import StratifiedClassicalMeanEngine
 from glide.estimators import StratifiedClassicalMeanEstimator
 from glide.mean_inference_results import ClassicalMeanInferenceResult
 
@@ -32,27 +32,38 @@ def estimator() -> StratifiedClassicalMeanEstimator:
     return StratifiedClassicalMeanEstimator()
 
 
+# --- __init__ ---
+
+
+def test_init_sets_engine(estimator):
+    assert isinstance(estimator._engine, StratifiedClassicalMeanEngine)
+
+
 # --- estimate ---
 
 
-def test_estimate_delegates_to_validation(estimator, y, groups):
+def test_estimate_delegates(estimator, y, groups):
     with (
-        patch.object(stratified_classical_module, "_validate_has_no_nan") as mock_validate_has_no_nan,
-        patch.object(stratified_classical_module, "_validate_min_samples") as mock_validate_min_samples,
+        patch.object(estimator._engine, "preprocess", wraps=estimator._engine.preprocess) as mock_preprocess,
+        patch.object(
+            estimator._engine, "compute_mean_and_std", wraps=estimator._engine.compute_mean_and_std
+        ) as mock_compute_mean_and_std,
     ):
-        estimator.estimate(y, groups)
+        estimator.estimate(y, groups, stratum_weights=np.array([0.8, 0.2]))
 
-        mock_validate_has_no_nan.assert_called_once()
-        np.testing.assert_array_equal(mock_validate_has_no_nan.call_args[0][0], groups)
-        assert mock_validate_has_no_nan.call_args[0][1] == "groups"
+        mock_preprocess.assert_called_once()
+        np.testing.assert_array_equal(mock_preprocess.call_args[0][0], y)
+        np.testing.assert_array_equal(mock_preprocess.call_args[0][1], groups)
+        np.testing.assert_array_equal(mock_preprocess.call_args[0][2], np.array([0.8, 0.2]))
 
-        assert len(mock_validate_min_samples.call_args_list) == 2
-        np.testing.assert_array_equal(mock_validate_min_samples.call_args_list[0][0][0], np.array([1.0, 3.0]))
-        assert mock_validate_min_samples.call_args_list[0][0][1] == "y"
-        assert mock_validate_min_samples.call_args_list[0][0][2] == "A"
-        np.testing.assert_array_equal(mock_validate_min_samples.call_args_list[1][0][0], np.array([5.0, 7.0]))
-        assert mock_validate_min_samples.call_args_list[1][0][1] == "y"
-        assert mock_validate_min_samples.call_args_list[1][0][2] == "B"
+        mock_compute_mean_and_std.assert_called_once()
+        dataset = mock_compute_mean_and_std.call_args[0][0]
+        assert list(dataset.keys()) == ["A", "B"]
+        np.testing.assert_array_equal(dataset["A"][0], np.array([1.0, 3.0]))
+        np.testing.assert_array_equal(dataset["B"][0], np.array([5.0, 7.0]))
+        assert dataset["A"][1] == pytest.approx(0.8, abs=1e-12)
+        assert dataset["B"][1] == pytest.approx(0.2, abs=1e-12)
+        assert mock_compute_mean_and_std.call_args[0][1] is None
 
 
 def test_estimate_is_valid_inference_result(estimator, y, groups):
