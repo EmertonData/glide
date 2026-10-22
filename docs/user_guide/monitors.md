@@ -209,6 +209,35 @@ Predictable power-tuning carries over unchanged from [Asymptotic PPRM](#asymptot
 
 Plugging $\hat{R}_t$ and $\hat{\sigma}_t$ into the [Asymptotic Confidence Sequences](#asymptotic-confidence-sequences) construction gives the anytime-valid lower bound $L_t$ derived there. The **drift alarm** fires as soon as $L_t > \tau$, the user-fixed threshold.
 
+### Asymptotic Clustered Classical Risk Monitoring
+
+When samples are grouped into clusters within which observations may be correlated, Asymptotic Clustered Classical Risk Monitoring tackles the problem of a stream of clustered data. It reduces each cluster to its mean and applies the classical mean to the cluster means, the same way [Clustered Classical Mean](estimators.md#clustered-classical-mean) generalises the classical mean.
+
+#### Setting
+
+Each batch $t$ contributes a set of human labels, each tagged with a cluster identifier, and the labeled observations of batch $t$ fall into $L^{\bullet}_t$ clusters.
+
+| Value | Present for | Description |
+|---|---|---|
+| $Y_{t,j}$ | Labeled samples in batch $t$ only | Ground-truth label |
+| $c_{t,i}$ | All samples in batch $t$ | Cluster identifier |
+
+As in [Asymptotic Clustered PPRM](#asymptotic-clustered-prediction-powered-risk-monitoring-asymptotic-clustered-pprm), a cluster belongs to a single batch and never reappears in a later one. The metric is treated as a risk $R$ monitored against a user-fixed threshold $\tau$, exactly as in [Asymptotic Classical Risk Monitoring](#asymptotic-classical-risk-monitoring).
+
+With $\bar{Y}^{(l)}_t$ the mean of the labels of cluster $l$ in batch $t$, the per-batch risk estimate is the average of the labeled cluster means,
+
+$$\hat{R}_t = \frac{1}{L^{\bullet}_t}\sum_{l=1}^{L^{\bullet}_t} \bar{Y}^{(l)}_t,$$
+
+together with its standard error,
+
+$$\hat{\sigma}_t = \sqrt{\frac{\widehat{\mathrm{Var}}\big(\bar{Y}^{(l)}_t\big)}{L^{\bullet}_t}},$$
+
+where $\widehat{\mathrm{Var}}$ is the sample variance across the $L^{\bullet}_t$ labeled cluster means. Using clusters rather than samples as sampling units is what keeps $\hat{\sigma}_t$ honest under within-cluster correlation. When every cluster holds a single sample, this reduces to Asymptotic Classical Risk Monitoring; it is also the special case of Asymptotic Clustered PPRM that ignores the proxy labels ($\lambda_t = 0$).
+
+#### Bound and Alarm Rule
+
+Plugging $\hat{R}_t$ and $\hat{\sigma}_t$ into the [Asymptotic Confidence Sequences](#asymptotic-confidence-sequences) construction gives the anytime-valid lower bound $L_t$ derived there. The **drift alarm** fires as soon as $L_t > \tau$, the user-fixed threshold.
+
 ### Asymptotic Multi-Proxy Prediction-Powered Risk Monitoring (Asymptotic Multi-PPRM)
 
 Cheap proxy labels are not limited to a single source: Asymptotic PPRM generalises to $M \ge 1$ proxies combined through [Multi-Proxy Prediction-Powered Inference (Multi-PPI)](estimators.md#multi-proxy-prediction-powered-inference-multi-ppi) [[4](#ref-4)], the same way the underlying estimator generalises PPI++.
