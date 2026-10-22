@@ -72,7 +72,8 @@ class AsymptoticClusteredClassicalRM(AsymptoticRM[NDArray, None]):
         y : NDArray
             Array of observations, shape ``(n_samples,)``. Unlabeled entries are
             ``np.nan`` and are dropped per batch; every batch must keep labeled
-            entries in at least 2 clusters.
+            entries in at least 2 clusters, though tens are recommended in practice
+            for the asymptotic guarantee to hold.
         clusters : NDArray
             Array of cluster identifiers, shape ``(n_samples,)``. Any hashable label
             type works (integers, strings, ...). Must be unique across the whole
@@ -88,14 +89,23 @@ class AsymptoticClusteredClassicalRM(AsymptoticRM[NDArray, None]):
             ``False`` when the metric is a risk (drift means the metric increased),
             ``True`` when it is a performance (drift means the metric decreased).
         threshold : float
-            The metric value the running mean is monitored against, in metric units.
+            The metric value the running mean is monitored against, in metric units:
+            the worst level the user is willing to tolerate. An alarm fires once the
+            anytime-valid bound proves the running metric has crossed it (the running
+            risk exceeds it for a risk, the running performance falls below it for a
+            performance).
         metric_name : str, optional
             Human-readable label for the metric. Defaults to ``"Metric"``.
         confidence_level : float, optional
-            How confident each alarm should be. Must be in ``(0.5, 1)``. Defaults to ``0.8``.
+            How confident each alarm should be. At the default ``0.8`` the monitor
+            raises "80% confident" alarms: under no drift it has at most a 20% chance
+            of raising a false alarm. Raising this value demands more evidence before
+            alarming, so alarms become more trustworthy but arrive later; lowering it
+            detects sooner at the cost of more false alarms. Must be in ``(0.5, 1)``.
         tightest_at_batch : int, optional
             The batch index (1-indexed) at which the confidence sequence is tuned to
-            be tightest. Defaults to ``10``.
+            be tightest. Defaults to ``10``. Only affects tightness, not validity:
+            bounds stay anytime-valid at every batch regardless of this choice.
 
         Returns
         -------

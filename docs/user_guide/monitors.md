@@ -211,7 +211,7 @@ Plugging $\hat{R}_t$ and $\hat{\sigma}_t$ into the [Asymptotic Confidence Sequen
 
 ### Asymptotic Clustered Classical Risk Monitoring
 
-Asymptotic Classical Risk Monitoring assumes that the labels of a batch are independent. When samples are grouped into clusters within which observations may be correlated, it generalises to a stream of clustered data by reducing each cluster to its mean and applying the classical mean to the cluster means, the same way [Clustered Classical Mean](estimators.md#clustered-classical-mean) generalises the classical mean.
+When samples are grouped into clusters within which observations may be correlated, Asymptotic Clustered Classical Risk Monitoring tackles the problem of a stream of clustered data. It reduces each cluster to its mean and applies the classical mean to the cluster means, the same way [Clustered Classical Mean](estimators.md#clustered-classical-mean) generalises the classical mean.
 
 #### Setting
 

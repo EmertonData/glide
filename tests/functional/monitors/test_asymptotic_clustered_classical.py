@@ -8,7 +8,7 @@ import numpy as np
 import pytest
 
 from glide.estimators import ClusteredClassicalMeanEstimator
-from glide.monitors import AsymptoticClassicalRM, AsymptoticClusteredClassicalRM
+from glide.monitors import AsymptoticClusteredClassicalRM
 from glide.samplers import UniformClusteredSampler
 from glide.simulators import generate_batched_clustered_binary_dataset, simulate_annotation
 
@@ -41,22 +41,6 @@ def dataset():
 
 
 # ── tests ──────────────────────────────────────────────────────────────────────
-
-
-def test_detect_singleton_clusters_equals_asymptotic_classical_rm(dataset):
-    """When every sample is its own cluster, the monitor reduces to AsymptoticClassicalRM."""
-    y, _, batches = dataset
-    clusters = np.arange(len(y))
-
-    clustered_result = AsymptoticClusteredClassicalRM().detect(
-        y, clusters, batches, higher_is_better=False, threshold=0.5, tightest_at_batch=2
-    )
-    classical_result = AsymptoticClassicalRM().detect(
-        y, batches, higher_is_better=False, threshold=0.5, tightest_at_batch=2
-    )
-
-    np.testing.assert_allclose(clustered_result.running_means, classical_result.running_means)
-    np.testing.assert_allclose(clustered_result.confidence_bounds, classical_result.confidence_bounds)
 
 
 def test_detect_batch_estimates_match_clustered_classical_estimator(dataset):

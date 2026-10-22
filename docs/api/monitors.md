@@ -4,6 +4,10 @@
 
 ---
 
+::: glide.monitors.asymptotic_clustered_classical.AsymptoticClusteredClassicalRM
+
+---
+
 ::: glide.monitors.asymptotic_pprm.AsymptoticPPRM
 
 ---
@@ -13,10 +17,6 @@
 ---
 
 ::: glide.monitors.asymptotic_clustered_pprm.AsymptoticClusteredPPRM
-
----
-
-::: glide.monitors.asymptotic_clustered_classical.AsymptoticClusteredClassicalRM
 
 ---
 
