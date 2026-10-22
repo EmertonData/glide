@@ -24,9 +24,9 @@ class IPWClassicalMeanEstimator:
     >>> import numpy as np
     >>> from glide.estimators import IPWClassicalMeanEstimator
     >>> y = np.array([5.0, 6.0, 4.0, np.nan, np.nan, np.nan])
-    >>> pi = np.array([0.2, 0.8, 0.6, 0.6, 0.4, 0.4])
+    >>> sampling_probability = np.array([0.2, 0.8, 0.6, 0.6, 0.4, 0.4])
     >>> estimator = IPWClassicalMeanEstimator()
-    >>> result = estimator.estimate(y, pi)
+    >>> result = estimator.estimate(y, sampling_probability)
     >>> print(result)
     Metric: Metric
     Point Estimate: 6.528
@@ -37,10 +37,10 @@ class IPWClassicalMeanEstimator:
 
     def _preprocess(self, y: NDArray, sampling_probability: NDArray) -> Tuple[NDArray, NDArray]:
         _validate_probabilities(sampling_probability)
-        non_zero_pi_mask = _get_non_zero_mask(sampling_probability)
+        non_zero_probability_mask = _get_non_zero_mask(sampling_probability)
         y_not_nan = ~np.isnan(y)
         _validate_label_prob_consistency(y_not_nan, sampling_probability)
-        return y[non_zero_pi_mask], sampling_probability[non_zero_pi_mask]
+        return y[non_zero_probability_mask], sampling_probability[non_zero_probability_mask]
 
     def estimate(
         self,
@@ -77,10 +77,10 @@ class IPWClassicalMeanEstimator:
             If any value in ``sampling_probability`` is outside of [0, 1].
             If any labeled observation (non-NaN ``y``) has ``sampling_probability`` equal to 0.
         """
-        y_non_zero_pi, pi_non_zero = self._preprocess(y, sampling_probability)
-        n_labeled = int(np.sum(~np.isnan(y_non_zero_pi)))
-        n_samples = len(y_non_zero_pi)
-        ipw_weighted_values = np.nan_to_num(y_non_zero_pi, nan=0) / pi_non_zero
+        y_non_zero_probability, sampling_probability_non_zero = self._preprocess(y, sampling_probability)
+        n_labeled = int(np.sum(~np.isnan(y_non_zero_probability)))
+        n_samples = len(y_non_zero_probability)
+        ipw_weighted_values = np.nan_to_num(y_non_zero_probability, nan=0) / sampling_probability_non_zero
 
         mean = np.mean(ipw_weighted_values)
         std = np.std(ipw_weighted_values, ddof=1) / np.sqrt(n_samples)

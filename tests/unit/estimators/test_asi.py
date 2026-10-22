@@ -18,8 +18,8 @@ def y_arrays() -> Tuple[NDArray, NDArray, NDArray, NDArray]:
     y_true = np.array([3.0, 5.0, np.nan, np.nan])
     y_proxy = np.array([2.0, 4.0, 5.0, 7.0])
     xi = np.array([1.0, 1.0, 0.0, 0.0])
-    pi = np.array([0.5, 0.5, 0.5, 0.5])
-    return y_true, y_proxy, xi, pi
+    sampling_probability = np.array([0.5, 0.5, 0.5, 0.5])
+    return y_true, y_proxy, xi, sampling_probability
 
 
 @pytest.fixture
@@ -36,13 +36,13 @@ def estimator() -> ASIMeanEstimator:
 
 
 def test_preprocess_valid_output(estimator, y_arrays):
-    y_true_input, y_proxy_input, _, pi = y_arrays
-    y_true, y_proxy, xi, pi = estimator._preprocess(y_true_input, y_proxy_input, pi)
+    y_true_input, y_proxy_input, _, sampling_probability = y_arrays
+    y_true, y_proxy, xi, sampling_probability = estimator._preprocess(y_true_input, y_proxy_input, sampling_probability)
     assert len(y_true) == 4
     assert len(y_proxy) == 4
     assert len(xi) == 4
     assert int(xi.sum()) == 2
-    assert len(pi) == 4
+    assert len(sampling_probability) == 4
     assert np.isin(xi, [0.0, 1.0]).all()
     assert not np.any(np.isnan(y_true))
 
@@ -50,7 +50,7 @@ def test_preprocess_valid_output(estimator, y_arrays):
 def test_preprocess_delegates_to_validation(estimator):
     y_true = np.array([1.0, 2.0, np.nan, np.nan])
     y_proxy = np.array([1.0, 2.0, 3.0, 4.0])
-    pi = np.array([0.5, 0.5, 0.5, 0.5])
+    sampling_probability = np.array([0.5, 0.5, 0.5, 0.5])
 
     with (
         patch.object(asi_module, "_validate_equal_lengths") as mock_validate_equal_lengths,
@@ -60,21 +60,23 @@ def test_preprocess_delegates_to_validation(estimator):
         patch.object(asi_module, "_get_non_zero_mask", return_value=np.ones(4, dtype=bool)) as mock_get_non_zero_mask,
         patch.object(asi_module, "_validate_non_constant") as mock_validate_non_constant,
     ):
-        estimator._preprocess(y_true, y_proxy, pi)
+        estimator._preprocess(y_true, y_proxy, sampling_probability)
 
-        mock_validate_equal_lengths.assert_called_once_with(y_true, y_proxy, pi, names=["y_true", "y_proxy", "pi"])
-        mock_validate_probabilities.assert_called_once_with(pi)
+        mock_validate_equal_lengths.assert_called_once_with(
+            y_true, y_proxy, sampling_probability, names=["y_true", "y_proxy", "sampling_probability"]
+        )
+        mock_validate_probabilities.assert_called_once_with(sampling_probability)
         mock_validate_y_proxy.assert_called_once()
         np.testing.assert_array_equal(mock_validate_y_proxy.call_args[0][0], y_proxy)
         mock_validate_label_prob_consistency.assert_called_once()
         labeled_mask = ~np.isnan(y_true)
         np.testing.assert_array_equal(mock_validate_label_prob_consistency.call_args[0][0], labeled_mask)
-        np.testing.assert_array_equal(mock_validate_label_prob_consistency.call_args[0][1], pi)
+        np.testing.assert_array_equal(mock_validate_label_prob_consistency.call_args[0][1], sampling_probability)
         mock_get_non_zero_mask.assert_called_once()
-        np.testing.assert_array_equal(mock_get_non_zero_mask.call_args[0][0], pi)
+        np.testing.assert_array_equal(mock_get_non_zero_mask.call_args[0][0], sampling_probability)
         mock_validate_non_constant.assert_called_once()
         xi = labeled_mask.astype(float)
-        expected_rectifiers = y_proxy * (xi / pi - 1)
+        expected_rectifiers = y_proxy * (xi / sampling_probability - 1)
         np.testing.assert_array_equal(mock_validate_non_constant.call_args[0][0], expected_rectifiers)
         assert mock_validate_non_constant.call_args[0][1] == "'y_proxy' values lead to constant rectifiers."
 
@@ -83,14 +85,14 @@ def test_preprocess_delegates_to_validation(estimator):
 
 
 def test_compute_tuning_parameter_returns_one_when_power_tuning_false(estimator, y_arrays, y_true_processed):
-    _, y_proxy, xi, pi = y_arrays
-    lam = estimator._compute_tuning_parameter(y_true_processed, y_proxy, xi, pi, power_tuning=False)
+    _, y_proxy, xi, sampling_probability = y_arrays
+    lam = estimator._compute_tuning_parameter(y_true_processed, y_proxy, xi, sampling_probability, power_tuning=False)
     assert lam == 1.0
 
 
 def test_compute_tuning_parameter_known_values(estimator, y_arrays, y_true_processed):
-    _, y_proxy, xi, pi = y_arrays
-    lam = estimator._compute_tuning_parameter(y_true_processed, y_proxy, xi, pi, power_tuning=True)
+    _, y_proxy, xi, sampling_probability = y_arrays
+    lam = estimator._compute_tuning_parameter(y_true_processed, y_proxy, xi, sampling_probability, power_tuning=True)
     expected = 0.89
     assert lam == pytest.approx(expected, abs=0.01)
 
@@ -99,8 +101,8 @@ def test_compute_tuning_parameter_known_values(estimator, y_arrays, y_true_proce
 
 
 def test_estimate_is_valid_inference_result(estimator, y_arrays):
-    y_true, y_proxy, _, pi = y_arrays
-    result = estimator.estimate(y_true, y_proxy, pi)
+    y_true, y_proxy, _, sampling_probability = y_arrays
+    result = estimator.estimate(y_true, y_proxy, sampling_probability)
     assert isinstance(result, PredictionPoweredMeanInferenceResult)
     assert isinstance(result.confidence_interval, CLTConfidenceInterval)
     assert np.isfinite(result.confidence_interval.lower_bound)
@@ -110,8 +112,8 @@ def test_estimate_is_valid_inference_result(estimator, y_arrays):
 
 
 def test_estimate_metadata(estimator, y_arrays):
-    y_true, y_proxy, _, pi = y_arrays
-    result = estimator.estimate(y_true, y_proxy, pi, metric_name="TestMetric")
+    y_true, y_proxy, _, sampling_probability = y_arrays
+    result = estimator.estimate(y_true, y_proxy, sampling_probability, metric_name="TestMetric")
     assert result.metric_name == "TestMetric"
     assert result.estimator_name == estimator.__class__.__name__
     assert result.n_true == 2
@@ -120,8 +122,8 @@ def test_estimate_metadata(estimator, y_arrays):
 
 
 def test_estimate_custom_confidence_level(estimator, y_arrays):
-    y_true, y_proxy, _, pi = y_arrays
-    result = estimator.estimate(y_true, y_proxy, pi, confidence_level=0.95)
+    y_true, y_proxy, _, sampling_probability = y_arrays
+    result = estimator.estimate(y_true, y_proxy, sampling_probability, confidence_level=0.95)
 
     expected_mean = 5.34
     expected_std = 0.58
@@ -139,8 +141,8 @@ def test_estimate_custom_confidence_level(estimator, y_arrays):
 
 
 def test_str_format(estimator, y_arrays):
-    y_true, y_proxy, _, pi = y_arrays
-    result = estimator.estimate(y_true, y_proxy, pi, metric_name="accuracy")
+    y_true, y_proxy, _, sampling_probability = y_arrays
+    result = estimator.estimate(y_true, y_proxy, sampling_probability, metric_name="accuracy")
     output = str(result)
     expected = (
         "Metric: accuracy\n"
@@ -155,6 +157,6 @@ def test_str_format(estimator, y_arrays):
 
 
 def test_repr_equals_str(estimator, y_arrays):
-    y_true, y_proxy, _, pi = y_arrays
-    result = estimator.estimate(y_true, y_proxy, pi, metric_name="perf")
+    y_true, y_proxy, _, sampling_probability = y_arrays
+    result = estimator.estimate(y_true, y_proxy, sampling_probability, metric_name="perf")
     assert repr(result) == str(result)

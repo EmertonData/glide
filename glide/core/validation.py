@@ -47,10 +47,10 @@ def _validate_y_true(y_true: NDArray, identifier: Optional[Hashable] = None, ide
     _validate_non_constant(labeled, f"'y_true' labeled values are constant{identifier_part}.")
 
 
-def _validate_label_prob_consistency(labeled_mask: NDArray, pi: NDArray) -> None:
-    if np.any(labeled_mask & (pi == 0)):
+def _validate_label_prob_consistency(labeled_mask: NDArray, sampling_probability: NDArray) -> None:
+    if np.any(labeled_mask & (sampling_probability == 0)):
         raise ValueError("Samples with zero probability of being labeled cannot be labeled.")
-    if np.any(~labeled_mask & (pi == 1)):
+    if np.any(~labeled_mask & (sampling_probability == 1)):
         raise ValueError("Samples with probability one of being labeled must be labeled.")
 
 
