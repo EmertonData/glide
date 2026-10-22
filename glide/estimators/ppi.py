@@ -106,19 +106,19 @@ class PPIMeanEstimator:
             - If there are fewer than 2 labeled or fewer than 2 unlabeled samples.
             - If ``confidence_level`` is not in ``(0, 1)``.
         """
-        ppi_dataset = self._engine.preprocess(y_true, y_proxy)
+        ppi_dataset = self._engine._preprocess(y_true, y_proxy)
         y_true_labeled, _, y_proxy_unlabeled = ppi_dataset
         _validate_non_constant(y_true_labeled, "'y_true' labeled values are constant.")
 
-        tuning_parameter = self._engine.fit_tuning_parameter(ppi_dataset, power_tuning=power_tuning)
-        mean, std = self._engine.compute_mean_and_std(ppi_dataset, tuning_parameter)
+        tuning_parameter = self._engine._fit_tuning_parameter(ppi_dataset, power_tuning=power_tuning)
+        mean, std = self._engine._compute_mean_and_std(ppi_dataset, tuning_parameter)
         confidence_interval = CLTConfidenceInterval(
             mean=mean,
             std=std,
             confidence_level=confidence_level,
         )
 
-        _, classical_std = self._classical_engine.compute_mean_and_std(y_true_labeled, None)
+        _, classical_std = self._classical_engine._compute_mean_and_std(y_true_labeled, None)
         n_labeled, n_unlabeled = len(y_true_labeled), len(y_proxy_unlabeled)
         effective_sample_size = floor(n_labeled * classical_std**2 / std**2)
 

@@ -25,7 +25,7 @@ def engine():
 
 @pytest.fixture
 def dataset(engine, y, clusters):
-    return engine.preprocess(y, clusters)
+    return engine._preprocess(y, clusters)
 
 
 # --- __init__ ---
@@ -35,7 +35,7 @@ def test_init_sets_classical_engine(engine):
     assert isinstance(engine._classical_engine, ClassicalMeanEngine)
 
 
-# --- preprocess ---
+# --- _preprocess ---
 
 
 def test_preprocess_delegates_to_validation(engine, y, clusters):
@@ -44,7 +44,7 @@ def test_preprocess_delegates_to_validation(engine, y, clusters):
         patch.object(clustered_classical_engine_module, "_validate_has_no_nan") as mock_validate_has_no_nan,
         patch.object(clustered_classical_engine_module, "_validate_bounds") as mock_validate_bounds,
     ):
-        engine.preprocess(y, clusters)
+        engine._preprocess(y, clusters)
 
         mock_validate_equal_lengths.assert_called_once()
         np.testing.assert_array_equal(mock_validate_equal_lengths.call_args[0][0], y)
@@ -64,26 +64,26 @@ def test_preprocess_delegates_to_validation(engine, y, clusters):
 
 
 def test_preprocess_valid_output(engine, y, clusters):
-    cluster_means = engine.preprocess(y, clusters)
+    cluster_means = engine._preprocess(y, clusters)
     expected = np.array([5.0, 7.0])
     np.testing.assert_allclose(cluster_means, expected)
 
 
-# --- fit_tuning_parameter ---
+# --- _fit_tuning_parameter ---
 
 
 def test_fit_tuning_parameter_returns_none(engine, dataset):
-    assert engine.fit_tuning_parameter(dataset, power_tuning=True) is None
-    assert engine.fit_tuning_parameter(dataset, power_tuning=False) is None
+    assert engine._fit_tuning_parameter(dataset, power_tuning=True) is None
+    assert engine._fit_tuning_parameter(dataset, power_tuning=False) is None
 
 
-# --- compute_mean_and_std ---
+# --- _compute_mean_and_std ---
 
 
 def test_compute_mean_and_std_delegates_to_classical_engine(engine, dataset):
-    with patch.object(engine._classical_engine, "compute_mean_and_std") as mock_compute_mean_and_std:
+    with patch.object(engine._classical_engine, "_compute_mean_and_std") as mock_compute_mean_and_std:
         mock_compute_mean_and_std.return_value = (1.5, 0.25)
-        mean, std = engine.compute_mean_and_std(dataset, tuning_parameter=None)
+        mean, std = engine._compute_mean_and_std(dataset, tuning_parameter=None)
 
         mock_compute_mean_and_std.assert_called_once()
         np.testing.assert_array_equal(mock_compute_mean_and_std.call_args[0][0], dataset)

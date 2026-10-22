@@ -25,7 +25,7 @@ def engine():
 
 @pytest.fixture
 def dataset(engine, y, groups):
-    return engine.preprocess(y, groups)
+    return engine._preprocess(y, groups)
 
 
 # --- __init__ ---
@@ -35,7 +35,7 @@ def test_init_sets_classical_engine(engine):
     assert isinstance(engine._classical_engine, ClassicalMeanEngine)
 
 
-# --- preprocess ---
+# --- _preprocess ---
 
 
 def test_preprocess_delegates_to_validation(engine, y, groups):
@@ -44,7 +44,7 @@ def test_preprocess_delegates_to_validation(engine, y, groups):
         patch.object(stratified_classical_engine_module, "_validate_equal_lengths") as mock_validate_equal_lengths,
         patch.object(stratified_classical_engine_module, "_validate_min_samples") as mock_validate_min_samples,
     ):
-        engine.preprocess(y, groups)
+        engine._preprocess(y, groups)
 
         mock_validate_has_no_nan.assert_called_once()
         np.testing.assert_array_equal(mock_validate_has_no_nan.call_args[0][0], groups)
@@ -74,24 +74,24 @@ def test_preprocess_valid_output(dataset):
 
 
 def test_preprocess_custom_stratum_weights(engine, y, groups):
-    dataset = engine.preprocess(y, groups, stratum_weights=np.array([0.8, 0.2]))
+    dataset = engine._preprocess(y, groups, stratum_weights=np.array([0.8, 0.2]))
 
     assert dataset["A"][1] == pytest.approx(0.8, abs=1e-12)
     assert dataset["B"][1] == pytest.approx(0.2, abs=1e-12)
 
 
-# --- fit_tuning_parameter ---
+# --- _fit_tuning_parameter ---
 
 
 def test_fit_tuning_parameter_returns_none(engine, dataset):
-    assert engine.fit_tuning_parameter(dataset, power_tuning=True) is None
-    assert engine.fit_tuning_parameter(dataset, power_tuning=False) is None
+    assert engine._fit_tuning_parameter(dataset, power_tuning=True) is None
+    assert engine._fit_tuning_parameter(dataset, power_tuning=False) is None
 
 
-# --- compute_mean_and_std ---
+# --- _compute_mean_and_std ---
 
 
 def test_compute_mean_and_std(engine, dataset):
-    mean, std = engine.compute_mean_and_std(dataset, None)
+    mean, std = engine._compute_mean_and_std(dataset, None)
     assert mean == pytest.approx(3.6)
     assert std == pytest.approx(np.sqrt(0.52))

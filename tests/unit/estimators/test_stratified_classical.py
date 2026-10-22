@@ -44,9 +44,9 @@ def test_init_sets_engine(estimator):
 
 def test_estimate_delegates(estimator, y, groups):
     with (
-        patch.object(estimator._engine, "preprocess", wraps=estimator._engine.preprocess) as mock_preprocess,
+        patch.object(estimator._engine, "_preprocess", wraps=estimator._engine._preprocess) as mock_preprocess,
         patch.object(
-            estimator._engine, "compute_mean_and_std", wraps=estimator._engine.compute_mean_and_std
+            estimator._engine, "_compute_mean_and_std", wraps=estimator._engine._compute_mean_and_std
         ) as mock_compute_mean_and_std,
     ):
         estimator.estimate(y, groups, stratum_weights=np.array([0.8, 0.2]))

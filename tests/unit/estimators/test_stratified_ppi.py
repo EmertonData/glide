@@ -45,12 +45,12 @@ def test_init_sets_engine(estimator):
 def test_estimate_delegates(estimator, y_true, y_proxy, groups):
     with (
         patch.object(stratified_ppi_module, "_validate_non_constant") as mock_validate_non_constant,
-        patch.object(estimator._engine, "preprocess", wraps=estimator._engine.preprocess) as mock_preprocess,
+        patch.object(estimator._engine, "_preprocess", wraps=estimator._engine._preprocess) as mock_preprocess,
         patch.object(
-            estimator._engine, "fit_tuning_parameter", wraps=estimator._engine.fit_tuning_parameter
+            estimator._engine, "_fit_tuning_parameter", wraps=estimator._engine._fit_tuning_parameter
         ) as mock_fit_tuning_parameter,
         patch.object(
-            estimator._engine, "compute_mean_and_std", wraps=estimator._engine.compute_mean_and_std
+            estimator._engine, "_compute_mean_and_std", wraps=estimator._engine._compute_mean_and_std
         ) as mock_compute_mean_and_std,
     ):
         estimator.estimate(y_true, y_proxy, groups)

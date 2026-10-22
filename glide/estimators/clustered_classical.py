@@ -79,8 +79,8 @@ class ClusteredClassicalMeanEstimator:
             - If ``clusters`` contains NaN values (numeric dtype) or None values (non-numeric dtype).
             - If fewer than 2 clusters have at least one non-NaN observation.
         """
-        cluster_means = self._engine.preprocess(y, clusters)
-        mean, std = self._engine.compute_mean_and_std(cluster_means, None)
+        cluster_means = self._engine._preprocess(y, clusters)
+        mean, std = self._engine._compute_mean_and_std(cluster_means, None)
         n_labeled = np.sum(~np.isnan(y))
 
         ci = CLTConfidenceInterval(
