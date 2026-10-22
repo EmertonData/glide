@@ -188,7 +188,7 @@ These three document types have distinct purposes and must not bleed into each o
 
 #### Tutorial baselines
 
-A comparison is only informative if each baseline differs from the featured method by exactly one ingredient. A baseline that differs on two confounds the conclusion.
+A comparison is only informative if each baseline differs from the featured method by exactly one ingredient. A baseline that differs on two confounds the conclusion. To illustrate two ingredients, use two baselines, one per ingredient, as the monitoring tutorials do: the per-batch naive baseline removes anytime validity while keeping the proxy labels, and the classical monitor removes the proxy labels while keeping anytime validity.
 
 - Before writing a tutorial, list the ingredients of the featured method (proxy labels, data structure such as strata, clusters or several proxies, sampling design, anytime validity). Each baseline in the comparison table must remove exactly one of them and keep all the others.
 - A takeaway may only attribute a gain to the ingredient the comparison isolates. Do not credit the proxy labels or the structure for a speed-up that the chosen baselines cannot separate.
