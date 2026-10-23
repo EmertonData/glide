@@ -8,6 +8,7 @@ def _compute_tuning_parameter(
     y_true: NDArray,
     y_proxy_labeled: NDArray,
     y_proxy_unlabeled: NDArray,
+    *,
     power_tuning: bool,
 ) -> float:
     if not power_tuning:

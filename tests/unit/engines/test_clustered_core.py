@@ -4,8 +4,8 @@ import numpy as np
 import pytest
 from numpy.typing import NDArray
 
-import glide.estimators.clustered_core as clustered_core_module
-from glide.estimators.clustered_core import _preprocess
+import glide.engines.clustered_core as clustered_core_module
+from glide.engines.clustered_core import _compute_cluster_means, _preprocess
 
 
 @pytest.fixture
@@ -23,14 +23,23 @@ def clusters() -> NDArray:
     return np.array(["A", "B", "C", "D"])
 
 
+# --- _compute_cluster_means ---
+
+
+def test_compute_cluster_means(y_proxy):
+    cluster_indices = np.array([0, 0, 1, 1])
+    expected = np.array([3.0, 6.0])
+    cluster_means = _compute_cluster_means(y_proxy, cluster_indices)
+    np.testing.assert_allclose(cluster_means, expected)
+
+
 # --- _preprocess ---
 
 
-def test_preprocess_delegates(y_true, y_proxy, clusters):
+def test_preprocess_delegates_to_validation(y_true, y_proxy, clusters):
     labeled_mask = np.array([True, False, True, False])
     with (
         patch.object(clustered_core_module, "_validate_equal_lengths") as mock_validate_equal_lengths,
-        patch.object(clustered_core_module, "_validate_y_true") as mock_validate_y_true,
         patch.object(clustered_core_module, "_validate_has_no_nan") as mock_validate_has_no_nan,
         patch.object(clustered_core_module, "_split_labeled_unlabeled") as mock_split_labeled_unlabeled,
         patch.object(clustered_core_module, "_validate_unique_clusters") as mock_validate_unique_clusters,
@@ -48,10 +57,7 @@ def test_preprocess_delegates(y_true, y_proxy, clusters):
         np.testing.assert_array_equal(mock_validate_equal_lengths.call_args[0][0], y_true)
         np.testing.assert_array_equal(mock_validate_equal_lengths.call_args[0][1], y_proxy)
         np.testing.assert_array_equal(mock_validate_equal_lengths.call_args[0][2], clusters)
-        assert mock_validate_equal_lengths.call_args[1] == {"names": ["y_true", "y_proxy", "clusters"]}
-
-        mock_validate_y_true.assert_called_once()
-        np.testing.assert_array_equal(mock_validate_y_true.call_args[0][0], y_true)
+        assert mock_validate_equal_lengths.call_args.kwargs == {"names": ["y_true", "y_proxy", "clusters"]}
 
         assert len(mock_validate_has_no_nan.call_args_list) == 2
         np.testing.assert_array_equal(mock_validate_has_no_nan.call_args_list[0][0][0], y_proxy)

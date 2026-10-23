@@ -11,6 +11,10 @@
 
 [1–2 tight paragraphs. Name the specific files, classes, and methods involved. State the current problem (inconsistency, duplication, naming confusion) and the goal state in one sentence each. Skip context that the Implementation section already makes obvious.]
 
+## Prerequisites
+
+[Omit this section entirely if there are none. Otherwise, one bullet per concrete feature — a class, function, or behaviour — that must already exist in the codebase for this ticket's own work to make sense. Describe each in natural language, the way it reads once implemented, not by naming another ticket. The rest of the ticket then takes each prerequisite for granted, pointing back with "(see Prerequisites)" instead of re-explaining it.]
+
 ## Design choices
 
 [1 paragraph max, strictly synthetic. What gets renamed, moved, merged, or split, and the key reason for each choice. One sentence per decision is enough — "chose X over Y because Z".

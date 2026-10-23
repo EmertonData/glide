@@ -6,6 +6,7 @@ def _compute_tuning_parameters(
     bootstrap_y_true_means: NDArray,
     bootstrap_y_proxies_labeled_means: NDArray,
     cov_matrix_proxies_unlabeled: NDArray,
+    *,
     power_tuning: bool,
 ) -> NDArray:
     n_proxies = bootstrap_y_proxies_labeled_means.shape[1]

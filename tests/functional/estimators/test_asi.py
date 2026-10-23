@@ -23,7 +23,7 @@ def test_equal_probabilities_match_simple_ppi():
     to the plain PPIMeanEstimator on the same data.
     """
     n_labeled, n_unlabeled = 100, 400
-    pi_value = n_labeled / (n_labeled + n_unlabeled)
+    sampling_probability_value = n_labeled / (n_labeled + n_unlabeled)
     true_mean = 3
     true_std = 0.1
     proxy_mean = 2
@@ -40,9 +40,9 @@ def test_equal_probabilities_match_simple_ppi():
     )
     xi = np.hstack([np.ones(n_labeled), np.zeros(n_unlabeled)])
     y_true = simulate_annotation(y_true_oracle, xi)
-    pi = pi_value * np.ones(n_labeled + n_unlabeled)
+    sampling_probability = sampling_probability_value * np.ones(n_labeled + n_unlabeled)
 
-    asi_result = ASIMeanEstimator().estimate(y_true, y_proxy, pi)
+    asi_result = ASIMeanEstimator().estimate(y_true, y_proxy, sampling_probability)
     ppi_result = PPIMeanEstimator().estimate(y_true, y_proxy)
 
     assert asi_result.mean == pytest.approx(ppi_result.mean, abs=9e-3)

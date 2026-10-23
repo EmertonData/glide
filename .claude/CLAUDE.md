@@ -34,9 +34,9 @@ Do not run `make doc` (or `mkdocs build`) — it executes every tutorial noteboo
 
 The package has multiple layers:
 
-**`glide/estimators/`** — Public API. Statistical estimators (classical, PPI, ASI, IPW, PTD, and their stratified variants). Core computation modules (`ptd_core.py`, `stratified_core.py`) hold shared internals for families not yet migrated to `glide/engines/`.
+**`glide/estimators/`** — Public API. Statistical estimators (classical, PPI, ASI, IPW, PTD, and their stratified variants). `ptd_core.py` holds shared internals for families not yet migrated to `glide/engines/`.
 
-**`glide/engines/`** — Internal. Per-unit computation (validate, transform, tune, then compute mean and std) shared between an estimator and its monitor counterpart for the same family. Each family implements the `MeanEstimationEngine` protocol (`base.py`); currently `classical.py` and `ppi.py` (plus `ppi_core.py`) are migrated. Estimator shells call the engine once over the whole dataset; monitor façades loop it once per batch.
+**`glide/engines/`** — Internal. Per-unit computation (validate, transform, tune, then compute mean and std) shared between an estimator and its monitor counterpart for the same family. Each family implements the `MeanEstimationEngine` protocol (`base.py`); currently `classical.py`, `ppi.py` (plus `ppi_core.py`), `stratified_ppi.py` (plus `stratified_core.py`), and `clustered_ppi.py` (plus `clustered_core.py`) are migrated. Estimator shells call the engine once over the whole dataset; monitor façades loop it once per batch.
 
 **`glide/confidence_intervals/`** — Confidence interval implementations depending on statistical methods.
 
@@ -122,6 +122,19 @@ Always import from `typing`: `from typing import Dict, List, Optional, Tuple`.
 
 Never use `object` or `Any` as type annotations, use precise types or protocols instead.
 
+### Boolean Parameters
+
+Any function or method parameter typed `bool` (or with a boolean default) must be keyword-only (placed after a bare `*` in the signature); ruff enforces this via `FBT001`/`FBT002`. This applies to public and private functions alike, including internal helpers only called positionally from within the same module.
+
+```python
+# BAD
+def estimate(self, y_true: NDArray, y_proxy: NDArray, power_tuning: bool = True) -> ...: ...
+
+
+# GOOD
+def estimate(self, y_true: NDArray, y_proxy: NDArray, *, power_tuning: bool = True) -> ...: ...
+```
+
 ### Type Conversions
 
 Do not use needless type conversions like `float()` or `int()` unless required by the caller or for debugging purposes.
@@ -137,6 +150,14 @@ Do not use needless type conversions like `float()` or `int()` unless required b
 ### Comments
 
 Only add a comment when the *why* is non-obvious: a hidden constraint, a subtle invariant, a workaround for a specific bug, behavior that would surprise a reader. No comments restating what the code does.
+
+### Ambiguous Unicode Characters
+
+Strings, comments and docstrings (including notebook code cells) must not contain Unicode characters that look like an ASCII one; ruff enforces this via `RUF001`/`RUF002`/`RUF003`. Characters that are not ambiguous (e.g. `θ`, `Σ`, `²`, `·`) are allowed. Replace the ambiguous ones, there is no autofix:
+
+- Spell out the Greek letter: `rho` instead of `ρ`
+- Use a shape tuple or `x` instead of `×`: `(2, n_samples)` instead of `2 × n_samples`
+- Use `-` instead of an en dash in compound words and labels (`proxy-true correlation`), and "to" in numeric ranges (`0 to 3`)
 
 ### Docstrings
 
@@ -161,9 +182,17 @@ Only add a comment when the *why* is non-obvious: a hidden constraint, a subtle 
 
 These three document types have distinct purposes and must not bleed into each other.
 
-- **Tutorials** show how to use the public API. They must not expose private attributes or methods, must not be math-heavy (that belongs in the user guide), and must tell a coherent end-to-end story. If a tutorial section feels like it is documenting the implementation rather than teaching usage, move it or cut it.
+- **Tutorials** show how to use the public API. They must not expose private attributes or methods, must not be math-heavy (that belongs in the user guide), and must tell a coherent end-to-end story. If a tutorial section feels like it is documenting the implementation rather than teaching usage, move it or cut it. Tutorials must also stay lean: no Monte Carlo loops, no coverage sweeps, no helper machinery for validation-style analyses (those belong in deep dives, which the tutorial links to at the end). Mirror the closest sibling tutorial section by section: same summary table, at most 3 key takeaways (each adding something the others do not), and the same closing "Want to go further?" line linking to the scientific validation notebook.
 - **Deep dives / validation notebooks** are for scientific validation. They test the statistical validity of one or more workflows, where each workflow covers a full pipeline: data generation, annotation, then estimation. Results are stochastic and depend on a random seed. Monte Carlo simulations must use a single external loop over seeds, calling each workflow once per iteration. Note that workflows do not fully isolate from each other: data generation is typically shared across them. Figures must appear at the right point in the narrative.
 - **User guides** document the mathematical foundations of each implemented method (sampling or estimation). For each method, lay out the mathematical setting: expected inputs, computed quantities, and their main properties, taking inspiration from pre-existing sections in the guide. When a reference paper exists, formulas must be consistent with it; notation may diverge from the paper when needed to preserve consistency across the guide as a whole. Never reference the implementation directly: no pseudocode, no mentions of class or method names.
+
+#### Tutorial baselines
+
+A comparison is only informative if each baseline differs from the featured method by exactly one ingredient. A baseline that differs on two confounds the conclusion.
+
+- Before writing a tutorial, list the ingredients of the featured method (proxy labels, data structure such as strata, clusters or several proxies, sampling design, anytime validity). Each baseline in the comparison table must remove exactly one of them and keep all the others.
+- A takeaway may only attribute a gain to the ingredient the comparison isolates. Do not credit the proxy labels or the structure for a speed-up that the chosen baselines cannot separate.
+- If the matching baseline does not exist in the library, stop. Do not write the tutorial against a substitute. Report the missing estimator or monitor to the user, so a ticket can be opened and the tutorial put on hold.
 
 #### Scientific consistency in notebooks
 
@@ -194,4 +223,4 @@ Use Conventional Commits prefixes:
 
 ### Consistency and Propagation
 
-Before adding a new class, function, or module, find the nearest equivalent already in the codebase and verify that the new code mirrors it in structure, naming, and block ordering. When a good pattern appears in new code that the existing code lacks, propagate it to the existing code in the same PR. When a rename or refactor touches one site, grep for all other sites that use the old name and update them before considering the work done.
+Before adding a new class, function, or module, find the nearest equivalent already in the codebase and verify that the new code mirrors it in structure, naming, and block ordering. When a good pattern appears in new code that the existing code lacks, propagate it to the existing code in the same PR. When a rename or refactor touches one site, grep for all other sites that use the old name and update them before considering the work done. When adding an estimator or monitor for a new data structure or information source (strata, clusters, several proxies, active sampling), check that its label-only counterpart for the same structure exists. If it does not, it is part of the same deliverable, or a blocking dependency listed in the ticket.

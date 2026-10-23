@@ -9,20 +9,40 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 ## [Next release]
 
 ### ✨ Added
-- User guide sections for the classical baseline estimators: `ClassicalMeanEstimator`, `StratifiedClassicalMeanEstimator`, `IPWClassicalMeanEstimator`, and `ClusteredClassicalMeanEstimator`.
-- Interactive PPI simulator on the landing page.
-- RAG answer faithfulness (MEMERAG) case study in the documentation.
+- `AsymptoticClusteredPPRM`: a new anytime-valid drift monitor that combines human labels with proxy predictions over a stream of clustered data.
+- `generate_batched_clustered_binary_dataset`: a new synthetic dataset generator simulating a production stream as successive batches, each independently partitioned into clusters.
+- New tutorial on monitoring a stratified production stream for drift with `AsymptoticStratifiedPPRM`.
+- `AsymptoticStratifiedPPRM`: a new anytime-valid drift monitor that combines human labels with proxy predictions over a stream of stratified data.
+- `generate_batched_stratified_binary_dataset`: a new synthetic dataset generator simulating a production stream as successive batches, each independently partitioned into strata.
 
 ### 🔄 Changed
-- Renamed `AsymptoticClassicalMeanMonitor` to `AsymptoticClassicalRM`.
-- Removed the `metric_lower_bound` and `metric_upper_bound` parameters from `AsymptoticPPRM.detect` and `AsymptoticClassicalMeanMonitor.detect`.
-- Removed `EmpiricalPPRM`, `EmpiricalClassicalMeanMonitor`, and `glide.confidence_sequences.EmpiricalBernsteinConfidenceSequence`.
-- Renamed `n_total` to `n_samples` in `glide.simulators` dataset generators.
-- Enriched the tutorials overview with a Phase 4: Monitoring section mirroring the sampler/estimator decision guide.
+- Renamed the `pi` parameter of `ASIMeanEstimator.estimate` and `IPWPTDMeanEstimator.estimate` to `sampling_probability`, consistent with `IPWClassicalMeanEstimator.estimate`. Callers passing `pi=` by keyword must update; positional calls are unaffected.
+- `StratifiedClassicalMeanEstimator` now weights strata by their share of all rows by default, labeled or not (previously, only labeled rows were counted).
+- `UniformSampler.sample` now takes `y_proxy` instead of `n_total`, consistent with the other samplers.
 
 ### 🐛 Fixed
 
 ### 💛 Contributors
+
+## [0.11.0] – 2026-09-18
+
+### ✨ Added
+- `AsymptoticMultiPPRM`: a new anytime-valid drift monitor that combines human labels with multiple proxy predictors (plus a matching synthetic dataset generator, `generate_stratified_multi_binary_dataset`, for testing it).
+- Interactive prediction-powered inference (PPI) simulator on the landing page, letting visitors explore the method interactively.
+- New user guide sections covering the classical baseline estimators.
+- New RAG answer faithfulness (MEMERAG) case study in the documentation.
+
+### 🔄 Changed
+- Renamed `AsymptoticClassicalMeanMonitor` to `AsymptoticClassicalRM`, and removed the older `EmpiricalPPRM` and `EmpiricalClassicalMeanMonitor` monitors along with their underlying confidence sequence, in favor of the newer asymptotic monitors.
+- Simplified the drift monitors' `detect` methods by removing the `metric_lower_bound` and `metric_upper_bound` parameters.
+- Renamed the `n_total` parameter to `n_samples` across dataset generators for consistency.
+- Reorganized the tutorials: split into `estimators/` and `monitors/` subfolders, and added a monitoring section to the tutorials overview.
+
+### 🐛 Fixed
+- Fixed a color inconsistency in the landing page PPI simulator sliders.
+
+### 💛 Contributors
+Thank you to everyone who contributed to this release: @gmartinon-ed, @imerad, @pravallikamavilla
 
 ## [0.10.0] – 2026-07-27
 

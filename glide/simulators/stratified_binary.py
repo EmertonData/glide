@@ -1,4 +1,4 @@
-from typing import Optional, Tuple
+from typing import Optional, Tuple, Union
 
 import numpy as np
 from numpy.typing import ArrayLike, NDArray
@@ -12,7 +12,7 @@ def generate_stratified_binary_dataset(
     true_mean: ArrayLike,
     proxy_mean: ArrayLike,
     correlation: ArrayLike,
-    random_seed: Optional[int] = None,
+    random_seed: Optional[Union[int, np.random.SeedSequence]] = None,
 ) -> Tuple[NDArray, NDArray, NDArray]:
     """Generate a synthetic stratified binary-label oracle dataset.
 
@@ -34,7 +34,7 @@ def generate_stratified_binary_dataset(
     correlation : list of float or NDArray of shape (K,)
         Pearson correlation between true and proxy per stratum.
         Length must equal number of strata.
-    random_seed : int, optional
+    random_seed : int or np.random.SeedSequence, optional
         Seed for reproducibility. If provided, seeds are derived deterministically.
 
     Returns
@@ -83,7 +83,6 @@ def generate_stratified_binary_dataset(
     correlation_arr = np.asarray(correlation, dtype=float)
 
     _validate_non_empty(n_samples_arr, "n_samples")
-    num_strata = len(n_samples_arr)
 
     _validate_equal_lengths(
         n_samples_arr,
@@ -98,7 +97,11 @@ def generate_stratified_binary_dataset(
     y_proxy_per_stratum = []
     groups_per_stratum = []
 
-    seed_sequence = np.random.SeedSequence(random_seed)
+    if isinstance(random_seed, np.random.SeedSequence):
+        seed_sequence = random_seed
+    else:
+        seed_sequence = np.random.SeedSequence(random_seed)
+    num_strata = len(n_samples_arr)
     seeds = seed_sequence.spawn(num_strata)
 
     for stratum_id in range(num_strata):
@@ -111,7 +114,7 @@ def generate_stratified_binary_dataset(
         )
         y_true_per_stratum.append(y_true_k)
         y_proxy_per_stratum.append(y_proxy_k)
-        groups_per_stratum.append(np.full_like(y_true_k, stratum_id))
+        groups_per_stratum.append(np.full_like(y_true_k, stratum_id, dtype=np.int64))
 
     y_true = np.hstack(y_true_per_stratum)
     y_proxy = np.hstack(y_proxy_per_stratum)

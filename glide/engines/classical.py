@@ -7,16 +7,16 @@ from glide.core.validation import _validate_min_samples
 
 
 class ClassicalMeanEngine:
-    def preprocess(self, y: NDArray) -> NDArray:
+    def _preprocess(self, y: NDArray) -> NDArray:
         not_nan_mask = ~np.isnan(y)
         y_valid = y[not_nan_mask]
         _validate_min_samples(y_valid, "y")
         return y_valid
 
-    def fit_tuning_parameter(self, dataset: NDArray, power_tuning: bool) -> None:
+    def _fit_tuning_parameter(self, dataset: NDArray, *, power_tuning: bool) -> None:
         return None
 
-    def compute_mean_and_std(self, dataset: NDArray, tuning_parameter: None) -> Tuple[float, float]:
+    def _compute_mean_and_std(self, dataset: NDArray, tuning_parameter: None) -> Tuple[float, float]:
         n_samples = len(dataset)
         mean = np.mean(dataset)
         std = np.std(dataset, ddof=1) / np.sqrt(n_samples)

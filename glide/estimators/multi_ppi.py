@@ -55,6 +55,7 @@ class MultiPPIMeanEstimator:
         y_proxies: NDArray,
         metric_name: str = "Metric",
         confidence_level: float = 0.95,
+        *,
         power_tuning: bool = True,
     ) -> PredictionPoweredMeanInferenceResult:
         """Estimate the population mean using MultiPPI.
@@ -102,19 +103,19 @@ class MultiPPIMeanEstimator:
               perfectly correlated), with ``power_tuning=True``.
             - If ``confidence_level`` is not in ``(0, 1)``.
         """
-        multi_ppi_dataset = self._engine.preprocess(y_true, y_proxies)
+        multi_ppi_dataset = self._engine._preprocess(y_true, y_proxies)
         y_true_labeled, _, y_proxies_unlabeled = multi_ppi_dataset
         _validate_non_constant(y_true_labeled, "'y_true' labeled values are constant.")
 
-        tuning_parameter = self._engine.fit_tuning_parameter(multi_ppi_dataset, power_tuning)
-        mean, std = self._engine.compute_mean_and_std(multi_ppi_dataset, tuning_parameter)
+        tuning_parameter = self._engine._fit_tuning_parameter(multi_ppi_dataset, power_tuning=power_tuning)
+        mean, std = self._engine._compute_mean_and_std(multi_ppi_dataset, tuning_parameter)
         confidence_interval = CLTConfidenceInterval(
             mean=mean,
             std=std,
             confidence_level=confidence_level,
         )
 
-        _, classical_std = self._classical_engine.compute_mean_and_std(y_true_labeled, None)
+        _, classical_std = self._classical_engine._compute_mean_and_std(y_true_labeled, None)
         n_labeled, n_unlabeled = len(y_true_labeled), len(y_proxies_unlabeled)
         effective_sample_size = floor(n_labeled * classical_std**2 / std**2)
 

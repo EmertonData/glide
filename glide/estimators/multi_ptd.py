@@ -87,6 +87,7 @@ class MultiPTDMeanEstimator:
         metric_name: str = "Metric",
         confidence_level: float = 0.95,
         n_bootstrap: int = 2000,
+        *,
         power_tuning: bool = True,
         random_seed: Optional[int] = None,
     ) -> PredictionPoweredMeanInferenceResult:
@@ -148,7 +149,10 @@ class MultiPTDMeanEstimator:
             y_true_filtered, y_proxies_labeled, n_bootstrap, rng
         )
         lambdas_ = _compute_tuning_parameters(
-            bootstrap_y_true_means, bootstrap_y_proxies_labeled_means, cov_matrix_proxies_unlabeled, power_tuning
+            bootstrap_y_true_means,
+            bootstrap_y_proxies_labeled_means,
+            cov_matrix_proxies_unlabeled,
+            power_tuning=power_tuning,
         )
         bootstrap_mean_estimates = _compute_bootstrap_mean_estimates(
             bootstrap_y_true_means,

@@ -12,6 +12,7 @@ class PredictionPoweredMeanInferenceResult(MeanInferenceResult):
     effective_sample_size: int = 0
 
     def __str__(self) -> str:
+        """Return the multi-line textual representation of the result."""
         lines = self._common_lines() + [
             f"n_true: {self.n_true}",
             f"n_proxy: {self.n_proxy}",

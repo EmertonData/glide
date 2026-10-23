@@ -10,6 +10,9 @@
 | [`generate_gaussian_dataset`](simulators.md#glide.simulators.generate_gaussian_dataset) | Synthetic Gaussian dataset |
 | [`generate_clustered_binary_dataset`](simulators.md#glide.simulators.generate_clustered_binary_dataset) | Synthetic clustered binary-label dataset |
 | [`generate_multi_binary_dataset`](simulators.md#glide.simulators.generate_multi_binary_dataset) | Synthetic binary-label dataset with multiple proxies |
+| [`generate_stratified_multi_binary_dataset`](simulators.md#glide.simulators.generate_stratified_multi_binary_dataset) | Stratified binary-label dataset with multiple proxies |
+| [`generate_batched_clustered_binary_dataset`](simulators.md#glide.simulators.generate_batched_clustered_binary_dataset) | Batched, clustered binary-label dataset |
+| [`generate_batched_stratified_binary_dataset`](simulators.md#glide.simulators.generate_batched_stratified_binary_dataset) | Batched, stratified binary-label dataset |
 | [`simulate_annotation`](simulators.md#glide.simulators.simulate_annotation) | Simulate annotation in the simulation lifecycle |
 
 ## Samplers
@@ -62,6 +65,9 @@
 | Class | Description |
 |-------|-------------|
 | [`AsymptoticPPRM`](monitors.md#glide.monitors.asymptotic_pprm.AsymptoticPPRM) | Anytime-valid drift monitor combining true and proxy labels via an asymptotic confidence sequence |
+| [`AsymptoticStratifiedPPRM`](monitors.md#glide.monitors.asymptotic_stratified_pprm.AsymptoticStratifiedPPRM) | Anytime-valid drift monitor combining true and proxy labels via an asymptotic confidence sequence, over a stream naturally partitioned into strata |
+| [`AsymptoticClusteredPPRM`](monitors.md#glide.monitors.asymptotic_clustered_pprm.AsymptoticClusteredPPRM) | Anytime-valid drift monitor combining true and proxy labels via an asymptotic confidence sequence, over a stream of clustered data |
+| [`AsymptoticMultiPPRM`](monitors.md#glide.monitors.asymptotic_multi_pprm.AsymptoticMultiPPRM) | Anytime-valid drift monitor combining true labels with predictions from multiple proxies via an asymptotic confidence sequence |
 
 ## Confidence Intervals
 

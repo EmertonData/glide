@@ -153,6 +153,87 @@ To compute predictable weights $\lambda_t$, the simplest option is to pool the f
 
 Plugging $\hat{R}_s$ and $\hat{\sigma}_s$ into the [Asymptotic Confidence Sequences](#asymptotic-confidence-sequences) construction gives the anytime-valid lower bound $L_t$ derived there. The **drift alarm** fires as soon as $L_t > \tau$, the user-fixed threshold.
 
+### Asymptotic Stratified Prediction-Powered Risk Monitoring (Asymptotic Stratified PPRM)
+
+Asymptotic PPRM assumes that each batch is drawn from a single population. In practice, a batch is often naturally partitioned into strata, and the proxy's behavior can vary across them. Asymptotic PPRM generalises to a stream where each batch is split into $K$ strata combined through [Stratified PPI++](estimators.md#stratified-ppi) [[5](#ref-5), [6](#ref-6)], the same way the underlying estimator generalises PPI++.
+
+#### Setting
+
+Each batch $t$ carries the following inputs: a small set of human labels together with a larger set of proxy labels, both specific to that batch, each also tagged with a stratum identifier.
+
+| Value | Present for | Description |
+|---|---|---|
+| $\tilde{Y}_{t,i}$ | All samples in batch $t$ | Proxy label |
+| $Y_{t,j}$ | Labeled samples in batch $t$ only | Ground-truth label |
+| $g_{t,i}$ | All samples in batch $t$ | Stratum identifier |
+
+Unlike the one-shot Stratified PPI++ estimator, where every stratum is simply whatever is present in the single dataset passed in, a stratum's population weight $w_{k,t}$ is computed from batch $t$ alone, and both the weight and the stratum's very presence can vary from batch to batch: a stratum can be missing from one batch and appear for the first time later in the stream.
+
+The per-batch estimate $\hat{R}_t$ is the Stratified PPI++ estimate on batch $t$, a population-weighted sum of the per-stratum PPI++ estimates,
+
+$$\hat{R}_t = \sum_{k=1}^{K} w_{k,t} \cdot \hat{R}_{k,t}(\lambda_{k,t}),$$
+
+where $\hat{R}_{k,t}(\lambda_{k,t})$ is the PPI++ estimate restricted to batch $t$'s stratum $k$, together with its standard error $\hat{\sigma}_t$, obtained by applying the [Stratified PPI++](estimators.md#stratified-ppi) variance formula within batch $t$, and $\lambda_{k,t}$ a predictable, per-stratum power-tuning weight.
+
+Predictable power-tuning carries over unchanged from [Asymptotic PPRM](#asymptotic-prediction-powered-risk-monitoring-asymptotic-pprm), applied per stratum: $\lambda_{k,t}$ is fit on batches strictly before $t$ in which stratum $k$ appeared, and a stratum's first appearance anywhere in the stream, having no predecessor to fit on, uses the neutral weight $\lambda_{k,t} = 1$.
+
+#### Bound and Alarm Rule
+
+Plugging $\hat{R}_t$ and $\hat{\sigma}_t$ into the [Asymptotic Confidence Sequences](#asymptotic-confidence-sequences) construction gives the anytime-valid lower bound $L_t$ derived there. The **drift alarm** fires as soon as $L_t > \tau$, the user-fixed threshold.
+
+### Asymptotic Clustered Prediction-Powered Risk Monitoring (Asymptotic Clustered PPRM)
+
+Asymptotic PPRM assumes that the samples of a batch are independent. In practice, samples are often grouped into clusters within which observations may be correlated. Asymptotic PPRM generalises to a stream of clustered data, where each cluster is reduced to its mean and the cluster means are combined through [Clustered PPI++](estimators.md#clustered-prediction-powered-inference), the same way the underlying estimator generalises PPI++.
+
+#### Setting
+
+Each batch $t$ carries the following inputs: a small set of human labels together with a larger set of proxy labels, both specific to that batch, each also tagged with a cluster identifier. The observations of batch $t$ are partitioned into clusters, each either fully labeled ($L^{\bullet}_t$ clusters) or fully unlabeled ($L^{\circ}_t$ clusters).
+
+| Value | Present for | Description |
+|---|---|---|
+| $\tilde{Y}_{t,i}$ | All samples in batch $t$ | Proxy label |
+| $Y_{t,j}$ | Labeled samples in batch $t$ only | Ground-truth label |
+| $c_{t,i}$ | All samples in batch $t$ | Cluster identifier |
+
+Unlike strata, which are recurring categories (for example, a language) that can appear in many batches, a cluster is a group of correlated samples (for example, the phrases of one paragraph) that belongs to a single batch. A cluster must therefore never reappear in a later batch: each batch is made of its own distinct clusters, which are never matched with those of other batches.
+
+The per-batch estimate $\hat{R}_t$ is the [Clustered PPI++](estimators.md#clustered-prediction-powered-inference) estimate on batch $t$'s own cluster means, with $\bar{Y}^{(l)}_t$, $\bar{\tilde{Y}}^{(l),\bullet}_t$ and $\bar{\tilde{Y}}^{(m),\circ}_t$ the cluster means of the labels, labeled proxies and unlabeled proxies respectively,
+
+$$\hat{R}_t = \frac{1}{L^{\bullet}_t}\sum_{l=1}^{L^{\bullet}_t} \bar{Y}^{(l)}_t + \lambda_t\left[\frac{1}{L^{\circ}_t}\sum_{m=1}^{L^{\circ}_t} \bar{\tilde{Y}}^{(m),\circ}_t - \frac{1}{L^{\bullet}_t}\sum_{l=1}^{L^{\bullet}_t} \bar{\tilde{Y}}^{(l),\bullet}_t\right],$$
+
+together with its standard error $\hat{\sigma}_t$, obtained by applying the [Clustered Prediction-Powered Inference](estimators.md#clustered-prediction-powered-inference) variance formula within batch $t$, and $\lambda_t$ a predictable power-tuning weight.
+
+Predictable power-tuning carries over unchanged from [Asymptotic PPRM](#asymptotic-prediction-powered-risk-monitoring-asymptotic-pprm): $\lambda_t$ is fit on the pooled cluster means of every batch strictly before $t$, and the first batch, having no predecessor, uses the neutral weight $\lambda_1 = 1$.
+
+#### Bound and Alarm Rule
+
+Plugging $\hat{R}_t$ and $\hat{\sigma}_t$ into the [Asymptotic Confidence Sequences](#asymptotic-confidence-sequences) construction gives the anytime-valid lower bound $L_t$ derived there. The **drift alarm** fires as soon as $L_t > \tau$, the user-fixed threshold.
+
+### Asymptotic Multi-Proxy Prediction-Powered Risk Monitoring (Asymptotic Multi-PPRM)
+
+Cheap proxy labels are not limited to a single source: Asymptotic PPRM generalises to $M \ge 1$ proxies combined through [Multi-Proxy Prediction-Powered Inference (Multi-PPI)](estimators.md#multi-proxy-prediction-powered-inference-multi-ppi) [[4](#ref-4)], the same way the underlying estimator generalises PPI++.
+
+#### Setting
+
+Each batch $t$ carries the following inputs: a small set of human labels together with $M$ larger sets of proxy labels, all specific to that batch.
+
+| Value | Present for | Description |
+|---|---|---|
+| $\tilde{\mathbf{Y}}_{t,i} \in \mathbb{R}^M$ | All samples in batch $t$ | Proxy prediction vector |
+| $Y_{t,j}$ | Labeled samples in batch $t$ only | Ground-truth label |
+
+The per-batch estimate $\hat{R}_s$ is the Multi-PPI estimate on batch $s$. Denoting $\tilde{\mathbf{Y}}_s^{\bullet}$ and $\tilde{\mathbf{Y}}_s^{\circ}$ the labeled and unlabeled proxy vectors of batch $s$ respectively, with $n_s$ and $N_s$ their respective counts,
+
+$$\hat{R}_s = \frac{1}{n_s}\sum_{j=1}^{n_s} Y_{s,j} + \boldsymbol{\lambda}_s^\top\left[\frac{1}{N_s}\sum_{i=1}^{N_s} \tilde{\mathbf{Y}}_{s,i}^{\circ} - \frac{1}{n_s}\sum_{j=1}^{n_s} \tilde{\mathbf{Y}}_{s,j}^{\bullet}\right],$$
+
+together with its standard error $\hat{\sigma}_s$, obtained by applying the [Multi-Proxy Prediction-Powered Inference (Multi-PPI)](estimators.md#multi-proxy-prediction-powered-inference-multi-ppi) variance formula within batch $s$, and $\boldsymbol{\lambda}_s \in \mathbb{R}^M$ a predictable power-tuning weight vector.
+
+Predictable power-tuning carries over unchanged from [Asymptotic PPRM](#asymptotic-prediction-powered-risk-monitoring-asymptotic-pprm): weights are computed only from batches strictly earlier than $t$, and the first batch, having no predecessor, uses a fixed neutral weight vector $\boldsymbol{\lambda}_1$ with all entries set to $1/\sqrt{M}$, generalizing $\lambda_1 = 1$ from the single proxy case.
+
+#### Bound and Alarm Rule
+
+Plugging $\hat{R}_s$ and $\hat{\sigma}_s$ into the [Asymptotic Confidence Sequences](#asymptotic-confidence-sequences) construction gives the anytime-valid lower bound $L_t$ derived there. The **drift alarm** fires as soon as $L_t > \tau$, the user-fixed threshold.
+
 ---
 
 ## References
@@ -162,3 +243,9 @@ Plugging $\hat{R}_s$ and $\hat{\sigma}_s$ into the [Asymptotic Confidence Sequen
 <a id="ref-2"></a>[2] <a id="ref-2-link" href="https://doi.org/10.1214/24-AOS2408">Waudby-Smith, Ian, David Arbour, Ritwik Sinha, Edward H. Kennedy, and Aaditya Ramdas. "Time-uniform central limit theory and asymptotic confidence sequences." The Annals of Statistics 52, no. 6 (2024): 2613-2640</a>.
 
 <a id="ref-3"></a>[3] <a id="ref-3-link" href="https://projecteuclid.org/journals/annals-of-mathematical-statistics/volume-41/issue-5/Statistical-Methods-Related-to-the-Law-of-the-Iterated-Logarithm/10.1214/aoms/1177696786.full">Robbins, Herbert. "Statistical methods related to the law of the iterated logarithm." The Annals of Mathematical Statistics 41, no. 5 (1970): 1397-1409</a>.
+
+<a id="ref-4"></a>[4] <a id="ref-4-link" href="https://arxiv.org/abs/2509.21707">Shan, Jiawei, Zhifeng Chen, Yiming Dong, Yazhen Wang, and Jiwei Zhao. "SADA: Safe and Adaptive Aggregation of Multiple Black-Box Predictions in Semi-Supervised Learning." arXiv preprint arXiv:2509.21707 (2025).</a>.
+
+<a id="ref-5"></a>[5] <a id="ref-5-link" href="https://proceedings.neurips.cc/paper_files/paper/2024/file/c9fcd02e6445c7dfbad6986abee53d0d-Paper-Conference.pdf">Fisch, Adam, Joshua Maynez, R. Alex Hofer, Bhuwan Dhingra, Amir Globerson, and William W. Cohen. "Stratified prediction-powered inference for effective hybrid evaluation of language models." Advances in Neural Information Processing Systems 37 (2024): 111489-111514.</a>.
+
+<a id="ref-6"></a>[6] <a id="ref-6-link" href="https://www.ecva.net/papers/eccv_2024/papers_ECCV/papers/12117.pdf">Fogliato, Riccardo, Pratik Patil, Mathew Monfort, and Pietro Perona. "A framework for efficient model evaluation through stratification, sampling, and estimation." In European Conference on Computer Vision, pp. 140-158. Cham: Springer Nature Switzerland, 2024.</a>.

@@ -14,15 +14,18 @@ class MeanInferenceResult:
 
     @property
     def width(self) -> float:
+        """Width of the confidence interval."""
         result = self.confidence_interval.width
         return result
 
     @property
     def mean(self) -> float:
+        """Point estimate of the mean."""
         return self.confidence_interval.mean
 
     @property
     def std(self) -> float:
+        """Standard error of the point estimate."""
         return self.confidence_interval.std
 
     def _common_lines(self) -> List[str]:
@@ -37,6 +40,7 @@ class MeanInferenceResult:
         ]
 
     def __str__(self) -> str:
+        """Return the multi-line textual representation of the result."""
         return "\n".join(self._common_lines())
 
     def summary(self) -> str:
@@ -44,4 +48,5 @@ class MeanInferenceResult:
         return self.__str__()
 
     def __repr__(self) -> str:
+        """Return the same representation as ``str``."""
         return self.__str__()

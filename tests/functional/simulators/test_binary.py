@@ -4,7 +4,7 @@ import pytest
 from glide.simulators import generate_binary_dataset
 
 
-def test_generate_binary_dataset_empirical_means_and_correlation():
+def test_generate_binary_dataset_empirical_statistics():
     y_true, y_proxy = generate_binary_dataset(
         n_samples=500, true_mean=0.7, proxy_mean=0.6, correlation=0.8, random_seed=2
     )

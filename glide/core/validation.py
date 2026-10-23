@@ -1,5 +1,5 @@
 import warnings
-from typing import Hashable, List, Optional, Union
+from typing import Hashable, List, Optional, Sequence, Union
 
 import numpy as np
 from numpy.typing import NDArray
@@ -47,14 +47,14 @@ def _validate_y_true(y_true: NDArray, identifier: Optional[Hashable] = None, ide
     _validate_non_constant(labeled, f"'y_true' labeled values are constant{identifier_part}.")
 
 
-def _validate_label_prob_consistency(labeled_mask: NDArray, pi: NDArray) -> None:
-    if np.any(labeled_mask & (pi == 0)):
+def _validate_label_prob_consistency(labeled_mask: NDArray, sampling_probability: NDArray) -> None:
+    if np.any(labeled_mask & (sampling_probability == 0)):
         raise ValueError("Samples with zero probability of being labeled cannot be labeled.")
-    if np.any(~labeled_mask & (pi == 1)):
+    if np.any(~labeled_mask & (sampling_probability == 1)):
         raise ValueError("Samples with probability one of being labeled must be labeled.")
 
 
-def _validate_equal_lengths(*arrays: NDArray, names: List[str]) -> None:
+def _validate_equal_lengths(*arrays: Union[Sequence, NDArray], names: List[str]) -> None:
     lengths = [len(a) for a in arrays]
     if len(set(lengths)) > 1:
         if len(names) == 2:
@@ -72,7 +72,7 @@ def _validate_y_true_burn_in(y_true: NDArray) -> None:
     _validate_non_constant(y_true, "'y_true' label values are constant.")
 
 
-def _validate_non_empty(array: Union[List, NDArray], name: str) -> None:
+def _validate_non_empty(array: Union[Sequence, NDArray], name: str) -> None:
     if len(array) == 0:
         raise ValueError(f"'{name}' must be non-empty.")
 
@@ -80,6 +80,7 @@ def _validate_non_empty(array: Union[List, NDArray], name: str) -> None:
 def _validate_bounds(
     value: Union[float, NDArray],
     name: str,
+    *,
     lower: float = -np.inf,
     upper: float = np.inf,
     left_inclusive: bool = True,
@@ -193,3 +194,20 @@ def _validate_unique_clusters(unique_labeled_clusters: NDArray, unique_unlabeled
         upper=0,
         error_message=f"Cluster '{bad_cluster}' contains both labeled and unlabeled observations.",
     )
+
+
+def _validate_clusters_unique_across_batches(clusters: NDArray, batches: NDArray) -> None:
+    _validate_equal_lengths(clusters, batches, names=["clusters", "batches"])
+    _validate_has_no_nan(clusters, "clusters")
+    _validate_has_no_nan(batches, "batches")
+    unique_clusters, cluster_codes = np.unique(clusters, return_inverse=True)
+    _, batch_codes = np.unique(batches, return_inverse=True)
+    cluster_batch_codes = np.empty(len(unique_clusters), dtype=batch_codes.dtype)
+    cluster_batch_codes[cluster_codes] = batch_codes
+    is_split = cluster_batch_codes[cluster_codes] != batch_codes
+    if np.any(is_split):
+        bad_cluster = unique_clusters[cluster_codes[is_split][0]]
+        raise ValueError(
+            f"Cluster '{bad_cluster}' appears in more than one batch; cluster identifiers must be unique "
+            "across the whole stream."
+        )

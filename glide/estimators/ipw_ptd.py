@@ -48,9 +48,9 @@ class IPWPTDMeanEstimator:
     >>> from glide.estimators.ipw_ptd import IPWPTDMeanEstimator
     >>> y_true = np.array([1.0, 0.0, np.nan, np.nan])
     >>> y_proxy = np.array([0.9, 0.1, 0.8, 0.2])
-    >>> pi = np.array([0.4, 0.6, 0.3, 0.7])
+    >>> sampling_probability = np.array([0.4, 0.6, 0.3, 0.7])
     >>> estimator = IPWPTDMeanEstimator()
-    >>> result = estimator.estimate(y_true, y_proxy, pi, n_bootstrap=5, random_seed=0)
+    >>> result = estimator.estimate(y_true, y_proxy, sampling_probability, n_bootstrap=5, random_seed=0)
     >>> print(result)
     Metric: Metric
     Point Estimate: 0.253
@@ -65,10 +65,12 @@ class IPWPTDMeanEstimator:
         self,
         y_true: NDArray,
         y_proxy: NDArray,
-        pi: NDArray,
+        sampling_probability: NDArray,
     ) -> Tuple[NDArray, NDArray, NDArray, NDArray]:
-        _validate_equal_lengths(y_true, y_proxy, pi, names=["y_true", "y_proxy", "pi"])
-        _validate_probabilities(pi)
+        _validate_equal_lengths(
+            y_true, y_proxy, sampling_probability, names=["y_true", "y_proxy", "sampling_probability"]
+        )
+        _validate_probabilities(sampling_probability)
         _validate_y_proxy(y_proxy)
         _validate_y_true(y_true)
 
@@ -76,19 +78,20 @@ class IPWPTDMeanEstimator:
         xi = y_true_non_nan_mask.astype(float)
 
         _validate_sample_sizes(y_true_non_nan_mask)
-        _validate_label_prob_consistency(y_true_non_nan_mask, pi)
+        _validate_label_prob_consistency(y_true_non_nan_mask, sampling_probability)
 
         y_true_filled = np.nan_to_num(y_true, nan=0)
-        return y_true_filled, y_proxy, xi, pi
+        return y_true_filled, y_proxy, xi, sampling_probability
 
     def estimate(
         self,
         y_true: NDArray,
         y_proxy: NDArray,
-        pi: NDArray,
+        sampling_probability: NDArray,
         metric_name: str = "Metric",
         confidence_level: float = 0.95,
         n_bootstrap: int = 2000,
+        *,
         power_tuning: bool = True,
         random_seed: Optional[int] = None,
     ) -> PredictionPoweredMeanInferenceResult:
@@ -108,7 +111,7 @@ class IPWPTDMeanEstimator:
         y_proxy : NDArray
             Array of shape ``(n_samples,)`` with proxy predictions. Must be present for every
             sample and must not contain NaN.
-        pi : NDArray
+        sampling_probability : NDArray
             Array of shape ``(n_samples,)`` with the ground-truth labelling probability
             π_i ∈ [0, 1] for each sample.
         metric_name : str, optional
@@ -134,7 +137,7 @@ class IPWPTDMeanEstimator:
         Raises
         ------
         ValueError
-            - If ``y_true``, ``y_proxy``, and ``pi`` do not all have the same length.
+            - If ``y_true``, ``y_proxy``, and ``sampling_probability`` do not all have the same length.
             - If any proxy value is NaN.
             - If all proxy values are identical.
             - If labeled ``y_true`` values are constant.
@@ -143,20 +146,20 @@ class IPWPTDMeanEstimator:
             - If any unlabeled sample (NaN ``y_true``) has a labeling probability of 1.
             - If there are fewer than 2 labeled or fewer than 2 unlabeled samples.
         """
-        y_true_filled, y_proxy, xi, pi = self._preprocess(y_true, y_proxy, pi)
+        y_true_filled, y_proxy, xi, sampling_probability = self._preprocess(y_true, y_proxy, sampling_probability)
         rng = np.random.default_rng(random_seed)
 
-        non_zero_pi_mask = _get_non_zero_mask(pi)
-        non_one_pi_mask = _get_non_zero_mask(1 - pi)
+        non_zero_probability_mask = _get_non_zero_mask(sampling_probability)
+        non_one_probability_mask = _get_non_zero_mask(1 - sampling_probability)
 
         with warnings.catch_warnings():
             warnings.filterwarnings("ignore")
-            labeled_ipw_weights = xi / pi
-            unlabeled_ipw_weights = (1 - xi) / (1 - pi)
+            labeled_ipw_weights = xi / sampling_probability
+            unlabeled_ipw_weights = (1 - xi) / (1 - sampling_probability)
 
-        weighted_y_true_filled = (y_true_filled * labeled_ipw_weights)[non_zero_pi_mask]
-        weighted_y_proxy_labeled = (y_proxy * labeled_ipw_weights)[non_zero_pi_mask]
-        weighted_y_proxy_unlabeled = (y_proxy * unlabeled_ipw_weights)[non_one_pi_mask]
+        weighted_y_true_filled = (y_true_filled * labeled_ipw_weights)[non_zero_probability_mask]
+        weighted_y_proxy_labeled = (y_proxy * labeled_ipw_weights)[non_zero_probability_mask]
+        weighted_y_proxy_unlabeled = (y_proxy * unlabeled_ipw_weights)[non_one_probability_mask]
 
         mean_proxy_unlabeled = np.mean(weighted_y_proxy_unlabeled)
         effective_n_proxy_unlabeled = len(weighted_y_proxy_unlabeled)
@@ -166,7 +169,7 @@ class IPWPTDMeanEstimator:
             weighted_y_true_filled, weighted_y_proxy_labeled, n_bootstrap, rng
         )
         lambda_ = _compute_tuning_parameter(
-            bootstrap_y_true_means, bootstrap_y_proxy_labeled_means, var_proxy_unlabeled, power_tuning
+            bootstrap_y_true_means, bootstrap_y_proxy_labeled_means, var_proxy_unlabeled, power_tuning=power_tuning
         )
         bootstrap_mean_estimates = _compute_bootstrap_mean_estimates(
             bootstrap_y_true_means,
@@ -183,7 +186,9 @@ class IPWPTDMeanEstimator:
             bootstrap_estimates=bootstrap_mean_estimates,
             confidence_level=confidence_level,
         )
-        classical_confidence_interval = IPWClassicalMeanEstimator().estimate(y_true, pi).confidence_interval
+        classical_confidence_interval = (
+            IPWClassicalMeanEstimator().estimate(y_true, sampling_probability).confidence_interval
+        )
         effective_sample_size = floor(n_labeled * classical_confidence_interval.var / confidence_interval.var)
         result = PredictionPoweredMeanInferenceResult(
             confidence_interval=confidence_interval,

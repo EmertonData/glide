@@ -42,17 +42,17 @@ def test_estimate_delegates(estimator, y_arrays):
     y_true, y_proxy = y_arrays
     with (
         patch.object(ppi_module, "_validate_non_constant") as mock_validate_non_constant,
-        patch.object(estimator._engine, "preprocess", wraps=estimator._engine.preprocess) as mock_preprocess,
+        patch.object(estimator._engine, "_preprocess", wraps=estimator._engine._preprocess) as mock_preprocess,
         patch.object(
-            estimator._engine, "fit_tuning_parameter", wraps=estimator._engine.fit_tuning_parameter
+            estimator._engine, "_fit_tuning_parameter", wraps=estimator._engine._fit_tuning_parameter
         ) as mock_fit_tuning_parameter,
         patch.object(
-            estimator._engine, "compute_mean_and_std", wraps=estimator._engine.compute_mean_and_std
+            estimator._engine, "_compute_mean_and_std", wraps=estimator._engine._compute_mean_and_std
         ) as mock_compute_mean_and_std,
         patch.object(
             estimator._classical_engine,
-            "compute_mean_and_std",
-            wraps=estimator._classical_engine.compute_mean_and_std,
+            "_compute_mean_and_std",
+            wraps=estimator._classical_engine._compute_mean_and_std,
         ) as mock_classical_engine_compute_mean_and_std,
     ):
         estimator.estimate(y_true, y_proxy)
@@ -68,7 +68,7 @@ def test_estimate_delegates(estimator, y_arrays):
         mock_fit_tuning_parameter.assert_called_once()
         ppi_dataset = mock_fit_tuning_parameter.call_args[0][0]
         np.testing.assert_array_equal(ppi_dataset[0], np.array([1.0, 2.0]))
-        assert mock_fit_tuning_parameter.call_args[0][1] is True
+        assert mock_fit_tuning_parameter.call_args.kwargs["power_tuning"] is True
 
         mock_compute_mean_and_std.assert_called_once()
         np.testing.assert_array_equal(mock_compute_mean_and_std.call_args[0][0][0], np.array([1.0, 2.0]))

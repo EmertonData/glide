@@ -4,7 +4,7 @@ import pytest
 from glide.simulators import generate_binary_dataset_with_oracle_sampling
 
 
-def test_generate_binary_dataset_with_oracle_sampling_empirical_means_and_correlation():
+def test_generate_binary_dataset_with_oracle_sampling_empirical_statistics():
     y_true_oracle, y_proxy, uncertainty = generate_binary_dataset_with_oracle_sampling(
         n_samples=5000, true_mean=0.7, proxy_mean=0.6, correlation=0.5, random_seed=42
     )

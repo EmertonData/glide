@@ -1,17 +1,18 @@
 from math import floor
-from typing import Optional
+from typing import List, Optional, Tuple
 
 import numpy as np
 from numpy.typing import NDArray
 
 from glide.confidence_intervals import BootstrapConfidenceInterval
+from glide.core.validation import _validate_non_constant
+from glide.engines.stratified_core import _preprocess as _preprocess_strata
 from glide.estimators.ptd_core import (
     _compute_bootstrap_labeled_means,
     _compute_bootstrap_mean_estimates,
     _compute_tuning_parameter,
 )
 from glide.estimators.stratified_classical import StratifiedClassicalMeanEstimator
-from glide.estimators.stratified_core import _preprocess
 from glide.mean_inference_results import PredictionPoweredMeanInferenceResult
 
 
@@ -53,6 +54,25 @@ class StratifiedPTDMeanEstimator:
     Effective Sample Size: 33
     """
 
+    def _preprocess(
+        self,
+        y_true: NDArray,
+        y_proxy: NDArray,
+        groups: NDArray,
+    ) -> List[Tuple[NDArray, NDArray, NDArray]]:
+        stratified_dataset = _preprocess_strata(y_true, y_proxy, groups)
+        _validate_non_constant(y_true[~np.isnan(y_true)], "'y_true' labeled values are constant.")
+
+        strata = []
+        for stratum_id, (y_true_filtered, y_proxy_labeled, y_proxy_unlabeled) in stratified_dataset.items():
+            _validate_non_constant(
+                np.hstack([y_proxy_labeled, y_proxy_unlabeled]),
+                f"'y_proxy' values are constant in stratum '{stratum_id}'.",
+            )
+            strata.append((y_true_filtered, y_proxy_labeled, y_proxy_unlabeled))
+
+        return strata
+
     def estimate(
         self,
         y_true: NDArray,
@@ -61,6 +81,7 @@ class StratifiedPTDMeanEstimator:
         metric_name: str = "Metric",
         confidence_level: float = 0.95,
         n_bootstrap: int = 2000,
+        *,
         power_tuning: bool = True,
         random_seed: Optional[int] = None,
     ) -> PredictionPoweredMeanInferenceResult:
@@ -125,7 +146,7 @@ class StratifiedPTDMeanEstimator:
               cause a division by zero when computing the power-tuning parameter.
             - If any stratum has fewer than 2 labeled or fewer than 2 unlabeled samples.
         """
-        strata = _preprocess(y_true, y_proxy, groups)
+        strata = self._preprocess(y_true, y_proxy, groups)
 
         n_samples = len(y_true)
         rng = np.random.default_rng(random_seed)
@@ -144,7 +165,10 @@ class StratifiedPTDMeanEstimator:
                 y_true_filtered, y_proxy_labeled, n_bootstrap, rng
             )
             lambda_k = _compute_tuning_parameter(
-                bootstrap_y_true_means_k, bootstrap_y_proxy_labeled_means_k, var_proxy_unlabeled_k, power_tuning
+                bootstrap_y_true_means_k,
+                bootstrap_y_proxy_labeled_means_k,
+                var_proxy_unlabeled_k,
+                power_tuning=power_tuning,
             )
             bootstrap_estimates_k = _compute_bootstrap_mean_estimates(
                 bootstrap_y_true_means_k,
@@ -161,13 +185,7 @@ class StratifiedPTDMeanEstimator:
             bootstrap_estimates=weighted_bootstrap_estimates,
             confidence_level=confidence_level,
         )
-        _, stratum_counts = np.unique(groups, return_counts=True)
-        stratum_weights = stratum_counts / n_samples
-        classical_confidence_interval = (
-            StratifiedClassicalMeanEstimator()
-            .estimate(y_true, groups, stratum_weights=stratum_weights)
-            .confidence_interval
-        )
+        classical_confidence_interval = StratifiedClassicalMeanEstimator().estimate(y_true, groups).confidence_interval
         n_labeled = int(np.sum(~np.isnan(y_true)))
         effective_sample_size = floor(n_labeled * classical_confidence_interval.var / confidence_interval.var)
         result = PredictionPoweredMeanInferenceResult(

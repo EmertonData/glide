@@ -10,7 +10,7 @@ MultiPPIDataset = Tuple[NDArray, NDArray, NDArray]
 
 
 class MultiPPIMeanEngine:
-    def preprocess(self, y_true: NDArray, y_proxies: NDArray) -> MultiPPIDataset:
+    def _preprocess(self, y_true: NDArray, y_proxies: NDArray) -> MultiPPIDataset:
         _validate_is_2d(y_proxies, "y_proxies")
         _validate_equal_lengths(y_true, y_proxies, names=["y_true", "y_proxies"])
         _validate_has_no_nan(y_proxies, "y_proxies")
@@ -20,12 +20,14 @@ class MultiPPIMeanEngine:
         _validate_sample_sizes(labeled_mask)
         return y_true_labeled, y_proxies_labeled, y_proxies_unlabeled
 
-    def fit_tuning_parameter(self, dataset: MultiPPIDataset, power_tuning: bool) -> NDArray:
+    def _fit_tuning_parameter(self, dataset: MultiPPIDataset, *, power_tuning: bool) -> NDArray:
         y_true, y_proxies_labeled, y_proxies_unlabeled = dataset
-        tuning_parameter = _compute_tuning_parameter(y_true, y_proxies_labeled, y_proxies_unlabeled, power_tuning)
+        tuning_parameter = _compute_tuning_parameter(
+            y_true, y_proxies_labeled, y_proxies_unlabeled, power_tuning=power_tuning
+        )
         return tuning_parameter
 
-    def compute_mean_and_std(self, dataset: MultiPPIDataset, tuning_parameter: NDArray) -> Tuple[float, float]:
+    def _compute_mean_and_std(self, dataset: MultiPPIDataset, tuning_parameter: NDArray) -> Tuple[float, float]:
         y_true, y_proxies_labeled, y_proxies_unlabeled = dataset
         mean = _compute_mean_estimate(y_true, y_proxies_labeled, y_proxies_unlabeled, tuning_parameter)
         std = _compute_std_estimate(y_true, y_proxies_labeled, y_proxies_unlabeled, tuning_parameter)

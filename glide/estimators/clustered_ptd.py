@@ -5,8 +5,9 @@ import numpy as np
 from numpy.typing import NDArray
 
 from glide.confidence_intervals import BootstrapConfidenceInterval
+from glide.core.validation import _validate_non_constant
+from glide.engines.clustered_core import _preprocess
 from glide.estimators.clustered_classical import ClusteredClassicalMeanEstimator
-from glide.estimators.clustered_core import _preprocess
 from glide.estimators.ptd_core import (
     _compute_bootstrap_labeled_means,
     _compute_bootstrap_mean_estimates,
@@ -62,6 +63,7 @@ class ClusteredPTDMeanEstimator:
         metric_name: str = "Metric",
         confidence_level: float = 0.95,
         n_bootstrap: int = 2000,
+        *,
         power_tuning: bool = True,
         random_seed: Optional[int] = None,
     ) -> PredictionPoweredMeanInferenceResult:
@@ -114,7 +116,7 @@ class ClusteredPTDMeanEstimator:
         ------
         ValueError
             - If ``y_true``, ``y_proxy``, and ``clusters`` do not all have the same length.
-            - If labeled ``y_true`` values are constant.
+            - If the cluster means of the labeled ``y_true`` values are constant.
             - If any proxy value is NaN.
             - If ``clusters`` contains NaN values (numeric dtype) or None values (non-numeric dtype).
             - If any cluster contains both labeled and unlabeled observations.
@@ -126,6 +128,7 @@ class ClusteredPTDMeanEstimator:
             labeled_proxy_means,
             unlabeled_proxy_means,
         ) = _preprocess(y_true, y_proxy, clusters)
+        _validate_non_constant(labeled_true_means, "'y_true' labeled cluster means are constant.")
 
         n_unlabeled_clusters = len(unlabeled_proxy_means)
         mean_proxy_unlabeled = np.mean(unlabeled_proxy_means)
@@ -137,7 +140,7 @@ class ClusteredPTDMeanEstimator:
             labeled_true_means, labeled_proxy_means, n_bootstrap, rng
         )
         lambda_ = _compute_tuning_parameter(
-            bootstrap_y_true_means, bootstrap_y_proxy_labeled_means, var_proxy_unlabeled, power_tuning
+            bootstrap_y_true_means, bootstrap_y_proxy_labeled_means, var_proxy_unlabeled, power_tuning=power_tuning
         )
         bootstrap_estimates = _compute_bootstrap_mean_estimates(
             bootstrap_y_true_means,
