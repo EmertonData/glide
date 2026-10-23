@@ -130,6 +130,7 @@ Any function or method parameter typed `bool` (or with a boolean default) must b
 # BAD
 def estimate(self, y_true: NDArray, y_proxy: NDArray, power_tuning: bool = True) -> ...: ...
 
+
 # GOOD
 def estimate(self, y_true: NDArray, y_proxy: NDArray, *, power_tuning: bool = True) -> ...: ...
 ```
@@ -181,9 +182,17 @@ Strings, comments and docstrings (including notebook code cells) must not contai
 
 These three document types have distinct purposes and must not bleed into each other.
 
-- **Tutorials** show how to use the public API. They must not expose private attributes or methods, must not be math-heavy (that belongs in the user guide), and must tell a coherent end-to-end story. If a tutorial section feels like it is documenting the implementation rather than teaching usage, move it or cut it.
+- **Tutorials** show how to use the public API. They must not expose private attributes or methods, must not be math-heavy (that belongs in the user guide), and must tell a coherent end-to-end story. If a tutorial section feels like it is documenting the implementation rather than teaching usage, move it or cut it. Tutorials must also stay lean: no Monte Carlo loops, no coverage sweeps, no helper machinery for validation-style analyses (those belong in deep dives, which the tutorial links to at the end). Mirror the closest sibling tutorial section by section: same summary table, at most 3 key takeaways (each adding something the others do not), and the same closing "Want to go further?" line linking to the scientific validation notebook.
 - **Deep dives / validation notebooks** are for scientific validation. They test the statistical validity of one or more workflows, where each workflow covers a full pipeline: data generation, annotation, then estimation. Results are stochastic and depend on a random seed. Monte Carlo simulations must use a single external loop over seeds, calling each workflow once per iteration. Note that workflows do not fully isolate from each other: data generation is typically shared across them. Figures must appear at the right point in the narrative.
 - **User guides** document the mathematical foundations of each implemented method (sampling or estimation). For each method, lay out the mathematical setting: expected inputs, computed quantities, and their main properties, taking inspiration from pre-existing sections in the guide. When a reference paper exists, formulas must be consistent with it; notation may diverge from the paper when needed to preserve consistency across the guide as a whole. Never reference the implementation directly: no pseudocode, no mentions of class or method names.
+
+#### Tutorial baselines
+
+A comparison is only informative if each baseline differs from the featured method by exactly one ingredient. A baseline that differs on two confounds the conclusion.
+
+- Before writing a tutorial, list the ingredients of the featured method (proxy labels, data structure such as strata, clusters or several proxies, sampling design, anytime validity). Each baseline in the comparison table must remove exactly one of them and keep all the others.
+- A takeaway may only attribute a gain to the ingredient the comparison isolates. Do not credit the proxy labels or the structure for a speed-up that the chosen baselines cannot separate.
+- If the matching baseline does not exist in the library, stop. Do not write the tutorial against a substitute. Report the missing estimator or monitor to the user, so a ticket can be opened and the tutorial put on hold.
 
 #### Scientific consistency in notebooks
 
@@ -214,4 +223,4 @@ Use Conventional Commits prefixes:
 
 ### Consistency and Propagation
 
-Before adding a new class, function, or module, find the nearest equivalent already in the codebase and verify that the new code mirrors it in structure, naming, and block ordering. When a good pattern appears in new code that the existing code lacks, propagate it to the existing code in the same PR. When a rename or refactor touches one site, grep for all other sites that use the old name and update them before considering the work done.
+Before adding a new class, function, or module, find the nearest equivalent already in the codebase and verify that the new code mirrors it in structure, naming, and block ordering. When a good pattern appears in new code that the existing code lacks, propagate it to the existing code in the same PR. When a rename or refactor touches one site, grep for all other sites that use the old name and update them before considering the work done. When adding an estimator or monitor for a new data structure or information source (strata, clusters, several proxies, active sampling), check that its label-only counterpart for the same structure exists. If it does not, it is part of the same deliverable, or a blocking dependency listed in the ticket.
