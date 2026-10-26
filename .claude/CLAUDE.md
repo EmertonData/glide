@@ -164,7 +164,8 @@ Strings, comments and docstrings (including notebook code cells) must not contai
 - NumPy-style docstrings for all public API; paper references go exclusively in the `References` section. Never mention papers inline in parameter descriptions, summaries, or notes
 - Public API docstrings must include an `Examples` section with runnable doctests
 - In doctests, always import from the public package namespaces: `from glide.estimators import ...`, `from glide.samplers import ...`, `from glide.simulators import ...` — never from submodules directly.
-- **No docstrings for test functions or private methods** — test code is self-documenting via clear variable names and assertion structure; private methods are internal only.
+- **No docstrings for unit test functions or private methods** — test code is self-documenting via clear variable names and assertion structure; private methods are internal only.
+- **Functional test functions may carry a one-line docstring** stating the statistical property being verified, since it is often not obvious from the test name alone (e.g. prefix consistency, mirror symmetry). Keep it to a single sentence.
 
 ### Documentation
 
