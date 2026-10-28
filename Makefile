@@ -1,4 +1,4 @@
-.PHONY: tests
+.PHONY: tests architecture
 
 UNIT_DIRS = glide tests/unit
 FUNCTIONAL_DIRS = tests/functional
@@ -74,11 +74,12 @@ test-notebooks:
 	done && printf "test-notebooks%-50s\033[32mPassed\033[0m\n" | tr ' ' '.'
 
 clean:
+	rm -rf .cache
 	rm -rf .ruff_cache
 	rm -rf .pytest_cache
-	rm -f .coverage
-	rm -rf htmlcov
+	rm -rf .coverage coverage.xml htmlcov
 	rm -rf site
+	rm -rf dist
 	rm -rf docs/generated_examples
 	rm -rf architecture
 	find . -type d -name "__pycache__" -exec rm -rf {} +
