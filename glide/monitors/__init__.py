@@ -3,6 +3,7 @@ from glide.monitors.asymptotic_clustered_classical import AsymptoticClusteredCla
 from glide.monitors.asymptotic_clustered_pprm import AsymptoticClusteredPPRM
 from glide.monitors.asymptotic_multi_pprm import AsymptoticMultiPPRM
 from glide.monitors.asymptotic_pprm import AsymptoticPPRM
+from glide.monitors.asymptotic_stratified_classical import AsymptoticStratifiedClassicalRM
 from glide.monitors.asymptotic_stratified_pprm import AsymptoticStratifiedPPRM
 
 __all__ = [
@@ -11,5 +12,6 @@ __all__ = [
     "AsymptoticClusteredPPRM",
     "AsymptoticMultiPPRM",
     "AsymptoticPPRM",
+    "AsymptoticStratifiedClassicalRM",
     "AsymptoticStratifiedPPRM",
 ]
