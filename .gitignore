@@ -22,6 +22,9 @@ architecture/
 tickets/
 newsletters/
 
+# CodeGraph (optional, per-machine agent configuration)
+.mcp.json
+
 # Credentials
 .env
 

@@ -61,14 +61,15 @@ Note: Notebook testing also runs in CI for all pull requests, so local testing i
 
 **6. Code intelligence with CodeGraph (optional):**
 
-[CodeGraph](https://github.com/colbymchenry/codegraph) indexes the codebase into a local graph of symbols, imports and calls, which Claude Code queries instead of searching files one by one. The repository already ships a `.mcp.json` that connects Claude Code to it, so you only need to install the CLI and build the index once (for other agents such as Cursor or Codex, also run `codegraph install`):
+[CodeGraph](https://github.com/colbymchenry/codegraph) indexes the codebase into a local graph of symbols, imports and calls, which AI coding agents such as Claude Code query instead of searching files one by one. Nothing in the repository depends on it, and its per-machine files (`.mcp.json` and the index in `.codegraph/`) are git-ignored. To set it up:
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/colbymchenry/codegraph/main/install.sh | sh
+codegraph install
 codegraph init
 ```
 
-The index lives in `.codegraph/` and is git-ignored, except for `.codegraph/architecture.py`, which draws the package dependency figure from it:
+`codegraph install` connects your agent to CodeGraph: choose the global location when prompted, so that no configuration is added to your clone. Restart your agent afterwards. `codegraph init` builds the index of your clone and only needs to run once. The only tracked file in `.codegraph/` is `architecture.py`, which draws the package dependency figure from the index:
 
 ```bash
 make architecture
