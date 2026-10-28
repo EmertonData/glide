@@ -57,6 +57,10 @@ architecture:
 	codegraph sync
 	uv run python .codegraph/architecture.py
 
+architecture-modules:
+	codegraph sync
+	uv run python .codegraph/architecture.py --modules
+
 landing-tests:
 	node --test docs/landing/tests/*.mjs
 
@@ -76,6 +80,7 @@ clean:
 	rm -rf htmlcov
 	rm -rf site
 	rm -rf docs/generated_examples
+	rm -rf architecture
 	find . -type d -name "__pycache__" -exec rm -rf {} +
 
 build:

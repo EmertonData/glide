@@ -74,7 +74,7 @@ The index lives in `.codegraph/` and is git-ignored, except for `.codegraph/arch
 make architecture
 ```
 
-This refreshes the index and writes `.codegraph/architecture/packages.png` (and `.svg`). Rendering the images requires [Graphviz](https://graphviz.org/download/); without it only the `.dot` source is written.
+This refreshes the index and writes `architecture/packages.png` (and `.svg`). `make architecture-modules` writes `architecture/modules.png`, a denser zoom on the modules of `estimators`, `engines` and `monitors`. Rendering the images requires [Graphviz](https://graphviz.org/download/); without it only the `.dot` source is written.
 
 ---
 

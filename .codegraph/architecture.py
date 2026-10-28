@@ -1,13 +1,15 @@
-"""Draw the package dependency figure of glide from the CodeGraph index.
+"""Draw dependency figures of glide from the CodeGraph index.
 
-The figure is a Graphviz diagram built from the import edges stored in ``.codegraph/codegraph.db``. Only the
+The figures are Graphviz diagrams built from the import edges stored in ``.codegraph/codegraph.db``: an overview of
+the packages, and with ``--modules`` a zoom on the modules of the estimators, engines and monitors packages. Only the
 standard library is used; the ``dot`` executable (Graphviz) is optional and only needed to render the images, the
 ``.dot`` source is always written.
 
-Run it through ``make architecture``, which refreshes the index first. Files are written to
-``.codegraph/architecture/``.
+Run it through ``make architecture`` or ``make architecture-modules``, which refresh the index first. Files are
+written to ``architecture/`` at the repository root.
 """
 
+import argparse
 import shutil
 import sqlite3
 import subprocess
@@ -18,8 +20,9 @@ from typing import List, Optional, Tuple
 
 CODEGRAPH_DIRECTORY = Path(__file__).resolve().parent
 DATABASE_PATH = CODEGRAPH_DIRECTORY / "codegraph.db"
-OUTPUT_DIRECTORY = CODEGRAPH_DIRECTORY / "architecture"
+OUTPUT_DIRECTORY = CODEGRAPH_DIRECTORY.parent / "architecture"
 ROOT_PACKAGE = "glide"
+MODULE_VIEW_PACKAGES = ("estimators", "engines", "monitors")
 FONT = "Helvetica"
 DEFAULT_FILL_COLOR = "#e6e6e6"
 FILL_COLORS = {
@@ -60,7 +63,7 @@ def _load_module_counts() -> Counter:
     return module_counts
 
 
-def _build_dot(edges: List[Tuple[str, str]], module_counts: Counter) -> str:
+def _build_packages_dot(edges: List[Tuple[str, str]], module_counts: Counter) -> str:
     import_counts: Counter = Counter()
     for source, target in edges:
         source_package, target_package = _package_name(source), _package_name(target)
@@ -87,6 +90,41 @@ def _build_dot(edges: List[Tuple[str, str]], module_counts: Counter) -> str:
     return source_code
 
 
+def _build_modules_dot(edges: List[Tuple[str, str]]) -> str:
+    def is_shown(path: str) -> bool:
+        shown = _package_name(path) in MODULE_VIEW_PACKAGES and not path.endswith("__init__.py")
+        return shown
+
+    shown_edges = sorted(
+        {(source, target) for source, target in edges if source != target and is_shown(source) and is_shown(target)}
+    )
+    shown_modules = sorted({path for edge in shown_edges for path in edge})
+
+    lines = [
+        "digraph architecture {",
+        f'  rankdir=LR; bgcolor="white"; labelloc="t"; fontname="{FONT}"; fontsize=12; concentrate=true; ranksep=1.0;',
+        '  label="glide modules: an arrow A to B means A imports from B";',
+        f'  node [shape=box, style="rounded,filled", fontname="{FONT}", fontsize=11];',
+        '  edge [color="#888888", arrowsize=0.6];',
+    ]
+    for package in MODULE_VIEW_PACKAGES:
+        color = FILL_COLORS[package]
+        lines.append(
+            f'  subgraph cluster_{package} {{ label="glide/{package}"; fontname="{FONT}-Bold"; '
+            f'style="rounded,filled"; fillcolor="{color}33"; color="{color}";'
+        )
+        for path in shown_modules:
+            if _package_name(path) == package:
+                label = path.split("/")[-1].removesuffix(".py")
+                lines.append(f'    "{path}" [label="{label}", fillcolor="{color}"];')
+        lines.append("  }")
+    for source, target in shown_edges:
+        lines.append(f'  "{source}" -> "{target}";')
+    lines.append("}")
+    source_code = "\n".join(lines) + "\n"
+    return source_code
+
+
 def _render(dot_path: Path) -> List[Path]:
     if shutil.which("dot") is None:
         print("Graphviz 'dot' not found: wrote the .dot source only (install Graphviz to render images).")
@@ -99,13 +137,22 @@ def _render(dot_path: Path) -> List[Path]:
 
 
 def main() -> int:
+    parser = argparse.ArgumentParser(description=__doc__.split("\n")[0])
+    parser.add_argument("--modules", action="store_true", help="Draw the modules of the main packages instead.")
+    arguments = parser.parse_args()
+
     if not DATABASE_PATH.exists():
         print(f"No CodeGraph index at {DATABASE_PATH}; run 'codegraph init' first.", file=sys.stderr)
         return 1
 
     OUTPUT_DIRECTORY.mkdir(exist_ok=True)
-    dot_path = OUTPUT_DIRECTORY / "packages.dot"
-    dot_path.write_text(_build_dot(_load_import_edges(), _load_module_counts()))
+    edges = _load_import_edges()
+    if arguments.modules:
+        dot_path = OUTPUT_DIRECTORY / "modules.dot"
+        dot_path.write_text(_build_modules_dot(edges))
+    else:
+        dot_path = OUTPUT_DIRECTORY / "packages.dot"
+        dot_path.write_text(_build_packages_dot(edges, _load_module_counts()))
     for path in [dot_path, *_render(dot_path)]:
         print(f"Wrote {path}")
     return 0
