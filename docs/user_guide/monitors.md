@@ -96,32 +96,6 @@ A caveat on what this monitors: the monitored quantity $\bar{R}_t$ averages over
 
 ## Risk Monitoring
 
-### Asymptotic Classical Risk Monitoring
-
-The asymptotic confidence sequence above is applied here in the setting where the per-batch estimate comes from a batch of human-labeled samples.
-
-#### Setting
-
-Each batch $t$ contributes a set of human labels.
-
-| Value | Present for | Description |
-|---|---|---|
-| $Y_{t,j}$ | All labeled samples in batch $t$ | Ground-truth label |
-
-Every batch is monitored relative to a user-fixed threshold $\tau$ and the metric is treated as a **risk** $R$, where lower is better (for example an error rate); a performance metric, where higher is better (for example accuracy), is monitored by applying the same methodology to $-R$ instead of $R$.
-
-The per-batch risk estimate is the classical sample mean of the $n_s$ labels in batch $s$,
-
-$$\hat{R}_s = \frac{1}{n_s}\sum_{j=1}^{n_s} Y_{s,j},$$
-
-together with its standard error,
-
-$$\hat{\sigma}_s = \sqrt{\frac{\widehat{\mathrm{Var}}(Y_s)}{n_s}}.$$
-
-#### Bound and Alarm Rule
-
-Plugging the values $\hat{R}_s$ and $\hat{\sigma}_s$ into the [Asymptotic Confidence Sequences](#asymptotic-confidence-sequences) gives the anytime-valid lower bound $L_t$ derived there. The **drift alarm** fires as soon as $L_t > \tau$, the user-fixed threshold.
-
 ### Asymptotic Prediction-Powered Risk Monitoring (Asymptotic PPRM)
 
 The human labels collected in a batch can be scarce, which limits how quickly a monitor based on them alone can react to real drift. **Prediction-Powered Risk Monitoring (PPRM)** [[1](#ref-1)] instead combines those human labels with a large pool of cheap proxy labels, the same way [Prediction-Powered Inference (PPI++)](estimators.md#prediction-powered-inference-ppi) does for one-off estimation. Here, the per-batch estimate is plugged into the [Asymptotic Confidence Sequences](#asymptotic-confidence-sequences) construction, using the estimate's standard error.
@@ -152,6 +126,32 @@ To compute predictable weights $\lambda_t$, the simplest option is to pool the f
 #### Bound and Alarm Rule
 
 Plugging $\hat{R}_s$ and $\hat{\sigma}_s$ into the [Asymptotic Confidence Sequences](#asymptotic-confidence-sequences) construction gives the anytime-valid lower bound $L_t$ derived there. The **drift alarm** fires as soon as $L_t > \tau$, the user-fixed threshold.
+
+### Asymptotic Classical Risk Monitoring
+
+The asymptotic confidence sequence above is applied here in the setting where the per-batch estimate comes from a batch of human-labeled samples.
+
+#### Setting
+
+Each batch $t$ contributes a set of human labels.
+
+| Value | Present for | Description |
+|---|---|---|
+| $Y_{t,j}$ | All labeled samples in batch $t$ | Ground-truth label |
+
+Every batch is monitored relative to a user-fixed threshold $\tau$ and the metric is treated as a **risk** $R$, where lower is better (for example an error rate); a performance metric, where higher is better (for example accuracy), is monitored by applying the same methodology to $-R$ instead of $R$.
+
+The per-batch risk estimate is the classical sample mean of the $n_s$ labels in batch $s$,
+
+$$\hat{R}_s = \frac{1}{n_s}\sum_{j=1}^{n_s} Y_{s,j},$$
+
+together with its standard error,
+
+$$\hat{\sigma}_s = \sqrt{\frac{\widehat{\mathrm{Var}}(Y_s)}{n_s}}.$$
+
+#### Bound and Alarm Rule
+
+Plugging the values $\hat{R}_s$ and $\hat{\sigma}_s$ into the [Asymptotic Confidence Sequences](#asymptotic-confidence-sequences) gives the anytime-valid lower bound $L_t$ derived there. The **drift alarm** fires as soon as $L_t > \tau$, the user-fixed threshold.
 
 ### Asymptotic Stratified Prediction-Powered Risk Monitoring (Asymptotic Stratified PPRM)
 
@@ -204,7 +204,7 @@ where $\hat{R}_{k,t}$ is the mean of the $n_{k,t}$ labels of stratum $k$ in batc
 
 $$\hat{\sigma}_t = \sqrt{\sum_{k=1}^{K} w_{k,t}^2 \, \frac{\widehat{\mathrm{Var}}(Y_{k,t})}{n_{k,t}}}.$$
 
-No power-tuning is involved, so nothing is carried over from one batch to the next. With a single stratum this reduces to Asymptotic Classical Risk Monitoring; it is also the special case of Asymptotic Stratified PPRM that ignores the proxy labels ($\lambda_{k,t} = 0$ for every stratum).
+Estimation is independent from one batch to the next: $\hat{R}_t$ and $\hat{\sigma}_t$ depend on batch $t$ alone. With a single stratum this reduces to Asymptotic Classical Risk Monitoring; it is also the special case of Asymptotic Stratified PPRM that ignores the proxy labels ($\lambda_{k,t} = 0$ for every stratum).
 
 #### Bound and Alarm Rule
 
