@@ -59,17 +59,16 @@ make test-notebooks
 
 Note: Notebook testing also runs in CI for all pull requests, so local testing is optional. The CI workflow ensures notebooks are executed and validated before merge.
 
-**6. Code intelligence with CodeGraph (optional):**
+**6. Install CodeGraph:**
 
-[CodeGraph](https://github.com/colbymchenry/codegraph) indexes the codebase into a local graph of symbols, imports and calls, which AI coding agents such as Claude Code query instead of searching files one by one. Nothing in the repository depends on it, and its per-machine files (`.mcp.json` and the index in `.codegraph/`) are git-ignored. To set it up:
+[CodeGraph](https://github.com/colbymchenry/codegraph) indexes the codebase into a local graph of symbols, imports and calls, which AI coding agents such as Claude Code query instead of searching files one by one, making exploration faster. The repository ships a `.mcp.json` that connects Claude Code to it (Claude Code asks you to approve the server on first use), so you only need to install the CLI (tested with version 1.6.2) and build the index of your clone once:
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/colbymchenry/codegraph/main/install.sh | sh
-codegraph install
 codegraph init
 ```
 
-`codegraph install` connects your agent to CodeGraph: choose the global location when prompted, so that no configuration is added to your clone. Restart your agent afterwards. `codegraph init` builds the index of your clone and only needs to run once. The only tracked file in `.codegraph/` is `architecture.py`, which draws the package dependency figure from the index:
+Restart Claude Code afterwards. For other agents such as Cursor or Codex, also run `codegraph install` and choose the global location when prompted, so that no configuration is added to your clone. The index lives in `.codegraph/` and is git-ignored, except for `architecture.py`, which draws the package dependency figure from it:
 
 ```bash
 make architecture
@@ -202,7 +201,7 @@ glide/
 
 **How the pieces fit together.** Estimators accept raw NumPy arrays and return a `MeanInferenceResult` subclass: prediction-powered estimators return a `PredictionPoweredMeanInferenceResult`, classical ones a `ClassicalMeanInferenceResult`. Every result embeds a `ConfidenceInterval` (e.g. `CLTConfidenceInterval`). Samplers produce the labeled arrays that estimators consume. Monitors follow the same shape for batched, accumulating data: they return a `MeanMonitoringResult` subclass embedding a `ConfidenceSequence` (e.g. `AsymptoticConfidenceSequence`). The `io` module serialises result objects. When a family has both an estimator and a monitor, they can share their per-unit body (validate, transform, tune, then compute mean and std) through a common `Engine` in `glide/engines/`, so the two don't duplicate the same math.
 
-To see how these packages depend on each other, generate the dependency figure with `make architecture` (requires the optional CodeGraph [setup](#setup)).
+To see how these packages depend on each other, generate the dependency figure with `make architecture` (requires the CodeGraph [setup](#setup)).
 
 ---
 

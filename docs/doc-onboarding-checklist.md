@@ -15,7 +15,7 @@ Welcome to GLIDE. This checklist points a new contributor to the right material 
 - [ ] Clone the GLIDE GitHub repository locally.
 - [ ] Follow the "Setup" section of the Contributing guide in the online documentation: install `uv`, run `make venv`, verify with `make tests`, install the pre-commit hooks with `uv run prek install`, and optionally run `make test-notebooks`.
 - [ ] Read `.claude/CLAUDE.md` which details the module breakdown, how `tests/unit/` and `tests/functional/` mirror it, the coverage/mocking/naming/typing conventions, and the code hygiene and consistency/propagation expectations.
-- [ ] Optionally, set up CodeGraph by following the CodeGraph part of the "Setup" section of the Contributing guide: it indexes the codebase so that AI coding agents can explore it faster.
+- [ ] Set up CodeGraph by following the CodeGraph part of the "Setup" section of the Contributing guide: it indexes the codebase so that AI coding agents can explore it faster.
 - [ ] Confirm you can run `make lint`, `make type-check`, and `make tests` locally without errors on a clean checkout.
 
 Note: `make doc` builds and serves the full site locally, but it executes every tutorial notebook and takes 10+ minutes — don't run it just to check a small doc change. If your change doesn't touch any notebook or code, you can speed this up a lot by temporarily setting `execute: false` on the `mkdocs-jupyter` plugin in `mkdocs.yml` before running `make doc` locally (revert it before committing).
@@ -105,7 +105,7 @@ Once chapters 3 to 8 are checked off, take the second validation quiz (80% pass 
 
 ### Conclusion: the big picture
 
-- [ ] If you set up CodeGraph, run `make architecture` and open `architecture/packages.png`. Each box is a package of `glide/`, an arrow from A to B means A imports from B, and the label counts those imports. You should now recognise the layers: `core` underpins everything, while estimators and monitors sit on top and share their per-unit logic through `engines`. `make architecture-modules` gives a denser module-level zoom on these three packages, handy when you start reading the code.
+- [ ] Run `make architecture` and open `architecture/packages.png`. Each box is a package of `glide/`, an arrow from A to B means A imports from B, and the label counts those imports. You should now recognise the layers: `core` underpins everything, while estimators and monitors sit on top and share their per-unit logic through `engines`. `make architecture-modules` gives a denser module-level zoom on these three packages, handy when you start reading the code.
 
 ---
 
