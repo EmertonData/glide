@@ -53,6 +53,10 @@ branch:
 	@test -n "$(name)" || (echo "Usage: make branch name=<branch-name>"; exit 1)
 	git checkout main && git pull && git checkout -b $(name)
   
+architecture:
+	codegraph sync
+	uv run python .codegraph/architecture.py
+
 landing-tests:
 	node --test docs/landing/tests/*.mjs
 

@@ -59,6 +59,23 @@ make test-notebooks
 
 Note: Notebook testing also runs in CI for all pull requests, so local testing is optional. The CI workflow ensures notebooks are executed and validated before merge.
 
+**6. Code intelligence with CodeGraph (optional):**
+
+[CodeGraph](https://github.com/colbymchenry/codegraph) indexes the codebase into a local graph of symbols, imports and calls, which Claude Code queries instead of searching files one by one. The repository already ships a `.mcp.json` that connects Claude Code to it, so you only need to install the CLI and build the index once (for other agents such as Cursor or Codex, also run `codegraph install`):
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/colbymchenry/codegraph/main/install.sh | sh
+codegraph init
+```
+
+The index lives in `.codegraph/` and is git-ignored, except for `.codegraph/architecture.py`, which draws the package dependency figure from it:
+
+```bash
+make architecture
+```
+
+This refreshes the index and writes `.codegraph/architecture/packages.png` (and `.svg`). Rendering the images requires [Graphviz](https://graphviz.org/download/); without it only the `.dot` source is written.
+
 ---
 
 ## Contribution workflow
@@ -183,6 +200,8 @@ glide/
 ```
 
 **How the pieces fit together.** Estimators accept raw NumPy arrays and return a `MeanInferenceResult` subclass: prediction-powered estimators return a `PredictionPoweredMeanInferenceResult`, classical ones a `ClassicalMeanInferenceResult`. Every result embeds a `ConfidenceInterval` (e.g. `CLTConfidenceInterval`). Samplers produce the labeled arrays that estimators consume. Monitors follow the same shape for batched, accumulating data: they return a `MeanMonitoringResult` subclass embedding a `ConfidenceSequence` (e.g. `AsymptoticConfidenceSequence`). The `io` module serialises result objects. When a family has both an estimator and a monitor, they can share their per-unit body (validate, transform, tune, then compute mean and std) through a common `Engine` in `glide/engines/`, so the two don't duplicate the same math.
+
+To see how these packages depend on each other, generate the dependency figure with `make architecture` (requires the optional CodeGraph [setup](#setup)).
 
 ---
 
