@@ -15,6 +15,7 @@ wheels/
 # Docs
 site/
 docs/generated_examples/
+architecture/
 
 # Claude Code artifacts
 .claude/skills/*-workspace/

@@ -22,6 +22,7 @@
       "Bash(ls *)",
       "Bash(stat *)",
       "Bash(echo *)",
+      "mcp__codegraph__*",
       "WebFetch"
     ]
   },
@@ -30,5 +31,17 @@
     "skill-creator@claude-plugins-official": true,
     "claude-code-setup@claude-plugins-official": true,
     "claude-md-management@claude-plugins-official": true
+  },
+  "hooks": {
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "codegraph prompt-hook"
+          }
+        ]
+      }
+    ]
   }
 }

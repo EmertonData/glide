@@ -1,4 +1,4 @@
-.PHONY: tests
+.PHONY: tests architecture
 
 UNIT_DIRS = glide tests/unit
 FUNCTIONAL_DIRS = tests/functional
@@ -53,6 +53,14 @@ branch:
 	@test -n "$(name)" || (echo "Usage: make branch name=<branch-name>"; exit 1)
 	git checkout main && git pull && git checkout -b $(name)
   
+architecture:
+	codegraph sync
+	uv run python .codegraph/architecture.py
+
+architecture-modules:
+	codegraph sync
+	uv run python .codegraph/architecture.py --modules
+
 landing-tests:
 	node --test docs/landing/tests/*.mjs
 
@@ -66,12 +74,14 @@ test-notebooks:
 	done && printf "test-notebooks%-50s\033[32mPassed\033[0m\n" | tr ' ' '.'
 
 clean:
+	rm -rf .cache
 	rm -rf .ruff_cache
 	rm -rf .pytest_cache
-	rm -f .coverage
-	rm -rf htmlcov
+	rm -rf .coverage coverage.xml htmlcov
 	rm -rf site
+	rm -rf dist
 	rm -rf docs/generated_examples
+	rm -rf architecture
 	find . -type d -name "__pycache__" -exec rm -rf {} +
 
 build:
