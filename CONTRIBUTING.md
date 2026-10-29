@@ -59,6 +59,23 @@ make test-notebooks
 
 Note: Notebook testing also runs in CI for all pull requests, so local testing is optional. The CI workflow ensures notebooks are executed and validated before merge.
 
+**6. Install CodeGraph:**
+
+[CodeGraph](https://github.com/colbymchenry/codegraph) indexes the codebase so that AI coding agents can explore it faster. Install the CLI (tested with version 1.6.2) and build the index of your clone once:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/colbymchenry/codegraph/main/install.sh | sh
+codegraph init
+```
+
+Restart your agent afterwards. Claude Code is already configured by the repository (it asks you to approve the server on first use). For other agents such as Cursor or Codex, also run `codegraph install` and choose the global location when prompted, so that no configuration is added to your clone. The index lives in `.codegraph/` and is git-ignored, except for `architecture.py`, which draws the package dependency figure from it:
+
+```bash
+make architecture
+```
+
+This refreshes the index and writes `architecture/packages.png` (and `.svg`). `make architecture-modules` writes `architecture/modules.png`, a denser zoom on the modules of `estimators`, `engines` and `monitors`. Rendering the images requires [Graphviz](https://graphviz.org/download/); without it only the `.dot` source is written.
+
 ---
 
 ## Contribution workflow
@@ -183,6 +200,8 @@ glide/
 ```
 
 **How the pieces fit together.** Estimators accept raw NumPy arrays and return a `MeanInferenceResult` subclass: prediction-powered estimators return a `PredictionPoweredMeanInferenceResult`, classical ones a `ClassicalMeanInferenceResult`. Every result embeds a `ConfidenceInterval` (e.g. `CLTConfidenceInterval`). Samplers produce the labeled arrays that estimators consume. Monitors follow the same shape for batched, accumulating data: they return a `MeanMonitoringResult` subclass embedding a `ConfidenceSequence` (e.g. `AsymptoticConfidenceSequence`). The `io` module serialises result objects. When a family has both an estimator and a monitor, they can share their per-unit body (validate, transform, tune, then compute mean and std) through a common `Engine` in `glide/engines/`, so the two don't duplicate the same math.
+
+To see how these packages depend on each other, generate the dependency figure with `make architecture` (requires the CodeGraph [setup](#setup)).
 
 ---
 
