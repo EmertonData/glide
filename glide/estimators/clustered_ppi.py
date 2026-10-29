@@ -119,25 +119,25 @@ class ClusteredPPIMeanEstimator:
             - If ``power_tuning=True`` and proxy cluster means have zero variance across
               both labeled and unlabeled clusters.
         """
-        clustered_dataset = self._engine.preprocess(y_true, y_proxy, clusters)
+        clustered_dataset = self._engine._preprocess(y_true, y_proxy, clusters)
         labeled_true_means, _, _ = clustered_dataset
         _validate_non_constant(labeled_true_means, "'y_true' labeled cluster means are constant.")
-        tuning_parameter = self._engine.fit_tuning_parameter(clustered_dataset, power_tuning=power_tuning)
-        mean, std = self._engine.compute_mean_and_std(clustered_dataset, tuning_parameter)
+        tuning_parameter = self._engine._fit_tuning_parameter(clustered_dataset, power_tuning=power_tuning)
+        mean, std = self._engine._compute_mean_and_std(clustered_dataset, tuning_parameter)
         confidence_interval = CLTConfidenceInterval(
             mean=mean,
             std=std,
             confidence_level=confidence_level,
         )
 
-        labeled_total_size = np.sum(~np.isnan(y_true))
+        n_labeled = np.sum(~np.isnan(y_true))
         classical_confidence_interval = ClusteredClassicalMeanEstimator().estimate(y_true, clusters).confidence_interval
-        effective_sample_size = floor(labeled_total_size * classical_confidence_interval.var / confidence_interval.var)
+        effective_sample_size = floor(n_labeled * classical_confidence_interval.var / confidence_interval.var)
         result = PredictionPoweredMeanInferenceResult(
             confidence_interval=confidence_interval,
             metric_name=metric_name,
             estimator_name=self.__class__.__name__,
-            n_true=labeled_total_size,
+            n_true=n_labeled,
             n_proxy=len(y_proxy),
             effective_sample_size=effective_sample_size,
         )

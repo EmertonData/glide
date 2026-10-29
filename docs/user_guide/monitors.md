@@ -181,6 +181,35 @@ Predictable power-tuning carries over unchanged from [Asymptotic PPRM](#asymptot
 
 Plugging $\hat{R}_t$ and $\hat{\sigma}_t$ into the [Asymptotic Confidence Sequences](#asymptotic-confidence-sequences) construction gives the anytime-valid lower bound $L_t$ derived there. The **drift alarm** fires as soon as $L_t > \tau$, the user-fixed threshold.
 
+### Asymptotic Stratified Classical Risk Monitoring
+
+Asymptotic Classical Risk Monitoring assumes that each batch is drawn from a single population. When a batch is naturally partitioned into strata, it generalises to a stream where each batch is split into $K$ strata combined through the [Stratified Classical Mean](estimators.md#stratified-classical-mean), the same way the underlying estimator generalises the classical mean.
+
+#### Setting
+
+Each batch $t$ carries a small set of human labels, together with a stratum identifier for every sample of the batch, labeled or not.
+
+| Value | Present for | Description |
+|---|---|---|
+| $Y_{t,j}$ | Labeled samples in batch $t$ only | Ground-truth label |
+| $g_{t,i}$ | All samples in batch $t$ | Stratum identifier |
+
+As in [Asymptotic Stratified PPRM](#asymptotic-stratified-prediction-powered-risk-monitoring-asymptotic-stratified-pprm), the population weight $w_{k,t}$ of stratum $k$ is computed from batch $t$ alone, as the share of its samples (labeled or not) falling in stratum $k$, so both the weight and the stratum's very presence can vary from batch to batch. The metric is treated as a risk $R$ monitored against a user-fixed threshold $\tau$, exactly as in [Asymptotic Classical Risk Monitoring](#asymptotic-classical-risk-monitoring).
+
+The per-batch risk estimate is the population-weighted sum of the per-stratum classical means,
+
+$$\hat{R}_t = \sum_{k=1}^{K} w_{k,t} \cdot \hat{R}_{k,t},$$
+
+where $\hat{R}_{k,t}$ is the mean of the $n_{k,t}$ labels of stratum $k$ in batch $t$, together with its standard error,
+
+$$\hat{\sigma}_t = \sqrt{\sum_{k=1}^{K} w_{k,t}^2 \, \frac{\widehat{\mathrm{Var}}(Y_{k,t})}{n_{k,t}}}.$$
+
+Estimation is independent from one batch to the next: $\hat{R}_t$ and $\hat{\sigma}_t$ depend on batch $t$ alone. With a single stratum this reduces to Asymptotic Classical Risk Monitoring; it is also the special case of Asymptotic Stratified PPRM that ignores the proxy labels ($\lambda_{k,t} = 0$ for every stratum).
+
+#### Bound and Alarm Rule
+
+Plugging $\hat{R}_t$ and $\hat{\sigma}_t$ into the [Asymptotic Confidence Sequences](#asymptotic-confidence-sequences) construction gives the anytime-valid lower bound $L_t$ derived there. The **drift alarm** fires as soon as $L_t > \tau$, the user-fixed threshold.
+
 ### Asymptotic Clustered Prediction-Powered Risk Monitoring (Asymptotic Clustered PPRM)
 
 Asymptotic PPRM assumes that the samples of a batch are independent. In practice, samples are often grouped into clusters within which observations may be correlated. Asymptotic PPRM generalises to a stream of clustered data, where each cluster is reduced to its mean and the cluster means are combined through [Clustered PPI++](estimators.md#clustered-prediction-powered-inference), the same way the underlying estimator generalises PPI++.
@@ -204,6 +233,35 @@ $$\hat{R}_t = \frac{1}{L^{\bullet}_t}\sum_{l=1}^{L^{\bullet}_t} \bar{Y}^{(l)}_t 
 together with its standard error $\hat{\sigma}_t$, obtained by applying the [Clustered Prediction-Powered Inference](estimators.md#clustered-prediction-powered-inference) variance formula within batch $t$, and $\lambda_t$ a predictable power-tuning weight.
 
 Predictable power-tuning carries over unchanged from [Asymptotic PPRM](#asymptotic-prediction-powered-risk-monitoring-asymptotic-pprm): $\lambda_t$ is fit on the pooled cluster means of every batch strictly before $t$, and the first batch, having no predecessor, uses the neutral weight $\lambda_1 = 1$.
+
+#### Bound and Alarm Rule
+
+Plugging $\hat{R}_t$ and $\hat{\sigma}_t$ into the [Asymptotic Confidence Sequences](#asymptotic-confidence-sequences) construction gives the anytime-valid lower bound $L_t$ derived there. The **drift alarm** fires as soon as $L_t > \tau$, the user-fixed threshold.
+
+### Asymptotic Clustered Classical Risk Monitoring
+
+When samples are grouped into clusters within which observations may be correlated, Asymptotic Clustered Classical Risk Monitoring tackles the problem of a stream of clustered data. It reduces each cluster to its mean and applies the classical mean to the cluster means, the same way [Clustered Classical Mean](estimators.md#clustered-classical-mean) generalises the classical mean.
+
+#### Setting
+
+Each batch $t$ contributes a set of human labels, each tagged with a cluster identifier, and the labeled observations of batch $t$ fall into $L^{\bullet}_t$ clusters.
+
+| Value | Present for | Description |
+|---|---|---|
+| $Y_{t,j}$ | Labeled samples in batch $t$ only | Ground-truth label |
+| $c_{t,i}$ | All samples in batch $t$ | Cluster identifier |
+
+As in [Asymptotic Clustered PPRM](#asymptotic-clustered-prediction-powered-risk-monitoring-asymptotic-clustered-pprm), a cluster belongs to a single batch and never reappears in a later one. The metric is treated as a risk $R$ monitored against a user-fixed threshold $\tau$, exactly as in [Asymptotic Classical Risk Monitoring](#asymptotic-classical-risk-monitoring).
+
+With $\bar{Y}^{(l)}_t$ the mean of the labels of cluster $l$ in batch $t$, the per-batch risk estimate is the average of the labeled cluster means,
+
+$$\hat{R}_t = \frac{1}{L^{\bullet}_t}\sum_{l=1}^{L^{\bullet}_t} \bar{Y}^{(l)}_t,$$
+
+together with its standard error,
+
+$$\hat{\sigma}_t = \sqrt{\frac{\widehat{\mathrm{Var}}\big(\bar{Y}^{(l)}_t\big)}{L^{\bullet}_t}},$$
+
+where $\widehat{\mathrm{Var}}$ is the sample variance across the $L^{\bullet}_t$ labeled cluster means. Using clusters rather than samples as sampling units is what keeps $\hat{\sigma}_t$ honest under within-cluster correlation. When every cluster holds a single sample, this reduces to Asymptotic Classical Risk Monitoring; it is also the special case of Asymptotic Clustered PPRM that ignores the proxy labels ($\lambda_t = 0$).
 
 #### Bound and Alarm Rule
 

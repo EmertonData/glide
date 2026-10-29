@@ -50,6 +50,7 @@ class BootstrapConfidenceInterval:
 
     @property
     def confidence_level(self) -> float:
+        """Confidence level of the interval; setting it recomputes the bounds."""
         return self._confidence_level
 
     @confidence_level.setter

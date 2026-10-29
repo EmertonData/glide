@@ -11,11 +11,11 @@ StratifiedTuningParameter = Dict[Hashable, float]
 
 
 class StratifiedPPIMeanEngine:
-    def preprocess(self, y_true: NDArray, y_proxy: NDArray, groups: NDArray) -> StratifiedPPIDataset:
+    def _preprocess(self, y_true: NDArray, y_proxy: NDArray, groups: NDArray) -> StratifiedPPIDataset:
         stratified_dataset = _preprocess(y_true, y_proxy, groups)
         return stratified_dataset
 
-    def fit_tuning_parameter(self, dataset: StratifiedPPIDataset, *, power_tuning: bool) -> StratifiedTuningParameter:
+    def _fit_tuning_parameter(self, dataset: StratifiedPPIDataset, *, power_tuning: bool) -> StratifiedTuningParameter:
         tuning_parameter = {}
         for stratum_id, (y_true, y_proxy_labeled, y_proxy_unlabeled) in dataset.items():
             try:
@@ -26,7 +26,7 @@ class StratifiedPPIMeanEngine:
                 raise ValueError(f"{error} (stratum '{stratum_id}').") from error
         return tuning_parameter
 
-    def compute_mean_and_std(
+    def _compute_mean_and_std(
         self, dataset: StratifiedPPIDataset, tuning_parameter: StratifiedTuningParameter
     ) -> Tuple[float, float]:
         stratum_sizes = {

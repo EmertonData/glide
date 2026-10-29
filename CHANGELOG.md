@@ -9,6 +9,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 ## [Next release]
 
 ### ✨ Added
+- `AsymptoticStratifiedClassicalRM`: a new anytime-valid label-only drift monitor over a stream of stratified data, the stratified counterpart of `AsymptoticClassicalRM`.
+- `AsymptoticClusteredClassicalRM`: a new anytime-valid label-only drift monitor over a stream of clustered data, the cluster-aware counterpart of `AsymptoticClassicalRM`.
 - `AsymptoticClusteredPPRM`: a new anytime-valid drift monitor that combines human labels with proxy predictions over a stream of clustered data.
 - `generate_batched_clustered_binary_dataset`: a new synthetic dataset generator simulating a production stream as successive batches, each independently partitioned into clusters.
 - New tutorial on monitoring a stratified production stream for drift with `AsymptoticStratifiedPPRM`.
@@ -16,6 +18,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - `generate_batched_stratified_binary_dataset`: a new synthetic dataset generator simulating a production stream as successive batches, each independently partitioned into strata.
 
 ### 🔄 Changed
+- Renamed the `pi` parameter of `ASIMeanEstimator.estimate` and `IPWPTDMeanEstimator.estimate` to `sampling_probability`, consistent with `IPWClassicalMeanEstimator.estimate`. Callers passing `pi=` by keyword must update; positional calls are unaffected.
+- `StratifiedClassicalMeanEstimator` now weights strata by their share of all rows by default, labeled or not (previously, only labeled rows were counted).
 - `UniformSampler.sample` now takes `y_proxy` instead of `n_total`, consistent with the other samplers.
 
 ### 🐛 Fixed

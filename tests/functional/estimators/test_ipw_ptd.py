@@ -35,9 +35,9 @@ def test_deterministic_probabilities_match_simple_ptd():
     )
     xi = np.hstack([np.ones(n_labeled), np.zeros(n_unlabeled)])
     y_true = simulate_annotation(y_true_oracle, xi)
-    pi = (~np.isnan(y_true)).astype(float)
+    sampling_probability = (~np.isnan(y_true)).astype(float)
 
-    ipw_ptd_result = IPWPTDMeanEstimator().estimate(y_true, y_proxy, pi, random_seed=random_seed)
+    ipw_ptd_result = IPWPTDMeanEstimator().estimate(y_true, y_proxy, sampling_probability, random_seed=random_seed)
     simple_ptd_result = PTDMeanEstimator().estimate(y_true, y_proxy, random_seed=random_seed)
 
     simple_ptd_lower_bound = simple_ptd_result.confidence_interval.lower_bound
@@ -75,11 +75,11 @@ def test_large_sample_matches_asi():
         proxy_std=proxy_std,
         random_seed=random_seed,
     )
-    pi = np.clip(rng.random(n_samples), 0.5, 1)
-    y_true[rng.random(n_samples) > pi] = np.nan
+    sampling_probability = np.clip(rng.random(n_samples), 0.5, 1)
+    y_true[rng.random(n_samples) > sampling_probability] = np.nan
 
-    ipw_ptd_result = IPWPTDMeanEstimator().estimate(y_true, y_proxy, pi, random_seed=random_seed)
-    asi_result = ASIMeanEstimator().estimate(y_true, y_proxy, pi)
+    ipw_ptd_result = IPWPTDMeanEstimator().estimate(y_true, y_proxy, sampling_probability, random_seed=random_seed)
+    asi_result = ASIMeanEstimator().estimate(y_true, y_proxy, sampling_probability)
 
     asi_lower_bound = asi_result.confidence_interval.lower_bound
     ipw_ptd_lower_bound = ipw_ptd_result.confidence_interval.lower_bound

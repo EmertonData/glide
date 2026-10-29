@@ -23,7 +23,7 @@ def groups():
 
 
 # --- _preprocess ---
-def test_preprocess_delegates(y_true, y_proxy, groups):
+def test_preprocess_delegates_to_validation(y_true, y_proxy, groups):
     with (
         patch.object(stratified_core_module, "_validate_has_no_nan") as mock_validate_has_no_nan,
         patch.object(stratified_core_module, "_validate_equal_lengths") as mock_validate_equal_lengths,
@@ -48,7 +48,7 @@ def test_preprocess_delegates(y_true, y_proxy, groups):
         np.testing.assert_array_equal(mock_validate_equal_lengths.call_args[0][0], y_true)
         np.testing.assert_array_equal(mock_validate_equal_lengths.call_args[0][1], y_proxy)
         np.testing.assert_array_equal(mock_validate_equal_lengths.call_args[0][2], groups)
-        assert mock_validate_equal_lengths.call_args[1]["names"] == ["y_true", "y_proxy", "groups"]
+        assert mock_validate_equal_lengths.call_args.kwargs == {"names": ["y_true", "y_proxy", "groups"]}
 
         assert mock_split_labeled_unlabeled.call_count == 2
         np.testing.assert_array_equal(mock_split_labeled_unlabeled.call_args_list[0][0][0], y_true[groups == "A"])

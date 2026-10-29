@@ -164,7 +164,20 @@ where $Y^k$ is the vector of ground-truths in stratum $k$ (i.e. available $Y_j$ 
 
 ## Stratified Classical Mean
 
-The **stratified classical mean** extends the classical mean to a dataset partitioned into strata. It uses only ground-truth labels $Y_j$, grouped by stratum identifier $g_j$ (see table in previous section) and combined using the population weights $w_k$ defined above.
+The **stratified classical mean** extends the classical mean to a dataset partitioned into strata. Let $K$ denote the number of strata. Stratum $k$ contains $n_k+N_k$ samples, of which $n_k$ are labeled, and we let $n = \sum_k n_k$ and $N = \sum_k N_k$ be the total numbers of labeled and unlabeled samples. Each sample has the following values:
+
+| Value | Present for | Description |
+|---|---|---|
+| $Y_j$ | Labeled samples only | Ground-truth label |
+| $g_j$ | All $n+N$ samples | Stratum identifier |
+
+$Y^k$ denotes the vector of ground-truths in stratum $k$ (i.e. available $Y_j$ values with $j$ such that $g_j = k$).
+
+The **population weight** of stratum $k$ is the share of all samples, labeled or not, falling in that stratum:
+
+$$w_k = \frac{n_k+N_k}{n+N}$$
+
+Unlabeled samples therefore only contribute to the weights. Each stratum needs at least two labeled samples.
 
 ### Mean estimation
 
@@ -350,7 +363,14 @@ When every cluster is a singleton, $L^{\bullet} = n$ and $L^{\circ} = N$, and al
 
 ## Clustered Classical Mean
 
-The **clustered classical mean** extends the classical mean to a dataset partitioned into clusters, where observations within a cluster may be correlated but clusters are independent of one another. It uses only ground-truth labels $Y_j$, aggregated by cluster identifier $c_i$ (see table in previous section).
+The **clustered classical mean** extends the classical mean to a dataset partitioned into clusters, where observations within a cluster may be correlated but clusters are independent of one another. The data is partitioned into clusters as in Clustered Prediction-Powered Inference above, and only ground-truth labels are used:
+
+| Value | Present for | Description |
+|---|---|---|
+| $Y_j$ | Labeled samples only | Ground-truth label |
+| $c_i$ | All samples | Cluster identifier |
+
+Unlabeled observations are discarded before aggregating, so a cluster's mean is taken over its labeled observations only. Clusters with no labeled observation do not contribute, and at least two clusters must remain ($L^{\bullet} \geq 2$).
 
 For each of the $L^{\bullet}$ labeled clusters $l$, the cluster mean is:
 

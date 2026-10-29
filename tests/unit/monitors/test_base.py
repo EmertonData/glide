@@ -33,7 +33,7 @@ def monitor():
 
 def test_preprocess_subset_delegates(monitor, y_true, y_proxy, batches):
     mask = ~batches.astype(bool)
-    with patch.object(monitor._engine, "preprocess", wraps=monitor._engine.preprocess) as mock_preprocess:
+    with patch.object(monitor._engine, "_preprocess", wraps=monitor._engine._preprocess) as mock_preprocess:
         monitor._preprocess_subset({"y_true": y_true, "y_proxy": y_proxy}, mask)
 
         mock_preprocess.assert_called_once()
@@ -49,8 +49,8 @@ def test_detect_delegates(monitor, y_true, y_proxy, batches):
     with (
         patch.object(base_module, "_preprocess", wraps=base_module._preprocess) as mock_preprocess,
         patch.object(monitor, "_preprocess_subset", wraps=monitor._preprocess_subset) as mock_preprocess_subset,
-        patch.object(monitor._engine, "fit_tuning_parameter") as mock_fit_tuning_parameter,
-        patch.object(monitor._engine, "compute_mean_and_std") as mock_compute_mean_and_std,
+        patch.object(monitor._engine, "_fit_tuning_parameter") as mock_fit_tuning_parameter,
+        patch.object(monitor._engine, "_compute_mean_and_std") as mock_compute_mean_and_std,
         patch.object(
             base_module, "_compute_asymptotic_bounds", wraps=base_module._compute_asymptotic_bounds
         ) as mock_compute_asymptotic_bounds,

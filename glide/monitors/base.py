@@ -13,7 +13,7 @@ class AsymptoticRM(Generic[DatasetT, TuningParameterT]):
 
     def _preprocess_subset(self, fields: Dict[str, NDArray], mask: NDArray) -> DatasetT:
         field_subsets = {name: field[mask] for name, field in fields.items()}
-        dataset = self._engine.preprocess(**field_subsets)
+        dataset = self._engine._preprocess(**field_subsets)
         return dataset
 
     def _detect(
@@ -44,13 +44,13 @@ class AsymptoticRM(Generic[DatasetT, TuningParameterT]):
                 raise ValueError(f"{error} (batch '{batch_identifiers[position]}').") from error
 
             if position == 0 or not power_tuning:
-                tuning_parameter = self._engine.fit_tuning_parameter(batch_risk_dataset, power_tuning=False)
+                tuning_parameter = self._engine._fit_tuning_parameter(batch_risk_dataset, power_tuning=False)
             else:
                 prefix_risk_dataset = self._preprocess_subset(risk_fields, batch_codes < position)
-                tuning_parameter = self._engine.fit_tuning_parameter(prefix_risk_dataset, power_tuning=True)
+                tuning_parameter = self._engine._fit_tuning_parameter(prefix_risk_dataset, power_tuning=True)
 
-            batch_risk_mean_estimates[position], batch_risk_std_estimates[position] = self._engine.compute_mean_and_std(
-                batch_risk_dataset, tuning_parameter
+            batch_risk_mean_estimates[position], batch_risk_std_estimates[position] = (
+                self._engine._compute_mean_and_std(batch_risk_dataset, tuning_parameter)
             )
 
         miscoverage = 1.0 - confidence_level
