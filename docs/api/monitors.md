@@ -4,6 +4,10 @@
 
 ---
 
+::: glide.monitors.asymptotic_stratified_classical.AsymptoticStratifiedClassicalRM
+
+---
+
 ::: glide.monitors.asymptotic_clustered_classical.AsymptoticClusteredClassicalRM
 
 ---
