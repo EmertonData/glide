@@ -106,7 +106,7 @@ Then invoke the `create-pr` skill with the following context:
 
 - **Title:** `Release v<NEW_VERSION>`
 - **Body:** the approved changelog section for `[X.Y.Z]` verbatim (the lines moved in Step 6). If the user provided a ticket URL, include a `Closes <URL>` line; otherwise omit it.
-- **Labels:** `release`
+- **Labels:** `repository` (there is no `release` label in the repo)
 - Do **not** assign reviewers.
 
 Once the PR is open, say:
