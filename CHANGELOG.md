@@ -9,22 +9,26 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 ## [Next release]
 
 ### ✨ Added
-- `AsymptoticStratifiedClassicalRM`: a new anytime-valid label-only drift monitor over a stream of stratified data, the stratified counterpart of `AsymptoticClassicalRM`.
-- `AsymptoticClusteredClassicalRM`: a new anytime-valid label-only drift monitor over a stream of clustered data, the cluster-aware counterpart of `AsymptoticClassicalRM`.
-- `AsymptoticClusteredPPRM`: a new anytime-valid drift monitor that combines human labels with proxy predictions over a stream of clustered data.
-- `generate_batched_clustered_binary_dataset`: a new synthetic dataset generator simulating a production stream as successive batches, each independently partitioned into clusters.
-- New tutorial on monitoring a stratified production stream for drift with `AsymptoticStratifiedPPRM`.
-- `AsymptoticStratifiedPPRM`: a new anytime-valid drift monitor that combines human labels with proxy predictions over a stream of stratified data.
-- `generate_batched_stratified_binary_dataset`: a new synthetic dataset generator simulating a production stream as successive batches, each independently partitioned into strata.
+
+### 🔄 Changed
+
+### 🐛 Fixed
+
+### 💛 Contributors
+
+## [0.12.0] – 2026-10-30
+
+### ✨ Added
+- Drift monitoring on stratified data streams: `AsymptoticStratifiedPPRM` (human labels combined with proxy predictions) and `AsymptoticStratifiedClassicalRM` (labels only), the synthetic dataset generator `generate_batched_stratified_binary_dataset` (a production stream as successive batches, each independently partitioned into strata), and a new tutorial.
+- Drift monitoring on clustered data streams: `AsymptoticClusteredPPRM` (human labels combined with proxy predictions) and `AsymptoticClusteredClassicalRM` (labels only), the synthetic dataset generator `generate_batched_clustered_binary_dataset` (a production stream as successive batches, each independently partitioned into clusters), and a new tutorial.
 
 ### 🔄 Changed
 - Renamed the `pi` parameter of `ASIMeanEstimator.estimate` and `IPWPTDMeanEstimator.estimate` to `sampling_probability`, consistent with `IPWClassicalMeanEstimator.estimate`. Callers passing `pi=` by keyword must update; positional calls are unaffected.
 - `StratifiedClassicalMeanEstimator` now weights strata by their share of all rows by default, labeled or not (previously, only labeled rows were counted).
 - `UniformSampler.sample` now takes `y_proxy` instead of `n_total`, consistent with the other samplers.
 
-### 🐛 Fixed
-
 ### 💛 Contributors
+Thank you to everyone who contributed to this release: @gmartinon-ed, @imerad, @pravallikamavilla
 
 ## [0.11.0] – 2026-09-18
 
