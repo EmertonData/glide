@@ -97,6 +97,7 @@ nav:
     - Monitors:
       - Monitoring a deployed system for drift (Asymptotic PPRM): tutorials/monitors/asymptotic_pprm.ipynb
       - Monitoring a deployed system for drift on stratified data (Asymptotic Stratified PPRM): tutorials/monitors/asymptotic_stratified_pprm.ipynb
+      - Monitoring a deployed system for drift on clustered data (Asymptotic Clustered PPRM): tutorials/monitors/asymptotic_clustered_pprm.ipynb
       - Monitoring a deployed system for drift with multiple judges (Asymptotic Multi-PPRM): tutorials/monitors/asymptotic_multi_pprm.ipynb
   - Deep Dive:
     - Overview: deep_dive/index.md
