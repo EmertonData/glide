@@ -60,6 +60,9 @@ plugins:
       execute_ignore:
         - "*/scientific_validation/estimators/ipwptd.ipynb"
         - "*/scientific_validation/estimators/clustered_ptd.ipynb"
+        - "*/scientific_validation/estimators/multi_ptd.ipynb"
+        - "*/scientific_validation/estimators/stratified_ptd.ipynb"
+        - "*/scientific_validation/estimators/ptd.ipynb"
 
 markdown_extensions:
   - attr_list
