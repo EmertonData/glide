@@ -129,7 +129,8 @@ def generate_multi_binary_dataset(
     min_correlations = np.maximum(-p_t * p_p, p_p + p_t - 1 - p_t * p_p) / D
     max_correlations = np.minimum(p_t * (1 - p_p), p_p * (1 - p_t)) / D
 
-    for m, (rho, lo, hi, proxy_mean) in enumerate(zip(correlations_arr, min_correlations, max_correlations, p_p)):
+    bounds = zip(correlations_arr, min_correlations, max_correlations, p_p, strict=True)
+    for m, (rho, lo, hi, proxy_mean) in enumerate(bounds):
         if rho < lo or rho > hi:
             raise ValueError(
                 f"Proxy {m}: impossible combination of 'true_mean'={true_mean!r}, "
