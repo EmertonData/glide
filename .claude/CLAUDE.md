@@ -157,6 +157,7 @@ Do not use needless type conversions like `float()` or `int()` unless required b
 - Never define custom exception classes.
 - Always include the bad value in the message: `f"'param' must be > 0; got {value!r}."` Terminate messages with a period.
 - Only validate at public API boundaries. Centralizing checks into a private `_preprocess` helper is fine; re-checking the same condition in downstream private helpers is not.
+- Always pass an explicit `stacklevel` to `warnings.warn` (ruff `B028`). Use the number of frames between the `warn` call and user code (e.g. `stacklevel=3` for a private helper called by a public method), so the warning points at the user's line rather than at library internals.
 
 ### Comments
 
@@ -175,6 +176,7 @@ Strings, comments and docstrings (including notebook code cells) must not contai
 - NumPy-style docstrings for all public API; paper references go exclusively in the `References` section. Never mention papers inline in parameter descriptions, summaries, or notes
 - Public API docstrings must include an `Examples` section with runnable doctests
 - In doctests, always import from the public package namespaces: `from glide.estimators import ...`, `from glide.samplers import ...`, `from glide.simulators import ...` — never from submodules directly.
+- Every public method, including public magic methods such as `__call__` or `__len__`, must have a docstring (ruff `D102`/`D105`).
 - **No docstrings for unit test functions or private methods** — test code is self-documenting via clear variable names and assertion structure; private methods are internal only.
 - **Functional test functions may carry a one-line docstring** stating the statistical property being verified, since it is often not obvious from the test name alone (e.g. prefix consistency, mirror symmetry). Keep it to a single sentence.
 
@@ -213,6 +215,8 @@ Figures, printed values, and inline text must be mutually consistent — if the 
 ### Code Hygiene
 
 Remove debug cells, dead code, and stray blank lines before merging. This applies to Python files and Jupyter notebooks alike.
+
+No unused imports, unused variables or undefined names (ruff `F`), and keep imports sorted (ruff `I`). `make lint` autofixes most of these.
 
 ### No Redundancy
 
