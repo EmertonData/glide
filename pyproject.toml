@@ -50,7 +50,7 @@ packages = ["glide"]
 
 [dependency-groups]
 dev = [
-    "bump-my-version>=1.5.1",
+    "bump-my-version>=1.6.7",
     "papermill>=2.7.0",
     "prek>=0.5.4",
     "pytest>=9.1.1",
@@ -59,11 +59,11 @@ dev = [
     "ty>=0.0.84",
 ]
 doc = [
-    "datasets>=5.0.1",
+    "datasets>=5.1.0",
     "matplotlib>=3.11.2",
     "mkdocs>=1.6.1",
-    "mkdocs-jupyter>=0.26.3",
-    "mkdocs-material>=9.7.7",
+    "mkdocs-jupyter>=0.27.0",
+    "mkdocs-material>=9.8.0",
     "mkdocstrings[python]>=1.0.4",
     "scikit-learn>=1.9.1",
 ]
