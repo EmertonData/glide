@@ -27,7 +27,7 @@ def _validate_is_2d(array: NDArray, name: str) -> None:
 def _get_non_zero_mask(values: NDArray, warning_message: Optional[str] = None) -> NDArray:
     non_zero_mask = values > 0
     if warning_message is not None and np.any(~non_zero_mask):
-        warnings.warn(warning_message, UserWarning)
+        warnings.warn(warning_message, UserWarning, stacklevel=4)
     return non_zero_mask
 
 

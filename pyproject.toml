@@ -55,15 +55,15 @@ dev = [
     "prek>=0.5.4",
     "pytest>=9.1.1",
     "pytest-coverage>=0.0",
-    "ruff>=0.16.9",
+    "ruff>=0.17.3",
     "ty>=0.0.84",
 ]
 doc = [
-    "datasets>=5.0.1",
+    "datasets>=5.1.0",
     "matplotlib>=3.11.2",
     "mkdocs>=1.6.1",
-    "mkdocs-jupyter>=0.26.3",
-    "mkdocs-material>=9.7.7",
+    "mkdocs-jupyter>=0.27.0",
+    "mkdocs-material>=9.8.0",
     "mkdocstrings[python]>=1.0.4",
     "scikit-learn>=1.9.1",
 ]
@@ -74,7 +74,7 @@ default-groups = ["dev"]
 [tool.ruff]
 line-length = 120
 fix = true
-lint.select = ["E", "F", "FBT001", "FBT002", "I", "RUF001", "RUF002", "RUF003", "D102", "D105", "B905"]
+lint.select = ["E", "F", "FBT001", "FBT002", "I", "RUF001", "RUF002", "RUF003", "D102", "D105", "B028", "B905"]
 
 [tool.ty.analysis]
 respect-type-ignore-comments = true

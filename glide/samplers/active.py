@@ -55,6 +55,7 @@ class ActiveSampler:
                 f"Extreme uncertainty ratio detected among samples (max/min={uncertainty_ratio:.2e} > 1e3); "
                 "this may cause numerical instability.",
                 UserWarning,
+                stacklevel=3,
             )
         naive_pi = n_samples * uncertainties / uncertainties.sum()
         if np.max(naive_pi) <= 1.0:
