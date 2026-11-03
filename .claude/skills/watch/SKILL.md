@@ -123,6 +123,16 @@ If any Scholar fetch in 4b or 4c returns a CAPTCHA, a bot-detection page, or an 
 (Scholar citation lookup skipped — bot detection or empty results.)
 ```
 
+### 4f — Papers citing the GLIDE paper
+
+**Goal**: find papers citing the GLIDE paper itself (arXiv:2605.31278, "Industrializing Prediction-Powered Inference: The GLIDE Library for Reliable GenAI and Agentic Systems Evaluation"). Fire these in the same message as 4b, and run them even if Step 4 is skipped under 4e.
+
+1. Scholar: `https://scholar.google.com/scholar?q=%22Industrializing+Prediction-Powered+Inference%22+GLIDE&hl=en&scisbd=1`. Extract title, authors, year and arXiv ID of every result.
+2. OpenAlex: `https://api.openalex.org/works/https://doi.org/10.48550/arxiv.2605.31278`. Read `cited_by_count`; if it is above 0, list the citers with `https://api.openalex.org/works?filter=cites:W7163048233&sort=publication_date:desc&per-page=50`.
+3. For every candidate, confirm the citation before flagging: fetch `https://arxiv.org/html/<id>` and look for "Martinon", "Merad" or "GLIDE" in the references and body. The reference list usually sits past the first 100000 characters, so refetch with `offset=100000` (then `200000`) when the first read does not reach it.
+
+Add confirmed papers to the candidate pool with the label `cites:GLIDE`, and deduplicate as in 4d.
+
 ## Step 5 — Fetch abstracts and filter by time window
 
 In a **single message**, fire one WebFetch call to `https://arxiv.org/abs/XXXX.XXXXX` for every arXiv candidate gathered in Steps 1–4 (skip non-arXiv papers). Retain the full abstract text — it is used for both date confirmation and topic matching in Step 6.
@@ -152,6 +162,7 @@ Using the abstract text already fetched in Step 5, evaluate each surviving candi
 - Hybrid annotation / human-in-the-loop evaluation of language models
 - LLM-as-judge bias correction / LLM evaluation under annotation noise
 - Imputed covariates in inference / covariate imputation
+- Anytime-valid inference / confidence sequences
 
 When flagging for topic, quote the specific matching phrase from the title or abstract.
 
@@ -163,6 +174,10 @@ Flag if any of the Step 3 authors appear in the author list. Always verify the f
 
 Flag if the paper was found in Step 4 as citing a README reference paper. Note which reference it cites.
 
+### GLIDE citation match
+
+Flag if the paper was found in Step 4f as citing the GLIDE paper (arXiv:2605.31278). List these first in the Step 7 output.
+
 ## Step 7 — Output
 
 For each flagged paper:
@@ -170,7 +185,7 @@ For each flagged paper:
 ```
 [arXiv:XXXX.XXXXX] Title            (use [non-arXiv] if no arXiv ID)
 Authors: ...
-Reason flagged: <topic match: "exact phrase" | author match: "Author Name" | cites README [N]: "Short paper title">
+Reason flagged: <cites GLIDE paper: "how it is used" | topic match: "exact phrase" | author match: "Author Name" | cites README [N]: "Short paper title">
 Link: https://arxiv.org/abs/XXXX.XXXXX  (or DOI/URL for non-arXiv papers)
 ```
 
