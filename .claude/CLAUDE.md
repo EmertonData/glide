@@ -146,6 +146,19 @@ def estimate(self, y_true: NDArray, y_proxy: NDArray, power_tuning: bool = True)
 def estimate(self, y_true: NDArray, y_proxy: NDArray, *, power_tuning: bool = True) -> ...: ...
 ```
 
+### Zip Strictness
+
+Every `zip()` call must pass an explicit `strict=` argument (ruff `B905`). Use `strict=True` whenever the iterables are expected to have the same length, so a mismatch raises instead of silently truncating; use `strict=False` only when truncation is intended. This applies to library code, tests and notebook code cells alike.
+
+```python
+# BAD
+for estimate, label in zip(estimates, labels): ...
+
+
+# GOOD
+for estimate, label in zip(estimates, labels, strict=True): ...
+```
+
 ### Type Conversions
 
 Do not use needless type conversions like `float()` or `int()` unless required by the caller or for debugging purposes.

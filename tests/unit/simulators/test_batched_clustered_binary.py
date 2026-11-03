@@ -56,7 +56,7 @@ def test_generate_batched_clustered_binary_dataset_delegates_to_validation(datas
 def test_generate_batched_clustered_binary_dataset_reproducibility(dataset_params):
     output1 = generate_batched_clustered_binary_dataset(**dataset_params, random_seed=42)
     output2 = generate_batched_clustered_binary_dataset(**dataset_params, random_seed=42)
-    for array1, array2 in zip(output1, output2):
+    for array1, array2 in zip(output1, output2, strict=True):
         np.testing.assert_array_equal(array1, array2)
 
 

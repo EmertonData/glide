@@ -65,7 +65,7 @@ def test_fit_tuning_parameter_delegates_to_ppi_engine(engine, dataset):
         tuning_parameter = engine._fit_tuning_parameter(dataset, power_tuning=False)
 
         mock_fit_tuning_parameter.assert_called_once()
-        for received, expected in zip(mock_fit_tuning_parameter.call_args[0][0], dataset):
+        for received, expected in zip(mock_fit_tuning_parameter.call_args[0][0], dataset, strict=True):
             np.testing.assert_array_equal(received, expected)
         assert mock_fit_tuning_parameter.call_args.kwargs == {"power_tuning": False}
         assert tuning_parameter == 0.5
@@ -80,7 +80,7 @@ def test_compute_mean_and_std_delegates_to_ppi_engine(engine, dataset):
         mean, std = engine._compute_mean_and_std(dataset, tuning_parameter=0.5)
 
         mock_compute_mean_and_std.assert_called_once()
-        for received, expected in zip(mock_compute_mean_and_std.call_args[0][0], dataset):
+        for received, expected in zip(mock_compute_mean_and_std.call_args[0][0], dataset, strict=True):
             np.testing.assert_array_equal(received, expected)
         assert mock_compute_mean_and_std.call_args[0][1] == 0.5
         assert (mean, std) == (1.5, 0.25)
