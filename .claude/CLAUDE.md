@@ -216,8 +216,6 @@ Figures, printed values, and inline text must be mutually consistent — if the 
 
 Remove debug cells, dead code, and stray blank lines before merging. This applies to Python files and Jupyter notebooks alike.
 
-No unused imports, unused variables or undefined names (ruff `F`), and keep imports sorted (ruff `I`). `make lint` autofixes most of these.
-
 ### No Redundancy
 
 Information should appear exactly once. If two classes share logic (e.g., a validation raise), extract it rather than duplicating. If two doc sections say the same thing, remove one.
