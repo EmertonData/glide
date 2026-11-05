@@ -8,12 +8,12 @@ from glide.engines.ipw_classical import IPWClassicalMeanEngine
 
 @pytest.fixture
 def y():
-    return np.array([2.0, np.nan, 4.0])
+    return np.array([2.0, np.nan, np.nan, 4.0])
 
 
 @pytest.fixture
 def sampling_probability():
-    return np.array([0.5, 0.5, 0.5])
+    return np.array([0.5, 0.25, 0.0, 0.8])
 
 
 @pytest.fixture
@@ -33,7 +33,7 @@ def test_preprocess_valid_output(engine, y, sampling_probability):
     y_filled, labeled_indicator, sampling_probability_filtered = engine._preprocess(y, sampling_probability)
     np.testing.assert_array_equal(y_filled, np.array([2.0, 0.0, 4.0]))
     np.testing.assert_array_equal(labeled_indicator, np.array([1.0, 0.0, 1.0]))
-    np.testing.assert_array_equal(sampling_probability_filtered, np.array([0.5, 0.5, 0.5]))
+    np.testing.assert_array_equal(sampling_probability_filtered, np.array([0.5, 0.25, 0.8]))
 
 
 def test_preprocess_delegates_to_validation(engine, y, sampling_probability):
@@ -43,7 +43,7 @@ def test_preprocess_delegates_to_validation(engine, y, sampling_probability):
         patch("glide.engines.ipw_classical._validate_label_prob_consistency") as mock_validate_label_prob_consistency,
         patch("glide.engines.ipw_classical._validate_min_samples") as mock_validate_min_samples,
         patch(
-            "glide.engines.ipw_classical._get_non_zero_mask", return_value=np.ones(3, dtype=bool)
+            "glide.engines.ipw_classical._get_non_zero_mask", return_value=np.ones(4, dtype=bool)
         ) as mock_get_non_zero_mask,
     ):
         engine._preprocess(y, sampling_probability)
@@ -55,10 +55,12 @@ def test_preprocess_delegates_to_validation(engine, y, sampling_probability):
     mock_validate_probabilities.assert_called_once()
     np.testing.assert_array_equal(mock_validate_probabilities.call_args[0][0], sampling_probability)
     mock_validate_label_prob_consistency.assert_called_once()
-    np.testing.assert_array_equal(mock_validate_label_prob_consistency.call_args[0][0], np.array([True, False, True]))
+    np.testing.assert_array_equal(
+        mock_validate_label_prob_consistency.call_args[0][0], np.array([True, False, False, True])
+    )
     np.testing.assert_array_equal(mock_validate_label_prob_consistency.call_args[0][1], sampling_probability)
     mock_validate_min_samples.assert_called_once()
-    np.testing.assert_array_equal(mock_validate_min_samples.call_args[0][0], np.array([2.0, 4.0]))
+    np.testing.assert_array_equal(mock_validate_min_samples.call_args[0][0], y)
     assert mock_validate_min_samples.call_args[0][1] == "y"
     mock_get_non_zero_mask.assert_called_once()
     np.testing.assert_array_equal(mock_get_non_zero_mask.call_args[0][0], sampling_probability)
@@ -77,5 +79,5 @@ def test_fit_tuning_parameter_returns_none(engine, dataset):
 
 def test_compute_mean_and_std(engine, dataset):
     mean, std = engine._compute_mean_and_std(dataset, tuning_parameter=None)
-    assert mean == pytest.approx(4.0)
-    assert std == pytest.approx(2.3094, abs=1e-4)
+    assert mean == pytest.approx(3.0)
+    assert std == pytest.approx(1.5275, abs=1e-4)

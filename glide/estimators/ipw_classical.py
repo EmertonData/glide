@@ -70,7 +70,7 @@ class IPWClassicalMeanEstimator:
             - If ``y`` and ``sampling_probability`` do not have the same length.
             - If any value in ``sampling_probability`` is outside of [0, 1].
             - If any labeled observation (non-NaN ``y``) has ``sampling_probability`` equal to 0.
-            - If ``y`` contains fewer than 2 non-NaN values.
+            - If ``y`` contains fewer than 2 values.
         """
         dataset = self._engine._preprocess(y, sampling_probability)
         _, labeled_indicator, _ = dataset

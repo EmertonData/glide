@@ -20,7 +20,7 @@ class IPWClassicalMeanEngine:
         _validate_probabilities(sampling_probability)
         labeled_mask = ~np.isnan(y)
         _validate_label_prob_consistency(labeled_mask, sampling_probability)
-        _validate_min_samples(y[labeled_mask], "y")
+        _validate_min_samples(y, "y")
 
         non_zero_mask = _get_non_zero_mask(sampling_probability)
         y_filled = np.nan_to_num(y[non_zero_mask], nan=0.0)
