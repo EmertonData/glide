@@ -71,6 +71,12 @@ def generate_batched_binary_dataset_with_oracle_sampling(
     10
     >>> len(np.unique(batches))
     2
+    >>> bool(np.all(np.isin(y_true_oracle, [0.0, 1.0])))
+    True
+    >>> bool(np.all(np.isin(y_proxy, [0.0, 1.0])))
+    True
+    >>> bool(np.all((uncertainty >= 0) & (uncertainty <= 1)))
+    True
     """
     _validate_non_empty(n_samples, "n_samples")
     n_batches = len(n_samples)
