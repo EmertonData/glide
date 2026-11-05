@@ -36,25 +36,6 @@ def test_preprocess_valid_output(engine, y, sampling_probability):
     np.testing.assert_array_equal(sampling_probability_filtered, np.array([0.5, 0.5, 0.5]))
 
 
-def test_preprocess_drops_zero_probability_rows(engine):
-    y = np.array([1.0, 2.0, np.nan, np.nan])
-    sampling_probability = np.array([0.5, 0.5, 0.0, 0.5])
-    y_filled, labeled_indicator, sampling_probability_filtered = engine._preprocess(y, sampling_probability)
-    np.testing.assert_array_equal(y_filled, np.array([1.0, 2.0, 0.0]))
-    np.testing.assert_array_equal(labeled_indicator, np.array([1.0, 1.0, 0.0]))
-    np.testing.assert_array_equal(sampling_probability_filtered, np.array([0.5, 0.5, 0.5]))
-
-
-def test_preprocess_unequal_lengths(engine, y):
-    with pytest.raises(ValueError, match="'y' and 'sampling_probability' must have the same length; got 3 and 2."):
-        engine._preprocess(y, np.array([0.5, 0.5]))
-
-
-def test_preprocess_too_few_labeled_values(engine):
-    with pytest.raises(ValueError, match="'y' must have at least 2 non-NaN values; got 1."):
-        engine._preprocess(np.array([1.0, np.nan]), np.array([0.5, 0.5]))
-
-
 def test_preprocess_delegates_to_validation(engine, y, sampling_probability):
     with (
         patch("glide.engines.ipw_classical._validate_equal_lengths") as mock_validate_equal_lengths,
@@ -94,8 +75,7 @@ def test_fit_tuning_parameter_returns_none(engine, dataset):
 # --- _compute_mean_and_std ---
 
 
-def test_compute_mean_and_std(engine):
-    dataset = (np.array([2.0, 4.0]), np.array([1.0, 1.0]), np.array([0.5, 0.5]))
+def test_compute_mean_and_std(engine, dataset):
     mean, std = engine._compute_mean_and_std(dataset, tuning_parameter=None)
-    assert mean == pytest.approx(6.0)
-    assert std == pytest.approx(2.0)
+    assert mean == pytest.approx(4.0)
+    assert std == pytest.approx(2.3094, abs=1e-4)

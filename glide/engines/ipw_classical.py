@@ -22,7 +22,6 @@ class IPWClassicalMeanEngine:
         _validate_label_prob_consistency(labeled_mask, sampling_probability)
         _validate_min_samples(y[labeled_mask], "y")
 
-        # Rows with probability 0 can never be sampled, so they are not part of the population being estimated.
         non_zero_mask = _get_non_zero_mask(sampling_probability)
         y_filled = np.nan_to_num(y[non_zero_mask], nan=0.0)
         labeled_indicator = labeled_mask[non_zero_mask].astype(float)
