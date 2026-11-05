@@ -11,6 +11,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 ### ✨ Added
 
 ### 🔄 Changed
+- `IPWClassicalMeanEstimator.estimate` now raises a `ValueError` when `y` and `sampling_probability` differ in length or when `y` has fewer than 2 labeled values (previously an opaque indexing error or a `NaN` standard error).
 
 ### 🐛 Fixed
 
