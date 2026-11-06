@@ -5,7 +5,6 @@ import numpy as np
 import pytest
 from numpy.typing import NDArray
 
-import glide.estimators.asi as asi_module
 from glide.confidence_intervals import CLTConfidenceInterval
 from glide.estimators import ASIMeanEstimator
 from glide.mean_inference_results import PredictionPoweredMeanInferenceResult
@@ -23,81 +22,50 @@ def y_arrays() -> Tuple[NDArray, NDArray, NDArray, NDArray]:
 
 
 @pytest.fixture
-def y_true_processed() -> NDArray:
-    return np.array([3.0, 5.0, 0.0, 0.0])
-
-
-@pytest.fixture
 def estimator() -> ASIMeanEstimator:
     return ASIMeanEstimator()
 
 
-# --- preprocessing ---
-
-
-def test_preprocess_valid_output(estimator, y_arrays):
-    y_true_input, y_proxy_input, _, sampling_probability = y_arrays
-    y_true, y_proxy, xi, sampling_probability = estimator._preprocess(y_true_input, y_proxy_input, sampling_probability)
-    assert len(y_true) == 4
-    assert len(y_proxy) == 4
-    assert len(xi) == 4
-    assert int(xi.sum()) == 2
-    assert len(sampling_probability) == 4
-    assert np.isin(xi, [0.0, 1.0]).all()
-    assert not np.any(np.isnan(y_true))
-
-
-def test_preprocess_delegates_to_validation(estimator):
-    y_true = np.array([1.0, 2.0, np.nan, np.nan])
-    y_proxy = np.array([1.0, 2.0, 3.0, 4.0])
-    sampling_probability = np.array([0.5, 0.5, 0.5, 0.5])
-
-    with (
-        patch.object(asi_module, "_validate_equal_lengths") as mock_validate_equal_lengths,
-        patch.object(asi_module, "_validate_probabilities") as mock_validate_probabilities,
-        patch.object(asi_module, "_validate_y_proxy") as mock_validate_y_proxy,
-        patch.object(asi_module, "_validate_label_prob_consistency") as mock_validate_label_prob_consistency,
-        patch.object(asi_module, "_get_non_zero_mask", return_value=np.ones(4, dtype=bool)) as mock_get_non_zero_mask,
-        patch.object(asi_module, "_validate_non_constant") as mock_validate_non_constant,
-    ):
-        estimator._preprocess(y_true, y_proxy, sampling_probability)
-
-        mock_validate_equal_lengths.assert_called_once_with(
-            y_true, y_proxy, sampling_probability, names=["y_true", "y_proxy", "sampling_probability"]
-        )
-        mock_validate_probabilities.assert_called_once_with(sampling_probability)
-        mock_validate_y_proxy.assert_called_once()
-        np.testing.assert_array_equal(mock_validate_y_proxy.call_args[0][0], y_proxy)
-        mock_validate_label_prob_consistency.assert_called_once()
-        labeled_mask = ~np.isnan(y_true)
-        np.testing.assert_array_equal(mock_validate_label_prob_consistency.call_args[0][0], labeled_mask)
-        np.testing.assert_array_equal(mock_validate_label_prob_consistency.call_args[0][1], sampling_probability)
-        mock_get_non_zero_mask.assert_called_once()
-        np.testing.assert_array_equal(mock_get_non_zero_mask.call_args[0][0], sampling_probability)
-        mock_validate_non_constant.assert_called_once()
-        xi = labeled_mask.astype(float)
-        expected_rectifiers = y_proxy * (xi / sampling_probability - 1)
-        np.testing.assert_array_equal(mock_validate_non_constant.call_args[0][0], expected_rectifiers)
-        assert mock_validate_non_constant.call_args[0][1] == "'y_proxy' values lead to constant rectifiers."
-
-
-# --- _compute_tuning_parameter ---
-
-
-def test_compute_tuning_parameter_returns_one_when_power_tuning_false(estimator, y_arrays, y_true_processed):
-    _, y_proxy, xi, sampling_probability = y_arrays
-    lam = estimator._compute_tuning_parameter(y_true_processed, y_proxy, xi, sampling_probability, power_tuning=False)
-    assert lam == 1.0
-
-
-def test_compute_tuning_parameter_known_values(estimator, y_arrays, y_true_processed):
-    _, y_proxy, xi, sampling_probability = y_arrays
-    lam = estimator._compute_tuning_parameter(y_true_processed, y_proxy, xi, sampling_probability, power_tuning=True)
-    expected = 0.89
-    assert lam == pytest.approx(expected, abs=0.01)
-
-
 # --- estimate ---
+
+
+def test_estimate_delegates(estimator, y_arrays):
+    y_true, y_proxy, _, sampling_probability = y_arrays
+    with (
+        patch.object(estimator._engine, "_preprocess", wraps=estimator._engine._preprocess) as mock_preprocess,
+        patch.object(
+            estimator._engine, "_fit_tuning_parameter", wraps=estimator._engine._fit_tuning_parameter
+        ) as mock_fit_tuning_parameter,
+        patch.object(
+            estimator._engine, "_compute_mean_and_std", wraps=estimator._engine._compute_mean_and_std
+        ) as mock_compute_mean_and_std,
+        patch.object(
+            estimator._classical_engine,
+            "_compute_mean_and_std",
+            wraps=estimator._classical_engine._compute_mean_and_std,
+        ) as mock_classical_engine_compute_mean_and_std,
+    ):
+        estimator.estimate(y_true, y_proxy, sampling_probability)
+
+        mock_preprocess.assert_called_once()
+        np.testing.assert_array_equal(mock_preprocess.call_args[0][0], y_true)
+        np.testing.assert_array_equal(mock_preprocess.call_args[0][1], y_proxy)
+        np.testing.assert_array_equal(mock_preprocess.call_args[0][2], sampling_probability)
+
+        mock_fit_tuning_parameter.assert_called_once()
+        asi_dataset = mock_fit_tuning_parameter.call_args[0][0]
+        np.testing.assert_array_equal(asi_dataset[2], np.array([1.0, 1.0, 0.0, 0.0]))
+        assert mock_fit_tuning_parameter.call_args.kwargs == {"power_tuning": True}
+
+        mock_compute_mean_and_std.assert_called_once()
+        assert mock_compute_mean_and_std.call_args[0][0] is asi_dataset
+        assert mock_compute_mean_and_std.call_args[0][1] == pytest.approx(76 / 85, abs=1e-9)
+
+        mock_classical_engine_compute_mean_and_std.assert_called_once()
+        ipw_classical_dataset = mock_classical_engine_compute_mean_and_std.call_args[0][0]
+        np.testing.assert_array_equal(ipw_classical_dataset[0], np.array([3.0, 5.0, np.nan, np.nan]))
+        np.testing.assert_array_equal(ipw_classical_dataset[1], sampling_probability)
+        assert mock_classical_engine_compute_mean_and_std.call_args[0][1] is None
 
 
 def test_estimate_is_valid_inference_result(estimator, y_arrays):
