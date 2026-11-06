@@ -6,6 +6,8 @@ import pytest
 from numpy.typing import NDArray
 
 from glide.confidence_intervals import CLTConfidenceInterval
+from glide.engines.asi import ASIMeanEngine
+from glide.engines.ipw_classical import IPWClassicalMeanEngine
 from glide.estimators import ASIMeanEstimator
 from glide.mean_inference_results import PredictionPoweredMeanInferenceResult
 
@@ -14,9 +16,9 @@ from glide.mean_inference_results import PredictionPoweredMeanInferenceResult
 
 @pytest.fixture
 def y_arrays() -> Tuple[NDArray, NDArray, NDArray]:
-    y_true = np.array([3.0, 5.0, np.nan, np.nan])
-    y_proxy = np.array([2.0, 4.0, 5.0, 7.0])
-    sampling_probability = np.array([0.5, 0.5, 0.5, 0.5])
+    y_true = np.array([3.0, 5.0, np.nan, np.nan, np.nan])
+    y_proxy = np.array([2.0, 4.0, 5.0, 7.0, 9.0])
+    sampling_probability = np.array([0.5, 0.5, 0.5, 0.5, 0.0])
     return y_true, y_proxy, sampling_probability
 
 
@@ -25,11 +27,21 @@ def estimator() -> ASIMeanEstimator:
     return ASIMeanEstimator()
 
 
+# --- __init__ ---
+
+
+def test_init_sets_engines(estimator):
+    assert isinstance(estimator._engine, ASIMeanEngine)
+    assert isinstance(estimator._classical_engine, IPWClassicalMeanEngine)
+
+
 # --- estimate ---
 
 
 def test_estimate_delegates(estimator, y_arrays):
     y_true, y_proxy, sampling_probability = y_arrays
+    y_true_filtered = np.array([3.0, 5.0, np.nan, np.nan])
+    sampling_probability_filtered = np.array([0.5, 0.5, 0.5, 0.5])
     with (
         patch.object(estimator._engine, "_preprocess", wraps=estimator._engine._preprocess) as mock_preprocess,
         patch.object(
@@ -53,7 +65,9 @@ def test_estimate_delegates(estimator, y_arrays):
 
         mock_fit_tuning_parameter.assert_called_once()
         asi_dataset = mock_fit_tuning_parameter.call_args[0][0]
-        np.testing.assert_array_equal(asi_dataset[0], np.array([3.0, 5.0, np.nan, np.nan]))
+        np.testing.assert_array_equal(asi_dataset[0], y_true_filtered)
+        np.testing.assert_array_equal(asi_dataset[1], np.array([2.0, 4.0, 5.0, 7.0]))
+        np.testing.assert_array_equal(asi_dataset[2], sampling_probability_filtered)
         assert mock_fit_tuning_parameter.call_args.kwargs == {"power_tuning": True}
 
         mock_compute_mean_and_std.assert_called_once()
@@ -62,8 +76,8 @@ def test_estimate_delegates(estimator, y_arrays):
 
         mock_classical_engine_compute_mean_and_std.assert_called_once()
         ipw_classical_dataset = mock_classical_engine_compute_mean_and_std.call_args[0][0]
-        np.testing.assert_array_equal(ipw_classical_dataset[0], np.array([3.0, 5.0, np.nan, np.nan]))
-        np.testing.assert_array_equal(ipw_classical_dataset[1], sampling_probability)
+        np.testing.assert_array_equal(ipw_classical_dataset[0], y_true_filtered)
+        np.testing.assert_array_equal(ipw_classical_dataset[1], sampling_probability_filtered)
         assert mock_classical_engine_compute_mean_and_std.call_args[0][1] is None
 
 
