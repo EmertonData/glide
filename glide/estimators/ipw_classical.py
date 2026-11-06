@@ -1,10 +1,8 @@
-from typing import Tuple
-
 import numpy as np
 from numpy.typing import NDArray
 
 from glide.confidence_intervals import CLTConfidenceInterval
-from glide.core.validation import _get_non_zero_mask, _validate_label_prob_consistency, _validate_probabilities
+from glide.engines.ipw_classical import IPWClassicalMeanEngine
 from glide.mean_inference_results import ClassicalMeanInferenceResult
 
 
@@ -35,12 +33,8 @@ class IPWClassicalMeanEstimator:
     n: 3
     """
 
-    def _preprocess(self, y: NDArray, sampling_probability: NDArray) -> Tuple[NDArray, NDArray]:
-        _validate_probabilities(sampling_probability)
-        non_zero_probability_mask = _get_non_zero_mask(sampling_probability)
-        y_not_nan = ~np.isnan(y)
-        _validate_label_prob_consistency(y_not_nan, sampling_probability)
-        return y[non_zero_probability_mask], sampling_probability[non_zero_probability_mask]
+    def __init__(self) -> None:
+        self._engine = IPWClassicalMeanEngine()
 
     def estimate(
         self,
@@ -74,16 +68,16 @@ class IPWClassicalMeanEstimator:
         Raises
         ------
         ValueError
-            If any value in ``sampling_probability`` is outside of [0, 1].
-            If any labeled observation (non-NaN ``y``) has ``sampling_probability`` equal to 0.
+            - If ``y`` and ``sampling_probability`` do not have the same length.
+            - If any value in ``sampling_probability`` is outside of [0, 1].
+            - If any labeled observation (non-NaN ``y``) has ``sampling_probability`` equal to 0.
+            - If ``y`` contains fewer than 2 values.
         """
-        y_non_zero_probability, sampling_probability_non_zero = self._preprocess(y, sampling_probability)
-        n_labeled = int(np.sum(~np.isnan(y_non_zero_probability)))
-        n_samples = len(y_non_zero_probability)
-        ipw_weighted_values = np.nan_to_num(y_non_zero_probability, nan=0) / sampling_probability_non_zero
-
-        mean = np.mean(ipw_weighted_values)
-        std = np.std(ipw_weighted_values, ddof=1) / np.sqrt(n_samples)
+        dataset = self._engine._preprocess(y, sampling_probability)
+        y_filtered, _ = dataset
+        n_labeled = int(np.count_nonzero(~np.isnan(y_filtered)))
+        tuning_parameter = self._engine._fit_tuning_parameter(dataset, power_tuning=False)
+        mean, std = self._engine._compute_mean_and_std(dataset, tuning_parameter)
         ci = CLTConfidenceInterval(mean=mean, std=std, confidence_level=confidence_level)
         result = ClassicalMeanInferenceResult(
             confidence_interval=ci,

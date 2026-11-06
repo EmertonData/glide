@@ -94,6 +94,8 @@ If there is no `.codegraph/` directory, skip CodeGraph entirely — indexing is 
 - Never use `assert_called_with`, `assert_any_call`, or `assert mock.call_count == N` alone.
 - Name every mock variable `mock_<mocked_function_name>`, stripping the leading underscore from private functions — BAD: `mock`, `mock_nan`, `mock_bounds`; GOOD: `mock_validate_has_no_nan`, `mock_validate_bounds`.
 - All delegation checks for a given function belong in a single `test_<function>_delegates_to_validation` test. Before adding a new delegation assertion, check whether that test already exists and extend it rather than creating a new one.
+- Engine and estimator tests never re-test validation errors raised by shared helpers in `glide/core/validation.py` (no `pytest.raises` on unequal lengths, too few labeled values, out-of-range probabilities, etc.): the error messages are tested once in `tests/unit/core/test_validation.py` and the `test_<function>_delegates_to_validation` test proves the helper is called. Only add a `pytest.raises` test for an error raised by logic specific to that engine or estimator (see `test_fit_tuning_parameter_wraps_error_with_stratum_identifier` in `tests/unit/engines/test_stratified_ppi.py`)
+- Engine `_preprocess` gets one `test_preprocess_valid_output` on a single hardcoded example, not one test per row-filtering edge case: put the edge-case rows (e.g. a zero-probability row, a NaN label) into that example's fixtures instead. The canonical engine test layout is `delegates_to_validation`, `valid_output`, `fit_tuning_parameter`, `compute_mean_and_std` (see `tests/unit/engines/test_ppi.py`, `tests/unit/engines/test_clustered_classical.py`)
 
 ## Code Conventions
 

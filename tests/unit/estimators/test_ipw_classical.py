@@ -4,7 +4,7 @@ import numpy as np
 import pytest
 from numpy.typing import NDArray
 
-import glide.estimators.ipw_classical as ipw_classical_module
+from glide.engines.ipw_classical import IPWClassicalMeanEngine
 from glide.estimators import IPWClassicalMeanEstimator
 from glide.mean_inference_results import ClassicalMeanInferenceResult
 
@@ -24,40 +24,40 @@ def sampling_probability() -> NDArray:
     return np.array([0.5, 0.5, 0.5, 0.5])
 
 
-# --- preprocessing ---
+# --- __init__ ---
 
 
-def test_preprocess_valid_output(estimator):
-    y = np.array([1.0, 2.0, np.nan, np.nan])
-    sampling_probability = np.array([0.5, 0.5, 0.0, 0.5])
-    y_out, sampling_probability_out = estimator._preprocess(y, sampling_probability)
-    assert len(y_out) == 3
-    assert len(sampling_probability_out) == 3
-    np.testing.assert_array_equal(y_out, np.array([1.0, 2.0, np.nan]))
-
-
-def test_preprocess_delegates_to_validation(estimator):
-    y = np.array([1.0, np.nan])
-    sampling_probability = np.array([0.5, 0.5])
-
-    with (
-        patch.object(ipw_classical_module, "_validate_probabilities") as mock_validate_probabilities,
-        patch.object(ipw_classical_module, "_validate_label_prob_consistency") as mock_validate_label_prob_consistency,
-        patch.object(
-            ipw_classical_module, "_get_non_zero_mask", return_value=np.ones(2, dtype=bool)
-        ) as mock_get_non_zero_mask,
-    ):
-        estimator._preprocess(y, sampling_probability)
-        mock_validate_probabilities.assert_called_once_with(sampling_probability)
-        mock_validate_label_prob_consistency.assert_called_once()
-        y_not_nan = ~np.isnan(y)
-        np.testing.assert_array_equal(mock_validate_label_prob_consistency.call_args[0][0], y_not_nan)
-        np.testing.assert_array_equal(mock_validate_label_prob_consistency.call_args[0][1], sampling_probability)
-        mock_get_non_zero_mask.assert_called_once()
-        np.testing.assert_array_equal(mock_get_non_zero_mask.call_args[0][0], sampling_probability)
+def test_init_sets_engine(estimator):
+    assert isinstance(estimator._engine, IPWClassicalMeanEngine)
 
 
 # --- estimate ---
+
+
+def test_estimate_delegates(estimator, y, sampling_probability):
+    dataset = estimator._engine._preprocess(y, sampling_probability)
+    with (
+        patch.object(estimator._engine, "_preprocess", wraps=estimator._engine._preprocess) as mock_preprocess,
+        patch.object(
+            estimator._engine, "_fit_tuning_parameter", wraps=estimator._engine._fit_tuning_parameter
+        ) as mock_fit_tuning_parameter,
+        patch.object(
+            estimator._engine, "_compute_mean_and_std", wraps=estimator._engine._compute_mean_and_std
+        ) as mock_compute_mean_and_std,
+    ):
+        estimator.estimate(y, sampling_probability)
+
+    mock_preprocess.assert_called_once()
+    np.testing.assert_array_equal(mock_preprocess.call_args[0][0], y)
+    np.testing.assert_array_equal(mock_preprocess.call_args[0][1], sampling_probability)
+    mock_fit_tuning_parameter.assert_called_once()
+    for received, expected in zip(mock_fit_tuning_parameter.call_args[0][0], dataset, strict=True):
+        np.testing.assert_array_equal(received, expected)
+    assert mock_fit_tuning_parameter.call_args[1] == {"power_tuning": False}
+    mock_compute_mean_and_std.assert_called_once()
+    for received, expected in zip(mock_compute_mean_and_std.call_args[0][0], dataset, strict=True):
+        np.testing.assert_array_equal(received, expected)
+    assert mock_compute_mean_and_std.call_args[0][1] is None
 
 
 def test_estimate_is_valid_inference_result(estimator, y, sampling_probability):
