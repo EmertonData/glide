@@ -1,5 +1,6 @@
 from math import floor
 
+import numpy as np
 from numpy.typing import NDArray
 
 from glide.confidence_intervals import CLTConfidenceInterval
@@ -105,8 +106,8 @@ class ASIMeanEstimator:
             - If any value in ``sampling_probability`` is not in [0, 1].
         """
         asi_dataset = self._engine._preprocess(y_true, y_proxy, sampling_probability)
-        y_true_filtered, _, labeled_indicator, sampling_probability_filtered = asi_dataset
-        n_labeled = int(labeled_indicator.sum())
+        y_true_filtered, _, sampling_probability_filtered = asi_dataset
+        n_labeled = int(np.count_nonzero(~np.isnan(y_true_filtered)))
         n_proxy = len(sampling_probability_filtered)
 
         tuning_parameter = self._engine._fit_tuning_parameter(asi_dataset, power_tuning=power_tuning)

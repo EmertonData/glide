@@ -71,12 +71,11 @@ def test_preprocess_delegates_to_validation(engine, y_true, y_proxy, sampling_pr
 
 
 def test_preprocess_valid_output(engine, y_true, y_proxy, sampling_probability):
-    y_true_filtered, y_proxy_filtered, labeled_indicator, sampling_probability_filtered = engine._preprocess(
+    y_true_filtered, y_proxy_filtered, sampling_probability_filtered = engine._preprocess(
         y_true, y_proxy, sampling_probability
     )
     np.testing.assert_array_equal(y_true_filtered, np.array([3.0, 5.0, np.nan, np.nan]))
     np.testing.assert_array_equal(y_proxy_filtered, np.array([2.0, 4.0, 5.0, 7.0]))
-    np.testing.assert_array_equal(labeled_indicator, np.array([1.0, 1.0, 0.0, 0.0]))
     np.testing.assert_array_equal(sampling_probability_filtered, np.array([0.5, 0.5, 0.5, 0.5]))
 
 

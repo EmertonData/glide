@@ -12,7 +12,7 @@ from glide.core.validation import (
     _validate_y_proxy,
 )
 
-ASIDataset = Tuple[NDArray, NDArray, NDArray, NDArray]
+ASIDataset = Tuple[NDArray, NDArray, NDArray]
 
 
 class ASIMeanEngine:
@@ -28,18 +28,19 @@ class ASIMeanEngine:
         non_zero_probability_mask = _get_non_zero_mask(sampling_probability)
         y_true_filtered = y_true[non_zero_probability_mask]
         y_proxy_filtered = y_proxy[non_zero_probability_mask]
-        labeled_indicator = labeled_mask[non_zero_probability_mask].astype(float)
         sampling_probability_filtered = sampling_probability[non_zero_probability_mask]
 
+        labeled_indicator = ~np.isnan(y_true_filtered)
         rectifiers = y_proxy_filtered * (labeled_indicator / sampling_probability_filtered - 1)
         _validate_non_constant(rectifiers, "'y_proxy' values lead to constant rectifiers.")
-        return y_true_filtered, y_proxy_filtered, labeled_indicator, sampling_probability_filtered
+        return y_true_filtered, y_proxy_filtered, sampling_probability_filtered
 
     def _fit_tuning_parameter(self, dataset: ASIDataset, *, power_tuning: bool) -> float:
         if not power_tuning:
             tuning_parameter = 1.0
             return tuning_parameter
-        y_true, y_proxy, labeled_indicator, sampling_probability = dataset
+        y_true, y_proxy, sampling_probability = dataset
+        labeled_indicator = ~np.isnan(y_true)
         inverse_weights = labeled_indicator / sampling_probability
         proxy_term = y_proxy * (inverse_weights - 1)
         label_term = np.nan_to_num(y_true, nan=0.0) * inverse_weights
@@ -48,7 +49,8 @@ class ASIMeanEngine:
         return tuning_parameter
 
     def _compute_mean_and_std(self, dataset: ASIDataset, tuning_parameter: float) -> Tuple[float, float]:
-        y_true, y_proxy, labeled_indicator, sampling_probability = dataset
+        y_true, y_proxy, sampling_probability = dataset
+        labeled_indicator = ~np.isnan(y_true)
         n_samples = len(sampling_probability)
         proxy_projection = tuning_parameter * y_proxy
         residuals = np.nan_to_num(y_true, nan=0.0) - proxy_projection

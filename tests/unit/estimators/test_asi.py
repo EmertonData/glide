@@ -13,12 +13,11 @@ from glide.mean_inference_results import PredictionPoweredMeanInferenceResult
 
 
 @pytest.fixture
-def y_arrays() -> Tuple[NDArray, NDArray, NDArray, NDArray]:
+def y_arrays() -> Tuple[NDArray, NDArray, NDArray]:
     y_true = np.array([3.0, 5.0, np.nan, np.nan])
     y_proxy = np.array([2.0, 4.0, 5.0, 7.0])
-    xi = np.array([1.0, 1.0, 0.0, 0.0])
     sampling_probability = np.array([0.5, 0.5, 0.5, 0.5])
-    return y_true, y_proxy, xi, sampling_probability
+    return y_true, y_proxy, sampling_probability
 
 
 @pytest.fixture
@@ -30,7 +29,7 @@ def estimator() -> ASIMeanEstimator:
 
 
 def test_estimate_delegates(estimator, y_arrays):
-    y_true, y_proxy, _, sampling_probability = y_arrays
+    y_true, y_proxy, sampling_probability = y_arrays
     with (
         patch.object(estimator._engine, "_preprocess", wraps=estimator._engine._preprocess) as mock_preprocess,
         patch.object(
@@ -54,7 +53,7 @@ def test_estimate_delegates(estimator, y_arrays):
 
         mock_fit_tuning_parameter.assert_called_once()
         asi_dataset = mock_fit_tuning_parameter.call_args[0][0]
-        np.testing.assert_array_equal(asi_dataset[2], np.array([1.0, 1.0, 0.0, 0.0]))
+        np.testing.assert_array_equal(asi_dataset[0], np.array([3.0, 5.0, np.nan, np.nan]))
         assert mock_fit_tuning_parameter.call_args.kwargs == {"power_tuning": True}
 
         mock_compute_mean_and_std.assert_called_once()
@@ -69,7 +68,7 @@ def test_estimate_delegates(estimator, y_arrays):
 
 
 def test_estimate_is_valid_inference_result(estimator, y_arrays):
-    y_true, y_proxy, _, sampling_probability = y_arrays
+    y_true, y_proxy, sampling_probability = y_arrays
     result = estimator.estimate(y_true, y_proxy, sampling_probability)
     assert isinstance(result, PredictionPoweredMeanInferenceResult)
     assert isinstance(result.confidence_interval, CLTConfidenceInterval)
@@ -80,7 +79,7 @@ def test_estimate_is_valid_inference_result(estimator, y_arrays):
 
 
 def test_estimate_metadata(estimator, y_arrays):
-    y_true, y_proxy, _, sampling_probability = y_arrays
+    y_true, y_proxy, sampling_probability = y_arrays
     result = estimator.estimate(y_true, y_proxy, sampling_probability, metric_name="TestMetric")
     assert result.metric_name == "TestMetric"
     assert result.estimator_name == estimator.__class__.__name__
@@ -90,7 +89,7 @@ def test_estimate_metadata(estimator, y_arrays):
 
 
 def test_estimate_custom_confidence_level(estimator, y_arrays):
-    y_true, y_proxy, _, sampling_probability = y_arrays
+    y_true, y_proxy, sampling_probability = y_arrays
     result = estimator.estimate(y_true, y_proxy, sampling_probability, confidence_level=0.95)
 
     expected_mean = 5.34
@@ -109,7 +108,7 @@ def test_estimate_custom_confidence_level(estimator, y_arrays):
 
 
 def test_str_format(estimator, y_arrays):
-    y_true, y_proxy, _, sampling_probability = y_arrays
+    y_true, y_proxy, sampling_probability = y_arrays
     result = estimator.estimate(y_true, y_proxy, sampling_probability, metric_name="accuracy")
     output = str(result)
     expected = (
@@ -125,6 +124,6 @@ def test_str_format(estimator, y_arrays):
 
 
 def test_repr_equals_str(estimator, y_arrays):
-    y_true, y_proxy, _, sampling_probability = y_arrays
+    y_true, y_proxy, sampling_probability = y_arrays
     result = estimator.estimate(y_true, y_proxy, sampling_probability, metric_name="perf")
     assert repr(result) == str(result)
