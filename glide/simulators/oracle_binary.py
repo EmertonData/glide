@@ -1,4 +1,4 @@
-from typing import Optional, Tuple
+from typing import Optional, Tuple, Union
 
 import numpy as np
 from numpy.typing import NDArray
@@ -11,7 +11,7 @@ def generate_binary_dataset_with_oracle_sampling(
     true_mean: float = 0.7,
     proxy_mean: float = 0.6,
     correlation: float = 0.8,
-    random_seed: Optional[int] = None,
+    random_seed: Optional[Union[int, np.random.SeedSequence]] = None,
 ) -> Tuple[NDArray, NDArray, NDArray]:
     """Generate a synthetic binary dataset with oracle sampling probabilities.
 
@@ -36,7 +36,7 @@ def generate_binary_dataset_with_oracle_sampling(
         Expected mean of y_proxy. Must be in (0, 1).
     correlation : float
         Pearson correlation between y_true_oracle and y_proxy (marginal, across all samples).
-    random_seed : int, optional
+    random_seed : int or np.random.SeedSequence, optional
         Seed for reproducibility.
 
     Returns
