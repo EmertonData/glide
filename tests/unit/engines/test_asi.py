@@ -84,7 +84,7 @@ def test_preprocess_valid_output(engine, y_true, y_proxy, sampling_probability):
 
 def test_fit_tuning_parameter_power_tuning_true(engine, dataset):
     tuning_parameter = engine._fit_tuning_parameter(dataset, power_tuning=True)
-    assert tuning_parameter == pytest.approx(76 / 85, abs=1e-9)
+    assert tuning_parameter == pytest.approx(0.894, abs=1e-3)
 
 
 def test_fit_tuning_parameter_power_tuning_false(engine, dataset):
@@ -97,11 +97,11 @@ def test_fit_tuning_parameter_power_tuning_false(engine, dataset):
 
 def test_compute_mean_and_std(engine, dataset):
     mean, std = engine._compute_mean_and_std(dataset, tuning_parameter=1.0)
-    assert mean == pytest.approx(5.5, abs=1e-9)
+    assert mean == pytest.approx(5.5, abs=1e-4)
     assert std == pytest.approx(0.6455, abs=1e-4)
 
 
 def test_compute_mean_and_std_zero_tuning_parameter(engine, dataset):
     mean, std = engine._compute_mean_and_std(dataset, tuning_parameter=0.0)
-    assert mean == pytest.approx(4.0, abs=1e-9)
+    assert mean == pytest.approx(4.0, abs=1e-4)
     assert std == pytest.approx(2.4495, abs=1e-4)

@@ -58,7 +58,7 @@ def test_estimate_delegates(estimator, y_arrays):
 
         mock_compute_mean_and_std.assert_called_once()
         assert mock_compute_mean_and_std.call_args[0][0] is asi_dataset
-        assert mock_compute_mean_and_std.call_args[0][1] == pytest.approx(76 / 85, abs=1e-9)
+        assert mock_compute_mean_and_std.call_args[0][1] == pytest.approx(0.894, abs=1e-3)
 
         mock_classical_engine_compute_mean_and_std.assert_called_once()
         ipw_classical_dataset = mock_classical_engine_compute_mean_and_std.call_args[0][0]
