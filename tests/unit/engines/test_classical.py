@@ -3,6 +3,7 @@ from unittest.mock import patch
 import numpy as np
 import pytest
 
+import glide.engines.classical as classical_engine_module
 from glide.engines.classical import ClassicalMeanEngine
 
 
@@ -24,17 +25,18 @@ def dataset(engine, y):
 # --- _preprocess ---
 
 
+def test_preprocess_delegates_to_validation(engine, y):
+    with patch.object(classical_engine_module, "_validate_min_samples") as mock_validate_min_samples:
+        engine._preprocess(y)
+
+        mock_validate_min_samples.assert_called_once()
+        np.testing.assert_array_equal(mock_validate_min_samples.call_args[0][0], np.array([2.0, 4.0]))
+        assert mock_validate_min_samples.call_args[0][1] == "y"
+
+
 def test_preprocess_valid_output(engine, y):
     dataset = engine._preprocess(y)
     np.testing.assert_array_equal(dataset, np.array([2.0, 4.0]))
-
-
-def test_preprocess_delegates_to_validation(engine, y):
-    with patch("glide.engines.classical._validate_min_samples") as mock_validate_min_samples:
-        engine._preprocess(y)
-    mock_validate_min_samples.assert_called_once()
-    np.testing.assert_array_equal(mock_validate_min_samples.call_args[0][0], np.array([2.0, 4.0]))
-    assert mock_validate_min_samples.call_args[0][1] == "y"
 
 
 # --- _fit_tuning_parameter ---

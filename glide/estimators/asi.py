@@ -102,7 +102,7 @@ class ASIMeanEstimator:
         ValueError
             - If ``y_true``, ``y_proxy``, and ``sampling_probability`` do not all have the same length.
             - If any proxy value is NaN.
-            - If the rectifiers ``y_proxy * (ξ_i / π_i - 1)`` are constant.
+            - If ``power_tuning`` is ``True`` and the rectifiers ``y_proxy * (ξ_i / π_i - 1)`` are constant.
             - If any value in ``sampling_probability`` is not in [0, 1].
         """
         asi_dataset = self._engine._preprocess(y_true, y_proxy, sampling_probability)

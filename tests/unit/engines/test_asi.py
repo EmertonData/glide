@@ -42,10 +42,10 @@ def test_preprocess_delegates_to_validation(engine, y_true, y_proxy, sampling_pr
         patch.object(asi_engine_module, "_validate_y_proxy") as mock_validate_y_proxy,
         patch.object(asi_engine_module, "_validate_probabilities") as mock_validate_probabilities,
         patch.object(asi_engine_module, "_validate_label_prob_consistency") as mock_validate_label_prob_consistency,
+        patch.object(asi_engine_module, "_validate_min_samples") as mock_validate_min_samples,
         patch.object(
             asi_engine_module, "_get_non_zero_mask", return_value=non_zero_probability_mask
         ) as mock_get_non_zero_mask,
-        patch.object(asi_engine_module, "_validate_non_constant") as mock_validate_non_constant,
     ):
         engine._preprocess(y_true, y_proxy, sampling_probability)
 
@@ -54,20 +54,25 @@ def test_preprocess_delegates_to_validation(engine, y_true, y_proxy, sampling_pr
         np.testing.assert_array_equal(mock_validate_equal_lengths.call_args[0][1], y_proxy)
         np.testing.assert_array_equal(mock_validate_equal_lengths.call_args[0][2], sampling_probability)
         assert mock_validate_equal_lengths.call_args.kwargs == {"names": ["y_true", "y_proxy", "sampling_probability"]}
+
         mock_validate_y_proxy.assert_called_once()
         np.testing.assert_array_equal(mock_validate_y_proxy.call_args[0][0], y_proxy)
+
         mock_validate_probabilities.assert_called_once()
         np.testing.assert_array_equal(mock_validate_probabilities.call_args[0][0], sampling_probability)
+
         mock_validate_label_prob_consistency.assert_called_once()
         np.testing.assert_array_equal(
             mock_validate_label_prob_consistency.call_args[0][0], np.array([True, True, False, False, False])
         )
         np.testing.assert_array_equal(mock_validate_label_prob_consistency.call_args[0][1], sampling_probability)
+
+        mock_validate_min_samples.assert_called_once()
+        np.testing.assert_array_equal(mock_validate_min_samples.call_args[0][0], y_true)
+        assert mock_validate_min_samples.call_args[0][1] == "y_true"
+
         mock_get_non_zero_mask.assert_called_once()
         np.testing.assert_array_equal(mock_get_non_zero_mask.call_args[0][0], sampling_probability)
-        mock_validate_non_constant.assert_called_once()
-        np.testing.assert_allclose(mock_validate_non_constant.call_args[0][0], np.array([2.0, 4.0, -5.0, -7.0]))
-        assert mock_validate_non_constant.call_args[0][1] == "'y_proxy' values lead to constant rectifiers."
 
 
 def test_preprocess_valid_output(engine, y_true, y_proxy, sampling_probability):
@@ -80,6 +85,15 @@ def test_preprocess_valid_output(engine, y_true, y_proxy, sampling_probability):
 
 
 # --- _fit_tuning_parameter ---
+
+
+def test_fit_tuning_parameter_delegates_to_validation(engine, dataset):
+    with patch.object(asi_engine_module, "_validate_non_constant") as mock_validate_non_constant:
+        engine._fit_tuning_parameter(dataset, power_tuning=True)
+
+        mock_validate_non_constant.assert_called_once()
+        np.testing.assert_allclose(mock_validate_non_constant.call_args[0][0], np.array([2.0, 4.0, -5.0, -7.0]))
+        assert mock_validate_non_constant.call_args[0][1] == "'y_proxy' values lead to constant rectifiers."
 
 
 def test_fit_tuning_parameter_power_tuning_true(engine, dataset):
@@ -96,12 +110,6 @@ def test_fit_tuning_parameter_power_tuning_false(engine, dataset):
 
 
 def test_compute_mean_and_std(engine, dataset):
-    mean, std = engine._compute_mean_and_std(dataset, tuning_parameter=1.0)
-    assert mean == pytest.approx(5.5, abs=1e-4)
-    assert std == pytest.approx(0.6455, abs=1e-4)
-
-
-def test_compute_mean_and_std_zero_tuning_parameter(engine, dataset):
-    mean, std = engine._compute_mean_and_std(dataset, tuning_parameter=0.0)
-    assert mean == pytest.approx(4.0, abs=1e-4)
-    assert std == pytest.approx(2.4495, abs=1e-4)
+    mean, std = engine._compute_mean_and_std(dataset, tuning_parameter=0.5)
+    assert mean == pytest.approx(4.75, abs=1e-4)
+    assert std == pytest.approx(1.1989, abs=1e-4)
