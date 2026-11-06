@@ -50,12 +50,15 @@ def test_preprocess_delegates_to_validation(engine, y_true, y_proxy):
         np.testing.assert_array_equal(mock_validate_equal_lengths.call_args[0][0], y_true)
         np.testing.assert_array_equal(mock_validate_equal_lengths.call_args[0][1], y_proxy)
         assert mock_validate_equal_lengths.call_args.kwargs == {"names": ["y_true", "y_proxy"]}
+
         mock_validate_has_no_nan.assert_called_once()
         np.testing.assert_array_equal(mock_validate_has_no_nan.call_args[0][0], y_proxy)
         assert mock_validate_has_no_nan.call_args[0][1] == "y_proxy"
+
         mock_split_labeled_unlabeled.assert_called_once()
         np.testing.assert_array_equal(mock_split_labeled_unlabeled.call_args[0][0], y_true)
         np.testing.assert_array_equal(mock_split_labeled_unlabeled.call_args[0][1], y_proxy)
+
         mock_validate_sample_sizes.assert_called_once()
         np.testing.assert_array_equal(mock_validate_sample_sizes.call_args[0][0], labeled_mask)
 
