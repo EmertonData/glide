@@ -102,6 +102,7 @@ class ASIMeanEstimator:
         ValueError
             - If ``y_true``, ``y_proxy``, and ``sampling_probability`` do not all have the same length.
             - If any proxy value is NaN.
+            - If fewer than two labeled or two unlabeled samples remain after excluding zero-probability samples.
             - If ``power_tuning`` is ``True`` and the rectifiers ``y_proxy * (ξ_i / π_i - 1)`` are constant.
             - If any value in ``sampling_probability`` is not in [0, 1].
         """

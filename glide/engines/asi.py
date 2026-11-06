@@ -7,9 +7,9 @@ from glide.core.validation import (
     _get_non_zero_mask,
     _validate_equal_lengths,
     _validate_label_prob_consistency,
-    _validate_min_samples,
     _validate_non_constant,
     _validate_probabilities,
+    _validate_sample_sizes,
     _validate_y_proxy,
 )
 
@@ -25,12 +25,12 @@ class ASIMeanEngine:
         _validate_probabilities(sampling_probability)
         labeled_mask = ~np.isnan(y_true)
         _validate_label_prob_consistency(labeled_mask, sampling_probability)
-        _validate_min_samples(y_true, "y_true")
 
         non_zero_probability_mask = _get_non_zero_mask(sampling_probability)
         y_true_filtered = y_true[non_zero_probability_mask]
         y_proxy_filtered = y_proxy[non_zero_probability_mask]
         sampling_probability_filtered = sampling_probability[non_zero_probability_mask]
+        _validate_sample_sizes(~np.isnan(y_true_filtered))
         return y_true_filtered, y_proxy_filtered, sampling_probability_filtered
 
     def _fit_tuning_parameter(self, dataset: ASIDataset, *, power_tuning: bool) -> float:

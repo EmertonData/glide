@@ -42,10 +42,10 @@ def test_preprocess_delegates_to_validation(engine, y_true, y_proxy, sampling_pr
         patch.object(asi_engine_module, "_validate_y_proxy") as mock_validate_y_proxy,
         patch.object(asi_engine_module, "_validate_probabilities") as mock_validate_probabilities,
         patch.object(asi_engine_module, "_validate_label_prob_consistency") as mock_validate_label_prob_consistency,
-        patch.object(asi_engine_module, "_validate_min_samples") as mock_validate_min_samples,
         patch.object(
             asi_engine_module, "_get_non_zero_mask", return_value=non_zero_probability_mask
         ) as mock_get_non_zero_mask,
+        patch.object(asi_engine_module, "_validate_sample_sizes") as mock_validate_sample_sizes,
     ):
         engine._preprocess(y_true, y_proxy, sampling_probability)
 
@@ -67,12 +67,11 @@ def test_preprocess_delegates_to_validation(engine, y_true, y_proxy, sampling_pr
         )
         np.testing.assert_array_equal(mock_validate_label_prob_consistency.call_args[0][1], sampling_probability)
 
-        mock_validate_min_samples.assert_called_once()
-        np.testing.assert_array_equal(mock_validate_min_samples.call_args[0][0], y_true)
-        assert mock_validate_min_samples.call_args[0][1] == "y_true"
-
         mock_get_non_zero_mask.assert_called_once()
         np.testing.assert_array_equal(mock_get_non_zero_mask.call_args[0][0], sampling_probability)
+
+        mock_validate_sample_sizes.assert_called_once()
+        np.testing.assert_array_equal(mock_validate_sample_sizes.call_args[0][0], np.array([True, True, False, False]))
 
 
 def test_preprocess_valid_output(engine, y_true, y_proxy, sampling_probability):
