@@ -1,3 +1,4 @@
+import numpy as np
 from numpy.typing import NDArray
 
 from glide.confidence_intervals import CLTConfidenceInterval
@@ -73,8 +74,8 @@ class IPWClassicalMeanEstimator:
             - If ``y`` contains fewer than 2 values.
         """
         dataset = self._engine._preprocess(y, sampling_probability)
-        _, labeled_indicator, _ = dataset
-        n_labeled = int(labeled_indicator.sum())
+        y_filtered, _ = dataset
+        n_labeled = int(np.count_nonzero(~np.isnan(y_filtered)))
         tuning_parameter = self._engine._fit_tuning_parameter(dataset, power_tuning=False)
         mean, std = self._engine._compute_mean_and_std(dataset, tuning_parameter)
         ci = CLTConfidenceInterval(mean=mean, std=std, confidence_level=confidence_level)

@@ -30,9 +30,8 @@ def dataset(engine, y, sampling_probability):
 
 
 def test_preprocess_valid_output(engine, y, sampling_probability):
-    y_filled, labeled_indicator, sampling_probability_filtered = engine._preprocess(y, sampling_probability)
-    np.testing.assert_array_equal(y_filled, np.array([2.0, 0.0, 4.0]))
-    np.testing.assert_array_equal(labeled_indicator, np.array([1.0, 0.0, 1.0]))
+    y_filtered, sampling_probability_filtered = engine._preprocess(y, sampling_probability)
+    np.testing.assert_array_equal(y_filtered, np.array([2.0, np.nan, 4.0]))
     np.testing.assert_array_equal(sampling_probability_filtered, np.array([0.5, 0.25, 0.8]))
 
 

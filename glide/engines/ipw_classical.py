@@ -11,7 +11,7 @@ from glide.core.validation import (
     _validate_probabilities,
 )
 
-IPWClassicalDataset = Tuple[NDArray, NDArray, NDArray]
+IPWClassicalDataset = Tuple[NDArray, NDArray]
 
 
 class IPWClassicalMeanEngine:
@@ -22,18 +22,18 @@ class IPWClassicalMeanEngine:
         _validate_label_prob_consistency(labeled_mask, sampling_probability)
         _validate_min_samples(y, "y")
 
-        non_zero_mask = _get_non_zero_mask(sampling_probability)
-        y_filled = np.nan_to_num(y[non_zero_mask], nan=0.0)
-        labeled_indicator = labeled_mask[non_zero_mask].astype(float)
-        sampling_probability_filtered = sampling_probability[non_zero_mask]
-        return y_filled, labeled_indicator, sampling_probability_filtered
+        non_zero_probability_mask = _get_non_zero_mask(sampling_probability)
+        y_filtered = y[non_zero_probability_mask]
+        sampling_probability_filtered = sampling_probability[non_zero_probability_mask]
+        return y_filtered, sampling_probability_filtered
 
     def _fit_tuning_parameter(self, dataset: IPWClassicalDataset, *, power_tuning: bool) -> None:
         return None
 
     def _compute_mean_and_std(self, dataset: IPWClassicalDataset, tuning_parameter: None) -> Tuple[float, float]:
-        y_filled, _, sampling_probability = dataset
+        y, sampling_probability = dataset
         n_samples = len(sampling_probability)
+        y_filled = np.nan_to_num(y, nan=0.0)
         ipw_weighted_values = y_filled / sampling_probability
         mean = np.mean(ipw_weighted_values)
         std = np.std(ipw_weighted_values, ddof=1) / np.sqrt(n_samples)
