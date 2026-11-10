@@ -33,8 +33,8 @@ def dataset(engine, y_true, y_proxies):
 def test_preprocess_delegates_to_validation(engine, y_true, y_proxies):
     labeled_mask = np.array([True, True, False, False])
     with (
-        patch.object(multi_ppi_engine_module, "_validate_equal_lengths") as mock_validate_equal_lengths,
         patch.object(multi_ppi_engine_module, "_validate_is_2d") as mock_validate_is_2d,
+        patch.object(multi_ppi_engine_module, "_validate_equal_lengths") as mock_validate_equal_lengths,
         patch.object(multi_ppi_engine_module, "_validate_has_no_nan") as mock_validate_has_no_nan,
         patch.object(multi_ppi_engine_module, "_split_labeled_unlabeled") as mock_split_labeled_unlabeled,
         patch.object(multi_ppi_engine_module, "_validate_sample_sizes") as mock_validate_sample_sizes,
@@ -47,15 +47,14 @@ def test_preprocess_delegates_to_validation(engine, y_true, y_proxies):
         )
         engine._preprocess(y_true, y_proxies)
 
-        mock_validate_equal_lengths.assert_called_once()
-        np.testing.assert_array_equal(mock_validate_equal_lengths.call_args[0][0], y_true)
-        np.testing.assert_array_equal(mock_validate_equal_lengths.call_args[0][1], y_proxies)
-
-        assert mock_validate_equal_lengths.call_args.kwargs == {"names": ["y_true", "y_proxies"]}
-
         mock_validate_is_2d.assert_called_once()
         np.testing.assert_array_equal(mock_validate_is_2d.call_args[0][0], y_proxies)
         assert mock_validate_is_2d.call_args[0][1] == "y_proxies"
+
+        mock_validate_equal_lengths.assert_called_once()
+        np.testing.assert_array_equal(mock_validate_equal_lengths.call_args[0][0], y_true)
+        np.testing.assert_array_equal(mock_validate_equal_lengths.call_args[0][1], y_proxies)
+        assert mock_validate_equal_lengths.call_args.kwargs == {"names": ["y_true", "y_proxies"]}
 
         mock_validate_has_no_nan.assert_called_once()
         np.testing.assert_array_equal(mock_validate_has_no_nan.call_args[0][0], y_proxies)
