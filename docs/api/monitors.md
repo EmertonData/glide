@@ -24,8 +24,9 @@
 
 ---
 
-::: glide.monitors.asymptotic_multi_pprm.AsymptoticMultiPPRM
+::: glide.monitors.asymptotic_active_pprm.AsymptoticActivePPRM
 
 ---
 
-::: glide.monitors.asymptotic_active_pprm.AsymptoticActivePPRM
+::: glide.monitors.asymptotic_multi_pprm.AsymptoticMultiPPRM
+

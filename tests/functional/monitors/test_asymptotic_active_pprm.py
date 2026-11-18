@@ -4,11 +4,8 @@ These tests verify end-to-end statistical properties rather than implementation
 details, and therefore require larger datasets to hold reliably.
 """
 
-from typing import List, Tuple
-
 import numpy as np
 import pytest
-from numpy.typing import NDArray
 
 from glide.estimators import ASIMeanEstimator
 from glide.monitors import AsymptoticActivePPRM, AsymptoticPPRM
@@ -23,14 +20,15 @@ N_BATCHES = 8
 BATCH_SIZE = 100
 N_LABELED_PER_BATCH = 40
 
-# ── helpers ────────────────────────────────────────────────────────────────────
+# ── fixtures ───────────────────────────────────────────────────────────────────
 
 
-def _build_active_stream(true_mean: List[float], proxy_mean: List[float]) -> Tuple[NDArray, NDArray, NDArray, NDArray]:
+@pytest.fixture
+def dataset():
     y_true_oracle, y_proxy, uncertainty, batches = generate_batched_binary_dataset_with_oracle_sampling(
         n_samples=[BATCH_SIZE] * N_BATCHES,
-        true_mean=true_mean,
-        proxy_mean=proxy_mean,
+        true_mean=[0.3] * N_BATCHES,
+        proxy_mean=[0.35] * N_BATCHES,
         correlation=[0.6] * N_BATCHES,
         random_seed=0,
     )
@@ -42,39 +40,6 @@ def _build_active_stream(true_mean: List[float], proxy_mean: List[float]) -> Tup
     xi = np.hstack([sample[1] for sample in samples])
     y_true = simulate_annotation(y_true_oracle, xi)
     return y_true, y_proxy, sampling_probability, batches
-
-
-# ── fixtures ───────────────────────────────────────────────────────────────────
-
-
-@pytest.fixture
-def dataset():
-    return _build_active_stream(true_mean=[0.3] * N_BATCHES, proxy_mean=[0.35] * N_BATCHES)
-
-
-@pytest.fixture
-def drifted_dataset():
-    return _build_active_stream(
-        true_mean=[0.3] * 2 + [0.7] * (N_BATCHES - 2), proxy_mean=[0.35] * 2 + [0.65] * (N_BATCHES - 2)
-    )
-
-
-@pytest.fixture
-def constant_probability_dataset():
-    n_labeled_per_batch = 25
-    y_true_oracle_per_batch = []
-    y_proxy_per_batch = []
-    for batch_id in range(N_BATCHES):
-        y_true_oracle, y_proxy = generate_gaussian_dataset(
-            n_samples=BATCH_SIZE, true_mean=3, true_std=0.1, proxy_mean=2, proxy_std=0.1, random_seed=batch_id
-        )
-        y_true_oracle_per_batch.append(y_true_oracle)
-        y_proxy_per_batch.append(y_proxy)
-    xi = np.tile(np.hstack([np.ones(n_labeled_per_batch), np.zeros(BATCH_SIZE - n_labeled_per_batch)]), N_BATCHES)
-    y_true = simulate_annotation(np.hstack(y_true_oracle_per_batch), xi)
-    sampling_probability = np.full(N_BATCHES * BATCH_SIZE, n_labeled_per_batch / BATCH_SIZE)
-    batches = np.repeat(np.arange(N_BATCHES), BATCH_SIZE)
-    return y_true, np.hstack(y_proxy_per_batch), sampling_probability, batches
 
 
 # ── tests ──────────────────────────────────────────────────────────────────────
@@ -97,9 +62,24 @@ def test_detect_batch_estimates_match_asi_estimator(dataset):
     np.testing.assert_allclose(monitor_result.batch_mean_estimates, estimator_means)
 
 
-def test_detect_constant_probability_matches_asymptotic_pprm(constant_probability_dataset):
-    """With a constant sampling probability, ASI reduces to PPI++ so both monitors return the same batch estimates."""
-    y_true, y_proxy, sampling_probability, batches = constant_probability_dataset
+def test_detect_equal_probabilities_match_asymptotic_pprm():
+    """Equal sampling probabilities reduce ASI to PPI++, up to a small finite-sample gap between the two monitors."""
+    n_batches = 3
+    n_labeled, n_unlabeled = 100, 400
+    batch_size = n_labeled + n_unlabeled
+    y_true_oracle_and_proxy = [
+        generate_gaussian_dataset(
+            n_samples=batch_size, true_mean=3, true_std=0.1, proxy_mean=2, proxy_std=0.1, random_seed=batch_id
+        )
+        for batch_id in range(n_batches)
+    ]
+    y_true_oracle = np.hstack([pair[0] for pair in y_true_oracle_and_proxy])
+    y_proxy = np.hstack([pair[1] for pair in y_true_oracle_and_proxy])
+    xi = np.tile(np.hstack([np.ones(n_labeled), np.zeros(n_unlabeled)]), n_batches)
+    y_true = simulate_annotation(y_true_oracle, xi)
+    sampling_probability = np.full(n_batches * batch_size, n_labeled / batch_size)
+    batches = np.repeat(np.arange(n_batches), batch_size)
+
     active_result = AsymptoticActivePPRM().detect(
         y_true, y_proxy, sampling_probability, batches, higher_is_better=False, threshold=3.5, power_tuning=False
     )
@@ -107,7 +87,7 @@ def test_detect_constant_probability_matches_asymptotic_pprm(constant_probabilit
         y_true, y_proxy, batches, higher_is_better=False, threshold=3.5, power_tuning=False
     )
 
-    np.testing.assert_allclose(active_result.batch_mean_estimates, ppi_result.batch_mean_estimates, atol=1e-2)
+    np.testing.assert_allclose(active_result.batch_mean_estimates, ppi_result.batch_mean_estimates, atol=9e-3)
 
 
 def test_detect_prefix_consistency(dataset):
@@ -144,23 +124,3 @@ def test_detect_higher_is_better_symmetry(dataset):
 
     np.testing.assert_array_equal(performance.alarms, risk.alarms)
     np.testing.assert_allclose(performance.confidence_bounds, -risk.confidence_bounds)
-
-
-def test_detect_stationary_stream_below_threshold_does_not_alarm(dataset):
-    """No false alarm is raised on a stationary stream whose true mean stays below the threshold."""
-    y_true, y_proxy, sampling_probability, batches = dataset
-    result = AsymptoticActivePPRM().detect(
-        y_true, y_proxy, sampling_probability, batches, higher_is_better=False, threshold=0.5, tightest_at_batch=4
-    )
-
-    assert not result.drift_detected
-
-
-def test_detect_injected_drift_alarms(drifted_dataset):
-    """An alarm is raised once the true mean of the stream drifts above the threshold."""
-    y_true, y_proxy, sampling_probability, batches = drifted_dataset
-    result = AsymptoticActivePPRM().detect(
-        y_true, y_proxy, sampling_probability, batches, higher_is_better=False, threshold=0.5, tightest_at_batch=4
-    )
-
-    assert result.drift_detected

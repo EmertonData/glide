@@ -10,12 +10,14 @@ from glide.monitors.base import AsymptoticRM
 class AsymptoticActivePPRM(AsymptoticRM[ASIDataset, float]):
     """Anytime-valid drift monitor combining human and proxy labels under active sampling.
 
-    Computes a per-batch Active Statistical Inference estimate (each labeled sample is
-    reweighted by the inverse of the known probability with which it was selected for
-    annotation, and a power-tuned weight fitted on the batches that strictly precede the
-    current one, predictable as required for validity, balances the proxy against the
-    labels), together with its standard error, and tracks the running mean of the
-    per-batch estimates the same way ``AsymptoticPPRM`` does for uniformly sampled labels.
+    Computes a per-batch Active Statistical Inference estimate together with its standard
+    error. Each labeled sample is reweighted by the inverse of the known probability with
+    which it was selected for annotation. A power-tuned weight balances the proxy against
+    the labels; it is fitted on the batches that strictly precede the current one, which
+    keeps it predictable as required for validity.
+
+    The running mean of the per-batch estimates is then tracked the same way
+    ``AsymptoticPPRM`` does for uniformly sampled labels.
 
     References
     ----------

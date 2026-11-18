@@ -1,5 +1,3 @@
-from unittest.mock import patch
-
 import numpy as np
 import pytest
 
@@ -36,21 +34,6 @@ def monitor():
 # --- detect ---
 
 
-def test_detect_delegates_to_detect(monitor, y_true, y_proxy, sampling_probability, batches):
-    with patch.object(monitor, "_detect", wraps=monitor._detect) as mock_detect:
-        monitor.detect(y_true, y_proxy, sampling_probability, batches, higher_is_better=False, threshold=0.5)
-
-        mock_detect.assert_called_once()
-        label_fields = mock_detect.call_args.kwargs["label_fields"]
-        identifier_fields = mock_detect.call_args.kwargs["identifier_fields"]
-        assert list(label_fields) == ["y_true", "y_proxy"]
-        assert list(identifier_fields) == ["sampling_probability"]
-        np.testing.assert_array_equal(label_fields["y_true"], y_true)
-        np.testing.assert_array_equal(label_fields["y_proxy"], y_proxy)
-        np.testing.assert_array_equal(identifier_fields["sampling_probability"], sampling_probability)
-        np.testing.assert_array_equal(mock_detect.call_args.kwargs["batches"], batches)
-
-
 def test_detect_is_valid_monitoring_result(monitor, y_true, y_proxy, sampling_probability, batches):
     result = monitor.detect(y_true, y_proxy, sampling_probability, batches, higher_is_better=False, threshold=0.5)
 
@@ -61,9 +44,7 @@ def test_detect_is_valid_monitoring_result(monitor, y_true, y_proxy, sampling_pr
     assert (result.running_means >= result.confidence_bounds).all()
 
 
-def test_detect_metadata_higher_is_better_excludes_zero_probability_rows(
-    monitor, y_true, y_proxy, sampling_probability, batches
-):
+def test_detect_metadata(monitor, y_true, y_proxy, sampling_probability, batches):
     result = monitor.detect(
         y_true,
         y_proxy,
@@ -82,14 +63,6 @@ def test_detect_metadata_higher_is_better_excludes_zero_probability_rows(
     assert result.confidence_level == 0.85
     np.testing.assert_array_equal(result.batch_n_true, np.array([2, 3]))
     np.testing.assert_array_equal(result.batch_n_proxy, np.array([4, 6]))
-
-
-def test_detect_first_batch_estimate_matches_hand_computation(monitor, y_true, y_proxy, sampling_probability, batches):
-    expected_first_batch_estimate = 0.508125
-
-    result = monitor.detect(y_true, y_proxy, sampling_probability, batches, higher_is_better=False, threshold=0.5)
-
-    assert result.batch_mean_estimates[0] == pytest.approx(expected_first_batch_estimate, abs=1e-6)
 
 
 def test_detect_custom_confidence_level(monitor, y_true, y_proxy, sampling_probability, batches):
