@@ -122,34 +122,6 @@ $$\hat{\sigma}_s = \sqrt{\frac{\widehat{\mathrm{Var}}(Y_s)}{n_s}}.$$
 
 Plugging the values $\hat{R}_s$ and $\hat{\sigma}_s$ into the [Asymptotic Confidence Sequences](#asymptotic-confidence-sequences) gives the anytime-valid lower bound $L_t$ derived there. The **drift alarm** fires as soon as $L_t > \tau$, the user-fixed threshold.
 
-### Asymptotic IPW Classical Risk Monitoring
-
-When the labels of a batch were sampled with known, non-uniform probabilities, a plain batch mean is biased towards the samples that were more likely to be labeled. Asymptotic IPW Classical Risk Monitoring corrects for this by dividing each labeled value by its sampling probability, the same way the [IPW Classical Mean](estimators.md#ipw-classical-mean-horvitzthompson) estimator does.
-
-#### Setting
-
-Each sample $i$ of batch $t$, labeled or not, has a known sampling probability $\pi_{t,i}$ and a sampling indicator $\xi_{t,i}$. Samples selected for human annotation ($\xi_{t,i} = 1$) also have a human label $Y_{t,i}$.
-
-| Value | Present for | Description |
-|---|---|---|
-| $\pi_{t,i}$ | All samples in batch $t$ | Known, pre-determined sampling probability |
-| $\xi_{t,i}$ | All samples in batch $t$ | Sampling indicator such that $\Pr(\xi_{t,i} = 1) = \pi_{t,i}$ |
-| $Y_{t,i}$ | Labeled samples in batch $t$ only ($\xi_{t,i} = 1$) | Ground-truth label |
-
-The metric is treated as a risk $R$ monitored against a user-fixed threshold $\tau$, exactly as in [Asymptotic Classical Risk Monitoring](#asymptotic-classical-risk-monitoring).
-
-The per-batch risk estimate $\hat{R}_t$ is the IPW classical mean of batch $t$, with $n_t$ the number of samples of batch $t$,
-
-$$\hat{R}_t = \frac{1}{n_t}\sum_{i=1}^{n_t} \frac{\xi_{t,i}\,Y_{t,i}}{\pi_{t,i}},$$
-
-together with its standard error $\hat{\sigma}_t$, obtained by applying the [IPW Classical Mean](estimators.md#ipw-classical-mean-horvitzthompson) variance formula within batch $t$. Rows with $\pi_{t,i} = 0$ are excluded from batch $t$, and, as in [Asymptotic Active PPRM](#asymptotic-active-prediction-powered-risk-monitoring-asymptotic-active-pprm), $\pi_{t,i}$ may only use information available before batch $t$.
-
-This monitor is the special case of [Asymptotic Active PPRM](#asymptotic-active-prediction-powered-risk-monitoring-asymptotic-active-pprm) that ignores the proxy labels ($\lambda_t = 0$).
-
-#### Bound and Alarm Rule
-
-Plugging $\hat{R}_t$ and $\hat{\sigma}_t$ into the [Asymptotic Confidence Sequences](#asymptotic-confidence-sequences) construction gives the anytime-valid lower bound $L_t$ derived there. The **drift alarm** fires as soon as $L_t > \tau$, the user-fixed threshold.
-
 ### Asymptotic Prediction-Powered Risk Monitoring (Asymptotic PPRM)
 
 The human labels collected in a batch can be scarce, which limits how quickly a monitor based on them alone can react to real drift. **Prediction-Powered Risk Monitoring (PPRM)** [[1](#ref-1)] instead combines those human labels with a large pool of cheap proxy labels, the same way [Prediction-Powered Inference (PPI++)](estimators.md#prediction-powered-inference-ppi) does for one-off estimation. Here, the per-batch estimate is plugged into the [Asymptotic Confidence Sequences](#asymptotic-confidence-sequences) construction, using the estimate's standard error.
@@ -238,6 +210,63 @@ Estimation is independent from one batch to the next: $\hat{R}_t$ and $\hat{\sig
 
 Plugging $\hat{R}_t$ and $\hat{\sigma}_t$ into the [Asymptotic Confidence Sequences](#asymptotic-confidence-sequences) construction gives the anytime-valid lower bound $L_t$ derived there. The **drift alarm** fires as soon as $L_t > \tau$, the user-fixed threshold.
 
+### Asymptotic Active Prediction-Powered Risk Monitoring (Asymptotic Active PPRM)
+
+Asymptotic PPRM assumes that the human labels of a batch are drawn uniformly at random. In practice, annotation effort is often allocated strategically, for instance towards the samples on which the proxy is the most uncertain. Asymptotic PPRM generalises to a stream where the labels of each batch were drawn with known, non-uniform probabilities, combined with the proxy labels through [Active Statistical Inference (ASI)](estimators.md#active-statistical-inference-asi) [[7](#ref-7), [8](#ref-8)], the same way the underlying estimator generalises PPI++.
+
+#### Setting
+
+Each sample $i$ of batch $t$, labeled or not, has a proxy label $\tilde{Y}_{t,i}$, a known sampling probability $\pi_{t,i}$ and a sampling indicator $\xi_{t,i}$. Samples selected for human annotation ($\xi_{t,i} = 1$) also have a human label $Y_{t,i}$.
+
+| Value | Present for | Description |
+|---|---|---|
+| $\tilde{Y}_{t,i}$ | All samples in batch $t$ | Proxy label |
+| $\pi_{t,i}$ | All samples in batch $t$ | Known, pre-determined sampling probability |
+| $\xi_{t,i}$ | All samples in batch $t$ | Sampling indicator such that $\Pr(\xi_{t,i} = 1) = \pi_{t,i}$ |
+| $Y_{t,i}$ | Labeled samples in batch $t$ only ($\xi_{t,i} = 1$) | Ground-truth label |
+
+The probability $\pi_{t,i}$ is a property of the sampling design for batch $t$. It may be chosen using any information available before batch $t$, for instance a proxy uncertainty model fit on past batches. This is what keeps $\mathbb{E}[\xi_{t,i} / \pi_{t,i}] = 1$ conditionally on the past, which the anytime-valid guarantee relies on. Rows with $\pi_{t,i} = 0$ are excluded from batch $t$.
+
+The per-batch estimate $\hat{R}_t$ is the [ASI](estimators.md#active-statistical-inference-asi) estimate on batch $t$, the average of the IPW-corrected labels $z_{t,i}(\lambda_t)$ over the $n_t$ samples of the batch,
+
+$$\hat{R}_t = \frac{1}{n_t}\sum_{i=1}^{n_t} z_{t,i}(\lambda_t), \qquad z_{t,i}(\lambda_t) = \lambda_t\,\tilde{Y}_{t,i} + \xi_{t,i}\,\frac{Y_{t,i} - \lambda_t\,\tilde{Y}_{t,i}}{\pi_{t,i}},$$
+
+together with its standard error $\hat{\sigma}_t$, obtained by applying the [ASI](estimators.md#active-statistical-inference-asi) variance formula within batch $t$.
+
+The power-tuning weight $\lambda_t$ must be predictable, and this carries over unchanged from [Asymptotic PPRM](#asymptotic-prediction-powered-risk-monitoring-asymptotic-pprm). It is a single scalar, fit with the closed-form weight of [ASI](estimators.md#active-statistical-inference-asi) on the pooled samples of every batch strictly before $t$. The first batch, having no predecessor, uses the neutral weight $\lambda_1 = 1$.
+
+#### Bound and Alarm Rule
+
+Plugging $\hat{R}_t$ and $\hat{\sigma}_t$ into the [Asymptotic Confidence Sequences](#asymptotic-confidence-sequences) construction gives the anytime-valid lower bound $L_t$ derived there. The **drift alarm** fires as soon as $L_t > \tau$, the user-fixed threshold.
+
+### Asymptotic IPW Classical Risk Monitoring
+
+When the labels of a batch were sampled with known, non-uniform probabilities, a plain batch mean is biased towards the samples that were more likely to be labeled. Asymptotic IPW Classical Risk Monitoring corrects for this by dividing each labeled value by its sampling probability, the same way the [IPW Classical Mean](estimators.md#ipw-classical-mean-horvitzthompson) estimator does.
+
+#### Setting
+
+Each sample $i$ of batch $t$, labeled or not, has a known sampling probability $\pi_{t,i}$ and a sampling indicator $\xi_{t,i}$. Samples selected for human annotation ($\xi_{t,i} = 1$) also have a human label $Y_{t,i}$.
+
+| Value | Present for | Description |
+|---|---|---|
+| $\pi_{t,i}$ | All samples in batch $t$ | Known, pre-determined sampling probability |
+| $\xi_{t,i}$ | All samples in batch $t$ | Sampling indicator such that $\Pr(\xi_{t,i} = 1) = \pi_{t,i}$ |
+| $Y_{t,i}$ | Labeled samples in batch $t$ only ($\xi_{t,i} = 1$) | Ground-truth label |
+
+The metric is treated as a risk $R$ monitored against a user-fixed threshold $\tau$, exactly as in [Asymptotic Classical Risk Monitoring](#asymptotic-classical-risk-monitoring).
+
+The per-batch risk estimate $\hat{R}_t$ is the IPW classical mean of batch $t$, with $n_t$ the number of samples of batch $t$,
+
+$$\hat{R}_t = \frac{1}{n_t}\sum_{i=1}^{n_t} \frac{\xi_{t,i}\,Y_{t,i}}{\pi_{t,i}},$$
+
+together with its standard error $\hat{\sigma}_t$, obtained by applying the [IPW Classical Mean](estimators.md#ipw-classical-mean-horvitzthompson) variance formula within batch $t$. Rows with $\pi_{t,i} = 0$ are excluded from batch $t$, and, as in [Asymptotic Active PPRM](#asymptotic-active-prediction-powered-risk-monitoring-asymptotic-active-pprm), $\pi_{t,i}$ may only use information available before batch $t$.
+
+This monitor is the special case of [Asymptotic Active PPRM](#asymptotic-active-prediction-powered-risk-monitoring-asymptotic-active-pprm) that ignores the proxy labels ($\lambda_t = 0$).
+
+#### Bound and Alarm Rule
+
+Plugging $\hat{R}_t$ and $\hat{\sigma}_t$ into the [Asymptotic Confidence Sequences](#asymptotic-confidence-sequences) construction gives the anytime-valid lower bound $L_t$ derived there. The **drift alarm** fires as soon as $L_t > \tau$, the user-fixed threshold.
+
 ### Asymptotic Clustered Prediction-Powered Risk Monitoring (Asymptotic Clustered PPRM)
 
 Asymptotic PPRM assumes that the samples of a batch are independent. In practice, samples are often grouped into clusters within which observations may be correlated. Asymptotic PPRM generalises to a stream of clustered data, where each cluster is reduced to its mean and the cluster means are combined through [Clustered PPI++](estimators.md#clustered-prediction-powered-inference), the same way the underlying estimator generalises PPI++.
@@ -319,35 +348,6 @@ Predictable power-tuning carries over unchanged from [Asymptotic PPRM](#asymptot
 #### Bound and Alarm Rule
 
 Plugging $\hat{R}_s$ and $\hat{\sigma}_s$ into the [Asymptotic Confidence Sequences](#asymptotic-confidence-sequences) construction gives the anytime-valid lower bound $L_t$ derived there. The **drift alarm** fires as soon as $L_t > \tau$, the user-fixed threshold.
-
-### Asymptotic Active Prediction-Powered Risk Monitoring (Asymptotic Active PPRM)
-
-Asymptotic PPRM assumes that the human labels of a batch are drawn uniformly at random. In practice, annotation effort is often allocated strategically, for instance towards the samples on which the proxy is the most uncertain. Asymptotic PPRM generalises to a stream where the labels of each batch were drawn with known, non-uniform probabilities, combined with the proxy labels through [Active Statistical Inference (ASI)](estimators.md#active-statistical-inference-asi) [[7](#ref-7), [8](#ref-8)], the same way the underlying estimator generalises PPI++.
-
-#### Setting
-
-Each sample $i$ of batch $t$, labeled or not, has a proxy label $\tilde{Y}_{t,i}$, a known sampling probability $\pi_{t,i}$ and a sampling indicator $\xi_{t,i}$. Samples selected for human annotation ($\xi_{t,i} = 1$) also have a human label $Y_{t,i}$.
-
-| Value | Present for | Description |
-|---|---|---|
-| $\tilde{Y}_{t,i}$ | All samples in batch $t$ | Proxy label |
-| $\pi_{t,i}$ | All samples in batch $t$ | Known, pre-determined sampling probability |
-| $\xi_{t,i}$ | All samples in batch $t$ | Sampling indicator such that $\Pr(\xi_{t,i} = 1) = \pi_{t,i}$ |
-| $Y_{t,i}$ | Labeled samples in batch $t$ only ($\xi_{t,i} = 1$) | Ground-truth label |
-
-The probability $\pi_{t,i}$ is a property of the sampling design for batch $t$. It may be chosen using any information available before batch $t$, for instance a proxy uncertainty model fit on past batches. This is what keeps $\mathbb{E}[\xi_{t,i} / \pi_{t,i}] = 1$ conditionally on the past, which the anytime-valid guarantee relies on. Rows with $\pi_{t,i} = 0$ are excluded from batch $t$.
-
-The per-batch estimate $\hat{R}_t$ is the [ASI](estimators.md#active-statistical-inference-asi) estimate on batch $t$, the average of the IPW-corrected labels $z_{t,i}(\lambda_t)$ over the $n_t$ samples of the batch,
-
-$$\hat{R}_t = \frac{1}{n_t}\sum_{i=1}^{n_t} z_{t,i}(\lambda_t), \qquad z_{t,i}(\lambda_t) = \lambda_t\,\tilde{Y}_{t,i} + \xi_{t,i}\,\frac{Y_{t,i} - \lambda_t\,\tilde{Y}_{t,i}}{\pi_{t,i}},$$
-
-together with its standard error $\hat{\sigma}_t$, obtained by applying the [ASI](estimators.md#active-statistical-inference-asi) variance formula within batch $t$.
-
-The power-tuning weight $\lambda_t$ must be predictable, and this carries over unchanged from [Asymptotic PPRM](#asymptotic-prediction-powered-risk-monitoring-asymptotic-pprm). It is a single scalar, fit with the closed-form weight of [ASI](estimators.md#active-statistical-inference-asi) on the pooled samples of every batch strictly before $t$. The first batch, having no predecessor, uses the neutral weight $\lambda_1 = 1$.
-
-#### Bound and Alarm Rule
-
-Plugging $\hat{R}_t$ and $\hat{\sigma}_t$ into the [Asymptotic Confidence Sequences](#asymptotic-confidence-sequences) construction gives the anytime-valid lower bound $L_t$ derived there. The **drift alarm** fires as soon as $L_t > \tau$, the user-fixed threshold.
 
 ---
 
