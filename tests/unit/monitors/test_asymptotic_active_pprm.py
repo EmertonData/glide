@@ -54,6 +54,7 @@ def test_detect_metadata(monitor, y_true, y_proxy, sampling_probability, batches
         threshold=0.5,
         metric_name="accuracy",
         confidence_level=0.85,
+        power_tuning=False,
     )
 
     assert result.metric_name == "accuracy"
@@ -78,6 +79,7 @@ def test_detect_custom_confidence_level(monitor, y_true, y_proxy, sampling_proba
         threshold=0.5,
         metric_name="risk",
         confidence_level=0.85,
+        power_tuning=True,
     )
 
     assert result.confidence_level == 0.85

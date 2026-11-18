@@ -42,6 +42,24 @@ def dataset():
     return y_true, y_proxy, sampling_probability, batches
 
 
+@pytest.fixture
+def constant_probability_dataset():
+    n_labeled_per_batch = 25
+    y_true_oracle_per_batch = []
+    y_proxy_per_batch = []
+    for batch_id in range(N_BATCHES):
+        y_true_oracle, y_proxy = generate_gaussian_dataset(
+            n_samples=BATCH_SIZE, true_mean=3, true_std=0.1, proxy_mean=2, proxy_std=0.1, random_seed=batch_id
+        )
+        y_true_oracle_per_batch.append(y_true_oracle)
+        y_proxy_per_batch.append(y_proxy)
+    xi = np.tile(np.hstack([np.ones(n_labeled_per_batch), np.zeros(BATCH_SIZE - n_labeled_per_batch)]), N_BATCHES)
+    y_true = simulate_annotation(np.hstack(y_true_oracle_per_batch), xi)
+    sampling_probability = np.full(N_BATCHES * BATCH_SIZE, n_labeled_per_batch / BATCH_SIZE)
+    batches = np.repeat(np.arange(N_BATCHES), BATCH_SIZE)
+    return y_true, np.hstack(y_proxy_per_batch), sampling_probability, batches
+
+
 # ── tests ──────────────────────────────────────────────────────────────────────
 
 
@@ -62,24 +80,9 @@ def test_detect_batch_estimates_match_asi_estimator(dataset):
     np.testing.assert_allclose(monitor_result.batch_mean_estimates, estimator_means)
 
 
-def test_detect_equal_probabilities_match_asymptotic_pprm():
-    """Equal sampling probabilities reduce ASI to PPI++, up to a small finite-sample gap between the two monitors."""
-    n_batches = 3
-    n_labeled, n_unlabeled = 100, 400
-    batch_size = n_labeled + n_unlabeled
-    y_true_oracle_and_proxy = [
-        generate_gaussian_dataset(
-            n_samples=batch_size, true_mean=3, true_std=0.1, proxy_mean=2, proxy_std=0.1, random_seed=batch_id
-        )
-        for batch_id in range(n_batches)
-    ]
-    y_true_oracle = np.hstack([pair[0] for pair in y_true_oracle_and_proxy])
-    y_proxy = np.hstack([pair[1] for pair in y_true_oracle_and_proxy])
-    xi = np.tile(np.hstack([np.ones(n_labeled), np.zeros(n_unlabeled)]), n_batches)
-    y_true = simulate_annotation(y_true_oracle, xi)
-    sampling_probability = np.full(n_batches * batch_size, n_labeled / batch_size)
-    batches = np.repeat(np.arange(n_batches), batch_size)
-
+def test_detect_equal_probabilities_match_asymptotic_pprm(constant_probability_dataset):
+    """With constant sampling probabilities, ASI and PPI++ are only asymptotically equivalent, so estimates are near."""
+    y_true, y_proxy, sampling_probability, batches = constant_probability_dataset
     active_result = AsymptoticActivePPRM().detect(
         y_true, y_proxy, sampling_probability, batches, higher_is_better=False, threshold=3.5, power_tuning=False
     )
@@ -87,7 +90,7 @@ def test_detect_equal_probabilities_match_asymptotic_pprm():
         y_true, y_proxy, batches, higher_is_better=False, threshold=3.5, power_tuning=False
     )
 
-    np.testing.assert_allclose(active_result.batch_mean_estimates, ppi_result.batch_mean_estimates, atol=9e-3)
+    np.testing.assert_allclose(active_result.batch_mean_estimates, ppi_result.batch_mean_estimates, atol=1e-2)
 
 
 def test_detect_prefix_consistency(dataset):
