@@ -140,7 +140,7 @@ class AsymptoticActivePPRM(AsymptoticRM[ASIDataset, float]):
             - If ``y_true``, ``y_proxy``, ``sampling_probability`` and ``batches`` have different lengths.
             - If ``batches`` contains NaN values (numeric dtype) or None values (non-numeric dtype).
             - If ``confidence_level`` is not in ``(0.5, 1)``.
-            - If any proxy value is NaN.
+            - If any proxy value is NaN, or if proxy values are constant within any batch.
             - If any probability is outside ``[0, 1]``.
             - If a labeled entry has probability ``0``, or an unlabeled entry has probability ``1``.
             - If batches are interleaved rather than grouped into contiguous blocks.

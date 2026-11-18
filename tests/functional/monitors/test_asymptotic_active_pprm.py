@@ -81,7 +81,7 @@ def test_detect_batch_estimates_match_asi_estimator(dataset):
 
 
 def test_detect_equal_probabilities_match_asymptotic_pprm(constant_probability_dataset):
-    """With constant sampling probabilities, ASI and PPI++ are only asymptotically equivalent, so estimates are near."""
+    """With equal probabilities, ASI and PPI estimates are asymptotically equal, so they are close in finite samples."""
     y_true, y_proxy, sampling_probability, batches = constant_probability_dataset
     active_result = AsymptoticActivePPRM().detect(
         y_true, y_proxy, sampling_probability, batches, higher_is_better=False, threshold=3.5, power_tuning=False
