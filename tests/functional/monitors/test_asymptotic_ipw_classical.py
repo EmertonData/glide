@@ -46,8 +46,8 @@ def y(y_true, sampling_probability):
 # ── tests ──────────────────────────────────────────────────────────────────────
 
 
-def test_constant_probability_matches_classical_monitor():
-    """With a constant probability labeling exactly that fraction of each batch, IPW and classical agree."""
+def test_detect_constant_probability_matches_classical_monitor():
+    """With a constant probability labeling exactly that fraction of each batch, the batch estimates agree."""
     batch_size, probability = 10, 0.5
     y_true_oracle, _, _, batches = generate_batched_binary_dataset_with_oracle_sampling(
         n_samples=[batch_size] * 4, true_mean=[0.4] * 4, proxy_mean=[0.4] * 4, correlation=[0.7] * 4, random_seed=0
