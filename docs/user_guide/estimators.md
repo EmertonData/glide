@@ -265,7 +265,7 @@ The variance-minimising $\lambda$ is:
 
 $$\hat{\lambda} = \frac{\widehat{\text{Cov}}(a,\, b)}{\widehat{\text{Var}}(a)}$$
 
-When the proxy is informative, $\hat{\lambda}$ is large and the IPW-corrected labels benefit from the proxy signal, narrowing the confidence interval. When the proxy is uninformative, $\hat{\lambda}$ shrinks toward 0, down-weighting it. Fixing $\lambda = 1$, recover the plain IPW estimator. It is standard to use optimal power-tuning with the $\hat{\lambda}$ value above.
+When the proxy is informative, $\hat{\lambda}$ is large and the IPW-corrected labels benefit from the proxy signal, narrowing the confidence interval. When the proxy is uninformative, $\hat{\lambda}$ shrinks toward 0, down-weighting it. Fixing $\lambda = 1$ gives the untuned ASI estimator, while $\lambda = 0$ recovers the plain IPW estimator. It is standard to use optimal power-tuning with the $\hat{\lambda}$ value above.
 
 ---
 
