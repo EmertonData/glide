@@ -9,6 +9,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 ## [Next release]
 
 ### ✨ Added
+- `AsymptoticIPWClassicalRM` monitor: anytime-valid label-only drift monitoring on non-uniformly labeled streams (e.g. with `ActiveSampler`), using inverse probability weighting.
 - `generate_batched_binary_dataset_with_oracle_sampling` simulator: a stream of binary datasets with oracle uncertainty scores, one per batch, with per-batch parameters to inject a drift in actively sampled data.
 
 ### 🔄 Changed

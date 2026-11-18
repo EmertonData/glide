@@ -12,6 +12,10 @@
 
 ---
 
+::: glide.monitors.asymptotic_ipw_classical.AsymptoticIPWClassicalRM
+
+---
+
 ::: glide.monitors.asymptotic_pprm.AsymptoticPPRM
 
 ---
