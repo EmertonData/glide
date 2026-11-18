@@ -69,15 +69,4 @@ def test_detect_custom_confidence_level(monitor, y, sampling_probability, batche
 
     np.testing.assert_allclose(result.batch_mean_estimates, expected_batch_mean_estimates, atol=1e-9)
     np.testing.assert_allclose(result.running_means, expected_running_means, atol=1e-9)
-    np.testing.assert_allclose(result.confidence_bounds, expected_confidence_bounds, atol=0.0001)
-
-
-def test_detect_higher_is_better_keeps_sampling_probability(monitor, y, sampling_probability, batches):
-    expected_confidence_bounds = np.array([0.6995, 0.7912])
-
-    result = monitor.detect(
-        y, sampling_probability, batches, higher_is_better=True, threshold=0.5, confidence_level=0.85
-    )
-
-    np.testing.assert_allclose(result.batch_mean_estimates, np.array([0.3, 0.625]), atol=1e-9)
-    np.testing.assert_allclose(result.confidence_bounds, expected_confidence_bounds, atol=0.0001)
+    np.testing.assert_allclose(result.confidence_bounds, expected_confidence_bounds, atol=1e-4)

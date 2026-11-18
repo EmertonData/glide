@@ -9,7 +9,11 @@ import pytest
 
 from glide.estimators import IPWClassicalMeanEstimator
 from glide.monitors import AsymptoticClassicalRM, AsymptoticIPWClassicalRM
-from glide.simulators import generate_binary_dataset
+from glide.simulators import (
+    generate_batched_binary_dataset_with_oracle_sampling,
+    generate_binary_dataset,
+    simulate_annotation,
+)
 
 # ── fixtures ───────────────────────────────────────────────────────────────────
 
@@ -42,14 +46,15 @@ def y(y_true, sampling_probability):
 # ── tests ──────────────────────────────────────────────────────────────────────
 
 
-def test_detect_constant_probability_matches_classical_monitor():
+def test_constant_probability_matches_classical_monitor():
     """With a constant probability labeling exactly that fraction of each batch, IPW and classical agree."""
-    n_batches, batch_size, probability = 4, 10, 0.5
-    y_full = np.random.default_rng(0).binomial(1, 0.4, size=n_batches * batch_size).astype(float)
-    labeled = np.tile(np.arange(batch_size) < batch_size * probability, n_batches)
-    y = np.where(labeled, y_full, np.nan)
-    batches = np.repeat(np.arange(n_batches), batch_size)
-    sampling_probability = np.full(n_batches * batch_size, probability)
+    batch_size, probability = 10, 0.5
+    y_true_oracle, _, _, batches = generate_batched_binary_dataset_with_oracle_sampling(
+        n_samples=[batch_size] * 4, true_mean=[0.4] * 4, proxy_mean=[0.4] * 4, correlation=[0.7] * 4, random_seed=0
+    )
+    xi = np.tile(np.arange(batch_size) < batch_size * probability, 4).astype(float)
+    y = simulate_annotation(y_true_oracle, xi)
+    sampling_probability = np.full(len(y), probability)
 
     ipw_result = AsymptoticIPWClassicalRM().detect(
         y, sampling_probability, batches, higher_is_better=False, threshold=0.5
