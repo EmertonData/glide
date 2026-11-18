@@ -128,7 +128,7 @@ When the labels of a batch were sampled with known, non-uniform probabilities, a
 
 #### Setting
 
-Each batch $t$ contributes a set of human labels, each drawn with a known probability, together with the sampling probability and indicator of every sample of the batch, labeled or not.
+Each sample $i$ of batch $t$, labeled or not, has a known sampling probability $\pi_{t,i}$ and a sampling indicator $\xi_{t,i}$. Samples selected for human annotation ($\xi_{t,i} = 1$) also have a human label $Y_{t,i}$.
 
 | Value | Present for | Description |
 |---|---|---|
@@ -324,7 +324,7 @@ Asymptotic PPRM assumes that the human labels of a batch are drawn uniformly at 
 
 #### Setting
 
-Each batch $t$ carries the following inputs: a proxy label, a known sampling probability and a sampling indicator for every sample of the batch, together with a human label for the sampled ones.
+Each sample $i$ of batch $t$, labeled or not, has a proxy label $\tilde{Y}_{t,i}$, a known sampling probability $\pi_{t,i}$ and a sampling indicator $\xi_{t,i}$. Samples selected for human annotation ($\xi_{t,i} = 1$) also have a human label $Y_{t,i}$.
 
 | Value | Present for | Description |
 |---|---|---|
@@ -333,15 +333,15 @@ Each batch $t$ carries the following inputs: a proxy label, a known sampling pro
 | $\xi_{t,i}$ | All samples in batch $t$ | Sampling indicator such that $\Pr(\xi_{t,i} = 1) = \pi_{t,i}$ |
 | $Y_{t,i}$ | Labeled samples in batch $t$ only ($\xi_{t,i} = 1$) | Ground-truth label |
 
-The probability $\pi_{t,i}$ is a property of the sampling design for batch $t$. It may be chosen using any information available before batch $t$, for instance a proxy uncertainty model fit on past batches, but never information from batch $t$'s own labels. This is what keeps $\mathbb{E}[\xi_{t,i} / \pi_{t,i}] = 1$ given the past, on which the anytime-valid guarantee relies. Rows with $\pi_{t,i} = 0$ are excluded from batch $t$.
+The probability $\pi_{t,i}$ is a property of the sampling design for batch $t$. It may be chosen using any information available before batch $t$, for instance a proxy uncertainty model fit on past batches. This is what keeps $\mathbb{E}[\xi_{t,i} / \pi_{t,i}] = 1$ conditionally on the past, which is necessary for the anytime-valid guarantee. Rows with $\pi_{t,i} = 0$ are excluded from batch $t$.
 
 The per-batch estimate $\hat{R}_t$ is the [ASI](estimators.md#active-statistical-inference-asi) estimate on batch $t$, the average of the IPW-corrected labels $z_{t,i}(\lambda_t)$ over the $n_t$ samples of the batch,
 
 $$\hat{R}_t = \frac{1}{n_t}\sum_{i=1}^{n_t} z_{t,i}(\lambda_t), \qquad z_{t,i}(\lambda_t) = \lambda_t\,\tilde{Y}_{t,i} + \xi_{t,i}\,\frac{Y_{t,i} - \lambda_t\,\tilde{Y}_{t,i}}{\pi_{t,i}},$$
 
-together with its standard error $\hat{\sigma}_t$, obtained by applying the [ASI](estimators.md#active-statistical-inference-asi) variance formula within batch $t$, and $\lambda_t$ a predictable power-tuning weight.
+Its standard error $\hat{\sigma}_t$ is obtained by applying the [ASI](estimators.md#active-statistical-inference-asi) variance formula within batch $t$.
 
-Predictable power-tuning carries over unchanged from [Asymptotic PPRM](#asymptotic-prediction-powered-risk-monitoring-asymptotic-pprm): $\lambda_t$, a single scalar with no per-stratum weight, is fit on the pooled samples of every batch strictly before $t$ using the closed-form weight of [ASI](estimators.md#active-statistical-inference-asi), and the first batch, having no predecessor, uses the neutral weight $\lambda_1 = 1$.
+The power-tuning weight $\lambda_t$ must be predictable, and this carries over unchanged from [Asymptotic PPRM](#asymptotic-prediction-powered-risk-monitoring-asymptotic-pprm). It is a single scalar, fit with the closed-form weight of [ASI](estimators.md#active-statistical-inference-asi) on the pooled samples of every batch strictly before $t$. The first batch, having no predecessor, uses the neutral weight $\lambda_1 = 1$.
 
 #### Bound and Alarm Rule
 
