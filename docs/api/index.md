@@ -62,6 +62,7 @@
 | [`AsymptoticClassicalRM`](monitors.md#glide.monitors.asymptotic_classical.AsymptoticClassicalRM) | Anytime-valid drift monitor over batched labels via an asymptotic confidence sequence, without proxy predictions |
 | [`AsymptoticStratifiedClassicalRM`](monitors.md#glide.monitors.asymptotic_stratified_classical.AsymptoticStratifiedClassicalRM) | Anytime-valid drift monitor over batched labels via an asymptotic confidence sequence, without proxy predictions, over a stream naturally partitioned into strata |
 | [`AsymptoticClusteredClassicalRM`](monitors.md#glide.monitors.asymptotic_clustered_classical.AsymptoticClusteredClassicalRM) | Anytime-valid drift monitor over batched labels via an asymptotic confidence sequence, without proxy predictions, over a stream of clustered data |
+| [`AsymptoticIPWClassicalRM`](monitors.md#glide.monitors.asymptotic_ipw_classical.AsymptoticIPWClassicalRM) | Anytime-valid drift monitor over batched labels via an asymptotic confidence sequence, without proxy predictions, with inverse probability weighting for non-uniformly sampled labels |
 
 ### Prediction-Powered
 
