@@ -88,7 +88,7 @@ class ASIMeanEstimator:
             Target coverage for the confidence interval. Defaults to ``0.95``.
         power_tuning : bool, optional
             If ``True`` (default), selects λ analytically to minimise asymptotic variance.
-            If ``False``, uses λ = 1 (plain IPW estimator).
+            If ``False``, uses λ = 1 (no power tuning).
 
         Returns
         -------
