@@ -9,15 +9,21 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 ## [Next release]
 
 ### ✨ Added
-- `AsymptoticActivePPRM` drift monitor: anytime-valid monitoring that combines human labels drawn with known, non-uniform probabilities (e.g. with `ActiveSampler`) and proxy labels.
-- `AsymptoticIPWClassicalRM` monitor: anytime-valid label-only drift monitoring on non-uniformly labeled streams (e.g. with `ActiveSampler`), using inverse probability weighting.
-- `generate_batched_binary_dataset_with_oracle_sampling` simulator: a stream of binary datasets with oracle uncertainty scores, one per batch, with per-batch parameters to inject a drift in actively sampled data.
 
 ### 🔄 Changed
 
 ### 🐛 Fixed
 
 ### 💛 Contributors
+
+## [0.13.0] – 2026-11-20
+
+### ✨ Added
+- Drift monitoring on actively sampled data streams, where human labels are drawn with known, non-uniform probabilities (e.g. with `ActiveSampler`): `AsymptoticActivePPRM` (human labels combined with proxy predictions) and `AsymptoticIPWClassicalRM` (labels only, using inverse probability weighting), plus a new tutorial and user guide sections.
+- `generate_batched_binary_dataset_with_oracle_sampling` simulator: a stream of binary datasets with oracle uncertainty scores, one per batch, with per-batch parameters to inject a drift in actively sampled data.
+
+### 💛 Contributors
+Thank you to everyone who contributed to this release: @gmartinon-ed, @imerad
 
 ## [0.12.0] – 2026-10-30
 
