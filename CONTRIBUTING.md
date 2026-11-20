@@ -231,7 +231,7 @@ New estimators and samplers should be backed by a scientific publication. Please
    - Doctests in the class docstring.
 5. **Write functional tests** in `tests/functional/estimators/test_<name>.py`. If applicable, test expected behaviors and properties of your estimator in specific situations (e.g., the estimator reduces to the classical mean in special cases), see existing files in `tests/functional/estimators` for examples
 6. **Write a numpy-style docstring** that includes the reference paper, parameter descriptions, and a small `Examples` section with a minimalistic runnable doctest. See existing estimators for inspiration.
-7. **Add an example script** in `docs/examples/plot_<name>.py` demonstrating the estimator on some synthetic data.
+7. **Optionally, add a tutorial notebook** in `docs/tutorials/estimators/<name>.ipynb` demonstrating the estimator on some synthetic data.
 8. **Update `CHANGELOG.md`** under the `[Next release]` section.
 
 If this family is likely to get a monitor counterpart too, consider factoring the per-unit computation (validate, transform, tune, then compute mean and std) into a shared `Engine` in `glide/engines/` (see `ppi.py` or `classical.py` for examples), so the estimator and monitor don't duplicate the same math.
@@ -270,7 +270,7 @@ If this family is likely to get a monitor counterpart too, consider factoring th
 6. **Write a numpy-style docstring** that includes the reference paper, parameter descriptions, and a small `Examples` section with a minimalistic runnable doctest. See existing monitors for inspiration.
 7. **Update `CHANGELOG.md`** under the `[Next release]` section.
 
-If an estimator already exists for this family, check whether its per-unit computation lives in a shared `Engine` in `glide/engines/` — reusing it saves you from re-deriving the same math for the monitor.
+If an estimator already exists for this family, check whether its per-unit computation lives in a shared `Engine` in `glide/engines/` — reusing it saves you from re-deriving the same math for the monitor, which then reduces to a thin façade over `AsymptoticRM` (see `asymptotic_pprm.py`).
 
 ### 3. Documentation
 

@@ -36,7 +36,7 @@ The package has multiple layers:
 
 **`glide/estimators/`** — Public API. Statistical estimators (classical, PPI, ASI, IPW, PTD, and their stratified variants). `ptd_core.py` holds shared internals for families not yet migrated to `glide/engines/`.
 
-**`glide/engines/`** — Internal. Per-unit computation (validate, transform, tune, then compute mean and std) shared between an estimator and its monitor counterpart for the same family. Each family implements the `MeanEstimationEngine` protocol (`base.py`); currently `classical.py`, `ppi.py` (plus `ppi_core.py`), `stratified_ppi.py` (plus `stratified_core.py`), and `clustered_ppi.py` (plus `clustered_core.py`) are migrated. Estimator shells call the engine once over the whole dataset; monitor façades loop it once per batch.
+**`glide/engines/`** — Internal. Per-unit computation (validate, transform, tune, then compute mean and std) shared between an estimator and its monitor counterpart for the same family. Each family implements the `MeanEstimationEngine` protocol (`base.py`); every family except the PTD one is migrated (classical, PPI, ASI, IPW classical, multi-PPI, and the stratified and clustered variants), with `*_core.py` files holding the internals shared within a structure. Estimator shells call the engine once over the whole dataset; monitor façades loop it once per batch.
 
 **`glide/confidence_intervals/`** — Confidence interval implementations depending on statistical methods.
 
@@ -95,6 +95,7 @@ If there is no `.codegraph/` directory, skip CodeGraph entirely — indexing is 
 - Name every mock variable `mock_<mocked_function_name>`, stripping the leading underscore from private functions — BAD: `mock`, `mock_nan`, `mock_bounds`; GOOD: `mock_validate_has_no_nan`, `mock_validate_bounds`.
 - All delegation checks for a given function belong in a single `test_<function>_delegates_to_validation` test. Before adding a new delegation assertion, check whether that test already exists and extend it rather than creating a new one.
 - Engine and estimator tests never re-test validation errors raised by shared helpers in `glide/core/validation.py` (no `pytest.raises` on unequal lengths, too few labeled values, out-of-range probabilities, etc.): the error messages are tested once in `tests/unit/core/test_validation.py` and the `test_<function>_delegates_to_validation` test proves the helper is called. Only add a `pytest.raises` test for an error raised by logic specific to that engine or estimator (see `test_fit_tuning_parameter_wraps_error_with_stratum_identifier` in `tests/unit/engines/test_stratified_ppi.py`)
+- Monitor tests follow `tests/unit/monitors/test_asymptotic_pprm.py`; their functional tests check that per-batch estimates match the corresponding estimator on that batch alone
 - Engine `_preprocess` gets one `test_preprocess_valid_output` on a single hardcoded example, not one test per row-filtering edge case: put the edge-case rows (e.g. a zero-probability row, a NaN label) into that example's fixtures instead. The canonical engine test layout is `delegates_to_validation`, `valid_output`, `fit_tuning_parameter`, `compute_mean_and_std` (see `tests/unit/engines/test_ppi.py`, `tests/unit/engines/test_clustered_classical.py`)
 
 ## Code Conventions
@@ -198,6 +199,7 @@ Strings, comments and docstrings (including notebook code cells) must not contai
 ### Documentation
 
 - MkDocs with mkdocstrings; docs must build without warnings
+- Register every new tutorial in the `mkdocs.yml` navigation and in `docs/tutorials/index.md` (for a monitor, its row in the Phase 4 table).
 - Always specify image widths as a percentage (e.g. `width="80%"`), never as fixed pixels.
 - Update `CHANGELOG.md` for any user-facing changes (Keep a Changelog format, SemVer)
 - Always add elements to the "Added" or "Changed" sections of `CHANGELOG.md` at the top of the existing list
