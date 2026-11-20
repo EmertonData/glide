@@ -270,7 +270,7 @@ If this family is likely to get a monitor counterpart too, consider factoring th
 6. **Write a numpy-style docstring** that includes the reference paper, parameter descriptions, and a small `Examples` section with a minimalistic runnable doctest. See existing monitors for inspiration.
 7. **Update `CHANGELOG.md`** under the `[Next release]` section.
 
-If an estimator already exists for this family, check whether its per-unit computation lives in a shared `Engine` in `glide/engines/` — reusing it saves you from re-deriving the same math for the monitor, which then reduces to a thin façade over `AsymptoticRM` (see `asymptotic_ipw_classical.py`).
+If an estimator already exists for this family, check whether its per-unit computation lives in a shared `Engine` in `glide/engines/` — reusing it saves you from re-deriving the same math for the monitor, which then reduces to a thin façade over `AsymptoticRM` (see `asymptotic_pprm.py`).
 
 ### 3. Documentation
 
