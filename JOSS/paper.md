@@ -61,8 +61,6 @@ Evaluation orchestration frameworks such as RAGAS [@es-etal-2024-ragas], DeepEva
 
 We built a new library rather than contributing these methods upstream for two reasons.
 
-The first is audience and scope. `ppi_py` is the reference implementation of the seminal PPI work and remains the right tool for inference on general estimands (e.g., quantiles, regression coefficients). It starts from an already-labeled set, so sampling design falls outside its scope. `GLIDE` addresses the broader community of engineers and evaluation teams, and buys that accessibility by narrowing the estimand to the mean, the workhorse of system evaluation. The narrowing also buys breadth: `ppi_py` predates most of the extensions listed above, whereas `GLIDE` brings cost-aware and active designs, stratified and clustered variants, multi-proxy aggregation, bootstrap intervals and anytime-valid monitoring into one consistent framework, several of them in their first public implementation.
-
 The first is audience and scope. `ppi_py` is the reference implementation of the seminal PPI work and remains the right tool for inference on general estimands (e.g., quantiles, regression coefficients). It starts from an already-labeled set, so sampling design falls outside its scope. `GLIDE` addresses the broader community of engineers and evaluation teams, and buys that accessibility by narrowing the estimand to the mean, the workhorse of system evaluation. The narrowing also buys breadth: `ppi_py` predates most of the extensions listed above into one consistent framework, several of them in their first public implementation.
 
 The second reason follows from the first. Serving that audience requires an API that reconciles sampling, estimation and monitoring in one modular architecture. `GLIDE` provides a unified API that lets users switch easily between methods, and lets contributors add a new estimator, sampler or monitor without having to understand or modify the rest of the code base.
@@ -73,7 +71,7 @@ The second reason follows from the first. Serving that audience requires an API 
 
 Two design decisions carry most of the library's behavior.
 
-The first is the data contract: each class method take as inputs one aligned array per collection of labels, following the conventions scikit-learn established across the data science community [@Pedregosa_Scikit-learn_Machine_Learning_2011].
+The first is the data contract: each class method takes as inputs one aligned array per collection of labels, following the conventions scikit-learn established across the data science community [@Pedregosa_Scikit-learn_Machine_Learning_2011].
 
 The second is a middle layer of abstraction: each estimator family factors its computation into a `MeanEstimationEngine`, which an estimator calls once over the whole dataset and a monitor calls once per batch. Because estimators and monitors share this middle layer, contributors can readily extend any estimator into its anytime-valid monitor counterpart, without reimplementing its statistics.
 
@@ -95,7 +93,7 @@ The package can be installed from PyPI with `pip install glide-py`. The source i
 
 # AI usage disclosure
 
-Generative AI was used both to develop the software and to prepare this manuscript. Development tasks are co-designed by the tech lead with Claude Code. Developers co-implement with Claude Code. Each pull request is co-reviewed: Claude's code-review first, then a tech lead's review. For the manuscript, Claude was used to brainstorm, format, and audit the draft against the journal's guidelines. The authors take full responsibility of the result.
+Generative AI was used both to develop the software and to prepare this manuscript. Development tasks are co-designed by the tech lead with Claude Code. Developers co-implement with Claude Code. Each pull request is co-reviewed: Claude's code-review first, then a tech lead's review. For the manuscript, Claude was used to brainstorm, format, and audit the draft against the journal's guidelines. The authors take full responsibility for the result.
 
 # Acknowledgements
 
