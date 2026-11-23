@@ -1,4 +1,5 @@
-from typing import Hashable, Optional
+from collections.abc import Hashable
+from typing import Optional
 
 import numpy as np
 from numpy.typing import NDArray

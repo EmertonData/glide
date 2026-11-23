@@ -1,5 +1,6 @@
 import warnings
-from typing import Hashable, Optional, Sequence
+from collections.abc import Hashable, Sequence
+from typing import Optional
 
 import numpy as np
 from numpy.typing import NDArray
