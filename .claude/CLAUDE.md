@@ -132,7 +132,7 @@ Use built-in generics for collections (PEP 585); ruff enforces this via `UP006`.
 - BAD: `List[str]`, `Dict[str, int]`, `Tuple[int, ...]`, `Union[float, NDArray]`, `int | None`
 - GOOD: `list[str]`, `dict[str, int]`, `tuple[int, ...]`, `float | NDArray`, `Optional[int]`
 
-Import the remaining generics from `typing`: `from typing import Optional`.
+Import abstract types (`Sequence`, `Hashable`, `Callable`, ...) from `collections.abc`, not from `typing`; ruff enforces this via `UP035`. Import the remaining generics from `typing`: `from typing import Optional`.
 
 Never use `object` or `Any` as type annotations, use precise types or protocols instead.
 
