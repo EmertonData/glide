@@ -1,5 +1,3 @@
-from typing import Tuple
-
 import numpy as np
 from numpy.typing import NDArray
 
@@ -16,7 +14,7 @@ class ClassicalMeanEngine:
     def _fit_tuning_parameter(self, dataset: NDArray, *, power_tuning: bool) -> None:
         return None
 
-    def _compute_mean_and_std(self, dataset: NDArray, tuning_parameter: None) -> Tuple[float, float]:
+    def _compute_mean_and_std(self, dataset: NDArray, tuning_parameter: None) -> tuple[float, float]:
         n_samples = len(dataset)
         mean = np.mean(dataset)
         std = np.std(dataset, ddof=1) / np.sqrt(n_samples)

@@ -1,5 +1,5 @@
 import warnings
-from typing import Hashable, List, Optional, Sequence, Union
+from typing import Hashable, Optional, Sequence, Union
 
 import numpy as np
 from numpy.typing import NDArray
@@ -54,7 +54,7 @@ def _validate_label_prob_consistency(labeled_mask: NDArray, sampling_probability
         raise ValueError("Samples with probability one of being labeled must be labeled.")
 
 
-def _validate_equal_lengths(*arrays: Union[Sequence, NDArray], names: List[str]) -> None:
+def _validate_equal_lengths(*arrays: Union[Sequence, NDArray], names: list[str]) -> None:
     lengths = [len(a) for a in arrays]
     if len(set(lengths)) > 1:
         if len(names) == 2:
@@ -131,7 +131,7 @@ def _validate_n_samples_bound(n_samples: int, n_max: int) -> None:
     )
 
 
-def _validate_literal(arg: str, name: str, allowed: List[str]) -> None:
+def _validate_literal(arg: str, name: str, allowed: list[str]) -> None:
     if arg not in allowed:
         allowed_str = ", ".join(f"'{v}'" for v in allowed[:-1]) + f", or '{allowed[-1]}'"
         raise ValueError(f"'{name}' must be {allowed_str}; got {arg!r}.")

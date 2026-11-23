@@ -1,4 +1,4 @@
-from typing import Optional, Tuple, Union
+from typing import Optional, Union
 
 import numpy as np
 from numpy.random.bit_generator import SeedSequence
@@ -123,7 +123,7 @@ class CostOptimalRandomSampler:
         y_proxy_cost: float,
         max_cost: float,
         random_seed: Optional[Union[int, SeedSequence]] = None,
-    ) -> Tuple[NDArray, NDArray]:
+    ) -> tuple[NDArray, NDArray]:
         """Sample observations with cost-optimal allocation between raters.
 
         Derives the optimal probability of querying the expensive rater (ground truth)

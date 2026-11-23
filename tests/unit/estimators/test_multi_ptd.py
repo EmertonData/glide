@@ -1,4 +1,3 @@
-from typing import Tuple
 from unittest.mock import patch
 
 import numpy as np
@@ -19,7 +18,7 @@ def estimator() -> MultiPTDMeanEstimator:
 
 
 @pytest.fixture
-def y_arrays() -> Tuple[NDArray, NDArray]:
+def y_arrays() -> tuple[NDArray, NDArray]:
     y_true = np.array([5.0, 6.0, 7.0, np.nan, np.nan, np.nan])
     y_proxies = np.array([[4.5, 4.0], [5.5, 6.0], [6.5, 7.0], [6.0, 6.0], [7.0, 7.0], [8.0, 9.0]])
     return y_true, y_proxies

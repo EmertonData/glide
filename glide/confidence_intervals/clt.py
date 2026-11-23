@@ -1,5 +1,5 @@
 from dataclasses import dataclass, field
-from typing import Literal, Tuple
+from typing import Literal
 
 from scipy.stats import norm
 
@@ -63,7 +63,7 @@ class CLTConfidenceInterval:
 
     def test_null_hypothesis(
         self, h0_value: float, alternative: Literal["larger", "smaller", "two-sided"] = "two-sided"
-    ) -> Tuple[float, float, float]:
+    ) -> tuple[float, float, float]:
         """Perform a one-sample z-test against a null hypothesis value.
 
         Parameters

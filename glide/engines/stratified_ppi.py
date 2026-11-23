@@ -1,4 +1,4 @@
-from typing import Dict, Hashable, Tuple
+from typing import Hashable
 
 import numpy as np
 from numpy.typing import NDArray
@@ -7,7 +7,7 @@ from glide.engines.ppi_core import _compute_mean_estimate, _compute_std_estimate
 from glide.engines.stratified_core import StratifiedDataset as StratifiedPPIDataset
 from glide.engines.stratified_core import _preprocess
 
-StratifiedTuningParameter = Dict[Hashable, float]
+StratifiedTuningParameter = dict[Hashable, float]
 
 
 class StratifiedPPIMeanEngine:
@@ -28,7 +28,7 @@ class StratifiedPPIMeanEngine:
 
     def _compute_mean_and_std(
         self, dataset: StratifiedPPIDataset, tuning_parameter: StratifiedTuningParameter
-    ) -> Tuple[float, float]:
+    ) -> tuple[float, float]:
         stratum_sizes = {
             stratum_id: len(y_true) + len(y_proxy_unlabeled)
             for stratum_id, (y_true, _, y_proxy_unlabeled) in dataset.items()

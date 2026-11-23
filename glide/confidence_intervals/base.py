@@ -1,4 +1,4 @@
-from typing import Literal, Protocol, Tuple
+from typing import Literal, Protocol
 
 
 class ConfidenceInterval(Protocol):
@@ -32,7 +32,7 @@ class ConfidenceInterval(Protocol):
         self,
         h0_value: float,
         alternative: Literal["larger", "smaller", "two-sided"] = "two-sided",
-    ) -> Tuple[float, float, float]:
+    ) -> tuple[float, float, float]:
         """Test null hypothesis against a value.
 
         Returns (test_statistic, p_value, df).

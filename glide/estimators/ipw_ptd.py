@@ -1,6 +1,6 @@
 import warnings
 from math import floor
-from typing import Optional, Tuple
+from typing import Optional
 
 import numpy as np
 from numpy.typing import NDArray
@@ -66,7 +66,7 @@ class IPWPTDMeanEstimator:
         y_true: NDArray,
         y_proxy: NDArray,
         sampling_probability: NDArray,
-    ) -> Tuple[NDArray, NDArray, NDArray, NDArray]:
+    ) -> tuple[NDArray, NDArray, NDArray, NDArray]:
         _validate_equal_lengths(
             y_true, y_proxy, sampling_probability, names=["y_true", "y_proxy", "sampling_probability"]
         )

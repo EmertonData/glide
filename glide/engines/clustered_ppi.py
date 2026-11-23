@@ -1,5 +1,3 @@
-from typing import Tuple
-
 from numpy.typing import NDArray
 
 from glide.engines.clustered_core import ClusteredDataset as ClusteredPPIDataset
@@ -19,6 +17,6 @@ class ClusteredPPIMeanEngine:
         tuning_parameter = self._ppi_engine._fit_tuning_parameter(dataset, power_tuning=power_tuning)
         return tuning_parameter
 
-    def _compute_mean_and_std(self, dataset: ClusteredPPIDataset, tuning_parameter: float) -> Tuple[float, float]:
+    def _compute_mean_and_std(self, dataset: ClusteredPPIDataset, tuning_parameter: float) -> tuple[float, float]:
         mean, std = self._ppi_engine._compute_mean_and_std(dataset, tuning_parameter)
         return mean, std

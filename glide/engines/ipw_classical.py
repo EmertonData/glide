@@ -1,5 +1,3 @@
-from typing import Tuple
-
 import numpy as np
 from numpy.typing import NDArray
 
@@ -11,7 +9,7 @@ from glide.core.validation import (
     _validate_probabilities,
 )
 
-IPWClassicalDataset = Tuple[NDArray, NDArray]
+IPWClassicalDataset = tuple[NDArray, NDArray]
 
 
 class IPWClassicalMeanEngine:
@@ -30,7 +28,7 @@ class IPWClassicalMeanEngine:
     def _fit_tuning_parameter(self, dataset: IPWClassicalDataset, *, power_tuning: bool) -> None:
         return None
 
-    def _compute_mean_and_std(self, dataset: IPWClassicalDataset, tuning_parameter: None) -> Tuple[float, float]:
+    def _compute_mean_and_std(self, dataset: IPWClassicalDataset, tuning_parameter: None) -> tuple[float, float]:
         y, sampling_probability = dataset
         n_samples = len(sampling_probability)
         y_filled = np.nan_to_num(y, nan=0.0)

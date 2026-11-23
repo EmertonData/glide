@@ -1,4 +1,4 @@
-from typing import Dict, Tuple, Union, overload
+from typing import Union, overload
 
 import numpy as np
 from numpy.typing import NDArray
@@ -18,7 +18,7 @@ def _reorient(value: Union[float, NDArray], *, higher_is_better: bool) -> Union[
     return reoriented_value
 
 
-def _unique_ordered_batches(batches: NDArray) -> Tuple[NDArray, NDArray]:
+def _unique_ordered_batches(batches: NDArray) -> tuple[NDArray, NDArray]:
     block_starts = np.ones(len(batches), dtype=bool)
     block_starts[1:] = batches[1:] != batches[:-1]
     batch_identifiers = batches[block_starts]
@@ -33,13 +33,13 @@ def _unique_ordered_batches(batches: NDArray) -> Tuple[NDArray, NDArray]:
 
 
 def _preprocess(
-    label_fields: Dict[str, NDArray],
-    identifier_fields: Dict[str, NDArray],
+    label_fields: dict[str, NDArray],
+    identifier_fields: dict[str, NDArray],
     batches: NDArray,
     *,
     higher_is_better: bool,
     confidence_level: float,
-) -> Tuple[Dict[str, NDArray], NDArray, NDArray]:
+) -> tuple[dict[str, NDArray], NDArray, NDArray]:
     _validate_bounds(
         confidence_level,
         "confidence_level",
@@ -72,7 +72,7 @@ def _postprocess(
     risk_batch_mean_estimates: NDArray,
     *,
     higher_is_better: bool,
-) -> Tuple[NDArray, NDArray, NDArray]:
+) -> tuple[NDArray, NDArray, NDArray]:
     running_means = _reorient(risk_running_means, higher_is_better=higher_is_better)
     confidence_bounds = _reorient(risk_confidence_bounds, higher_is_better=higher_is_better)
     batch_mean_estimates = _reorient(risk_batch_mean_estimates, higher_is_better=higher_is_better)

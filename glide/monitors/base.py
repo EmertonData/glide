@@ -1,4 +1,4 @@
-from typing import Dict, Generic, Optional, Tuple
+from typing import Generic, Optional
 
 import numpy as np
 from numpy.typing import NDArray
@@ -11,22 +11,22 @@ from glide.monitors.core import _postprocess, _preprocess
 class AsymptoticRM(Generic[DatasetT, TuningParameterT]):
     _engine: MeanEstimationEngine[DatasetT, TuningParameterT]
 
-    def _preprocess_subset(self, fields: Dict[str, NDArray], mask: NDArray) -> DatasetT:
+    def _preprocess_subset(self, fields: dict[str, NDArray], mask: NDArray) -> DatasetT:
         field_subsets = {name: field[mask] for name, field in fields.items()}
         dataset = self._engine._preprocess(**field_subsets)
         return dataset
 
     def _detect(
         self,
-        label_fields: Dict[str, NDArray],
+        label_fields: dict[str, NDArray],
         batches: NDArray,
         *,
-        identifier_fields: Optional[Dict[str, NDArray]] = None,
+        identifier_fields: Optional[dict[str, NDArray]] = None,
         higher_is_better: bool,
         confidence_level: float,
         tightest_at_batch: int,
         power_tuning: bool,
-    ) -> Tuple[NDArray, NDArray, NDArray, NDArray]:
+    ) -> tuple[NDArray, NDArray, NDArray, NDArray]:
         risk_fields, batch_identifiers, batch_codes = _preprocess(
             label_fields,
             identifier_fields or {},

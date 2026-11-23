@@ -1,5 +1,3 @@
-from typing import Tuple
-
 import numpy as np
 from numpy.typing import NDArray
 
@@ -9,7 +7,7 @@ def _compute_bootstrap_labeled_means(
     y_proxy_labeled: NDArray,
     n_bootstrap: int,
     rng: np.random.Generator,
-) -> Tuple[NDArray, NDArray]:
+) -> tuple[NDArray, NDArray]:
     n_labeled = len(y_true)
     idx = rng.choice(n_labeled, size=(n_bootstrap, n_labeled), replace=True)
     bootstrap_y_true_means = np.mean(y_true[idx], axis=1)

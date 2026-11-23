@@ -1,5 +1,4 @@
 from dataclasses import dataclass
-from typing import Tuple
 
 import numpy as np
 from numpy.typing import NDArray
@@ -13,7 +12,7 @@ def _compute_asymptotic_bounds(
     batch_std_estimates: NDArray,
     miscoverage: float,
     tightest_at_batch: int,
-) -> Tuple[NDArray, NDArray]:
+) -> tuple[NDArray, NDArray]:
     _validate_non_empty(batch_estimates, "batch_estimates")
     _validate_equal_lengths(batch_estimates, batch_std_estimates, names=["batch_estimates", "batch_std_estimates"])
     _validate_bounds(

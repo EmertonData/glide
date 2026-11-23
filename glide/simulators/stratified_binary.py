@@ -1,4 +1,4 @@
-from typing import Optional, Tuple, Union
+from typing import Optional, Union
 
 import numpy as np
 from numpy.typing import ArrayLike, NDArray
@@ -13,7 +13,7 @@ def generate_stratified_binary_dataset(
     proxy_mean: ArrayLike,
     correlation: ArrayLike,
     random_seed: Optional[Union[int, np.random.SeedSequence]] = None,
-) -> Tuple[NDArray, NDArray, NDArray]:
+) -> tuple[NDArray, NDArray, NDArray]:
     """Generate a synthetic stratified binary-label oracle dataset.
 
     Generate multiple strata with potentially different parameters (true_mean, proxy_mean,

@@ -1,4 +1,4 @@
-from typing import Dict, Hashable, Literal, Optional
+from typing import Hashable, Literal, Optional
 
 import numpy as np
 from numpy.typing import NDArray
@@ -62,9 +62,9 @@ class StratifiedSampler:
 
     def _apply_largest_remainder_rounding(
         self,
-        raw_allocation: Dict[Hashable, float],
+        raw_allocation: dict[Hashable, float],
         n_samples: int,
-    ) -> Dict[Hashable, int]:
+    ) -> dict[Hashable, int]:
         allocation = {}
         remainders = {}
 
@@ -88,7 +88,7 @@ class StratifiedSampler:
         y_proxy: NDArray,
         groups: NDArray,
         n_samples: int,
-    ) -> Dict[Hashable, int]:
+    ) -> dict[Hashable, int]:
 
         unique_strata = np.unique(groups)
 
@@ -120,7 +120,7 @@ class StratifiedSampler:
         self,
         groups: NDArray,
         n_samples: int,
-    ) -> Dict[Hashable, int]:
+    ) -> dict[Hashable, int]:
 
         unique_strata = np.unique(groups)
         total_size = len(groups)

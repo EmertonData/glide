@@ -1,12 +1,10 @@
-from typing import Tuple
-
 from numpy.typing import NDArray
 
 from glide.core.utils import _split_labeled_unlabeled
 from glide.core.validation import _validate_equal_lengths, _validate_has_no_nan, _validate_sample_sizes
 from glide.engines.ppi_core import _compute_mean_estimate, _compute_std_estimate, _compute_tuning_parameter
 
-PPIDataset = Tuple[NDArray, NDArray, NDArray]
+PPIDataset = tuple[NDArray, NDArray, NDArray]
 
 
 class PPIMeanEngine:
@@ -24,7 +22,7 @@ class PPIMeanEngine:
         )
         return tuning_parameter
 
-    def _compute_mean_and_std(self, dataset: PPIDataset, tuning_parameter: float) -> Tuple[float, float]:
+    def _compute_mean_and_std(self, dataset: PPIDataset, tuning_parameter: float) -> tuple[float, float]:
         y_true, y_proxy_labeled, y_proxy_unlabeled = dataset
         mean = _compute_mean_estimate(y_true, y_proxy_labeled, y_proxy_unlabeled, tuning_parameter)
         std = _compute_std_estimate(y_true, y_proxy_labeled, y_proxy_unlabeled, tuning_parameter)

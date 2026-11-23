@@ -1,5 +1,5 @@
 from dataclasses import dataclass, field
-from typing import Literal, Tuple
+from typing import Literal
 
 import numpy as np
 from numpy.typing import NDArray
@@ -66,7 +66,7 @@ class BootstrapConfidenceInterval:
         self,
         h0_value: float,
         alternative: Literal["larger", "smaller", "two-sided"] = "two-sided",
-    ) -> Tuple[float, float, float]:
+    ) -> tuple[float, float, float]:
         """Bootstrap hypothesis test against a null value.
 
         Computes a p-value as the proportion of bootstrap estimates that are
