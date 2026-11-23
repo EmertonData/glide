@@ -1,4 +1,4 @@
-from typing import Optional, Union
+from typing import Optional
 
 import numpy as np
 from numpy.random.bit_generator import SeedSequence
@@ -122,7 +122,7 @@ class CostOptimalRandomSampler:
         y_true_cost: float,
         y_proxy_cost: float,
         max_cost: float,
-        random_seed: Optional[Union[int, SeedSequence]] = None,
+        random_seed: Optional[int | SeedSequence] = None,
     ) -> tuple[NDArray, NDArray]:
         """Sample observations with cost-optimal allocation between raters.
 

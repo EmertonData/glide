@@ -1,4 +1,4 @@
-from typing import Union, overload
+from typing import overload
 
 import numpy as np
 from numpy.typing import NDArray
@@ -10,7 +10,7 @@ from glide.core.validation import _validate_bounds, _validate_equal_lengths, _va
 def _reorient(value: float, *, higher_is_better: bool) -> float: ...
 @overload
 def _reorient(value: NDArray, *, higher_is_better: bool) -> NDArray: ...
-def _reorient(value: Union[float, NDArray], *, higher_is_better: bool) -> Union[float, NDArray]:
+def _reorient(value: float | NDArray, *, higher_is_better: bool) -> float | NDArray:
     if higher_is_better:
         reoriented_value = -value
     else:

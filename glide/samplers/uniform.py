@@ -1,4 +1,4 @@
-from typing import Optional, Union
+from typing import Optional
 
 import numpy as np
 from numpy.random.bit_generator import SeedSequence
@@ -27,7 +27,7 @@ class UniformSampler:
         self,
         y_proxy: NDArray,
         n_samples: int,
-        random_seed: Optional[Union[int, SeedSequence]] = None,
+        random_seed: Optional[int | SeedSequence] = None,
     ) -> NDArray:
         """Sample observations uniformly at random without replacement.
 
