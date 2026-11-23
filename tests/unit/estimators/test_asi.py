@@ -1,4 +1,3 @@
-from typing import Tuple
 from unittest.mock import patch
 
 import numpy as np
@@ -15,7 +14,7 @@ from glide.mean_inference_results import PredictionPoweredMeanInferenceResult
 
 
 @pytest.fixture
-def y_arrays() -> Tuple[NDArray, NDArray, NDArray]:
+def y_arrays() -> tuple[NDArray, NDArray, NDArray]:
     y_true = np.array([3.0, 5.0, np.nan, np.nan, np.nan])
     y_proxy = np.array([2.0, 4.0, 5.0, 7.0, 9.0])
     sampling_probability = np.array([0.5, 0.5, 0.5, 0.5, 0.0])

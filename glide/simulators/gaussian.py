@@ -1,4 +1,4 @@
-from typing import Optional, Tuple
+from typing import Optional
 
 import numpy as np
 from numpy.typing import NDArray
@@ -14,7 +14,7 @@ def generate_gaussian_dataset(
     proxy_std: float = 1,
     correlation: float = 0.8,
     random_seed: Optional[int] = None,
-) -> Tuple[NDArray, NDArray]:
+) -> tuple[NDArray, NDArray]:
     """Generate a synthetic Gaussian dataset for evaluation.
 
     Parameters

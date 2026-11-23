@@ -1,5 +1,4 @@
 from dataclasses import dataclass
-from typing import List
 
 from glide.confidence_intervals import ConfidenceInterval
 
@@ -28,7 +27,7 @@ class MeanInferenceResult:
         """Standard error of the point estimate."""
         return self.confidence_interval.std
 
-    def _common_lines(self) -> List[str]:
+    def _common_lines(self) -> list[str]:
         lower_bound = self.confidence_interval.lower_bound
         upper_bound = self.confidence_interval.upper_bound
         confidence_level_pct = self.confidence_interval.confidence_level * 100

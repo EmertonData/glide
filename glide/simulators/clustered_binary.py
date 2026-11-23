@@ -1,4 +1,4 @@
-from typing import Optional, Tuple, Union
+from typing import Optional, Union
 
 import numpy as np
 from numpy.typing import NDArray
@@ -15,7 +15,7 @@ def generate_clustered_binary_dataset(
     correlation: float = 0.8,
     within_cluster_diversity: float = 0.9,
     random_seed: Optional[Union[int, np.random.SeedSequence]] = None,
-) -> Tuple[NDArray, NDArray, NDArray]:
+) -> tuple[NDArray, NDArray, NDArray]:
     """Generate a synthetic clustered binary-label dataset for evaluation.
 
     Draws ``n_samples`` i.i.d. ``(y_true, y_proxy)`` pairs from the

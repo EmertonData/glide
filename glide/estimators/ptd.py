@@ -1,5 +1,5 @@
 from math import floor
-from typing import Optional, Tuple
+from typing import Optional
 
 import numpy as np
 from numpy.typing import NDArray
@@ -60,7 +60,7 @@ class PTDMeanEstimator:
     Effective Sample Size: 5
     """
 
-    def _preprocess(self, y_true_all: NDArray, y_proxy_all: NDArray) -> Tuple[NDArray, NDArray, NDArray]:
+    def _preprocess(self, y_true_all: NDArray, y_proxy_all: NDArray) -> tuple[NDArray, NDArray, NDArray]:
         _validate_equal_lengths(y_true_all, y_proxy_all, names=["y_true", "y_proxy"])
         _validate_y_proxy(y_proxy_all)
         _validate_y_true(y_true_all)

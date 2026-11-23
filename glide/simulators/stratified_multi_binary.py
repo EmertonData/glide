@@ -1,4 +1,4 @@
-from typing import Optional, Tuple
+from typing import Optional
 
 import numpy as np
 from numpy.typing import ArrayLike, NDArray
@@ -13,7 +13,7 @@ def generate_stratified_multi_binary_dataset(
     proxy_means: ArrayLike,
     correlations: ArrayLike,
     random_seed: Optional[int] = None,
-) -> Tuple[NDArray, NDArray, NDArray]:
+) -> tuple[NDArray, NDArray, NDArray]:
     """Generate a synthetic stratified binary-label oracle dataset with multiple proxy models.
 
     Combines ``M >= 1`` proxy models with ``K >= 1`` strata . This enables simulation of

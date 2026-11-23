@@ -16,7 +16,7 @@ import subprocess
 import sys
 from collections import Counter
 from pathlib import Path
-from typing import List, Optional, Tuple
+from typing import Optional
 
 CODEGRAPH_DIRECTORY = Path(__file__).resolve().parent
 DATABASE_PATH = CODEGRAPH_DIRECTORY / "codegraph.db"
@@ -43,7 +43,7 @@ def _package_name(path: str) -> Optional[str]:
     return name
 
 
-def _load_import_edges() -> List[Tuple[str, str]]:
+def _load_import_edges() -> list[tuple[str, str]]:
     query = """
         SELECT source.file_path, target.file_path
         FROM edges
@@ -63,7 +63,7 @@ def _load_module_counts() -> Counter:
     return module_counts
 
 
-def _build_packages_dot(edges: List[Tuple[str, str]], module_counts: Counter) -> str:
+def _build_packages_dot(edges: list[tuple[str, str]], module_counts: Counter) -> str:
     import_counts: Counter = Counter()
     for source, target in edges:
         source_package, target_package = _package_name(source), _package_name(target)
@@ -90,7 +90,7 @@ def _build_packages_dot(edges: List[Tuple[str, str]], module_counts: Counter) ->
     return source_code
 
 
-def _build_modules_dot(edges: List[Tuple[str, str]]) -> str:
+def _build_modules_dot(edges: list[tuple[str, str]]) -> str:
     def is_shown(path: str) -> bool:
         shown = _package_name(path) in MODULE_VIEW_PACKAGES and not path.endswith("__init__.py")
         return shown
@@ -125,7 +125,7 @@ def _build_modules_dot(edges: List[Tuple[str, str]]) -> str:
     return source_code
 
 
-def _render(dot_path: Path) -> List[Path]:
+def _render(dot_path: Path) -> list[Path]:
     if shutil.which("dot") is None:
         print("Graphviz 'dot' not found: wrote the .dot source only (install Graphviz to render images).")
         return []

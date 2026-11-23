@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import List, Optional
+from typing import Optional
 
 from numpy.typing import NDArray
 
@@ -89,7 +89,7 @@ class MeanMonitoringResult:
         result = int(self.alarms.argmax())
         return result
 
-    def _common_lines(self) -> List[str]:
+    def _common_lines(self) -> list[str]:
         lines = [
             f"Metric: {self.metric_name}",
             f"Monitor: {self.monitor_name}",

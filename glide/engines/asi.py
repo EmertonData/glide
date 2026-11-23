@@ -1,5 +1,3 @@
-from typing import Tuple
-
 import numpy as np
 from numpy.typing import NDArray
 
@@ -13,7 +11,7 @@ from glide.core.validation import (
     _validate_y_proxy,
 )
 
-ASIDataset = Tuple[NDArray, NDArray, NDArray]
+ASIDataset = tuple[NDArray, NDArray, NDArray]
 
 
 class ASIMeanEngine:
@@ -47,7 +45,7 @@ class ASIMeanEngine:
         tuning_parameter = covariance / variance
         return tuning_parameter
 
-    def _compute_mean_and_std(self, dataset: ASIDataset, tuning_parameter: float) -> Tuple[float, float]:
+    def _compute_mean_and_std(self, dataset: ASIDataset, tuning_parameter: float) -> tuple[float, float]:
         y_true, y_proxy, sampling_probability = dataset
         labeled_indicator = ~np.isnan(y_true)
         n_samples = len(sampling_probability)

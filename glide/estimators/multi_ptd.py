@@ -1,5 +1,5 @@
 from math import floor
-from typing import Optional, Tuple
+from typing import Optional
 
 import numpy as np
 from numpy.typing import NDArray
@@ -70,7 +70,7 @@ class MultiPTDMeanEstimator:
         self,
         y_true_all: NDArray,
         y_proxies_all: NDArray,
-    ) -> Tuple[NDArray, NDArray, NDArray]:
+    ) -> tuple[NDArray, NDArray, NDArray]:
         _validate_equal_lengths(y_true_all, y_proxies_all, names=["y_true", "y_proxies"])
         _validate_y_proxies(y_proxies_all)
         _validate_y_true(y_true_all)

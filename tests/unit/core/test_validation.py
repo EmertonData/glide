@@ -1,4 +1,3 @@
-from typing import List
 from unittest.mock import patch
 
 import numpy as np
@@ -44,7 +43,7 @@ def too_few_labeled_mask() -> NDArray:
 
 
 @pytest.fixture
-def alternatives() -> List[str]:
+def alternatives() -> list[str]:
     return ["two-sided", "larger", "smaller"]
 
 

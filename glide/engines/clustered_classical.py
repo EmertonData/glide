@@ -1,5 +1,3 @@
-from typing import Tuple
-
 import numpy as np
 from numpy.typing import NDArray
 
@@ -31,6 +29,6 @@ class ClusteredClassicalMeanEngine:
     def _fit_tuning_parameter(self, dataset: NDArray, *, power_tuning: bool) -> None:
         return None
 
-    def _compute_mean_and_std(self, dataset: NDArray, tuning_parameter: None) -> Tuple[float, float]:
+    def _compute_mean_and_std(self, dataset: NDArray, tuning_parameter: None) -> tuple[float, float]:
         mean, std = self._classical_engine._compute_mean_and_std(dataset, tuning_parameter)
         return mean, std

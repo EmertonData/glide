@@ -1,4 +1,4 @@
-from typing import Dict, Hashable, Optional, Tuple
+from typing import Hashable, Optional
 
 import numpy as np
 from numpy.typing import NDArray
@@ -6,7 +6,7 @@ from numpy.typing import NDArray
 from glide.core.validation import _validate_equal_lengths, _validate_has_no_nan, _validate_min_samples
 from glide.engines.classical import ClassicalMeanEngine
 
-StratifiedClassicalDataset = Dict[Hashable, Tuple[NDArray, float]]
+StratifiedClassicalDataset = dict[Hashable, tuple[NDArray, float]]
 
 
 class StratifiedClassicalMeanEngine:
@@ -33,7 +33,7 @@ class StratifiedClassicalMeanEngine:
     def _fit_tuning_parameter(self, dataset: StratifiedClassicalDataset, *, power_tuning: bool) -> None:
         return None
 
-    def _compute_mean_and_std(self, dataset: StratifiedClassicalDataset, tuning_parameter: None) -> Tuple[float, float]:
+    def _compute_mean_and_std(self, dataset: StratifiedClassicalDataset, tuning_parameter: None) -> tuple[float, float]:
         weighted_mean = 0.0
         weighted_var = 0.0
         for y_stratum, stratum_weight in dataset.values():

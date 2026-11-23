@@ -1,4 +1,4 @@
-from typing import List, Optional, Tuple
+from typing import Optional
 
 import numpy as np
 from numpy.typing import NDArray
@@ -8,12 +8,12 @@ from glide.simulators.oracle_binary import generate_binary_dataset_with_oracle_s
 
 
 def generate_batched_binary_dataset_with_oracle_sampling(
-    n_samples: List[int],
-    true_mean: List[float],
-    proxy_mean: List[float],
-    correlation: List[float],
+    n_samples: list[int],
+    true_mean: list[float],
+    proxy_mean: list[float],
+    correlation: list[float],
     random_seed: Optional[int] = None,
-) -> Tuple[NDArray, NDArray, NDArray, NDArray]:
+) -> tuple[NDArray, NDArray, NDArray, NDArray]:
     """Generate a synthetic batched binary dataset with oracle sampling probabilities.
 
     Generalizes ``generate_binary_dataset_with_oracle_sampling`` with an outer batch

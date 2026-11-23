@@ -1,4 +1,4 @@
-from typing import Dict, Hashable
+from typing import Hashable
 
 import numpy as np
 from numpy.typing import NDArray
@@ -7,7 +7,7 @@ from glide.core.utils import _split_labeled_unlabeled
 from glide.core.validation import _validate_equal_lengths, _validate_has_no_nan, _validate_sample_sizes
 from glide.engines.ppi import PPIDataset
 
-StratifiedDataset = Dict[Hashable, PPIDataset]
+StratifiedDataset = dict[Hashable, PPIDataset]
 
 
 def _preprocess(y_true: NDArray, y_proxy: NDArray, groups: NDArray) -> StratifiedDataset:

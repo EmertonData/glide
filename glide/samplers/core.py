@@ -1,5 +1,3 @@
-from typing import Tuple
-
 import numpy as np
 from numpy.typing import NDArray
 
@@ -7,7 +5,7 @@ from numpy.typing import NDArray
 def _shuffle(
     array: NDArray,
     rng: np.random.Generator,
-) -> Tuple[NDArray, NDArray]:
+) -> tuple[NDArray, NDArray]:
     order = rng.permutation(len(array))
     shuffled = array[order]
     return shuffled, order
@@ -19,7 +17,7 @@ def _compute_cutoff_indices(cumulative_costs: NDArray, order: NDArray, budget: f
     return kept_indices
 
 
-def _build_output(kept_indices: NDArray, pi_shuffled: NDArray, xi_shuffled: NDArray) -> Tuple[NDArray, NDArray]:
+def _build_output(kept_indices: NDArray, pi_shuffled: NDArray, xi_shuffled: NDArray) -> tuple[NDArray, NDArray]:
     n = len(pi_shuffled)
     pi_out = np.zeros(n)
     xi_out = np.full(n, np.nan)

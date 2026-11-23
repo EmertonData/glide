@@ -1,5 +1,5 @@
 import warnings
-from typing import Optional, Tuple, Union
+from typing import Optional, Union
 
 import numpy as np
 from numpy.random.bit_generator import SeedSequence
@@ -91,7 +91,7 @@ class ActiveSampler:
         uncertainties: NDArray,
         n_samples: int,
         random_seed: Optional[Union[int, SeedSequence]] = None,
-    ) -> Tuple[NDArray, NDArray]:
+    ) -> tuple[NDArray, NDArray]:
         """Sample observations with probability proportional to uncertainty.
 
         Each observation receives a drawing probability π_i that minimizes the variance

@@ -1,4 +1,4 @@
-from typing import Any, Callable, Dict, Tuple
+from typing import Any, Callable
 
 import numpy as np
 from numpy.typing import NDArray
@@ -9,9 +9,9 @@ from glide.estimators import ClassicalMeanEstimator
 
 def run_monte_carlo(
     confidence_levels: NDArray,
-    run_seed: Callable[[int], Dict[str, Any]],
+    run_seed: Callable[[int], dict[str, Any]],
     n_seeds: int = 500,
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Run ``run_seed`` for ``n_seeds`` independent seeds and collect all outputs into a single dictionary.
 
     The method names are inferred from the keys of the dict returned by ``run_seed``.
@@ -99,10 +99,10 @@ def run_monte_carlo(
 
 
 def compute_hits(
-    stats: Dict[str, Dict[str, Any]],
+    stats: dict[str, dict[str, Any]],
     confidence_level: float,
     true_mean: float,
-) -> Dict[str, NDArray]:
+) -> dict[str, NDArray]:
     """Compute per-seed hit indicators from the output of :func:`run_monte_carlo`.
 
     For each method and each seed, a hit indicator records whether the confidence
@@ -161,7 +161,7 @@ def compute_hits(
 def coverage_with_error_bar(
     hits: NDArray,
     confidence_level: float,
-) -> Tuple[float, float, float]:
+) -> tuple[float, float, float]:
     """Estimate empirical coverage and its confidence interval from hit indicators.
 
     Uses :class:`~glide.estimators.ClassicalMeanEstimator` on the binary hit array,

@@ -1,5 +1,5 @@
 from math import floor
-from typing import List, Optional, Tuple
+from typing import Optional
 
 import numpy as np
 from numpy.typing import NDArray
@@ -59,7 +59,7 @@ class StratifiedPTDMeanEstimator:
         y_true: NDArray,
         y_proxy: NDArray,
         groups: NDArray,
-    ) -> List[Tuple[NDArray, NDArray, NDArray]]:
+    ) -> list[tuple[NDArray, NDArray, NDArray]]:
         stratified_dataset = _preprocess_strata(y_true, y_proxy, groups)
         _validate_non_constant(y_true[~np.isnan(y_true)], "'y_true' labeled values are constant.")
 
