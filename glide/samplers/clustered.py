@@ -1,4 +1,4 @@
-from typing import Optional, Union
+from typing import Optional
 
 import numpy as np
 from numpy.random.bit_generator import SeedSequence
@@ -30,7 +30,7 @@ class UniformClusteredSampler:
         self,
         clusters: NDArray,
         n_clusters: int,
-        random_seed: Optional[Union[int, SeedSequence]] = None,
+        random_seed: Optional[int | SeedSequence] = None,
     ) -> NDArray:
         """Select entire clusters without replacement.
 

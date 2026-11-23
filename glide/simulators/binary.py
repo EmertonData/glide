@@ -1,4 +1,4 @@
-from typing import Optional, Union
+from typing import Optional
 
 import numpy as np
 from numpy.typing import NDArray
@@ -11,7 +11,7 @@ def generate_binary_dataset(
     true_mean: float = 0.7,
     proxy_mean: float = 0.6,
     correlation: float = 0.8,
-    random_seed: Optional[Union[int, np.random.SeedSequence]] = None,
+    random_seed: Optional[int | np.random.SeedSequence] = None,
 ) -> tuple[NDArray, NDArray]:
     """Generate a synthetic binary-label oracle dataset.
 

@@ -1,4 +1,4 @@
-from typing import Optional, Union
+from typing import Optional
 
 import numpy as np
 from numpy.typing import ArrayLike, NDArray
@@ -11,7 +11,7 @@ def generate_multi_binary_dataset(
     true_mean: float,
     proxy_means: ArrayLike,
     correlations: ArrayLike,
-    random_seed: Optional[Union[int, np.random.SeedSequence]] = None,
+    random_seed: Optional[int | np.random.SeedSequence] = None,
 ) -> tuple[NDArray, NDArray]:
     """Generate a synthetic binary oracle dataset with multiple proxy models.
 

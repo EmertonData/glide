@@ -127,12 +127,12 @@ return result
 
 ### Type Annotations
 
-Use built-in generics for collections (PEP 585); ruff enforces this via `UP006`. Keep `Optional` and `Union` from `typing` instead of PEP 604 `X | None` unions:
+Use built-in generics for collections (PEP 585); ruff enforces this via `UP006`. Use PEP 604 `X | Y` unions instead of `Union`; ruff enforces this via `UP007`. Keep `Optional` from `typing` for optional values rather than `X | None`:
 
-- BAD: `List[str]`, `Dict[str, int]`, `Tuple[int, ...]`, `int | None`
-- GOOD: `list[str]`, `dict[str, int]`, `tuple[int, ...]`, `Optional[int]`
+- BAD: `List[str]`, `Dict[str, int]`, `Tuple[int, ...]`, `Union[float, NDArray]`, `int | None`
+- GOOD: `list[str]`, `dict[str, int]`, `tuple[int, ...]`, `float | NDArray`, `Optional[int]`
 
-Import the remaining generics from `typing`: `from typing import Optional, Union`.
+Import the remaining generics from `typing`: `from typing import Optional`.
 
 Never use `object` or `Any` as type annotations, use precise types or protocols instead.
 
