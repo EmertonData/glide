@@ -1,5 +1,4 @@
 from dataclasses import dataclass
-from typing import Optional
 
 from numpy.typing import NDArray
 
@@ -82,7 +81,7 @@ class MeanMonitoringResult:
         return result
 
     @property
-    def first_alarm_index(self) -> Optional[int]:
+    def first_alarm_index(self) -> int | None:
         """Index of the first batch raising an alarm, or None if no drift was detected."""
         if not self.drift_detected:
             return None

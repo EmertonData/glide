@@ -1,5 +1,3 @@
-from typing import Optional
-
 import numpy as np
 from numpy.typing import NDArray
 
@@ -14,7 +12,7 @@ def generate_clustered_binary_dataset(
     proxy_mean: float = 0.6,
     correlation: float = 0.8,
     within_cluster_diversity: float = 0.9,
-    random_seed: Optional[int | np.random.SeedSequence] = None,
+    random_seed: int | np.random.SeedSequence | None = None,
 ) -> tuple[NDArray, NDArray, NDArray]:
     """Generate a synthetic clustered binary-label dataset for evaluation.
 

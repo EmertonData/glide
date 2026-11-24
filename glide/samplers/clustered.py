@@ -1,5 +1,3 @@
-from typing import Optional
-
 import numpy as np
 from numpy.random.bit_generator import SeedSequence
 from numpy.typing import NDArray
@@ -30,7 +28,7 @@ class UniformClusteredSampler:
         self,
         clusters: NDArray,
         n_clusters: int,
-        random_seed: Optional[int | SeedSequence] = None,
+        random_seed: int | SeedSequence | None = None,
     ) -> NDArray:
         """Select entire clusters without replacement.
 

@@ -1,5 +1,4 @@
 from math import floor
-from typing import Optional
 
 import numpy as np
 from numpy.typing import NDArray
@@ -89,7 +88,7 @@ class MultiPTDMeanEstimator:
         n_bootstrap: int = 2000,
         *,
         power_tuning: bool = True,
-        random_seed: Optional[int] = None,
+        random_seed: int | None = None,
     ) -> PredictionPoweredMeanInferenceResult:
         """Estimate the population mean using Multi-PTD.
 

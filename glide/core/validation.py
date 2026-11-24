@@ -1,6 +1,5 @@
 import warnings
 from collections.abc import Hashable, Sequence
-from typing import Optional
 
 import numpy as np
 from numpy.typing import NDArray
@@ -25,22 +24,20 @@ def _validate_is_2d(array: NDArray, name: str) -> None:
         raise ValueError(f"'{name}' must be a 2D array; got shape {array.shape!r}.")
 
 
-def _get_non_zero_mask(values: NDArray, warning_message: Optional[str] = None) -> NDArray:
+def _get_non_zero_mask(values: NDArray, warning_message: str | None = None) -> NDArray:
     non_zero_mask = values > 0
     if warning_message is not None and np.any(~non_zero_mask):
         warnings.warn(warning_message, UserWarning, stacklevel=4)
     return non_zero_mask
 
 
-def _validate_y_proxy(
-    y_proxy: NDArray, identifier: Optional[Hashable] = None, identifier_kind: str = "stratum"
-) -> None:
+def _validate_y_proxy(y_proxy: NDArray, identifier: Hashable | None = None, identifier_kind: str = "stratum") -> None:
     _validate_has_no_nan(y_proxy, "y_proxy")
     identifier_part = f" in {identifier_kind} '{identifier}'" if identifier is not None else ""
     _validate_non_constant(y_proxy, f"'y_proxy' values are constant{identifier_part}.")
 
 
-def _validate_y_true(y_true: NDArray, identifier: Optional[Hashable] = None, identifier_kind: str = "stratum") -> None:
+def _validate_y_true(y_true: NDArray, identifier: Hashable | None = None, identifier_kind: str = "stratum") -> None:
     labeled = y_true[~np.isnan(y_true)]
     if len(labeled) == 0:
         raise ValueError("'y_true' contains only NaN values.")
@@ -86,7 +83,7 @@ def _validate_bounds(
     upper: float = np.inf,
     left_inclusive: bool = True,
     right_inclusive: bool = True,
-    error_message: Optional[str] = None,
+    error_message: str | None = None,
 ) -> None:
     lower_valid = bool(np.all(value >= lower) if left_inclusive else np.all(value > lower))
     upper_valid = bool(np.all(value <= upper) if right_inclusive else np.all(value < upper))
@@ -145,7 +142,7 @@ def _validate_is_integer(param: int, name: str) -> None:
 
 def _validate_sample_sizes(
     labeled_mask: NDArray,
-    identifier: Optional[Hashable] = None,
+    identifier: Hashable | None = None,
     identifier_kind: str = "stratum",
 ) -> None:
     n_labeled = labeled_mask.sum()
@@ -156,7 +153,7 @@ def _validate_sample_sizes(
 
 
 def _validate_y_proxies(
-    y_proxies: NDArray, identifier: Optional[Hashable] = None, identifier_kind: str = "stratum"
+    y_proxies: NDArray, identifier: Hashable | None = None, identifier_kind: str = "stratum"
 ) -> None:
     _validate_is_2d(y_proxies, "y_proxies")
     _validate_has_no_nan(y_proxies, "y_proxies")
@@ -175,7 +172,7 @@ def _validate_binary_or_nan(array: NDArray, name: str) -> None:
 
 
 def _validate_min_samples(
-    values: NDArray, name: str, identifier: Optional[Hashable] = None, identifier_kind: str = "stratum"
+    values: NDArray, name: str, identifier: Hashable | None = None, identifier_kind: str = "stratum"
 ) -> None:
     if len(values) < 2:
         if identifier is not None:

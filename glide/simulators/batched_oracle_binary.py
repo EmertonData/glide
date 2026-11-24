@@ -1,5 +1,3 @@
-from typing import Optional
-
 import numpy as np
 from numpy.typing import NDArray
 
@@ -12,7 +10,7 @@ def generate_batched_binary_dataset_with_oracle_sampling(
     true_mean: list[float],
     proxy_mean: list[float],
     correlation: list[float],
-    random_seed: Optional[int] = None,
+    random_seed: int | None = None,
 ) -> tuple[NDArray, NDArray, NDArray, NDArray]:
     """Generate a synthetic batched binary dataset with oracle sampling probabilities.
 

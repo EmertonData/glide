@@ -1,5 +1,3 @@
-from typing import Optional
-
 import numpy as np
 from numpy.typing import NDArray
 
@@ -41,7 +39,7 @@ class StratifiedClassicalMeanEstimator:
         groups: NDArray,
         metric_name: str = "Metric",
         confidence_level: float = 0.95,
-        stratum_weights: Optional[NDArray] = None,
+        stratum_weights: NDArray | None = None,
     ) -> ClassicalMeanInferenceResult:
         """Estimate the population mean using stratified classical inference.
 

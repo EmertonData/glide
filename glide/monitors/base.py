@@ -1,4 +1,4 @@
-from typing import Generic, Optional
+from typing import Generic
 
 import numpy as np
 from numpy.typing import NDArray
@@ -21,7 +21,7 @@ class AsymptoticRM(Generic[DatasetT, TuningParameterT]):
         label_fields: dict[str, NDArray],
         batches: NDArray,
         *,
-        identifier_fields: Optional[dict[str, NDArray]] = None,
+        identifier_fields: dict[str, NDArray] | None = None,
         higher_is_better: bool,
         confidence_level: float,
         tightest_at_batch: int,
