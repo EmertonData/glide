@@ -1,5 +1,4 @@
 from collections.abc import Hashable
-from typing import Optional
 
 import numpy as np
 from numpy.typing import NDArray
@@ -15,7 +14,7 @@ class StratifiedClassicalMeanEngine:
         self._classical_engine = ClassicalMeanEngine()
 
     def _preprocess(
-        self, y: NDArray, groups: NDArray, stratum_weights: Optional[NDArray] = None
+        self, y: NDArray, groups: NDArray, stratum_weights: NDArray | None = None
     ) -> StratifiedClassicalDataset:
         _validate_has_no_nan(groups, "groups")
         _validate_equal_lengths(y, groups, names=["y", "groups"])

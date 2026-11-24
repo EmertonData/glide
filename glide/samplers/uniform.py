@@ -1,5 +1,3 @@
-from typing import Optional
-
 import numpy as np
 from numpy.random.bit_generator import SeedSequence
 from numpy.typing import NDArray
@@ -27,7 +25,7 @@ class UniformSampler:
         self,
         y_proxy: NDArray,
         n_samples: int,
-        random_seed: Optional[int | SeedSequence] = None,
+        random_seed: int | SeedSequence | None = None,
     ) -> NDArray:
         """Sample observations uniformly at random without replacement.
 

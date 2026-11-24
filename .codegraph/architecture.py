@@ -16,7 +16,6 @@ import subprocess
 import sys
 from collections import Counter
 from pathlib import Path
-from typing import Optional
 
 CODEGRAPH_DIRECTORY = Path(__file__).resolve().parent
 DATABASE_PATH = CODEGRAPH_DIRECTORY / "codegraph.db"
@@ -37,7 +36,7 @@ FILL_COLORS = {
 }
 
 
-def _package_name(path: str) -> Optional[str]:
+def _package_name(path: str) -> str | None:
     parts = path.split("/")
     name = parts[1].removesuffix(".py") if parts[0] == ROOT_PACKAGE and len(parts) > 1 else None
     return name

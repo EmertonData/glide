@@ -1,5 +1,4 @@
 from collections.abc import Sequence
-from typing import Optional
 
 import numpy as np
 from numpy.typing import ArrayLike, NDArray
@@ -13,7 +12,7 @@ def generate_batched_stratified_binary_dataset(
     true_mean: Sequence[ArrayLike],
     proxy_mean: Sequence[ArrayLike],
     correlation: Sequence[ArrayLike],
-    random_seed: Optional[int] = None,
+    random_seed: int | None = None,
 ) -> tuple[NDArray, NDArray, NDArray, NDArray]:
     """Generate a synthetic batched, stratified binary-label oracle dataset.
 

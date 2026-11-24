@@ -1,5 +1,4 @@
 from collections.abc import Sequence
-from typing import Optional
 
 import numpy as np
 from numpy.typing import NDArray
@@ -15,7 +14,7 @@ def generate_batched_clustered_binary_dataset(
     proxy_mean: Sequence[float],
     correlation: Sequence[float],
     within_cluster_diversity: float | Sequence[float] = 0.9,
-    random_seed: Optional[int] = None,
+    random_seed: int | None = None,
 ) -> tuple[NDArray, NDArray, NDArray, NDArray]:
     """Generate a synthetic batched, clustered binary-label oracle dataset.
 

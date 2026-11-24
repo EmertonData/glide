@@ -1,5 +1,5 @@
 from collections.abc import Hashable
-from typing import Literal, Optional
+from typing import Literal
 
 import numpy as np
 from numpy.typing import NDArray
@@ -147,7 +147,7 @@ class StratifiedSampler:
         groups: NDArray,
         n_samples: int,
         strategy: Literal["proportional", "neyman"] = "neyman",
-        random_seed: Optional[int] = None,
+        random_seed: int | None = None,
     ) -> NDArray:
         """Allocate annotation budget across strata and perform stratified sampling.
 

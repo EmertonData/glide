@@ -100,7 +100,7 @@ If there is no `.codegraph/` directory, skip CodeGraph entirely — indexing is 
 
 ## Code Conventions
 
-- Line length: 120 (configured in ruff)
+- Line length: 120
 - Use `np.hstack` or `np.vstack` instead of `np.concatenate` whenever possible
 - Use NumPy vectorization instead of Python for loops whenever possible
 
@@ -127,18 +127,18 @@ return result
 
 ### Type Annotations
 
-Use built-in generics for collections (PEP 585); ruff enforces this via `UP006`. Use PEP 604 `X | Y` unions instead of `Union`; ruff enforces this via `UP007`. Keep `Optional` from `typing` for optional values rather than `X | None`:
+Use built-in generics for collections (PEP 585). Use PEP 604 `X | Y` unions instead of `Union`. Write optional values as `X | None` instead of `Optional[X]`:
 
-- BAD: `List[str]`, `Dict[str, int]`, `Tuple[int, ...]`, `Union[float, NDArray]`, `int | None`
-- GOOD: `list[str]`, `dict[str, int]`, `tuple[int, ...]`, `float | NDArray`, `Optional[int]`
+- BAD: `List[str]`, `Dict[str, int]`, `Tuple[int, ...]`, `Union[float, NDArray]`, `Optional[int]`
+- GOOD: `list[str]`, `dict[str, int]`, `tuple[int, ...]`, `float | NDArray`, `int | None`
 
-Import abstract types (`Sequence`, `Hashable`, `Callable`, ...) from `collections.abc`, not from `typing`; ruff enforces this via `UP035`. Import the remaining generics from `typing`: `from typing import Optional`.
+Import abstract types (`Sequence`, `Hashable`, `Callable`, ...) from `collections.abc`, not from `typing`. Import the remaining generics (e.g. `Generic`) from `typing`.
 
 Never use `object` or `Any` as type annotations, use precise types or protocols instead.
 
 ### Boolean Parameters
 
-Any function or method parameter typed `bool` (or with a boolean default) must be keyword-only (placed after a bare `*` in the signature); ruff enforces this via `FBT001`/`FBT002`. This applies to public and private functions alike, including internal helpers only called positionally from within the same module.
+Any function or method parameter typed `bool` (or with a boolean default) must be keyword-only (placed after a bare `*` in the signature). This applies to public and private functions alike, including internal helpers only called positionally from within the same module.
 
 ```python
 # BAD
@@ -151,15 +151,17 @@ def estimate(self, y_true: NDArray, y_proxy: NDArray, *, power_tuning: bool = Tr
 
 ### Zip Strictness
 
-Every `zip()` call must pass an explicit `strict=` argument (ruff `B905`). Use `strict=True` whenever the iterables are expected to have the same length, so a mismatch raises instead of silently truncating; use `strict=False` only when truncation is intended. This applies to library code, tests and notebook code cells alike.
+Every `zip()` call must pass an explicit `strict=` argument. Use `strict=True` whenever the iterables are expected to have the same length, so a mismatch raises instead of silently truncating; use `strict=False` only when truncation is intended. This applies to library code, tests and notebook code cells alike.
 
 ```python
 # BAD
-for estimate, label in zip(estimates, labels): ...
+for estimate, label in zip(estimates, labels):
+    ...
 
 
 # GOOD
-for estimate, label in zip(estimates, labels, strict=True): ...
+for estimate, label in zip(estimates, labels, strict=True):
+    ...
 ```
 
 ### Type Conversions
@@ -173,7 +175,7 @@ Do not use needless type conversions like `float()` or `int()` unless required b
 - Never define custom exception classes.
 - Always include the bad value in the message: `f"'param' must be > 0; got {value!r}."` Terminate messages with a period.
 - Only validate at public API boundaries. Centralizing checks into a private `_preprocess` helper is fine; re-checking the same condition in downstream private helpers is not.
-- Always pass an explicit `stacklevel` to `warnings.warn` (ruff `B028`). Use the number of frames between the `warn` call and user code (e.g. `stacklevel=3` for a private helper called by a public method), so the warning points at the user's line rather than at library internals.
+- Always pass an explicit `stacklevel` to `warnings.warn`. Use the number of frames between the `warn` call and user code (e.g. `stacklevel=3` for a private helper called by a public method), so the warning points at the user's line rather than at library internals.
 
 ### Comments
 
@@ -181,7 +183,7 @@ Only add a comment when the *why* is non-obvious: a hidden constraint, a subtle 
 
 ### Ambiguous Unicode Characters
 
-Strings, comments and docstrings (including notebook code cells) must not contain Unicode characters that look like an ASCII one; ruff enforces this via `RUF001`/`RUF002`/`RUF003`. Characters that are not ambiguous (e.g. `θ`, `Σ`, `²`, `·`) are allowed. Replace the ambiguous ones, there is no autofix:
+Strings, comments and docstrings (including notebook code cells) must not contain Unicode characters that look like an ASCII one. Characters that are not ambiguous (e.g. `θ`, `Σ`, `²`, `·`) are allowed. Replace the ambiguous ones, there is no autofix:
 
 - Spell out the Greek letter: `rho` instead of `ρ`
 - Use a shape tuple or `x` instead of `×`: `(2, n_samples)` instead of `2 × n_samples`
@@ -192,7 +194,7 @@ Strings, comments and docstrings (including notebook code cells) must not contai
 - NumPy-style docstrings for all public API; paper references go exclusively in the `References` section. Never mention papers inline in parameter descriptions, summaries, or notes
 - Public API docstrings must include an `Examples` section with runnable doctests
 - In doctests, always import from the public package namespaces: `from glide.estimators import ...`, `from glide.samplers import ...`, `from glide.simulators import ...` — never from submodules directly.
-- Every public method, including public magic methods such as `__call__` or `__len__`, must have a docstring (ruff `D102`/`D105`).
+- Every public method, including public magic methods such as `__call__` or `__len__`, must have a docstring.
 - **No docstrings for unit test functions or private methods** — test code is self-documenting via clear variable names and assertion structure; private methods are internal only.
 - **Functional test functions may carry a one-line docstring** stating the statistical property being verified, since it is often not obvious from the test name alone (e.g. prefix consistency, mirror symmetry). Keep it to a single sentence.
 
